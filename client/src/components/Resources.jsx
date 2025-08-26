@@ -1,0 +1,635 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Container, 
+  Grid, 
+  Card, 
+  CardMedia, 
+  CardContent, 
+  Typography, 
+  Button, 
+  Box, 
+  IconButton, 
+  Fade,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  DialogActions,
+  CircularProgress,
+  Alert
+} from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { Add, Edit, Delete } from '@mui/icons-material';
+import MediaUpload from './common/MediaUpload';
+import API_BASE_URL from "../utils/api";
+
+export default function Resources({ user }) {
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [currentResource, setCurrentResource] = useState({
+    title: '',
+    description: '',
+    category: '',
+    author: '',
+    image: '',
+    downloadLink: '',
+  });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  const fetchResources = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/resources`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch resources');
+      }
+      const data = await response.json();
+      console.log('Fetched resources:', data);
+      setResources(data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching resources:', err);
+      setError(err.message);
+      setLoading(false);
+      setResources(dummyResources); // Fallback to dummy data
+    }
+  };
+
+  // Dummy data for Resources
+  const dummyResources = [
+    {
+      _id: "1",
+      title: "Ancient Tamil Literature",
+      description: "A collection of classical Tamil literary works, including Sangam literature and epics.",
+      category: "Books",
+      author: "Various Ancient Poets",
+      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
+      downloadLink: "#",
+      createdAt: new Date(),
+    },
+    {
+      _id: "2",
+      title: "Tamil History Documentary",
+      description: "A documentary exploring the rich history and cultural heritage of the Tamil people.",
+      category: "Videos",
+      author: "Tamil Heritage Foundation",
+      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
+      downloadLink: "#",
+      createdAt: new Date(),
+    },
+  ];
+
+  const handleAdd = () => {
+    setCurrentResource({
+      title: '',
+      description: '',
+      category: '',
+      author: '',
+      image: '',
+      downloadLink: '',
+    });
+    setOpenDialog(true);
+  };
+
+  const handleEdit = (resource) => {
+    setCurrentResource(resource);
+    setOpenDialog(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const method = currentResource._id ? 'PUT' : 'POST';
+      const url = currentResource._id 
+        ? `${API_BASE_URL}/api/resources/${currentResource._id}` 
+        : `${API_BASE_URL}/api/resources`;
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: currentResource.title,
+          description: currentResource.description,
+          category: currentResource.category,
+          author: currentResource.author,
+          image: currentResource.image,
+          downloadLink: currentResource.downloadLink,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save resource');
+      }
+
+      const savedResource = await response.json();
+      
+      if (method === 'POST') {
+        setResources([...resources, savedResource]);
+      } else {
+        setResources(resources.map(resource => 
+          resource._id === savedResource._id ? savedResource : resource
+        ));
+      }
+
+      setOpenDialog(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this resource?')) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete resource');
+        }
+
+        setResources(resources.filter(resource => resource._id !== id));
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh' 
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="md">
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+      {/* Unique Heading Section */}
+      <Box 
+        sx={{ 
+          mb: 6, 
+          textAlign: 'center', 
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <Typography 
+          variant="h2" 
+          sx={{ 
+            fontWeight: 900, 
+            color: "#000", 
+            position: 'relative',
+            display: 'inline-block',
+            letterSpacing: -1,
+            padding: '0 10px',
+            transition: 'all 0.3s ease',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              left: '-50px',
+              width: '40px',
+              height: '3px',
+              backgroundColor: '#000',
+              transform: 'translateY(-50%)',
+              transition: 'all 0.3s ease',
+            },
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              right: '-50px',
+              width: '40px',
+              height: '3px',
+              backgroundColor: '#000',
+              transform: 'translateY(-50%)',
+              transition: 'all 0.3s ease',
+            },
+            '&:hover': {
+              color: '#333',
+              transform: 'scale(1.02)',
+              '&::before': {
+                width: '60px',
+                left: '-70px',
+                backgroundColor: '#666',
+              },
+              '&::after': {
+                width: '60px',
+                right: '-70px',
+                backgroundColor: '#666',
+              },
+            },
+          }}
+        >
+          Tamil Resources
+        </Typography>
+        
+        {user && user.role === "admin" && (
+          <Box 
+            sx={{ 
+              position: 'absolute', 
+              right: 0, 
+              top: '50%', 
+              transform: 'translateY(-50%)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-50%) scale(1.05)',
+                '& button': {
+                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
+                  transform: 'translateY(-3px)',
+                }
+              }
+            }}
+          >
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<Add />}
+              sx={{
+                bgcolor: "#000",
+                color: "#fff",
+                transition: 'all 0.3s ease',
+                "&:hover": { 
+                  bgcolor: "#333",
+                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
+                  transform: 'translateY(-3px)',
+                },
+                borderRadius: 0,
+                px: 3,
+              }}
+            >
+              Add Resource
+            </Button>
+          </Box>
+        )}
+      </Box>
+
+      <Grid 
+        container 
+        spacing={4} 
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'stretch',
+          perspective: '1000px', // 3D effect for cards
+          transition: 'all 0.3s ease',
+          '& > .MuiGrid-item': {
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'scale(1.02)',
+              zIndex: 10,
+            }
+          }
+        }}
+      >
+        {resources.map((resource, index) => (
+          <Fade 
+            in={true} 
+            timeout={500 + index * 200} 
+            key={resource._id}
+          >
+            <Grid 
+              item 
+              xs={12} 
+              sm={6} 
+              md={4} 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <Card
+                sx={{
+                  width: 350,  // Fixed width
+                  height: 450, // Fixed height
+                  display: 'flex',
+                  flexDirection: 'column',
+                  border: "3px solid #000",
+                  borderRadius: 0,
+                  bgcolor: "#fff",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                  position: 'relative',
+                  overflow: 'hidden',
+                  "&::before": {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
+                    transform: 'translateX(-100%)',
+                    transition: 'transform 0.6s ease',
+                  },
+                  "&:hover": {
+                    transform: "translateY(-15px) rotate(1deg)",
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                    "&::before": {
+                      transform: 'translateX(100%)',
+                    },
+                    "& .card-content": {
+                      transform: "scale(1.02)",
+                      opacity: 0.95,
+                    }
+                  },
+                }}
+                onClick={() => navigate(`/resources/${resource._id}`)}
+              >
+                {(resource.image) ? (
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={resource.image}
+                    alt={resource.title}
+                    sx={{ 
+                      objectFit: "contain",
+                      width: '100%',
+                      maxHeight: 200,
+                      backgroundColor: '#f0f0f0',
+                      padding: '10px',
+                      boxSizing: 'border-box',
+                    }}
+                    onError={(e) => {
+                      console.error('Image failed to load:', resource.image);
+                      console.log('Full resource object:', resource);
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
+                      e.target.style.display = 'block';
+                    }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      height: 200,
+                      width: '100%',
+                      backgroundColor: '#f0f0f0',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '10px',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <Typography 
+                      variant="body2" 
+                      color="textSecondary"
+                      sx={{ textAlign: 'center' }}
+                    >
+                      No Image Available (Debug: {JSON.stringify(resource)})
+                    </Typography>
+                  </Box>
+                )}
+                <CardContent
+                  className="card-content"
+                  sx={{
+                    p: 3,
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: 'relative', // For absolute positioning of admin buttons
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  {user && user.role === "admin" && (
+                    <Box 
+                      sx={{ 
+                        position: 'absolute', 
+                        top: 10, 
+                        right: 10, 
+                        display: "flex", 
+                        gap: 1 
+                      }}
+                    >
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(resource);
+                        }}
+                        size="small"
+                        sx={{
+                          color: "#000",
+                          bgcolor: 'rgba(255,255,255,0.7)',
+                          "&:hover": { 
+                            bgcolor: 'rgba(255,255,255,0.9)',
+                            transform: 'scale(1.1)' 
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(resource._id);
+                        }}
+                        size="small"
+                        sx={{
+                          color: "#000",
+                          bgcolor: 'rgba(255,255,255,0.7)',
+                          "&:hover": { 
+                            bgcolor: 'rgba(255,255,255,0.9)',
+                            transform: 'scale(1.1)' 
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  )}
+                  <Box>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 700, 
+                        color: "#000", 
+                        mb: 1,
+                        lineHeight: 1.3,
+                        fontSize: '1.5rem',
+                        textTransform: 'capitalize',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {resource.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        fontStyle: "italic",
+                        fontSize: "0.9rem",
+                        mb: 2,
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {resource.author || resource.category}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ 
+                        color: "#000", 
+                        lineHeight: 1.6, 
+                        mb: 2,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                      }}
+                    >
+                      {resource.description.length > 150 
+                        ? `${resource.description.substring(0, 150)}...` 
+                        : resource.description}
+                    </Typography>
+                  </Box>
+
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center' 
+                    }}
+                  >
+                    <Button
+                      component={Link}
+                      to={`/resources/${resource._id}`}
+                      variant="outlined"
+                      sx={{
+                        color: "#000",
+                        borderColor: "#000",
+                        borderRadius: 0,
+                        "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
+                      }}
+                    >
+                      Read More
+                    </Button>
+                    {resource.downloadLink && (
+                      <Button
+                        href={resource.downloadLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="contained"
+                        sx={{
+                          bgcolor: "#000",
+                          color: "#fff",
+                          borderRadius: 0,
+                          "&:hover": { 
+                            bgcolor: "#333",
+                          },
+                        }}
+                      >
+                        Download
+                      </Button>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Fade>
+        ))}
+      </Grid>
+
+      {/* Edit/Add Dialog */}
+      <Dialog 
+        open={openDialog} 
+        onClose={() => setOpenDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {currentResource._id ? 'Edit Resource' : 'Add New Resource'}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Title"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={currentResource.title}
+            onChange={(e) => setCurrentResource({...currentResource, title: e.target.value})}
+          />
+          <TextField
+            label="Author"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={currentResource.author}
+            onChange={(e) => setCurrentResource({...currentResource, author: e.target.value})}
+          />
+          <TextField
+            label="Category"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={currentResource.category}
+            onChange={(e) => setCurrentResource({...currentResource, category: e.target.value})}
+          />
+          <TextField
+            label="Description"
+            fullWidth
+            multiline
+            minRows={5}
+            sx={{ mb: 2 }}
+            value={currentResource.description}
+            onChange={(e) => setCurrentResource({...currentResource, description: e.target.value})}
+          />
+          <TextField
+            label="Download Link"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={currentResource.downloadLink}
+            onChange={(e) => setCurrentResource({...currentResource, downloadLink: e.target.value})}
+            placeholder="Optional: Add a download link for the resource"
+          />
+          <MediaUpload
+            onImageLinkChange={(link) => {
+              console.log('Image link changed:', link);
+              setCurrentResource({...currentResource, image: link});
+            }}
+            onVideoLinkChange={(link) => {}} // No video link field in this dialog
+            onImageChange={(url) => {
+              console.log('Image URL changed:', url);
+              setCurrentResource({...currentResource, image: url});
+            }}
+            onVideoChange={(url) => {}} // No video URL field in this dialog
+            currentImageLink={currentResource.image}
+            currentVideoLink={''} // No video link in this dialog
+            currentImage={currentResource.image}
+            currentVideo={''} // No video URL in this dialog
+            label="Media Links"
+            showInputsOnly={true}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+}
