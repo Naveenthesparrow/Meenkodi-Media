@@ -111,7 +111,7 @@ function DanceDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...(prev.contentSections || []), 
+        ...prev.contentSections, 
         { 
           subtitle: "", 
           content: "",
@@ -130,9 +130,7 @@ function DanceDetail() {
   const removeContentSection = (idToRemove) => {
     setEditableData(prev => ({
       ...prev,
-      contentSections: prev.contentSections && prev.contentSections.length > 0 
-        ? prev.contentSections.filter(section => section.id !== idToRemove)
-        : []
+      contentSections: prev.contentSections.filter(section => section.id !== idToRemove)
     }));
   };
 
@@ -221,12 +219,10 @@ function DanceDetail() {
     try {
       // Process content sections to ensure they're in the right format
       // Remove temporary id properties before sending to the server
-      const formattedContentSections = editableData.contentSections && editableData.contentSections.length > 0
-        ? editableData.contentSections.map(section => {
-            const { id, ...sectionWithoutId } = section;
-            return sectionWithoutId;
-          })
-        : [];
+      const formattedContentSections = editableData.contentSections.map(section => {
+        const { id, ...sectionWithoutId } = section;
+        return sectionWithoutId;
+      });
       
       const res = await fetch(`/api/dance/${id}`, {
         method: "PUT",
@@ -577,7 +573,6 @@ function DanceDetail() {
           alignItems: "center",
           mb: 4,
           justifyContent: "space-between",
-          width: "100%"
         }}
       >
         <IconButton onClick={() => navigate("/explore/dance")}>
@@ -619,18 +614,7 @@ function DanceDetail() {
             >
               {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
-            <IconButton 
-              onClick={handleDelete}
-              sx={{
-                color: "#000",
-                border: "1px solid #000",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  bgcolor: "rgba(255,0,0,0.1)",
-                  transform: "scale(1.1)"
-                }
-              }}
-            >
+            <IconButton onClick={handleDelete} color="error">
               <DeleteIcon />
             </IconButton>
           </Box>
@@ -638,52 +622,47 @@ function DanceDetail() {
       </Box>
 
       {/* Main Content */}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 4,
+      <Box 
+        sx={{ 
+          width: '100%', 
+          display: 'flex', 
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 4, 
+          alignItems: 'flex-start'
         }}
       >
-        {/* Image Section - Top */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            border: "2px solid #000",
-            position: "relative",
-            maxWidth: 800,
-            mx: "auto",
-            width: "100%",
+        {/* Image Section */}
+        <Box 
+          sx={{ 
+            width: { xs: '100%', md: '50%' },
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'relative',
           }}
         >
-          {(isEditing ? editableData.image : dance.image) ? (
+          {dance.image ? (
             <img
-              src={isEditing ? editableData.image : dance.image}
+              src={dance.image}
               alt={dance.name}
               style={{
-                maxWidth: "100%",
-                maxHeight: 600,
-                objectFit: "contain",
-                padding: 16,
-              }}
-              onError={(e) => {
-                e.target.src =
-                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                width: '100%',
+                height: '400px',
+                objectFit: 'cover',
+                border: '2px solid #000'
               }}
             />
           ) : (
             <Box
               sx={{
                 width: "100%",
-                height: "300px",
+                height: "400px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 bgcolor: "#f5f5f5",
+                border: '2px solid #000'
               }}
             >
               <Typography variant="h6" sx={{ color: "#666", mb: 1 }}>
@@ -696,272 +675,325 @@ function DanceDetail() {
           )}
         </Box>
 
-        {/* Details Section - Bottom */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 3,
-            maxWidth: 800,
-            mx: "auto",
-            width: "100%",
+        {/* Details Section */}
+        <Box 
+          sx={{ 
+            width: { xs: '100%', md: '50%' }, 
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3
           }}
         >
-          {/* Dynasty/Style and Period - Only show the box if there's content or in edit mode */}
-          {(!isEditing && (dance.style || dance.period)) || isEditing ? (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                borderBottom: "1px solid #000",
-                pb: 2,
-              }}
-            >
-              {!isEditing ? (
-                <>
-                  {dance.style && dance.style.trim() !== '' && (
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
-                    >
-                      Style: {dance.style}
-                    </Typography>
-                  )}
-                  {dance.period && dance.period.trim() !== '' && (
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
-                    >
-                      Period: {dance.period}
-                    </Typography>
-                  )}
-                </>
-              ) : (
-                <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                  <TextField
-                    label="Style"
-                    value={editableData.style || ''}
-                    onChange={(e) =>
-                      setEditableData({ ...editableData, style: e.target.value })
-                    }
-                    fullWidth
-                    variant="standard"
-                  />
-                  <TextField
-                    label="Period"
-                    value={editableData.period || ''}
-                    onChange={(e) =>
-                      setEditableData({ ...editableData, period: e.target.value })
-                    }
-                    fullWidth
-                    variant="standard"
-                  />
-                </Box>
+          {/* Style/Origin and Period */}
+          {!isEditing ? (
+            <>
+              {(dance.style || dance.origin) && (
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                  {dance.style && `Style: ${dance.style}`}
+                  {dance.style && dance.origin && ' | '}
+                  {dance.origin && `Origin: ${dance.origin}`}
+                </Typography>
               )}
-            </Box>
-          ) : null}
-
-          {/* Achievements - Only show if there's content or in edit mode */}
-          {(!isEditing && dance.achievements) ? (
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: 2,
-                  fontWeight: 700,
-                  borderBottom: "2px solid #000",
-                  pb: 1,
-                }}
-              >
-                Achievements
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  whiteSpace: "pre-wrap",
-                  lineHeight: 1.6,
-                }}
-              >
-                {dance.achievements}
-              </Typography>
-            </Box>
-          ) : isEditing ? (
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: 2,
-                  fontWeight: 700,
-                  borderBottom: "2px solid #000",
-                  pb: 1,
-                }}
-              >
-                Achievements
-              </Typography>
-              <TextField
-                label="Achievements"
-                value={editableData.achievements || ''}
-                onChange={(e) =>
-                  setEditableData({
-                    ...editableData,
-                    achievements: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                rows={3}
-                variant="standard"
-              />
-            </Box>
-          ) : null}
-
-          {/* Description - Only show if there's content or in edit mode */}
-          {(!isEditing && dance.description) ? (
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: 2,
-                  fontWeight: 700,
-                  borderBottom: "2px solid #000",
-                  pb: 1,
-                }}
-              >
-                Description
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  whiteSpace: "pre-wrap",
-                  lineHeight: 1.6,
-                }}
-              >
-                {dance.description}
-              </Typography>
-            </Box>
-          ) : isEditing ? (
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: 2,
-                  fontWeight: 700,
-                  borderBottom: "2px solid #000",
-                  pb: 1,
-                }}
-              >
-                Description
-              </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description || ''}
-                onChange={(e) =>
-                  setEditableData({
-                    ...editableData,
-                    description: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
-            </Box>
-          ) : null}
-
-          {/* Main Image (inline edit) */}
-          {isEditing && (
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  mb: 2,
-                  fontWeight: 700,
-                  borderBottom: "2px solid #000",
-                  pb: 1,
-                }}
-              >
-                Image URL
-              </Typography>
-              <TextField
-                label="Image URL"
-                value={editableData.image || ""}
-                onChange={(e) =>
-                  setEditableData({ ...editableData, image: e.target.value })
-                }
-                fullWidth
-                variant="standard"
-                InputLabelProps={{ shrink: true }}
-                placeholder="Enter full image URL"
-                sx={{ mb: 2 }}
-              />
-
-              {/* Upload from device for main image */}
-              <MediaUpload
-                onImageChange={(imageUrl) =>
-                  setEditableData((prev) => ({ ...prev, image: imageUrl }))
-                }
-                onImageLinkChange={(imageLink) =>
-                  setEditableData((prev) => ({ ...prev, image: imageLink }))
-                }
-                currentImage={editableData.image}
-                label="Main Image"
-              />
-
-              {editableData.image && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    display: "flex",
-                    justifyContent: "center",
-                    border: "1px solid #ddd",
-                    borderRadius: 1,
-                    p: 2,
-                  }}
-                >
-                  <img
-                    src={editableData.image}
-                    alt="Preview"
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: 200,
-                      objectFit: "contain",
-                    }}
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                </Box>
+              {dance.period && (
+                <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
+                  Period: {dance.period}
+                </Typography>
               )}
+            </>
+          ) : (
+            <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
+              <TextField
+                label="Style"
+                value={editableData.style}
+                onChange={(e) =>
+                  setEditableData({ ...editableData, style: e.target.value })
+                }
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Origin"
+                value={editableData.origin}
+                onChange={(e) =>
+                  setEditableData({ ...editableData, origin: e.target.value })
+                }
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Period"
+                value={editableData.period}
+                onChange={(e) =>
+                  setEditableData({ ...editableData, period: e.target.value })
+                }
+                fullWidth
+                variant="outlined"
+                size="small"
+              />
             </Box>
           )}
 
-          {/* Additional Content Sections */}
+          {/* Achievements */}
+          {!isEditing ? (
+            dance.achievements && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                  Achievements
+                </Typography>
+                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                  {dance.achievements}
+                </Typography>
+              </Box>
+            )
+          ) : (
+            <TextField
+              label="Achievements"
+              value={editableData.achievements}
+              onChange={(e) =>
+                setEditableData({
+                  ...editableData,
+                  achievements: e.target.value,
+                })
+              }
+              fullWidth
+              multiline
+              rows={3}
+              variant="outlined"
+              size="small"
+              sx={{ mb: 2 }}
+            />
+          )}
+
+          {/* Description */}
+          {!isEditing ? (
+            dance.description && (
+              <Box>
+                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                  Description
+                </Typography>
+                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                  {dance.description}
+                </Typography>
+              </Box>
+            )
+          ) : (
+            <TextField
+              label="Description"
+              value={editableData.description}
+              onChange={(e) =>
+                setEditableData({
+                  ...editableData,
+                  description: e.target.value,
+                })
+              }
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              size="small"
+            />
+          )}
+        </Box>
+
+        {/* Display Content Sections in Non-Edit Mode */}
+        {!isEditing && dance.contentSections && dance.contentSections.length > 0 && (
+          <Box sx={{ mt: 4, width: '100%' }}>
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+              Additional Content
+            </Typography>
+            {dance.contentSections.map((section, index) => (
+              <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
+                {section.subtitle && (
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    {section.subtitle}
+                  </Typography>
+                )}
+                {section.content && (
+                  <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
+                    {section.content}
+                  </Typography>
+                )}
+                {section.imageUrl && (
+                  <img
+                    src={section.imageUrl}
+                    alt={section.subtitle || `Section ${index + 1}`}
+                    style={{ maxWidth: '100%', height: 'auto', marginTop: 16 }}
+                  />
+                )}
+                {section.videoUrl && (
+                  <iframe
+                    src={section.videoUrl}
+                    title={section.videoTitle || `Video ${index + 1}`}
+                    style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
+                  />
+                )}
+                {section.videoDescription && (
+                  <Typography variant="body2" sx={{ mt: 2 }}>
+                    {section.videoDescription}
+                  </Typography>
+                )}
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      {/* Editing Sections for Content */}
+      {isEditing && (
+        <Box sx={{ mt: 4 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={addContentSection}
+            sx={{
+              color: '#000',
+              borderColor: '#000',
+              mb: 3,
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.04)',
+                borderColor: '#000',
+              }
+            }}
+          >
+            Add Content Section
+          </Button>
+
+          {editableData.contentSections.map((section, index) => (
+            <Box key={section.id || index} sx={{ mb: 4, p: 2, border: '1px solid #ccc' }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Content Section {index + 1}
+              </Typography>
+              
+              <TextField
+                label="Subtitle"
+                value={section.subtitle}
+                onChange={(e) => {
+                  const updatedSections = [...editableData.contentSections];
+                  updatedSections[index].subtitle = e.target.value;
+                  setEditableData(prev => ({
+                    ...prev,
+                    contentSections: updatedSections
+                  }));
+                }}
+                fullWidth
+                variant="outlined"
+                size="small"
+                sx={{ mb: 2 }}
+              />
+              
+              <TextField
+                label="Content"
+                value={section.content}
+                onChange={(e) => {
+                  const updatedSections = [...editableData.contentSections];
+                  updatedSections[index].content = e.target.value;
+                  setEditableData(prev => ({
+                    ...prev,
+                    contentSections: updatedSections
+                  }));
+                }}
+                fullWidth
+                multiline
+                rows={4}
+                variant="outlined"
+                size="small"
+                sx={{ mb: 2 }}
+              />
+
+              <MediaUpload
+                onImageChange={(imageUrl) => {
+                  const updatedSections = [...editableData.contentSections];
+                  updatedSections[index].imageUrl = imageUrl;
+                  setEditableData(prev => ({
+                    ...prev,
+                    contentSections: updatedSections
+                  }));
+                }}
+                onImageLinkChange={(imageLink) => {
+                  const updatedSections = [...editableData.contentSections];
+                  updatedSections[index].imageLink = imageLink;
+                  setEditableData(prev => ({
+                    ...prev,
+                    contentSections: updatedSections
+                  }));
+                }}
+              />
+
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                onClick={() => removeContentSection(section.id)}
+                sx={{ mt: 2 }}
+              >
+                Remove Section
+              </Button>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Bottom Action Buttons */}
+      {isEditing && (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mt: 4,
+            pt: 3,
+            borderTop: '2px solid #000'
+          }}
+        >
+          <Button 
+            variant="outlined" 
+            onClick={() => setIsEditing(false)}
+            sx={{
+              color: '#000',
+              borderColor: '#000',
+              textTransform: 'uppercase',
+              fontWeight: 700
+            }}
+          >
+            Cancel
+          </Button>
+          
+          <Button 
+            variant="contained" 
+            onClick={handleSave}
+            sx={{
+              bgcolor: '#000',
+              color: '#fff',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              '&:hover': {
+                bgcolor: '#333'
+              }
+            }}
+          >
+            Update Details
+          </Button>
+        </Box>
+      )}
+    </Container>
           <Box sx={{ mt: 4 }}>
             {isEditing && (
               <>
                 <Typography
                   variant="h6"
                   sx={{
-                    mb: 2,
+                    mb: 2, 
                     fontWeight: 700,
-                    borderBottom: '1px solid #000',
+                    borderBottom: '2px solid #000',
                     pb: 1,
                   }}
                 >
                   Additional Content Sections
                 </Typography>
                 
-                {editableData.contentSections && editableData.contentSections.map((section, index) => (
+                {editableData.contentSections.map((section, index) => (
                   <Box 
                     key={section.id || `editable-section-${index}`} 
                     sx={{ 
@@ -975,10 +1007,8 @@ function DanceDetail() {
                       label="Subtitle"
                       value={section.subtitle}
                       onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].subtitle = e.target.value;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].subtitle = e.target.value;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -993,10 +1023,8 @@ function DanceDetail() {
                       label="Content"
                       value={section.content}
                       onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].content = e.target.value;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].content = e.target.value;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -1009,13 +1037,15 @@ function DanceDetail() {
                       sx={{ mb: 2 }}
                     />
 
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Section Image */}
+                    {/* Image URL for Content Section */}
                     <Typography 
                       variant="subtitle1" 
                       sx={{ 
+                        mt: 2, 
+                        mb: 1, 
                         fontWeight: 700,
+                        borderBottom: '1px solid #000',
+                        pb: 1,
                       }}
                     >
                       Section Image
@@ -1025,10 +1055,8 @@ function DanceDetail() {
                       label="Image URL"
                       value={section.imageUrl}
                       onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].imageUrl = e.target.value;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].imageUrl = e.target.value;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -1037,66 +1065,22 @@ function DanceDetail() {
                       fullWidth
                       sx={{ mb: 2 }}
                       variant="standard"
+                      placeholder="Enter full image URL"
                     />
 
-                    {/* Section Image Upload */}
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        mt: 2,
-                        fontWeight: 700,
-                      }}
-                    >
-                      Section Image
-                    </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        mb: 1, 
-                        color: '#666',
-                      }}
-                    >
-                      Upload files directly from your device (alternative to using links above)
-                    </Typography>
-
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: 500,
-                        color: '#333'
-                      }}
-                    >
-                      Upload Image from Device
-                    </Typography>
-
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        mb: 1, 
-                        color: '#888',
-                        display: 'block'
-                      }}
-                    >
-                      Supported formats: JPG, PNG, GIF, WEBP (Max: 5MB)
-                    </Typography>
-
+                    {/* Image Upload for Content Section */}
                     <MediaUpload
                       onImageChange={(imageUrl) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].imageUrl = imageUrl;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].imageUrl = imageUrl;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
                         }));
                       }}
                       onImageLinkChange={(imageLink) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].imageLink = imageLink;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].imageLink = imageLink;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -1107,13 +1091,42 @@ function DanceDetail() {
                       label="Section Image"
                     />
 
-                    <Divider sx={{ my: 2 }} />
+                    {/* Preview of uploaded/entered image */}
+                    {section.imageUrl && (
+                      <Box 
+                        sx={{ 
+                          mt: 2, 
+                          display: 'flex', 
+                          justifyContent: 'center', 
+                          border: '1px solid #ddd', 
+                          borderRadius: 1,
+                          p: 2 
+                        }}
+                      >
+                        <img 
+                          src={section.imageUrl} 
+                          alt="Preview" 
+                          style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: 200, 
+                            objectFit: 'contain' 
+                          }}
+                          onError={(e) => {
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
+                      </Box>
+                    )}
 
-                    {/* Section Video Details */}
+                    {/* Video Details for Content Section */}
                     <Typography 
                       variant="subtitle1" 
                       sx={{ 
+                        mt: 2, 
+                        mb: 1, 
                         fontWeight: 700,
+                        borderBottom: '1px solid #000',
+                        pb: 1,
                       }}
                     >
                       Section Video Details
@@ -1123,10 +1136,8 @@ function DanceDetail() {
                       label="Video URL"
                       value={section.videoUrl}
                       onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].videoUrl = e.target.value;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoUrl = e.target.value;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -1135,16 +1146,15 @@ function DanceDetail() {
                       fullWidth
                       sx={{ mb: 2 }}
                       variant="standard"
+                      placeholder="Enter full YouTube video URL"
                     />
                     
                     <TextField
                       label="Video Title"
                       value={section.videoTitle}
                       onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].videoTitle = e.target.value;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoTitle = e.target.value;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -1159,10 +1169,8 @@ function DanceDetail() {
                       label="Video Description"
                       value={section.videoDescription}
                       onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].videoDescription = e.target.value;
-                        }
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoDescription = e.target.value;
                         setEditableData(prev => ({
                           ...prev,
                           contentSections: updatedSections
@@ -1187,24 +1195,49 @@ function DanceDetail() {
                     </IconButton>
                   </Box>
                 ))}
+                
+                <Button
+                  onClick={addContentSection}
+                  variant="outlined"
+                  startIcon={<Add />}
+                  sx={{
+                    color: '#000',
+                    borderColor: '#000',
+                    '&:hover': {
+                      bgcolor: 'rgba(0,0,0,0.05)'
+                    }
+                  }}
+                >
+                  Add Content Section
+                </Button>
               </>
             )}
             {!isEditing && dance.contentSections && dance.contentSections.length > 0 && (
-              dance.contentSections.map((section, index) => {
-                // Only render sections that have at least one piece of content
-                const hasContent = section.subtitle || section.content || section.imageUrl || section.videoUrl;
-                if (!hasContent) return null;
-                
-                return (
-                  <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
+              dance.contentSections.map((section, index) => (
+                <Card 
+                  key={section.id || `content-section-${index}`} 
+                  sx={{ 
+                    mt: 4, 
+                    boxShadow: 3, 
+                    overflow: "visible",
+                    borderRadius: 2,
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-5px)",
+                      boxShadow: 5
+                    }
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
                     {section.subtitle && (
                       <Typography 
-                        variant="h6" 
-                        sx={{
-                          mb: 2, 
-                          fontWeight: 700,
-                          borderBottom: '2px solid #000',
+                        variant="h5" 
+                        gutterBottom
+                        sx={{ 
+                          borderBottom: "2px solid #000",
                           pb: 1,
+                          mb: 2,
+                          fontWeight: 600
                         }}
                       >
                         {section.subtitle}
@@ -1212,129 +1245,141 @@ function DanceDetail() {
                     )}
                     
                     {section.content && (
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          whiteSpace: 'pre-wrap',
-                          lineHeight: 1.6,
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          mb: 3, 
+                          whiteSpace: "pre-wrap",
+                          lineHeight: 1.7,
+                          color: "#333"
                         }}
                       >
                         {section.content}
                       </Typography>
                     )}
 
-                    {/* Section Image */}
-                    {section.imageUrl && (
-                      <img 
-                        src={section.imageUrl} 
-                        alt={section.subtitle || `Section ${index + 1} Image`} 
-                        style={{ 
-                          maxWidth: '100%', 
-                          height: 'auto', 
-                          marginTop: 16,
-                          border: '1px solid #ddd',
-                          padding: 8
+                    {/* Section Media (Image or Video) */}
+                    {(section.imageUrl || section.videoUrl) && (
+                      <Box 
+                        sx={{ 
+                          mt: 2, 
+                          mb: 2,
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
                         }}
-                        onError={(e) => {
-                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
-                        }}
-                      />
-                    )}
-
-                    {/* Section Video */}
-                    {section.videoUrl && (
-                      <iframe 
-                        src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
-                        title={section.videoTitle || `Section ${index + 1} Video`}
-                        style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
-                        allowFullScreen
-                      />
-                    )}
-                    
-                    {/* Section Video Details - Only show if either title or description exists */}
-                    {(section.videoTitle || section.videoDescription) && (
-                      <Box sx={{ mt: 2 }}>
-                        {section.videoTitle && section.videoTitle.trim() !== '' && (
+                      >
+                        <MediaDisplay
+                          imageUrl={section.imageUrl}
+                          videoUrl={section.videoUrl}
+                          videoLink={section.videoUrl}
+                          title={section.videoTitle || section.subtitle}
+                          height={400}
+                        />
+                        {section.imageLink && section.imageUrl && (
                           <Typography 
-                            variant="subtitle1" 
-                            sx={{ fontWeight: 600 }}
+                            variant="caption" 
+                            display="block" 
+                            sx={{ 
+                              mt: 1, 
+                              textAlign: "center",
+                              fontStyle: "italic",
+                              color: "#555"
+                            }}
+                          >
+                            {section.imageLink}
+                          </Typography>
+                        )}
+                        {section.videoTitle && section.videoUrl && (
+                          <Typography 
+                            variant="subtitle1"
+                            sx={{ 
+                              mt: 2, 
+                              fontWeight: 600,
+                              px: 1
+                            }}
                           >
                             {section.videoTitle}
                           </Typography>
                         )}
-                        
-                        {section.videoDescription && section.videoDescription.trim() !== '' && (
+                        {section.videoDescription && section.videoUrl && (
                           <Typography 
                             variant="body2" 
-                            sx={{ color: '#555', fontStyle: 'italic' }}
+                            color="text.secondary"
+                            sx={{ 
+                              mt: 1, 
+                              fontStyle: "italic",
+                              px: 1,
+                              pb: 1
+                            }}
                           >
                             {section.videoDescription}
                           </Typography>
                         )}
                       </Box>
                     )}
-                  </Box>
-                );
-              })
+                  </CardContent>
+                </Card>
+              ))
             )}
           </Box>
         </Box>
       </Box>
 
-      {/* Separate Update Button for Content Sections */}
+      {/* Separate Update Button for Content Sections - match KingDetail.jsx */}
       {isEditing && user && user.role === "admin" && (
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 800,
+            mx: "auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             mt: 4,
             pt: 2,
-            borderTop: '1px solid #000',
-            maxWidth: 800,
-            mx: 'auto',
-            width: '100%'
+            borderTop: "1px solid #000",
+            boxShadow: "0 -2px 10px rgba(0,0,0,0.05)",
+            position: "sticky",
+            bottom: 0,
+            backgroundColor: "white",
+            zIndex: 100,
+            py: 2,
+            px: 3,
+            borderRadius: "10px 10px 0 0"
           }}
         >
           <Button
             onClick={() => setIsEditing(false)}
-            sx={{ 
-              color: '#000',
-              '&:hover': { 
-                bgcolor: 'rgba(0,0,0,0.05)' 
+            variant="text"
+            sx={{
+              color: "#000",
+              textTransform: "uppercase",
+              fontWeight: "bold",
+              "&:hover": {
+                bgcolor: "rgba(0,0,0,0.05)"
               }
             }}
           >
             Cancel
           </Button>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              onClick={addContentSection}
-              variant="outlined"
-              startIcon={<Add />}
-              sx={{
-                color: '#000',
-                borderColor: '#000',
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.05)'
-                }
-              }}
-            >
-              Add Section
-            </Button>
-            <Button
-              onClick={handleSave}
-              variant="contained"
-              sx={{
-                bgcolor: '#000',
-                color: '#fff',
-                '&:hover': { 
-                  bgcolor: '#333' 
-                }
-              }}
-            >
-              Update Details
-            </Button>
-          </Box>
+          
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            sx={{
+              bgcolor: "#000",
+              color: "#fff",
+              fontWeight: 'bold',
+              textTransform: "uppercase",
+              px: 4,
+              "&:hover": {
+                bgcolor: "#333"
+              }
+            }}
+          >
+            Update Details
+          </Button>
         </Box>
       )}
 
@@ -1427,44 +1472,43 @@ function DanceDetail() {
         </Box>
 
         {/* Comments Section */}
-        <Box 
-          sx={{ 
-            mt: 4, 
-            width: '100%', 
-            maxWidth: 800,  
-            mx: 'auto',    
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'stretch',
-            border: '1px solid #000',
+        <Box
+          sx={{
+            mt: 4,
+            width: "100%",
+            maxWidth: 800,
+            mx: "auto",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+            border: "1px solid #000",
             p: 2,
-            backgroundColor: '#fff',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            backgroundColor: "#fff",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           }}
         >
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               fontWeight: 700,
-              textTransform: 'uppercase',
-              textAlign: 'center',
+              textTransform: "uppercase",
+              textAlign: "center",
               letterSpacing: 1,
-              borderBottom: '1px solid #000',
+              borderBottom: "1px solid #000",
               pb: 1,
               mb: 2,
-              fontFamily: "'Montserrat', sans-serif"
             }}
           >
             Comments ({comments.length})
           </Typography>
 
           {/* Comment Input */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
               mb: 3,
-              position: 'relative'
+              position: "relative",
             }}
           >
             <TextField
@@ -1473,30 +1517,29 @@ function DanceDetail() {
               placeholder="Write a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              sx={{ 
+              sx={{
                 flex: 1,
-                fontFamily: "'Open Sans', sans-serif",
-                '& .MuiInput-underline:before': {
-                  borderBottomColor: '#000',
+                "& .MuiInput-underline:before": {
+                  borderBottomColor: "#000",
                 },
-                '& .MuiInput-underline:after': {
-                  borderBottomColor: '#000',
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "#000",
                 },
               }}
             />
-            <IconButton 
+            <IconButton
               onClick={handleAddComment}
               disabled={!newComment.trim() || !user}
               sx={{
-                position: 'absolute',
+                position: "absolute",
                 right: 0,
-                color: '#000',
-                '&:hover': {
-                  bgcolor: 'transparent'
+                color: "#000",
+                "&:hover": {
+                  bgcolor: "transparent",
                 },
-                '&.Mui-disabled': {
-                  color: '#ccc'
-                }
+                "&.Mui-disabled": {
+                  color: "#ccc",
+                },
               }}
             >
               <Send />
@@ -1505,66 +1548,61 @@ function DanceDetail() {
 
           {/* Comments List */}
           {comments.length === 0 ? (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                textAlign: 'center', 
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: "center",
                 py: 2,
-                color: '#666',
-                fontStyle: 'italic',
-                fontFamily: "'Open Sans', sans-serif"
+                color: "#666",
+                fontStyle: "italic",
               }}
             >
               No comments yet. Be the first to comment!
             </Typography>
           ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {comments.map((comment) => (
-                <Box 
-                  key={comment._id} 
-                  sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column',
+                <Box
+                  key={comment._id}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
                     gap: 1,
-                    border: '1px solid #eee',
+                    border: "1px solid #eee",
                     borderRadius: 2,
                     p: 2,
-                    position: 'relative'
+                    position: "relative",
                   }}
                 >
                   {/* Main Comment */}
                   <Box
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 1
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 1,
                     }}
                   >
                     <Typography
                       variant="subtitle2"
-                      sx={{ 
-                        fontFamily: "'Montserrat', sans-serif", 
-                        fontWeight: 700, 
-                        textTransform: 'uppercase',
-                        fontSize: '0.75rem',
-                        color: '#333',
-                        letterSpacing: 0.5
+                      sx={{
                       }}
                     >
-                      {comment.user?.displayName || 'Anonymous'}
+                      {comment.user?.displayName || "Anonymous"}
                     </Typography>
-                    <Typography 
-                      variant="caption"
-                      sx={{ 
-                        fontFamily: "'Roboto', sans-serif",
-                        color: '#666',
-                        fontSize: '0.625rem',
-                        fontStyle: 'italic'
-                      }}
-                    >
-                      {new Date(comment.createdAt).toLocaleString()}
-                    </Typography>
+                    {user?.role === "admin" && (
+                      <IconButton
+                        onClick={() => {
+                          setItemToDelete(comment._id);
+                          setDeleteType("comment");
+                          setDeleteDialogOpen(true);
+                        }}
+                        size="small"
+                        sx={{ color: "#000" }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    )}
                   </Box>
 
                   {/* Comment Content */}
@@ -1925,65 +1963,22 @@ function DanceDetail() {
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-          sx={{
-            '& .MuiDialog-paper': {
-              borderRadius: 0,
-              border: '2px solid #000',
-            }
-          }}
         >
-          <DialogTitle
-            sx={{
-              bgcolor: '#000', 
-              color: '#fff', 
-              textAlign: 'center',
-              fontWeight: 700 
-            }}
-          >
-            Confirm Delete
-          </DialogTitle>
-          <DialogContent sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Are you sure you want to delete this {deleteType}?
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
-              This action cannot be undone.
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete this {deleteType}? This action
+              cannot be undone.
             </Typography>
           </DialogContent>
-          <DialogActions
-            sx={{ 
-              p: 2, 
-              justifyContent: 'center',
-              gap: 2,
-              bgcolor: '#f0f0f0' 
-            }}
-          >
-            <Button 
-              onClick={() => setDeleteDialogOpen(false)}
-              sx={{ 
-                color: '#000',
-                border: '1px solid #000',
-                '&:hover': {
-                  bgcolor: 'rgba(0,0,0,0.05)'
-                }
-              }}
-            >
-              Cancel
-            </Button>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
             <Button
               onClick={handleDeleteItem}
+              color="error"
               variant="contained"
-              sx={{
-                bgcolor: '#000',
-                color: '#fff',
-                '&:hover': { 
-                  bgcolor: '#333'
-                }
-              }}
             >
-              Delete {deleteType === 'comment' ? 'Comment' : 'Reply'}
+              Delete
             </Button>
           </DialogActions>
         </Dialog>

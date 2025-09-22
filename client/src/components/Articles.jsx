@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Grid, 
@@ -24,6 +25,7 @@ import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
 
 export default function Articles({ user }) {
+  const { t } = useTranslation();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,31 +57,9 @@ export default function Articles({ user }) {
       console.error('Error fetching articles:', err);
       setError(err.message);
       setLoading(false);
-      setArticles(dummyArticles); // Fallback to dummy data
+      setArticles([]); // Fallback to an empty array instead of dummy data
     }
   };
-
-  // Dummy data for Articles
-  const dummyArticles = [
-    {
-      _id: "1",
-      title: "The History of Tamil Language",
-      author: "Dr. K. Tamilselvan",
-      content: "Tamil, one of the longest-surviving classical languages in the world, has a rich literary tradition and a unique linguistic heritage that spans over two millennia.",
-      category: "History",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      createdAt: new Date(),
-    },
-    {
-      _id: "2",
-      title: "Dravidian Architecture Marvels",
-      author: "Prof. S. Karthik",
-      content: "The temples of Tamil Nadu are renowned for their towering gopurams and intricate sculptures, representing the pinnacle of Dravidian architectural style and artistic excellence.",
-      category: "Architecture",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      createdAt: new Date(),
-    },
-  ];
 
   const handleAdd = () => {
     setCurrentArticle({
@@ -185,14 +165,19 @@ export default function Articles({ user }) {
       <Box 
         sx={{ 
           mb: 6, 
-          textAlign: 'center', 
+          // textAlign: 'center', // Removed as flexbox will handle alignment
           position: 'relative',
           overflow: 'hidden',
+          display: 'flex', // Added for flexbox layout
+          alignItems: 'center', // Center items vertically
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center', // Space between heading and button
+          flexDirection: { xs: 'column', md: 'row' }, // Stack on small screens
+          gap: { xs: 2, md: 0 }, // Gap when stacked
         }}
       >
-        <Typography 
+        <Typography
           variant="h2" 
-          sx={{ 
+            sx={{
             fontWeight: 900, 
             color: "#000", 
             position: 'relative',
@@ -238,19 +223,21 @@ export default function Articles({ user }) {
             },
           }}
         >
-          Tamil Articles
+          {t('nav.articles')}
         </Typography>
         
         {user && user.role === "admin" && (
           <Box 
             sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
+              // Removed absolute positioning for responsiveness
+              // position: 'absolute', 
+              // right: 0, 
+              // top: '50%', 
+              // transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                // transform: 'translateY(-50%) scale(1.05)', 
+                transform: 'scale(1.05)', // Adjusted for non-absolute positioning
                 '& button': {
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -275,7 +262,7 @@ export default function Articles({ user }) {
                 px: 3,
               }}
             >
-              Add Article
+              {t('articles.add', 'Add Article')}
             </Button>
           </Box>
         )}
@@ -318,8 +305,9 @@ export default function Articles({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 }, // Responsive width: full on xs, fixed on sm+
+                  maxWidth: '100%', // Ensure it doesn't exceed parent on smaller screens
+                  // height: 450, // Removed fixed height
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -357,7 +345,7 @@ export default function Articles({ user }) {
                 {(article.image) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200} // Explicitly set height
                     image={article.image}
                     alt={article.title}
                     sx={{ 
@@ -405,18 +393,21 @@ export default function Articles({ user }) {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
+                    // position: 'relative', // Removed as admin buttons are no longer absolute within CardContent
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {user && user.role === "admin" && (
                     <Box 
                       sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
+                        // Removed absolute positioning for responsiveness
+                        // position: 'absolute', 
+                        // top: 10, 
+                        // right: 10, 
                         display: "flex", 
-                        gap: 1 
+                        justifyContent: 'flex-end', // Align buttons to the right
+                        gap: 1, 
+                        mb: 2, // Margin bottom to separate from title
                       }}
                     >
                       <IconButton
@@ -465,7 +456,7 @@ export default function Articles({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -479,7 +470,7 @@ export default function Articles({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: '0.8rem', md: '0.9rem' }, // Responsive font size
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
@@ -497,7 +488,7 @@ export default function Articles({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
                       }}
                     >
                       {article.content.length > 150 
@@ -519,7 +510,7 @@ export default function Articles({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('common.readMore', 'Read More')}
                   </Button>
                 </CardContent>
               </Card>
@@ -536,32 +527,32 @@ export default function Articles({ user }) {
         fullWidth
       >
         <DialogTitle>
-          {currentArticle._id ? 'Edit Article' : 'Add New Article'}
+          {currentArticle._id ? t('articles.edit', 'Edit Article') : t('articles.addNew', 'Add New Article')}
         </DialogTitle>
         <DialogContent>
           <TextField
-            label="Title"
+            label={t('articles.title', 'Title')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentArticle.title}
             onChange={(e) => setCurrentArticle({...currentArticle, title: e.target.value})}
           />
           <TextField
-            label="Author"
+            label={t('articles.author', 'Author')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentArticle.author}
             onChange={(e) => setCurrentArticle({...currentArticle, author: e.target.value})}
           />
           <TextField
-            label="Category"
+            label={t('articles.category', 'Category')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentArticle.category}
             onChange={(e) => setCurrentArticle({...currentArticle, category: e.target.value})}
           />
           <TextField
-            label="Content"
+            label={t('articles.content', 'Content')}
             fullWidth
             multiline
             minRows={5}
@@ -578,13 +569,13 @@ export default function Articles({ user }) {
             currentVideoLink={currentArticle.videoLink}
             currentImage={currentArticle.image}
             currentVideo={currentArticle.videoUrl}
-            label="Media Links"
+            label={t('articles.mediaLinks', 'Media Links')}
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
         </DialogActions>
       </Dialog>
     </Container>

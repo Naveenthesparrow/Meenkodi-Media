@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import TempleDetail from "./components/details/TempleDetail";
 import KingDetail from "./components/details/KingDetail";
 import LiteratureDetail from "./components/details/LiteratureDetail";
@@ -32,16 +33,46 @@ import Foods from "./components/categories/Foods";
 import AncientScience from "./components/categories/AncientScience";
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
-import { AppBar, Toolbar, Button, Box, Link, Typography } from "@mui/material";
+import { 
+  AppBar, 
+  Toolbar, 
+  Button, 
+  Box, 
+  Link, 
+  Typography, 
+  IconButton, 
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemText 
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 import GalleryDetail from "./components/GalleryDetail";
 import ArticleDetail from "./components/ArticleDetail";
 import ResourceDetail from "./components/ResourceDetail";
 import AncientScienceDetail from "./components/details/AncientScienceDetail";
 import ClothingDetail from "./components/details/ClothingDetail";
+import LanguageSwitcher from './components/common/LanguageSwitcher';
+
+// Debug function for tracking 404 errors
+function setupResourceErrorLogging() {
+  window.addEventListener('error', (event) => {
+    if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK' || event.target.tagName === 'IMG')) {
+      console.error('Failed to load resource:', {
+        src: event.target.src || event.target.href,
+        tagName: event.target.tagName,
+        message: event.message
+      });
+    }
+  });
+}
 
 function App() {
+  const { t } = useTranslation();
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const fetchUser = React.useCallback(() => {
     console.log("Fetching user authentication status...");
@@ -94,6 +125,11 @@ function App() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [fetchUser]);
 
+  // Call resource error logging on component mount
+  useEffect(() => {
+    setupResourceErrorLogging();
+  }, []);
+
   const login = () => {
     console.log("Redirecting to Google OAuth...");
     window.location.href = `${
@@ -108,6 +144,27 @@ function App() {
     }/auth/logout`;
   };
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const navItems = [
+    { text: t('nav.explore'), path: "/explore" },
+    { text: t('nav.events'), path: "/events" },
+    { text: t('nav.gallery'), path: "/gallery" },
+    { text: t('nav.articles'), path: "/articles" },
+    { text: t('nav.resources'), path: "/resources" },
+  ];
+
+  const userNavItems = user 
+    ? [
+        { text: t('app.profile'), path: "/profile" },
+        { text: t('app.logout'), action: logout }
+      ]
+    : [
+        { text: t('app.loginWithGoogle'), action: login }
+      ];
+
   if (loading) {
     return (
       <Box
@@ -118,7 +175,7 @@ function App() {
           height: "100vh",
         }}
       >
-        <Typography>Loading...</Typography>
+        <Typography>{t('app.loading')}</Typography>
       </Box>
     );
   }
@@ -128,13 +185,24 @@ function App() {
       <AppBar
         position="static"
         elevation={0}
-        sx={{ bgcolor: "#fff", color: "#111", boxShadow: 1 }}
+        sx={{ 
+          bgcolor: "#fff", 
+          color: "#111", 
+          boxShadow: 1 
+        }}
       >
-        <Toolbar sx={{ fontFamily: "Inter, Arial, sans-serif" }}>
+        <Toolbar 
+          sx={{ 
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            px: { xs: 2, sm: 3 },
+            py: { xs: 1, sm: 2 }
+          }}
+        >
           <Typography
             variant="h6"
             sx={{
-              flexGrow: 1,
               fontWeight: 900,
               color: "#111",
               fontFamily: "Poppins, Arial, sans-serif",
@@ -152,119 +220,216 @@ function App() {
                 fontFamily: "Poppins, Arial, sans-serif",
                 letterSpacing: 1,
                 textTransform: "uppercase",
-                fontSize: 24,
+                fontSize: { xs: 20, sm: 24 },
               }}
             >
-              Tamil Heritage
+              {t('app.title')}
             </Link>
           </Typography>
-          <Button
-            variant="text"
-            sx={{
-              color: "#111",
-              fontFamily: "Poppins, Arial, sans-serif",
-              fontWeight: 600,
-              letterSpacing: 0.5,
+
+          {/* Desktop Navigation */}
+          <Box 
+            sx={{ 
+              display: { xs: 'none', sm: 'flex' },
+              alignItems: 'center',
+              gap: 2 
             }}
-            component={RouterLink}
-            to="/explore"
           >
-            Explore
-          </Button>
-          <Button
-            variant="text"
-            sx={{
-              color: "#111",
-              fontFamily: "Poppins, Arial, sans-serif",
-              fontWeight: 600,
-              letterSpacing: 0.5,
-            }}
-            component={RouterLink}
-            to="/events"
-          >
-            Events
-          </Button>
-          <Button
-            variant="text"
-            sx={{
-              color: "#111",
-              fontFamily: "Poppins, Arial, sans-serif",
-              fontWeight: 600,
-              letterSpacing: 0.5,
-            }}
-            component={RouterLink}
-            to="/gallery"
-          >
-            Gallery
-          </Button>
-          <Button
-            variant="text"
-            sx={{
-              color: "#111",
-              fontFamily: "Poppins, Arial, sans-serif",
-              fontWeight: 600,
-              letterSpacing: 0.5,
-            }}
-            component={RouterLink}
-            to="/articles"
-          >
-            Articles
-          </Button>
-          <Button
-            variant="text"
-            sx={{
-              color: "#111",
-              fontFamily: "Poppins, Arial, sans-serif",
-              fontWeight: 600,
-              letterSpacing: 0.5,
-            }}
-            component={RouterLink}
-            to="/resources"
-          >
-            Resources
-          </Button>
-          {user ? (
-            <>
+            {navItems.map((item) => (
               <Button
+                key={item.path}
                 variant="text"
+                component={RouterLink}
+                to={item.path}
                 sx={{
                   color: "#111",
                   fontFamily: "Poppins, Arial, sans-serif",
                   fontWeight: 600,
                   letterSpacing: 0.5,
                 }}
+              >
+                {item.text}
+              </Button>
+            ))}
+            <LanguageSwitcher />
+            {user && (
+              <Button
+                variant="text"
                 component={RouterLink}
                 to="/profile"
+                sx={{
+                  color: "#111",
+                  fontFamily: "Poppins, Arial, sans-serif",
+                  fontWeight: 600,
+                  letterSpacing: 0.5,
+                }}
               >
-                Profile
+                {t('app.profile')}
               </Button>
+            )}
+            {user ? (
               <Button
                 variant="outlined"
+                onClick={logout}
                 sx={{
                   color: "#111",
                   borderColor: "#111",
                   fontFamily: "Poppins, Arial, sans-serif",
-                  ml: 1,
                 }}
-                onClick={logout}
               >
-                Logout
+                {t('app.logout')}
               </Button>
-            </>
-          ) : (
-            <Button
-              variant="outlined"
-              sx={{
-                color: "#111",
-                borderColor: "#111",
-                fontFamily: "Poppins, Arial, sans-serif",
-                ml: 1,
+            ) : (
+              <Button
+                variant="outlined"
+                onClick={login}
+                sx={{
+                  color: "#111",
+                  borderColor: "#111",
+                  fontFamily: "Poppins, Arial, sans-serif",
+                }}
+              >
+                {t('app.login')}
+              </Button>
+            )}
+          </Box>
+
+          {/* Mobile Navigation Hamburger */}
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ 
+              display: { sm: 'none' }, 
+              color: '#111' 
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+
+          {/* Mobile Drawer */}
+          <Drawer
+            variant="temporary"
+            anchor="right"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+            sx={{
+              display: { xs: 'block', sm: 'none' },
+              '& .MuiDrawer-paper': { 
+                boxSizing: 'border-box', 
+                width: 240,
+                bgcolor: '#fff',
+                color: '#111'
+              },
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                p: 2 
               }}
-              onClick={login}
             >
-              Login with Google
-            </Button>
-          )}
+              <Typography variant="h6">{t('app.menu')}</Typography>
+              <LanguageSwitcher size="small" />
+              <IconButton onClick={handleDrawerToggle}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+            <List>
+              {navItems.map((item) => (
+                <ListItem 
+                  key={item.path}
+                  component={RouterLink}
+                  to={item.path}
+                  onClick={handleDrawerToggle}
+                  sx={{ 
+                    color: '#111',
+                    '&:hover': { 
+                      bgcolor: '#f0f0f0' 
+                    }
+                  }}
+                >
+                  <ListItemText 
+                    primary={item.text} 
+                    primaryTypographyProps={{
+                      fontFamily: "Poppins, Arial, sans-serif",
+                      fontWeight: 600,
+                    }}
+                  />
+                </ListItem>
+              ))}
+              {user && (
+                <ListItem 
+                  component={RouterLink}
+                  to="/profile"
+                  onClick={handleDrawerToggle}
+                  sx={{ 
+                    color: '#111',
+                    '&:hover': { 
+                      bgcolor: '#f0f0f0' 
+                    }
+                  }}
+                >
+                  <ListItemText 
+                    primary={t('app.profile')} 
+                    primaryTypographyProps={{
+                      fontFamily: "Poppins, Arial, sans-serif",
+                      fontWeight: 600,
+                    }}
+                  />
+                </ListItem>
+              )}
+              {user ? (
+                <ListItem 
+                  onClick={() => {
+                    logout();
+                    handleDrawerToggle();
+                  }}
+                  sx={{ 
+                    color: '#111',
+                    '&:hover': { 
+                      bgcolor: '#f0f0f0' 
+                    }
+                  }}
+                >
+                  <ListItemText 
+                    primary={t('app.logout')} 
+                    primaryTypographyProps={{
+                      fontFamily: "Poppins, Arial, sans-serif",
+                      fontWeight: 600,
+                    }}
+                  />
+                </ListItem>
+              ) : (
+                <ListItem 
+                  onClick={() => {
+                    login();
+                    handleDrawerToggle();
+                  }}
+                  sx={{ 
+                    color: '#111',
+                    '&:hover': { 
+                      bgcolor: '#f0f0f0' 
+                    }
+                  }}
+                >
+                  <ListItemText 
+                    primary={t('app.login')} 
+                    primaryTypographyProps={{
+                      fontFamily: "Poppins, Arial, sans-serif",
+                      fontWeight: 600,
+                    }}
+                  />
+                </ListItem>
+              )}
+            </List>
+          </Drawer>
         </Toolbar>
       </AppBar>
       <Box sx={{ mt: 4 }}>
@@ -323,7 +488,7 @@ function App() {
               ) : (
                 <Box sx={{ textAlign: "center", mt: 4 }}>
                   <Typography variant="h4" sx={{ mb: 2 }}>
-                    Please log in to view your profile
+                    {t('app.pleaseLogin')}
                   </Typography>
                   <Button
                     variant="contained"
@@ -334,7 +499,7 @@ function App() {
                       "&:hover": { bgcolor: "#333" },
                     }}
                   >
-                    Login with Google
+                    {t('app.loginWithGoogle')}
                   </Button>
                 </Box>
               )

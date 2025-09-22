@@ -29,6 +29,7 @@ import {
   Add,
   Architecture,
   Star,
+  Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 
@@ -46,78 +47,6 @@ export default function Temples({ user }) {
     image: "",
   });
 
-  // Dummy data with rich content
-  const dummyTemples = [
-    {
-      _id: "1",
-      name: "Brihadeeswarar Temple",
-      location: "Thanjavur, Tamil Nadu",
-      deity: "Lord Shiva",
-      period: "11th Century CE (1010 CE)",
-      dynasty: "Chola Dynasty",
-      builder: "Raja Raja Chola I",
-      description:
-        "A magnificent example of Dravidian architecture and one of the Great Living Chola Temples.",
-      significance:
-        "UNESCO World Heritage Site showcasing the pinnacle of Chola architectural achievement.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The Brihadeeswarar Temple stands as a testament to the architectural brilliance of the Chola dynasty.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "2",
-      name: "Meenakshi Amman Temple",
-      location: "Madurai, Tamil Nadu",
-      deity: "Goddess Meenakshi & Lord Sundareswarar",
-      period: "6th Century CE (rebuilt 17th Century)",
-      dynasty: "Pandya Dynasty (Nayak Period)",
-      builder: "Kulasekara Pandya (rebuilt by Nayaks)",
-      description:
-        "Famous temple complex known for its towering gopurams and intricate sculptures.",
-      significance:
-        "Major pilgrimage site and architectural marvel with 14 magnificent gateway towers.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The Meenakshi Amman Temple is a historic Hindu temple complex with stunning Dravidian architecture.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "3",
-      name: "Ramanathaswamy Temple",
-      location: "Rameswaram, Tamil Nadu",
-      deity: "Lord Ramanathaswamy (Shiva)",
-      period: "12th Century CE",
-      dynasty: "Pandya Dynasty",
-      builder: "Various Pandya Kings",
-      description:
-        "Sacred temple known for its magnificent corridors and holy water tanks.",
-      significance:
-        "One of the twelve Jyotirlinga temples and part of the Char Dham pilgrimage.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The temple is famous for its longest temple corridor in the world and sacred significance in Ramayana.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "4",
-      name: "Kapaleeshwarar Temple",
-      location: "Mylapore, Chennai",
-      deity: "Lord Kapaleeshwarar (Shiva)",
-      period: "7th Century CE (rebuilt 16th Century)",
-      dynasty: "Pallava Dynasty",
-      builder: "Pallava Kings (rebuilt by Vijayanagara)",
-      description:
-        "Ancient temple dedicated to Lord Shiva with beautiful Dravidian architecture.",
-      significance:
-        "One of Chennai's oldest temples with rich cultural and religious heritage.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The temple is associated with various legends and hosts the famous Arubathimoovar festival.",
-      createdAt: new Date(),
-    },
-  ];
-
   const handleCardClick = (templeId) => {
     navigate(`/explore/temples/${templeId}`);
   };
@@ -131,8 +60,8 @@ export default function Temples({ user }) {
       setTemples(data);
     } catch (err) {
       console.error(err);
-      // fallback to dummy data so UI isn't blank
-      setTemples(dummyTemples);
+      // fallback to an empty array so UI isn't blank
+      setTemples([]);
     } finally {
       setLoading(false);
     }
@@ -205,7 +134,25 @@ export default function Temples({ user }) {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this temple?")) {
-      setTemples(temples.filter((item) => item._id !== id));
+      (async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/temples/${id}`, {
+            method: "DELETE",
+            credentials: "include",
+          });
+          
+          if (!res.ok) throw new Error("Delete failed");
+          
+          // Optimistic update
+          setTemples(temples.filter((item) => item._id !== id));
+          
+          // Optional: Refresh to ensure consistency
+          await fetchTemples();
+        } catch (err) {
+          console.error(err);
+          alert("Failed to delete temple");
+        }
+      })();
     }
   };
 
@@ -223,14 +170,18 @@ export default function Temples({ user }) {
       <Box 
         sx={{ 
           mb: 6, 
-          textAlign: 'center', 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
+        <Typography
           variant="h2" 
-          sx={{ 
+            sx={{
             fontWeight: 900, 
             color: "#000", 
             position: 'relative',
@@ -276,19 +227,15 @@ export default function Temples({ user }) {
             },
           }}
         >
-          Sacred Tamil Temples
+          Temples
         </Typography>
         
         {user && user.role === "admin" && (
           <Box 
             sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                transform: 'scale(1.05)',
                 '& button': {
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -356,8 +303,10 @@ export default function Temples({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },  
+                  maxWidth: '100%',
+                  height: 'auto', 
+                  minHeight: 450,
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -395,7 +344,7 @@ export default function Temples({ user }) {
                 {(temple.image || temple.imageLink) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={temple.image || temple.imageLink}
                     alt={temple.name}
                     sx={{ 
@@ -408,7 +357,8 @@ export default function Temples({ user }) {
                     }}
                     onError={(e) => {
                       console.error('Image failed to load:', temple.image || temple.imageLink);
-                      e.target.style.display = 'none';
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
+                      e.target.style.display = 'block';
                     }}
                   />
                 ) : (
@@ -449,10 +399,16 @@ export default function Temples({ user }) {
                     <Box 
                       sx={{ 
                         position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
+                        top: 64, 
+                        right: 16, 
                         display: "flex", 
-                        gap: 1 
+                        gap: 2, 
+                        zIndex: 2,
+                        background: 'none',
+                        borderRadius: 0,
+                        boxShadow: 'none',
+                        border: 'none',
+                        p: 0
                       }}
                     >
                       <IconButton
@@ -501,7 +457,7 @@ export default function Temples({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' },
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -515,7 +471,7 @@ export default function Temples({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: '0.8rem', md: '0.9rem' },
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
@@ -533,11 +489,26 @@ export default function Temples({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Ensures consistent height for 3 lines
                       }}
                     >
                       {temple.period}
                     </Typography>
+                    
+                    {/* Like Count Display */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#000', 
+                          fontSize: '0.875rem',
+                          fontWeight: 500 
+                        }}
+                      >
+                        {temple.likes ? temple.likes.length : 0} Likes
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Button
@@ -591,31 +562,35 @@ export default function Temples({ user }) {
         <DialogContent sx={{ p: 3 }}>
               <TextField
                 fullWidth
-            label="Name"
+                label="Name"
                 value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                sx={{ mb: 2 }}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                sx={{ mb: 2, mt: 3 }}
+                InputLabelProps={{ shrink: true }}
               />
               <TextField
                 fullWidth
                 label="Location"
                 value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
               />
               <TextField
                 fullWidth
                 label="Period"
                 value={formData.period}
-            onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, period: e.target.value })}
                 sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
               />
               <TextField
                 fullWidth
                 label="Image URL"
                 value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
               />
         </DialogContent>
         <DialogActions

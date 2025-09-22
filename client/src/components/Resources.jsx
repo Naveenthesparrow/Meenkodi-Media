@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Grid, 
@@ -24,6 +25,7 @@ import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
 
 export default function Resources({ user }) {
+  const { t } = useTranslation();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -243,7 +245,7 @@ export default function Resources({ user }) {
             },
           }}
         >
-          Tamil Resources
+          {t('nav.resources')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -280,7 +282,7 @@ export default function Resources({ user }) {
                 px: 3,
               }}
             >
-              Add Resource
+              {t('resources.add', 'Add Resource')}
             </Button>
           </Box>
         )}
@@ -529,7 +531,7 @@ export default function Resources({ user }) {
                         "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                       }}
                     >
-                      Read More
+                      {t('common.readMore', 'Read More')}
                     </Button>
                     {resource.downloadLink && (
                       <Button
@@ -546,7 +548,7 @@ export default function Resources({ user }) {
                           },
                         }}
                       >
-                        Download
+                        {t('common.download', 'Download')}
                       </Button>
                     )}
                   </Box>
@@ -565,32 +567,32 @@ export default function Resources({ user }) {
         fullWidth
       >
         <DialogTitle>
-          {currentResource._id ? 'Edit Resource' : 'Add New Resource'}
+          {currentResource._id ? t('resources.edit', 'Edit Resource') : t('resources.addNew', 'Add New Resource')}
         </DialogTitle>
         <DialogContent>
           <TextField
-            label="Title"
+            label={t('resources.title', 'Title')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentResource.title}
             onChange={(e) => setCurrentResource({...currentResource, title: e.target.value})}
           />
           <TextField
-            label="Author"
+            label={t('resources.author', 'Author')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentResource.author}
             onChange={(e) => setCurrentResource({...currentResource, author: e.target.value})}
           />
           <TextField
-            label="Category"
+            label={t('resources.category', 'Category')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentResource.category}
             onChange={(e) => setCurrentResource({...currentResource, category: e.target.value})}
           />
           <TextField
-            label="Description"
+            label={t('resources.description', 'Description')}
             fullWidth
             multiline
             minRows={5}
@@ -599,12 +601,12 @@ export default function Resources({ user }) {
             onChange={(e) => setCurrentResource({...currentResource, description: e.target.value})}
           />
           <TextField
-            label="Download Link"
+            label={t('resources.downloadLink', 'Download Link')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentResource.downloadLink}
             onChange={(e) => setCurrentResource({...currentResource, downloadLink: e.target.value})}
-            placeholder="Optional: Add a download link for the resource"
+            placeholder={t('resources.downloadLinkPlaceholder', 'Optional: Add a download link for the resource')}
           />
           <MediaUpload
             onImageLinkChange={(link) => {
@@ -621,13 +623,13 @@ export default function Resources({ user }) {
             currentVideoLink={''} // No video link in this dialog
             currentImage={currentResource.image}
             currentVideo={''} // No video URL in this dialog
-            label="Media Links"
+            label={t('resources.mediaLinks', 'Media Links')}
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
         </DialogActions>
       </Dialog>
     </Container>

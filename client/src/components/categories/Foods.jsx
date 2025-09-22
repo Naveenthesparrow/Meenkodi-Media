@@ -33,6 +33,7 @@ import {
   Edit,
   Delete,
   Add,
+  Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 
@@ -51,314 +52,6 @@ export default function Foods({ user }) {
     image: "",
   });
 
-  // Rich Tamil cuisine data
-  const dummyFoods = [
-    {
-      _id: "1",
-      name: "Sambar",
-      tamilName: "சாம்பார்",
-      category: "Main Course",
-      region: "All Tamil Regions",
-      difficulty: "Medium",
-      cookingTime: "45 minutes",
-      servings: "4-6",
-      rating: 4.8,
-      description:
-        "Traditional Tamil lentil curry with vegetables, tamarind, and aromatic spices. A staple dish served with rice, idli, or dosa.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      ingredients: [
-        "Toor dal - 1 cup",
-        "Tamarind - lemon size",
-        "Drumstick - 2 pieces",
-        "Brinjal - 1 medium",
-        "Tomato - 1 large",
-        "Onion - 1 medium",
-        "Sambar powder - 2 tbsp",
-        "Turmeric powder - 1/2 tsp",
-        "Curry leaves",
-        "Coriander leaves",
-        "Ghee - 2 tbsp",
-      ],
-      preparation: [
-        "Cook toor dal with turmeric until soft",
-        "Soak tamarind in water and extract juice",
-        "Cut vegetables into medium pieces",
-        "Heat ghee, add mustard seeds, curry leaves",
-        "Add vegetables and cook until tender",
-        "Add tamarind juice, sambar powder, salt",
-        "Add cooked dal and simmer",
-        "Garnish with coriander leaves",
-      ],
-      culturalSignificance:
-        "Essential part of Tamil meals, represents the balance of six tastes in Ayurveda",
-      nutritionalBenefits: [
-        "High protein from lentils",
-        "Rich in vitamins from vegetables",
-        "Good source of fiber",
-      ],
-      occasions: [
-        "Daily meals",
-        "Festival celebrations",
-        "Religious offerings",
-      ],
-      createdAt: new Date(),
-    },
-    {
-      _id: "2",
-      name: "Pongal",
-      tamilName: "பொங்கல்",
-      category: "Main Course",
-      region: "Tamil Nadu",
-      difficulty: "Easy",
-      cookingTime: "30 minutes",
-      servings: "4",
-      rating: 4.9,
-      description:
-        "Traditional rice and lentil porridge, both sweet and savory versions. Especially significant during Pongal festival celebrations.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      ingredients: [
-        "Raw rice - 1 cup",
-        "Moong dal - 1/4 cup",
-        "Water - 4 cups",
-        "Milk - 1 cup",
-        "Ghee - 3 tbsp",
-        "Cashews - 10",
-        "Black pepper - 1 tsp",
-        "Cumin seeds - 1 tsp",
-        "Ginger - 1 inch",
-        "Curry leaves",
-        "Salt to taste",
-      ],
-      preparation: [
-        "Wash rice and dal together",
-        "Pressure cook with water until soft",
-        "Heat ghee in pan, add cashews",
-        "Add pepper, cumin, ginger, curry leaves",
-        "Add cooked rice-dal mixture",
-        "Add milk and mix well",
-        "Season with salt",
-        "Serve hot with ghee on top",
-      ],
-      culturalSignificance:
-        "Sacred food offered to Sun God during Pongal festival, symbolizes prosperity",
-      nutritionalBenefits: [
-        "Complete protein",
-        "Easy to digest",
-        "Good for all ages",
-      ],
-      occasions: ["Pongal festival", "Temple offerings", "Recovery meals"],
-      createdAt: new Date(),
-    },
-    {
-      _id: "3",
-      name: "Rasam",
-      tamilName: "ரசம்",
-      category: "Soup",
-      region: "South Tamil Nadu",
-      difficulty: "Medium",
-      cookingTime: "25 minutes",
-      servings: "4",
-      rating: 4.7,
-      description:
-        "Tangy tamarind-based soup with aromatic spices, perfect for digestion. A comforting dish often served with rice.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      ingredients: [
-        "Tamarind - small lemon size",
-        "Tomato - 2 medium",
-        "Rasam powder - 1 tbsp",
-        "Turmeric - 1/2 tsp",
-        "Ghee - 2 tbsp",
-        "Mustard seeds - 1 tsp",
-        "Cumin seeds - 1 tsp",
-        "Red chili - 2",
-        "Asafoetida - pinch",
-        "Curry leaves",
-        "Coriander leaves",
-        "Salt to taste",
-      ],
-      preparation: [
-        "Extract thick tamarind juice",
-        "Chop tomatoes finely",
-        "Heat ghee, add mustard, cumin seeds",
-        "Add red chili, asafoetida, curry leaves",
-        "Add tomatoes, cook until soft",
-        "Add tamarind juice, rasam powder",
-        "Add turmeric, salt, and water",
-        "Boil and garnish with coriander",
-      ],
-      culturalSignificance:
-        "Traditional digestive aid, consumed at end of heavy meals",
-      nutritionalBenefits: [
-        "Aids digestion",
-        "Rich in vitamin C",
-        "Antioxidant properties",
-      ],
-      occasions: ["Daily meals", "During illness", "Monsoon season"],
-      createdAt: new Date(),
-    },
-    {
-      _id: "4",
-      name: "Chettinad Chicken",
-      tamilName: "செட்டிநாடு கோழி",
-      category: "Non-Vegetarian",
-      region: "Chettinad",
-      difficulty: "Hard",
-      cookingTime: "1 hour",
-      servings: "4",
-      rating: 4.9,
-      description:
-        "Spicy and flavorful chicken curry from Chettinad region, known for its unique blend of roasted spices and coconut.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      ingredients: [
-        "Chicken - 1 kg",
-        "Coconut - 1 cup grated",
-        "Dry red chili - 8-10",
-        "Coriander seeds - 2 tbsp",
-        "Fennel seeds - 1 tbsp",
-        "Black pepper - 1 tsp",
-        "Cinnamon - 2 inch",
-        "Cardamom - 4",
-        "Cloves - 6",
-        "Star anise - 2",
-        "Onion - 3 large",
-        "Tomato - 2",
-        "Ginger-garlic paste - 2 tbsp",
-      ],
-      preparation: [
-        "Marinate chicken with turmeric, salt",
-        "Dry roast all spices until fragrant",
-        "Grind roasted spices with coconut",
-        "Heat oil, fry chicken pieces",
-        "Sauté onions until golden brown",
-        "Add ginger-garlic paste, tomatoes",
-        "Add ground spice paste, cook well",
-        "Add fried chicken, simmer until done",
-      ],
-      culturalSignificance:
-        "Pride of Chettinad cuisine, represents rich culinary heritage",
-      nutritionalBenefits: [
-        "High protein",
-        "Rich in spices with medicinal properties",
-        "Good iron content",
-      ],
-      occasions: [
-        "Special occasions",
-        "Wedding feasts",
-        "Festival celebrations",
-      ],
-      createdAt: new Date(),
-    },
-    {
-      _id: "5",
-      name: "Payasam",
-      tamilName: "பாயசம்",
-      category: "Dessert",
-      region: "Kerala-Tamil Border",
-      difficulty: "Medium",
-      cookingTime: "45 minutes",
-      servings: "6",
-      rating: 4.8,
-      description:
-        "Traditional sweet pudding made with rice, milk, and jaggery. A must-have dessert for festivals and celebrations.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      ingredients: [
-        "Raw rice - 1/2 cup",
-        "Full fat milk - 1 liter",
-        "Jaggery - 1/2 cup",
-        "Ghee - 3 tbsp",
-        "Cashews - 15",
-        "Raisins - 2 tbsp",
-        "Cardamom powder - 1 tsp",
-        "Coconut milk - 1/2 cup",
-        "Edible camphor - pinch",
-      ],
-      preparation: [
-        "Wash and soak rice for 30 minutes",
-        "Boil milk in heavy bottomed pan",
-        "Add rice and cook until soft",
-        "Dissolve jaggery in little water",
-        "Add jaggery syrup to rice-milk",
-        "Heat ghee, fry cashews and raisins",
-        "Add fried nuts to payasam",
-        "Add cardamom powder and coconut milk",
-      ],
-      culturalSignificance:
-        "Sacred offering in temples, essential for all celebrations",
-      nutritionalBenefits: [
-        "Rich in calcium",
-        "Good carbohydrates",
-        "Natural sweetener",
-      ],
-      occasions: [
-        "Festivals",
-        "Weddings",
-        "Temple offerings",
-        "Birthday celebrations",
-      ],
-      createdAt: new Date(),
-    },
-    {
-      _id: "6",
-      name: "Idli",
-      tamilName: "இட்லி",
-      category: "Breakfast",
-      region: "All Tamil Regions",
-      difficulty: "Medium",
-      cookingTime: "8 hours fermentation + 15 minutes cooking",
-      servings: "20 pieces",
-      rating: 4.9,
-      description:
-        "Steamed rice and lentil cakes, light and fluffy. A healthy breakfast staple served with sambar and chutney.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      ingredients: [
-        "Idli rice - 3 cups",
-        "Urad dal - 1 cup",
-        "Fenugreek seeds - 1 tsp",
-        "Salt - 1 tsp",
-        "Water as needed",
-      ],
-      preparation: [
-        "Soak rice and dal separately for 4-5 hours",
-        "Grind urad dal to fluffy batter",
-        "Grind rice to slightly coarse batter",
-        "Mix both batters with salt",
-        "Ferment overnight in warm place",
-        "Pour batter in idli moulds",
-        "Steam for 12-15 minutes",
-        "Serve hot with accompaniments",
-      ],
-      culturalSignificance:
-        "Symbol of South Indian cuisine, represents healthy living",
-      nutritionalBenefits: [
-        "Probiotic benefits",
-        "Easy to digest",
-        "Low in calories",
-      ],
-      occasions: ["Daily breakfast", "Light dinner", "During illness"],
-      createdAt: new Date(),
-    },
-  ];
-
-  // Removed filter options
-  // const categoryOptions = [
-  //   "all",
-  //   "Main Course",
-  //   "Soup",
-  //   "Non-Vegetarian",
-  //   "Dessert",
-  //   "Breakfast",
-  //   "Snacks",
-  // ];
-  // const regionOptions = [
-  //   "all",
-  //   "All Tamil Regions",
-  //   "Tamil Nadu",
-  //   "South Tamil Nadu",
-  //   "Chettinad",
-  //   "Kerala-Tamil Border",
-  //   "Kongu Nadu",
-  // ];
-
   const fetchFoods = async () => {
     setLoading(true);
     try {
@@ -368,7 +61,7 @@ export default function Foods({ user }) {
       setFoods(data);
     } catch (err) {
       console.error("Error fetching foods:", err);
-      setFoods(dummyFoods); // Fallback to dummy data
+      setFoods([]); // Fallback to an empty array instead of dummy data
     } finally {
       setLoading(false);
     }
@@ -442,18 +135,26 @@ export default function Foods({ user }) {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this recipe?")) {
+    if (window.confirm("Are you sure you want to delete this food entry?")) {
       (async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/foods/${id}`, {
             method: "DELETE",
             credentials: "include",
           });
+          
           if (!res.ok) throw new Error("Delete failed");
+          
+          // Optimistic update
+          setFoods(prevFoods => 
+            prevFoods.filter((food) => food._id !== id)
+          );
+          
+          // Optional: Refresh to ensure consistency
           await fetchFoods();
         } catch (err) {
           console.error(err);
-          alert("Failed to delete recipe");
+          alert("Failed to delete food entry");
         }
       })();
     }
@@ -477,14 +178,18 @@ export default function Foods({ user }) {
       <Box 
         sx={{ 
           mb: 6, 
-          textAlign: 'center', 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
+       <Typography
           variant="h2" 
-          sx={{ 
+            sx={{
             fontWeight: 900, 
             color: "#000", 
             position: 'relative',
@@ -530,19 +235,15 @@ export default function Foods({ user }) {
             },
           }}
         >
-          Tamil Cuisine
+          Foods
         </Typography>
         
         {user && user.role === "admin" && (
           <Box 
             sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                transform: 'scale(1.05)',
                 '& button': {
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -610,8 +311,9 @@ export default function Foods({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },  // Responsive width: full on xs, fixed on sm+
+                  maxWidth: '100%', // Ensure it doesn't exceed parent on smaller screens
+                  // height: 450, // Fixed height
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -649,7 +351,7 @@ export default function Foods({ user }) {
                 {(food.image || food.imageLink) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={food.image || food.imageLink}
                     alt={food.name}
                     sx={{ 
@@ -756,7 +458,7 @@ export default function Foods({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -770,7 +472,7 @@ export default function Foods({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: '0.8rem', md: '0.9rem' }, // Responsive font size
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
@@ -788,13 +490,28 @@ export default function Foods({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
                       }}
                     >
                       {food.description.length > 150 
                         ? `${food.description.substring(0, 150)}...` 
                         : food.description}
                     </Typography>
+                    
+                    {/* Like Count Display */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#000', 
+                          fontSize: '0.875rem',
+                          fontWeight: 500 
+                        }}
+                      >
+                        {food.likes ? food.likes.length : 0} Likes
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Button

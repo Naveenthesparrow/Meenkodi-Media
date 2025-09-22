@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Container, 
   Grid, 
@@ -24,6 +25,7 @@ import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
 
 export default function Gallery({ user }) {
+  const { t } = useTranslation();
   const [galleryItems, setGalleryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,32 +61,6 @@ export default function Gallery({ user }) {
         setGalleryItems(dummyGalleryItems); // Fallback to dummy data
     }
   };
-
-  // Dummy data for Gallery
-  const dummyGalleryItems = [
-    {
-      _id: "1",
-      title: "Ancient Temple Art",
-      description: "Intricate sculptures and carvings from ancient Tamil temples.",
-      category: "Architecture",
-      imageUrl: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      imageLink: "",
-      videoLink: "",
-      videoUrl: "",
-      createdAt: new Date(),
-    },
-    {
-      _id: "2",
-      title: "Traditional Tamil Dance",
-      description: "Vibrant performance of Bharatanatyam, a classical Indian dance form.",
-      category: "Dance",
-      imageUrl: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      imageLink: "",
-      videoLink: "",
-      videoUrl: "",
-      createdAt: new Date(),
-    },
-  ];
 
   const handleAdd = () => {
     setCurrentGalleryItem({
@@ -239,7 +215,7 @@ export default function Gallery({ user }) {
             },
           }}
         >
-          Tamil Gallery
+          {t('nav.gallery')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -276,7 +252,7 @@ export default function Gallery({ user }) {
                 px: 3,
               }}
             >
-              Add Gallery Item
+        {t('gallery.add', 'Add Gallery Item')}
           </Button>
         </Box>
       )}
@@ -519,7 +495,7 @@ export default function Gallery({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('common.readMore', 'Read More')}
                   </Button>
             </CardContent>
           </Card>
@@ -536,25 +512,25 @@ export default function Gallery({ user }) {
         fullWidth
       >
         <DialogTitle>
-          {currentGalleryItem._id ? 'Edit Gallery Item' : 'Add New Gallery Item'}
+          {currentGalleryItem._id ? t('gallery.edit', 'Edit Gallery Item') : t('gallery.addNew', 'Add New Gallery Item')}
         </DialogTitle>
         <DialogContent>
           <TextField
-            label="Title"
+            label={t('gallery.title', 'Title')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentGalleryItem.title}
             onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, title: e.target.value})}
           />
           <TextField
-            label="Category"
+            label={t('gallery.category', 'Category')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentGalleryItem.category}
             onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, category: e.target.value})}
           />
           <TextField
-            label="Description"
+            label={t('gallery.description', 'Description')}
             fullWidth
             multiline
             minRows={3}
@@ -571,13 +547,13 @@ export default function Gallery({ user }) {
             currentVideoLink={currentGalleryItem.videoLink}
             currentImage={currentGalleryItem.imageUrl}
             currentVideo={currentGalleryItem.videoUrl}
-            label="Media Links"
+            label={t('gallery.mediaLinks', 'Media Links')}
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
         </DialogActions>
       </Dialog>
     </Container>

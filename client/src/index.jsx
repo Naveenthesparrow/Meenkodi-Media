@@ -4,6 +4,9 @@ import App from "./App";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import "@fontsource/poppins";
 import "@fontsource/noto-serif-tamil";
+import "@fontsource/noto-sans-tamil";
+// Initialize i18n
+import "./utils/i18n";
 
 const theme = createTheme({
   palette: {
@@ -20,13 +23,13 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Inter, Arial, sans-serif",
-    h1: { fontFamily: "Poppins, Arial, sans-serif" },
-    h2: { fontFamily: "Poppins, Arial, sans-serif" },
-    h3: { fontFamily: "Poppins, Arial, sans-serif" },
-    h4: { fontFamily: "Poppins, Arial, sans-serif" },
-    h5: { fontFamily: "Poppins, Arial, sans-serif" },
-    h6: { fontFamily: "Poppins, Arial, sans-serif" },
+    fontFamily: "Inter, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif",
+    h1: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
+    h2: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
+    h3: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
+    h4: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
+    h5: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
+    h6: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
   },
 });
 

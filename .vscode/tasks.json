@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "vite-preview-smoke",
+			"type": "shell",
+			"command": "npm run --silent --prefix client build && npm run --silent --prefix client preview -- --port 5174 --strictPort",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

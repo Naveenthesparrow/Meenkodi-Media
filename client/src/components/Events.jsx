@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Grid, 
@@ -24,6 +25,7 @@ import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
 
 export default function Events({ user }) {
+  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -243,7 +245,7 @@ export default function Events({ user }) {
             },
           }}
         >
-          Tamil Events
+          {t('nav.events')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -280,7 +282,7 @@ export default function Events({ user }) {
                 px: 3,
               }}
             >
-              Add Event
+              {t('events.add', 'Add Event')}
             </Button>
           </Box>
         )}
@@ -523,7 +525,7 @@ export default function Events({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('common.readMore', 'Read More')}
                   </Button>
                 </CardContent>
               </Card>
@@ -540,18 +542,18 @@ export default function Events({ user }) {
         fullWidth
       >
         <DialogTitle>
-          {currentEvent._id ? 'Edit Event' : 'Add New Event'}
+          {currentEvent._id ? t('events.edit', 'Edit Event') : t('events.addNew', 'Add New Event')}
         </DialogTitle>
         <DialogContent>
           <TextField
-            label="Title"
+            label={t('events.title', 'Title')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.title}
             onChange={(e) => setCurrentEvent({...currentEvent, title: e.target.value})}
           />
           <TextField
-            label="Date"
+            label={t('events.date', 'Date')}
             type="date"
             fullWidth
             sx={{ mb: 2 }}
@@ -560,14 +562,14 @@ export default function Events({ user }) {
             InputLabelProps={{ shrink: true }}
           />
           <TextField
-            label="Location"
+            label={t('events.location', 'Location')}
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.location}
             onChange={(e) => setCurrentEvent({...currentEvent, location: e.target.value})}
           />
           <TextField
-            label="Description"
+            label={t('events.description', 'Description')}
             fullWidth
             multiline
             minRows={3}
@@ -584,13 +586,13 @@ export default function Events({ user }) {
             currentVideoLink={currentEvent.videoLink}
             currentImage={currentEvent.imageUrl}
             currentVideo={currentEvent.videoUrl}
-            label="Media Links"
+            label={t('events.mediaLinks', 'Media Links')}
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
         </DialogActions>
       </Dialog>
     </Container>

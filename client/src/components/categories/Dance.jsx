@@ -43,6 +43,7 @@ import {
   LocalActivity,
   School,
   Palette,
+  Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 
@@ -67,24 +68,6 @@ export default function Dance({ user }) {
     fetchDances();
   }, []);
 
-  // Dummy data for Dance
-  const dummyDances = [
-    {
-      _id: "1",
-      name: "Bharatanatyam",
-      type: "Classical Dance",
-      description: "A major form of Indian classical dance that originated in Tamil Nadu.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-    },
-    {
-      _id: "2",
-      name: "Kathakali",
-      type: "Classical Dance (Kerala Origin)",
-      description: "A major form of classical Indian dance-drama known for its elaborate makeup, costumes, and facial expressions.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-    },
-  ];
-
   const fetchDances = async () => {
     try {
       setLoading(true);
@@ -96,7 +79,7 @@ export default function Dance({ user }) {
       setDances(data);
     } catch (err) {
       console.error("Error fetching Dance data:", err);
-      setDances(dummyDances); // Fallback to dummy data
+      setDances([]); // Fallback to an empty array instead of dummy data
     } finally {
       setLoading(false);
     }
@@ -120,7 +103,7 @@ export default function Dance({ user }) {
       name: "",
       type: "",
       description: "",
-      image: "" 
+      image: "",
     });
     setAddOpen(true);
   };
@@ -128,7 +111,7 @@ export default function Dance({ user }) {
   const handleSave = () => {
     (async () => {
       try {
-    if (editItem) {
+        if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/dance/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
@@ -156,34 +139,44 @@ export default function Dance({ user }) {
           if (!res.ok) throw new Error("Create failed");
         }
         await fetchDances();
-      setEditOpen(false);
-      setAddOpen(false);
+        setEditOpen(false);
+        setAddOpen(false);
       } catch (err) {
         console.error(err);
         alert("Failed to save dance");
-    }
+      }
     })();
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this dance form?")) {
+    if (window.confirm("Are you sure you want to delete this dance entry?")) {
       (async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/dance/${id}`, {
             method: "DELETE",
             credentials: "include",
           });
+
           if (!res.ok) throw new Error("Delete failed");
+
+          // Optimistic update
+          setDances((prevDances) =>
+            prevDances.filter((dance) => dance._id !== id)
+          );
+
+          // Optional: Refresh to ensure consistency
           await fetchDances();
         } catch (err) {
-          console.error("Error deleting dance:", err);
-          alert("Failed to delete dance");
+          console.error(err);
+          alert("Failed to delete dance entry");
         }
       })();
     }
   };
 
   const handleCardClick = (id) => {
+    const dance = dances.find((d) => d._id === id);
+    console.log("Clicked dance card:", dance?.name, "ID:", id);
     navigate(`/explore/dance/${id}`);
   };
 
@@ -196,217 +189,227 @@ export default function Dance({ user }) {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+    <Container maxWidth="lg" sx={{ py: 4, position: "relative" }}>
       {/* Unique Heading Section */}
       <Box
         sx={{
-          mb: 6, 
-          textAlign: 'center', 
-          position: 'relative',
-          overflow: 'hidden',
+          mb: 6,
+          display: "flex",
+          alignItems: "center",
+          justifyContent:
+            user && user.role === "admin" ? "space-between" : "center",
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: 2, md: 0 },
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        <Typography 
-          variant="h2" 
-          sx={{ 
-            fontWeight: 900, 
-            color: "#000", 
-            position: 'relative',
-            display: 'inline-block',
+        <Typography
+          variant="h2"
+          sx={{
+            fontWeight: 900,
+            color: "#000",
+            position: "relative",
+            display: "inline-block",
             letterSpacing: -1,
-            padding: '0 10px',
-            transition: 'all 0.3s ease',
-            '&::before': {
+            padding: "0 10px",
+            transition: "all 0.3s ease",
+            "&::before": {
               content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
+              position: "absolute",
+              top: "50%",
+              left: "-50px",
+              width: "40px",
+              height: "3px",
+              backgroundColor: "#000",
+              transform: "translateY(-50%)",
+              transition: "all 0.3s ease",
             },
-            '&::after': {
+            "&::after": {
               content: '""',
-              position: 'absolute',
-              top: '50%',
-              right: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
+              position: "absolute",
+              top: "50%",
+              right: "-50px",
+              width: "40px",
+              height: "3px",
+              backgroundColor: "#000",
+              transform: "translateY(-50%)",
+              transition: "all 0.3s ease",
             },
-            '&:hover': {
-              color: '#333',
-              transform: 'scale(1.02)',
-              '&::before': {
-                width: '60px',
-                left: '-70px',
-                backgroundColor: '#666',
+            "&:hover": {
+              color: "#333",
+              transform: "scale(1.02)",
+              "&::before": {
+                width: "60px",
+                left: "-70px",
+                backgroundColor: "#666",
               },
-              '&::after': {
-                width: '60px',
-                right: '-70px',
-                backgroundColor: '#666',
+              "&::after": {
+                width: "60px",
+                right: "-70px",
+                backgroundColor: "#666",
               },
             },
           }}
         >
-          Tamil Dance Forms
+          Dance
         </Typography>
-        
+
         {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
-                '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                }
-              }
-            }}
-          >
-          <Button
-            onClick={handleAdd}
-            variant="contained"
-            startIcon={<Add />}
+          <Box
             sx={{
-              bgcolor: "#000",
-              color: "#fff",
-                transition: 'all 0.3s ease',
-                "&:hover": { 
-                  bgcolor: "#333",
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "scale(1.05)",
+                "& button": {
+                  boxShadow: "0 8px 15px rgba(0,0,0,0.2)",
+                  transform: "translateY(-3px)",
                 },
-              borderRadius: 0,
-              px: 3,
+              },
             }}
           >
-            Add Dance Form
-          </Button>
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<Add />}
+              sx={{
+                bgcolor: "#000",
+                color: "#fff",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  bgcolor: "#333",
+                  boxShadow: "0 8px 15px rgba(0,0,0,0.2)",
+                  transform: "translateY(-3px)",
+                },
+                borderRadius: 0,
+                px: 3,
+              }}
+            >
+              Add Dance Form
+            </Button>
           </Box>
         )}
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Grid
+        container
+        spacing={4}
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
-          transition: 'all 0.3s ease',
-          '& > .MuiGrid-item': {
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.02)',
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "stretch",
+          perspective: "1000px", // 3D effect for cards
+          transition: "all 0.3s ease",
+          "& > .MuiGrid-item": {
+            transition: "all 0.3s ease",
+            "&:hover": {
+              transform: "scale(1.02)",
               zIndex: 10,
-            }
-          }
+            },
+          },
         }}
       >
         {dances.map((dance, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
-            key={dance._id}
-          >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'center',
-                transition: 'all 0.3s ease',
+          <Fade in={true} timeout={500 + index * 200} key={dance._id}>
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                transition: "all 0.3s ease",
               }}
             >
+              {console.log(
+                "Rendering dance card:",
+                dance.name,
+                "ID:",
+                dance._id
+              )}
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
-                  display: 'flex',
-                  flexDirection: 'column',
+                  width: { xs: "100%", sm: 350 },
+                  maxWidth: "100%",
+                  height: "auto",
+                  minHeight: 450,
+                  display: "flex",
+                  flexDirection: "column",
                   border: "3px solid #000",
                   borderRadius: 0,
                   bgcolor: "#fff",
                   transition: "all 0.3s ease",
                   cursor: "pointer",
-                  position: 'relative',
-                  overflow: 'hidden',
+                  position: "relative",
+                  overflow: "hidden",
                   "&::before": {
                     content: '""',
-                    position: 'absolute',
+                    position: "absolute",
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
-                    transform: 'translateX(-100%)',
-                    transition: 'transform 0.6s ease',
+                    background:
+                      "linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)",
+                    transform: "translateX(-100%)",
+                    transition: "transform 0.6s ease",
                   },
                   "&:hover": {
                     transform: "translateY(-15px) rotate(1deg)",
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
                     "&::before": {
-                      transform: 'translateX(100%)',
+                      transform: "translateX(100%)",
                     },
                     "& .card-content": {
                       transform: "scale(1.02)",
                       opacity: 0.95,
-                    }
+                    },
                   },
                 }}
-                onClick={() => navigate(`/explore/dance/${dance._id}`)}
+                onClick={() => handleCardClick(dance._id)}
               >
-                {(dance.image || dance.imageLink) ? (
+                {dance.image || dance.imageLink ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={dance.image || dance.imageLink}
                     alt={dance.name}
-                    sx={{ 
+                    sx={{
                       objectFit: "contain",
-                      width: '100%',
+                      width: "100%",
                       maxHeight: 200,
-                      backgroundColor: '#f0f0f0',
-                      padding: '10px',
-                      boxSizing: 'border-box',
+                      backgroundColor: "#f0f0f0",
+                      padding: "10px",
+                      boxSizing: "border-box",
                     }}
                     onError={(e) => {
-                      console.error('Image failed to load:', dance.image || dance.imageLink);
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
-                      e.target.style.display = 'block';
+                      console.error(
+                        "Image failed to load:",
+                        dance.image || dance.imageLink
+                      );
+                      e.target.src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3E1200x600%3C/text%3E%3C/svg%3E";
+                      e.target.style.display = "block";
                     }}
                   />
                 ) : (
                   <Box
                     sx={{
                       height: 200,
-                      width: '100%',
-                      backgroundColor: '#f0f0f0',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '10px',
-                      boxSizing: 'border-box',
+                      width: "100%",
+                      backgroundColor: "#f0f0f0",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      padding: "10px",
+                      boxSizing: "border-box",
                     }}
                   >
-                    <Typography 
-                      variant="body2" 
+                    <Typography
+                      variant="body2"
                       color="textSecondary"
-                      sx={{ textAlign: 'center' }}
+                      sx={{ textAlign: "center" }}
                     >
                       No Image Available
                     </Typography>
@@ -420,105 +423,120 @@ export default function Dance({ user }) {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
-                    transition: 'all 0.3s ease',
+                    transition: "all 0.3s ease",
                   }}
                 >
                   {user && user.role === "admin" && (
-                  <Box
-                    sx={{
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
-                      display: "flex",
-                        gap: 1 
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 1,
+                        mb: 1,
                       }}
                     >
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(dance);
-                          }}
-                          size="small"
-                          sx={{
-                            color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(dance);
+                        }}
+                        size="small"
+                        sx={{
+                          color: "#000",
+                          bgcolor: "rgba(255,255,255,0.7)",
+                          "&:hover": {
+                            bgcolor: "rgba(255,255,255,0.9)",
+                            transform: "scale(1.1)",
                           },
-                          transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <Edit />
-                        </IconButton>
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(dance._id);
-                          }}
-                          size="small"
-                          sx={{
-                            color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(dance._id);
+                        }}
+                        size="small"
+                        sx={{
+                          color: "#000",
+                          bgcolor: "rgba(255,255,255,0.7)",
+                          "&:hover": {
+                            bgcolor: "rgba(255,255,255,0.9)",
+                            transform: "scale(1.1)",
                           },
-                          transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    )}
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  )}
                   <Box>
                     <Typography
                       variant="h5"
                       sx={{
-                        fontWeight: 700, 
-                        color: "#000", 
+                        fontWeight: 700,
+                        color: "#000",
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
-                        textTransform: 'capitalize',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        fontSize: { xs: "1.25rem", md: "1.5rem" },
+                        textTransform: "capitalize",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {dance.name}
-                  </Typography>
+                    </Typography>
                     <Typography
                       variant="body2"
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: "0.8rem", md: "0.9rem" },
                         mb: 2,
-                        textTransform: 'capitalize',
+                        textTransform: "capitalize",
                       }}
                     >
                       {dance.type}
-                        </Typography>
+                    </Typography>
                     <Typography
                       variant="body2"
                       sx={{
                         color: "#000",
-                        lineHeight: 1.6, 
+                        lineHeight: 1.6,
                         mb: 2,
-                        display: '-webkit-box',
+                        display: "-webkit-box",
                         WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        minHeight: { xs: "4.2rem", md: "4.8rem" }, // Ensures consistent height for 3 lines
                       }}
                     >
-                      {dance.description.length > 150 
-                        ? `${dance.description.substring(0, 150)}...` 
+                      {dance.description.length > 150
+                        ? `${dance.description.substring(0, 150)}...`
                         : dance.description}
                     </Typography>
+
+                    {/* Like Count Display */}
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Favorite
+                        sx={{ color: "#000", fontSize: "1rem", mr: 0.5 }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#000",
+                          fontSize: "0.875rem",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {dance.likes ? dance.likes.length : 0} Likes
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Button
@@ -530,7 +548,7 @@ export default function Dance({ user }) {
                       color: "#000",
                       borderColor: "#000",
                       borderRadius: 0,
-                      mt: 'auto',
+                      mt: "auto",
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
@@ -553,59 +571,63 @@ export default function Dance({ user }) {
         maxWidth="md"
         fullWidth
         sx={{
-          '& .MuiDialog-paper': {
+          "& .MuiDialog-paper": {
             borderRadius: 0,
-            border: '3px solid #000',
-          }
+            border: "3px solid #000",
+          },
         }}
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
-            textAlign: 'center',
-            fontWeight: 700 
+            bgcolor: "#000",
+            color: "#fff",
+            textAlign: "center",
+            fontWeight: 700,
           }}
         >
           {editItem ? "Edit Dance Form" : "Add New Dance Form"}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
-              <TextField
-                fullWidth
+          <TextField
+            fullWidth
             label="Name"
-                value={formData.name}
+            value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Type"
-                value={formData.type}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Type"
+            value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Description"
-                value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                multiline
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            multiline
             minRows={3}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
             label="Image URL"
             value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                sx={{ mb: 2 }}
-              />
+            onChange={(e) =>
+              setFormData({ ...formData, image: e.target.value })
+            }
+            sx={{ mb: 2 }}
+          />
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
-            justifyContent: 'space-between',
-            bgcolor: '#f0f0f0' 
+          sx={{
+            p: 2,
+            justifyContent: "space-between",
+            bgcolor: "#f0f0f0",
           }}
         >
           <Button
@@ -613,7 +635,7 @@ export default function Dance({ user }) {
               setEditOpen(false);
               setAddOpen(false);
             }}
-            sx={{ color: '#000' }}
+            sx={{ color: "#000" }}
           >
             Cancel
           </Button>
@@ -621,9 +643,9 @@ export default function Dance({ user }) {
             onClick={handleSave}
             variant="contained"
             sx={{
-              bgcolor: '#000',
-              color: '#fff',
-              '&:hover': { bgcolor: '#333' },
+              bgcolor: "#000",
+              color: "#fff",
+              "&:hover": { bgcolor: "#333" },
               borderRadius: 0,
             }}
           >

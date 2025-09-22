@@ -8,8 +8,6 @@ import {
   CardMedia,
   Grid,
   Button,
-  Chip,
-  CircularProgress,
   Container,
   TextField,
   Dialog,
@@ -17,18 +15,14 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  Paper,
   Fade,
+  CircularProgress,
 } from "@mui/material";
 import {
-  Star,
-  Person,
-  CalendarToday,
   Edit,
   Delete,
   Add,
-  LocationOn,
-  AccountBalance,
+  Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 
@@ -42,73 +36,8 @@ export default function Kings({ user }) {
   const [formData, setFormData] = useState({
     name: "",
     period: "",
-    description: "",
     image: "",
   });
-
-  // Dummy data with rich content
-  const dummyKings = [
-    {
-      _id: "1",
-      name: "Raja Raja Chola I",
-      dynasty: "Chola Dynasty",
-      period: "985-1014 CE",
-      capital: "Thanjavur",
-      achievements:
-        "Built Brihadeeswarar Temple, expanded Chola empire across South India and Southeast Asia",
-      description:
-        "One of the greatest Tamil kings who established the Chola empire as a major maritime power and patron of arts.",
-      image: "https://example.com/rajaraja.jpg",
-      content:
-        "Raja Raja Chola I was instrumental in transforming the Chola kingdom into a powerful empire. His military conquests, administrative reforms, and architectural achievements mark the golden age of Tamil civilization.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "2",
-      name: "Rajendra Chola I",
-      dynasty: "Chola Dynasty",
-      period: "1014-1044 CE",
-      capital: "Gangaikonda Cholapuram",
-      achievements:
-        "Extended empire to Southeast Asia, built Gangaikonda Cholapuram, naval expeditions to Sri Vijaya",
-      description:
-        "Son of Raja Raja Chola I, known for his naval conquests and expansion of the Chola empire to its greatest extent.",
-      image: "https://example.com/rajendra.jpg",
-      content:
-        "Rajendra Chola I continued his father's legacy and expanded the empire further. His naval expeditions to Southeast Asia established Chola influence in the region for centuries.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "3",
-      name: "Karikala Chola",
-      dynasty: "Early Chola Dynasty",
-      period: "2nd Century CE",
-      capital: "Poompuhar",
-      achievements:
-        "Established early Chola power, built extensive irrigation systems, expanded trade networks",
-      description:
-        "Legendary early Chola king who established the foundations of Chola power and prosperity through innovative governance.",
-      image: "https://example.com/karikala.jpg",
-      content:
-        "Karikala Chola is credited with many innovations in governance and infrastructure that laid the foundation for later Chola greatness. His irrigation projects transformed agriculture in the region.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "4",
-      name: "Krishnadevaraya",
-      dynasty: "Vijayanagara Empire",
-      period: "1509-1529 CE",
-      capital: "Vijayanagara",
-      achievements:
-        "Golden age of Vijayanagara, patron of arts and literature, military victories",
-      description:
-        "Greatest ruler of the Vijayanagara Empire, known for his military prowess and patronage of Telugu and Tamil literature.",
-      image: "https://example.com/krishnadevaraya.jpg",
-      content:
-        "Krishnadevaraya's reign marked the pinnacle of the Vijayanagara Empire. His court was home to the Ashtadiggajas (eight great poets) and he himself was a accomplished poet.",
-      createdAt: new Date(),
-    },
-  ];
 
   const handleCardClick = (kingId) => {
     navigate(`/explore/kings/${kingId}`);
@@ -123,7 +52,7 @@ export default function Kings({ user }) {
       setKings(data);
     } catch (err) {
       console.error(err);
-      setKings(dummyKings);
+      setKings([]); 
     } finally {
       setLoading(false);
     }
@@ -138,7 +67,6 @@ export default function Kings({ user }) {
     setFormData({
       name: item.name,
       period: item.period,
-      description: item.description,
       image: item.image,
     });
     setEditOpen(true);
@@ -148,7 +76,6 @@ export default function Kings({ user }) {
     setFormData({
       name: "",
       period: "",
-      description: "",
       image: "" 
     });
     setAddOpen(true);
@@ -165,7 +92,6 @@ export default function Kings({ user }) {
             body: JSON.stringify({
               name: formData.name,
               period: formData.period,
-              description: formData.description,
               image: formData.image,
             }),
           });
@@ -178,7 +104,6 @@ export default function Kings({ user }) {
             body: JSON.stringify({
               name: formData.name,
               period: formData.period,
-              description: formData.description,
               image: formData.image,
             }),
           });
@@ -195,20 +120,24 @@ export default function Kings({ user }) {
   };
 
   const handleDelete = (id) => {
-    if (
-      window.confirm("Are you sure you want to delete this king's profile?")
-    ) {
+    if (window.confirm("Are you sure you want to delete this king's profile?")) {
       (async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/kings/${id}`, {
             method: "DELETE",
             credentials: "include",
           });
+          
           if (!res.ok) throw new Error("Delete failed");
+          
+          setKings(prevKings => 
+            prevKings.filter((king) => king._id !== id)
+          );
+          
           await fetchKings();
         } catch (err) {
           console.error(err);
-          alert("Failed to delete king");
+          alert("Failed to delete king's profile");
         }
       })();
     }
@@ -224,18 +153,21 @@ export default function Kings({ user }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
-      {/* Unique Heading Section */}
       <Box 
         sx={{ 
           mb: 6, 
-          textAlign: 'center', 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
+        <Typography
           variant="h2" 
-          sx={{ 
+          sx={{
             fontWeight: 900, 
             color: "#000", 
             position: 'relative',
@@ -281,19 +213,15 @@ export default function Kings({ user }) {
             },
           }}
         >
-          Tamil Kings
+          Kings
         </Typography>
         
         {user && user.role === "admin" && (
           <Box 
             sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                transform: 'scale(1.05)',
                 '& button': {
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -331,7 +259,7 @@ export default function Kings({ user }) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
+          perspective: '1000px',
           transition: 'all 0.3s ease',
           '& > .MuiGrid-item': {
             transition: 'all 0.3s ease',
@@ -361,8 +289,10 @@ export default function Kings({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },  
+                  maxWidth: '100%',
+                  height: 'auto', 
+                  minHeight: 350,
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -400,7 +330,7 @@ export default function Kings({ user }) {
                 {(king.image || king.imageLink) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={king.image || king.imageLink}
                     alt={king.name}
                     sx={{ 
@@ -413,7 +343,8 @@ export default function Kings({ user }) {
                     }}
                     onError={(e) => {
                       console.error('Image failed to load:', king.image || king.imageLink);
-                      e.target.style.display = 'none';
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
+                      e.target.style.display = 'block';
                     }}
                   />
                 ) : (
@@ -446,18 +377,16 @@ export default function Kings({ user }) {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {user && user.role === "admin" && (
                     <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
+                      sx={{
                         display: "flex", 
-                        gap: 1 
+                        justifyContent: 'flex-end',
+                        gap: 1,
+                        mb: 1,
                       }}
                     >
                       <IconButton
@@ -506,7 +435,7 @@ export default function Kings({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' },
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -520,31 +449,31 @@ export default function Kings({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
-                        mb: 2,
+                        fontSize: { xs: '0.8rem', md: '0.9rem' },
+                        mb: 1,
                         textTransform: 'capitalize',
                       }}
                     >
                       {king.period}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ 
-                        color: "#000", 
-                        lineHeight: 1.6, 
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
-                      }}
-                    >
-                      {king.description.length > 150 
-                        ? `${king.description.substring(0, 150)}...` 
-                        : king.description}
-                    </Typography>
+                    
+                    {/* Like Count */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#000",
+                          fontWeight: 600,
+                          fontSize: { xs: '0.75rem', md: '0.85rem' },
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                        }}
+                      >
+                        <Favorite sx={{ fontSize: '1rem' }} />
+                        {king.likes ? (Array.isArray(king.likes) ? king.likes.length : 0) : 0} likes
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Button
@@ -596,36 +525,27 @@ export default function Kings({ user }) {
           {editItem ? "Edit King Profile" : "Add New King Profile"}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
-              <TextField
-                fullWidth
+          <TextField
+            fullWidth
             label="Name"
-                value={formData.name}
+            value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
             label="Period"
-                value={formData.period}
+            value={formData.period}
             onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Description"
-                value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                multiline
-            minRows={3}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
             label="Image URL"
             value={formData.image}
             onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                sx={{ mb: 2 }}
-              />
+            sx={{ mb: 2 }}
+          />
         </DialogContent>
         <DialogActions
           sx={{ 

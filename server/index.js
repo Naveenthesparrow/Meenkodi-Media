@@ -50,7 +50,7 @@ app.use(
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "fallback-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -59,11 +59,21 @@ app.use(
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: "lax",
     },
+    name: "sessionId", // Explicit session name
   })
 );
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Session debugging middleware
+app.use((req, res, next) => {
+  console.log("=== SESSION MIDDLEWARE DEBUG ===");
+  console.log("Session ID:", req.sessionID);
+  console.log("Session exists:", !!req.session);
+  console.log("User in session:", req.session?.passport?.user);
+  next();
+});
 
 passport.use(
   new GoogleStrategy(
@@ -113,17 +123,43 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/failure`,
+    failureRedirect: `${
+      process.env.CLIENT_URL || "http://localhost:5173"
+    }/auth/failure`,
     session: true,
   }),
   (req, res) => {
     console.log("OAuth callback success, redirecting to client...");
-    res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/auth/google/callback`);
+    res.redirect(
+      `${
+        process.env.CLIENT_URL || "http://localhost:5173"
+      }/auth/google/callback`
+    );
   }
 );
 
 app.get("/auth/user", (req, res) => {
-  res.send(req.user || null);
+  console.log("=== AUTH USER DEBUG ===");
+  console.log("Session ID:", req.sessionID);
+  console.log("Session:", req.session);
+  console.log("User:", req.user);
+  console.log("Is Authenticated:", req.isAuthenticated());
+
+  if (req.user) {
+    const { _id, googleId, displayName, email, role, photo } = req.user;
+    console.log("Sending user data:", {
+      _id,
+      googleId,
+      displayName,
+      email,
+      role,
+      photo,
+    });
+    res.json({ _id, googleId, displayName, email, role, photo });
+  } else {
+    console.log("No user found, sending 401");
+    res.status(401).json(null);
+  }
 });
 
 app.get("/auth/logout", (req, res) => {
@@ -133,11 +169,24 @@ app.get("/auth/logout", (req, res) => {
 });
 
 app.get("/auth/failure", (req, res) => {
-  res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/auth/failure`);
+  res.redirect(
+    `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/failure`
+  );
 });
 
 function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) return next();
+  console.log("=== ENSURE AUTHENTICATED DEBUG ===");
+  console.log("Session ID:", req.sessionID);
+  console.log("Session:", req.session);
+  console.log("User:", req.user);
+  console.log("Is Authenticated:", req.isAuthenticated());
+
+  if (req.isAuthenticated()) {
+    console.log("User is authenticated, proceeding");
+    return next();
+  }
+
+  console.log("User is NOT authenticated, sending 401");
   res.status(401).send("Not authenticated");
 }
 
@@ -461,94 +510,400 @@ const createDirectories = () => {
 
 createDirectories();
 
-// General image upload storage
+// Multer storage configuration for image uploads
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), "uploads/gallery"));
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + "-image" + ext);
-  },
-});
+    const uploadsDir = path.join(process.cwd(), "uploads/gallery");
 
-// General video upload storage
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), "uploads/gallery"));
+    // Ensure uploads directory exists with full permissions
+    try {
+      fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
+    } catch (err) {
+      console.error("Failed to create uploads directory:", err);
+    }
+
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
+    // Generate a unique filename with original extension
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, Date.now() + "-video" + ext);
+    const sanitizedOriginalName = file.originalname
+      .replace(/[^a-zA-Z0-9.]/g, "_") // Replace special characters
+      .toLowerCase();
+
+    cb(null, `image-${uniqueSuffix}-${sanitizedOriginalName}`);
   },
 });
 
 const imageUpload = multer({
   storage: imageStorage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
+    // Detailed image type validation
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/bmp",
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Not an image file!"), false);
+      cb(
+        new Error(
+          `Unsupported file type: ${file.mimetype}. Allowed types: JPEG, PNG, GIF, WEBP, BMP`
+        ),
+        false
+      );
     }
   },
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit for images
+    files: 1, // Limit to single file upload
+  },
+});
+
+// General image upload endpoint
+app.post(
+  "/api/upload/image",
+  ensureAdmin,
+  (req, res, next) => {
+    // Log authentication details
+    console.log("Image Upload Authentication Check:", {
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user
+        ? {
+            id: req.user._id,
+            email: req.user.email,
+            role: req.user.role,
+          }
+        : "No user",
+    });
+
+    // Ensure admin authentication
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({
+        error: "Unauthorized",
+        details: "Only admin users can upload images",
+      });
+    }
+
+    next();
+  },
+  imageUpload.single("image"),
+  (req, res) => {
+    try {
+      console.log("Image Upload Request FULL Details:", {
+        file: req.file
+          ? {
+              originalname: req.file.originalname,
+              filename: req.file.filename,
+              path: req.file.path,
+              destination: req.file.destination,
+              size: req.file.size,
+              mimetype: req.file.mimetype,
+            }
+          : "No file",
+        user: req.user
+          ? {
+              email: req.user.email,
+              role: req.user.role,
+              id: req.user._id,
+            }
+          : "No user",
+        body: req.body,
+      });
+
+      if (!req.file) {
+        console.error("No file uploaded");
+        return res.status(400).json({
+          error: "No image file uploaded",
+          details: "File was not processed by multer",
+        });
+      }
+
+      // Ensure uploads directory exists with full permissions
+      const uploadsDir = path.join(process.cwd(), "uploads/gallery");
+      try {
+        fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
+      } catch (mkdirError) {
+        console.error("Failed to create uploads directory:", mkdirError);
+        return res.status(500).json({
+          error: "Failed to create uploads directory",
+          details: mkdirError.message,
+        });
+      }
+
+      // Verify file was actually saved
+      const fullFilePath = path.join(uploadsDir, req.file.filename);
+
+      // Check file existence and permissions
+      try {
+        fs.accessSync(fullFilePath, fs.constants.R_OK | fs.constants.W_OK);
+      } catch (accessError) {
+        console.error("File access error:", accessError);
+        return res.status(500).json({
+          error: "Cannot access uploaded file",
+          details: accessError.message,
+          filePath: fullFilePath,
+        });
+      }
+
+      // Verify file stats
+      try {
+        const fileStats = fs.statSync(fullFilePath);
+        console.log("Uploaded file stats:", {
+          path: fullFilePath,
+          size: fileStats.size,
+          created: fileStats.birthtime,
+          isFile: fileStats.isFile(),
+        });
+
+        // Additional size check
+        if (fileStats.size === 0) {
+          console.error("Uploaded file is empty");
+          return res.status(400).json({
+            error: "Uploaded file is empty",
+            filePath: fullFilePath,
+          });
+        }
+      } catch (statError) {
+        console.error("File stat error:", statError);
+        return res.status(500).json({
+          error: "Failed to get file stats",
+          details: statError.message,
+          filePath: fullFilePath,
+        });
+      }
+
+      // Generate public URL
+      const publicUrl = `/uploads/gallery/${req.file.filename}`;
+
+      // Attempt to read file to verify it's a valid image
+      try {
+        const imageBuffer = fs.readFileSync(fullFilePath);
+        // You could add more sophisticated image validation here if needed
+      } catch (readError) {
+        console.error("Failed to read uploaded image:", readError);
+        return res.status(500).json({
+          error: "Failed to read uploaded image",
+          details: readError.message,
+        });
+      }
+
+      res.json({
+        imageUrl: publicUrl,
+        fullPath: fullFilePath,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+      });
+    } catch (error) {
+      console.error("Comprehensive Image Upload Error:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+
+      res.status(500).json({
+        error: "Failed to upload image",
+        details: error.message,
+        stack: error.stack,
+      });
+    }
+  }
+);
+
+// Video upload storage configuration
+const videoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(process.cwd(), "uploads/gallery");
+
+    // Ensure uploads directory exists with full permissions
+    try {
+      fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
+    } catch (err) {
+      console.error("Failed to create uploads directory:", err);
+    }
+
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate a unique filename with original extension
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    const sanitizedOriginalName = file.originalname
+      .replace(/[^a-zA-Z0-9.]/g, "_") // Replace special characters
+      .toLowerCase();
+
+    cb(null, `video-${uniqueSuffix}-${sanitizedOriginalName}`);
   },
 });
 
 const videoUpload = multer({
   storage: videoStorage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("video/")) {
+    // Detailed video type validation
+    const allowedMimeTypes = [
+      "video/mp4",
+      "video/avi",
+      "video/mov",
+      "video/webm",
+      "video/quicktime",
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Not a video file!"), false);
+      cb(
+        new Error(
+          `Unsupported video type: ${file.mimetype}. Allowed types: MP4, AVI, MOV, WEBM`
+        ),
+        false
+      );
     }
   },
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit for videos
+    files: 1, // Limit to single file upload
   },
 });
-
-// Serve uploaded files
-app.use(
-  "/uploads/gallery",
-  express.static(path.join(process.cwd(), "uploads/gallery"))
-);
-
-// General image upload endpoint
-app.post(
-  "/api/upload/image",
-  ensureAdmin,
-  imageUpload.single("image"),
-  (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No image file uploaded" });
-      }
-      res.json({ imageUrl: `/uploads/gallery/${req.file.filename}` });
-    } catch (error) {
-      console.error("Image upload error:", error);
-      res.status(500).json({ error: "Failed to upload image" });
-    }
-  }
-);
 
 // General video upload endpoint
 app.post(
   "/api/upload/video",
   ensureAdmin,
+  (req, res, next) => {
+    // Log authentication details
+    console.log("Video Upload Authentication Check:", {
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user
+        ? {
+            id: req.user._id,
+            email: req.user.email,
+            role: req.user.role,
+          }
+        : "No user",
+    });
+
+    // Ensure admin authentication
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({
+        error: "Unauthorized",
+        details: "Only admin users can upload videos",
+      });
+    }
+
+    next();
+  },
   videoUpload.single("video"),
   (req, res) => {
     try {
+      console.log("Video Upload Request FULL Details:", {
+        file: req.file
+          ? {
+              originalname: req.file.originalname,
+              filename: req.file.filename,
+              path: req.file.path,
+              destination: req.file.destination,
+              size: req.file.size,
+              mimetype: req.file.mimetype,
+            }
+          : "No file",
+        user: req.user
+          ? {
+              email: req.user.email,
+              role: req.user.role,
+              id: req.user._id,
+            }
+          : "No user",
+        body: req.body,
+      });
+
       if (!req.file) {
-        return res.status(400).json({ error: "No video file uploaded" });
+        console.error("No video file uploaded");
+        return res.status(400).json({
+          error: "No video file uploaded",
+          details: "File was not processed by multer",
+        });
       }
-      res.json({ videoUrl: `/uploads/gallery/${req.file.filename}` });
+
+      // Ensure uploads directory exists with full permissions
+      const uploadsDir = path.join(process.cwd(), "uploads/gallery");
+      try {
+        fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
+      } catch (mkdirError) {
+        console.error("Failed to create uploads directory:", mkdirError);
+        return res.status(500).json({
+          error: "Failed to create uploads directory",
+          details: mkdirError.message,
+        });
+      }
+
+      // Verify file was actually saved
+      const fullFilePath = path.join(uploadsDir, req.file.filename);
+
+      // Check file existence and permissions
+      try {
+        fs.accessSync(fullFilePath, fs.constants.R_OK | fs.constants.W_OK);
+      } catch (accessError) {
+        console.error("File access error:", accessError);
+        return res.status(500).json({
+          error: "Cannot access uploaded video",
+          details: accessError.message,
+          filePath: fullFilePath,
+        });
+      }
+
+      // Verify file stats
+      try {
+        const fileStats = fs.statSync(fullFilePath);
+        console.log("Uploaded video stats:", {
+          path: fullFilePath,
+          size: fileStats.size,
+          created: fileStats.birthtime,
+          isFile: fileStats.isFile(),
+        });
+
+        // Additional size check
+        if (fileStats.size === 0) {
+          console.error("Uploaded video is empty");
+          return res.status(400).json({
+            error: "Uploaded video is empty",
+            filePath: fullFilePath,
+          });
+        }
+      } catch (statError) {
+        console.error("Video stat error:", statError);
+        return res.status(500).json({
+          error: "Failed to get video stats",
+          details: statError.message,
+          filePath: fullFilePath,
+        });
+      }
+
+      // Generate public URL
+      const publicUrl = `/uploads/gallery/${req.file.filename}`;
+
+      res.json({
+        videoUrl: publicUrl,
+        fullPath: fullFilePath,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+      });
     } catch (error) {
-      console.error("Video upload error:", error);
-      res.status(500).json({ error: "Failed to upload video" });
+      console.error("Comprehensive Video Upload Error:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+
+      res.status(500).json({
+        error: "Failed to upload video",
+        details: error.message,
+        stack: error.stack,
+      });
     }
   }
 );
@@ -592,9 +947,32 @@ app.get("/api/temples", async (req, res) => {
 
 app.get("/api/temples/:id", async (req, res) => {
   try {
-    const temple = await Temple.findById(req.params.id);
+    const temple = await Temple.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!temple) return res.status(404).json({ error: "Temple not found" });
-    res.json(temple);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = temple.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...temple.toObject(),
+      likes: temple.likes.length,
+      userLiked,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch temple" });
   }
@@ -644,10 +1022,36 @@ app.get("/api/kings", async (req, res) => {
 
 app.get("/api/kings/:id", async (req, res) => {
   try {
-    const king = await King.findById(req.params.id);
-    if (!king) return res.status(404).json({ error: "King not found" });
-    res.json(king);
+    const king = await King.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    if (!king) {
+      return res.status(404).json({ error: "King not found" });
+    }
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = king.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...king.toObject(),
+      likes: king.likes.length,
+      userLiked,
+    });
   } catch (err) {
+    console.error("Fetch king error:", err);
     res.status(500).json({ error: "Failed to fetch king" });
   }
 });
@@ -666,11 +1070,20 @@ app.put("/api/kings/:id", ensureAdmin, async (req, res) => {
   try {
     const king = await King.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
+      runValidators: true,
     });
-    if (!king) return res.status(404).json({ error: "King not found" });
+
+    if (!king) {
+      return res.status(404).json({ error: "King not found" });
+    }
+
     res.json(king);
   } catch (err) {
-    res.status(500).json({ error: "Failed to update king" });
+    console.error("Error updating king:", err);
+    res.status(500).json({
+      error: "Failed to update king",
+      details: err.message,
+    });
   }
 });
 
@@ -684,6 +1097,200 @@ app.delete("/api/kings/:id", ensureAdmin, async (req, res) => {
   }
 });
 
+// Like a king's article
+app.post("/api/kings/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const king = await King.findById(req.params.id);
+    if (!king) {
+      return res.status(404).json({ error: "King not found" });
+    }
+
+    const userLikeIndex = king.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      // User already liked, so unlike
+      king.likes.splice(userLikeIndex, 1);
+    } else {
+      // User hasn't liked, so like
+      king.likes.push(req.user._id);
+    }
+
+    await king.save();
+
+    res.json({
+      likes: king.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+// Add a comment to a king's article
+app.post("/api/kings/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const king = await King.findById(req.params.id);
+    if (!king) {
+      return res.status(404).json({ error: "King not found" });
+    }
+
+    const newComment = {
+      user: req.user._id,
+      content: req.body.content,
+      createdAt: new Date(),
+    };
+
+    king.comments.push(newComment);
+    await king.save();
+
+    // Populate the comments with user details
+    await king.populate("comments.user", "displayName");
+
+    res.status(201).json({
+      comments: king.comments,
+    });
+  } catch (err) {
+    console.error("Comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+// Remove a comment (admin only)
+app.delete(
+  "/api/kings/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const king = await King.findById(req.params.id);
+      if (!king) {
+        return res.status(404).json({ error: "King not found" });
+      }
+
+      // Remove the comment
+      king.comments = king.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await king.save();
+
+      // Populate the comments with user details
+      await king.populate("comments.user", "displayName");
+
+      res.json({
+        comments: king.comments,
+      });
+    } catch (err) {
+      console.error("Remove comment error:", err);
+      res.status(500).json({ error: "Failed to remove comment" });
+    }
+  }
+);
+
+// Add a reply to a specific comment
+app.post(
+  "/api/kings/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const king = await King.findById(req.params.id);
+      if (!king) {
+        return res.status(404).json({ error: "King not found" });
+      }
+
+      // Find the specific comment
+      const comment = king.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      // Create new reply
+      const newReply = {
+        user: req.user._id,
+        content: req.body.content,
+        createdAt: new Date(),
+      };
+
+      // Add reply to the comment
+      comment.replies.push(newReply);
+      await king.save();
+
+      // Populate user details for the comment and its replies
+      await king.populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+
+      // Find the updated comment to return
+      const updatedComment = king.comments.id(req.params.commentId);
+
+      res.status(201).json({
+        comment: updatedComment,
+      });
+    } catch (err) {
+      console.error("Reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+// Remove a reply from a comment (admin only)
+app.delete(
+  "/api/kings/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const king = await King.findById(req.params.id);
+      if (!king) {
+        return res.status(404).json({ error: "King not found" });
+      }
+
+      // Find the specific comment
+      const comment = king.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      // Remove the specific reply
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await king.save();
+
+      // Populate user details for the comment and its replies
+      await king.populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+
+      // Find the updated comment to return
+      const updatedComment = king.comments.id(req.params.commentId);
+
+      res.json({
+        comment: updatedComment,
+      });
+    } catch (err) {
+      console.error("Remove reply error:", err);
+      res.status(500).json({ error: "Failed to remove reply" });
+    }
+  }
+);
+
 // LITERATURE API ROUTES
 app.get("/api/literature", async (req, res) => {
   try {
@@ -696,10 +1303,33 @@ app.get("/api/literature", async (req, res) => {
 
 app.get("/api/literature/:id", async (req, res) => {
   try {
-    const literature = await Literature.findById(req.params.id);
+    const literature = await Literature.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!literature)
       return res.status(404).json({ error: "Literature not found" });
-    res.json(literature);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = literature.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...literature.toObject(),
+      likes: literature.likes.length,
+      userLiked,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch literature" });
   }
@@ -720,7 +1350,7 @@ app.put("/api/literature/:id", ensureAdmin, async (req, res) => {
     const literature = await Literature.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     );
     if (!literature)
       return res.status(404).json({ error: "Literature not found" });
@@ -753,9 +1383,32 @@ app.get("/api/dance", async (req, res) => {
 
 app.get("/api/dance/:id", async (req, res) => {
   try {
-    const dance = await Dance.findById(req.params.id);
+    const dance = await Dance.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!dance) return res.status(404).json({ error: "Dance not found" });
-    res.json(dance);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = dance.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...dance.toObject(),
+      likes: dance.likes.length,
+      userLiked,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch dance" });
   }
@@ -793,6 +1446,200 @@ app.delete("/api/dance/:id", ensureAdmin, async (req, res) => {
   }
 });
 
+// Like a dance
+app.post("/api/dance/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const dance = await Dance.findById(req.params.id);
+    if (!dance) {
+      return res.status(404).json({ error: "Dance not found" });
+    }
+
+    const userLikeIndex = dance.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      // User already liked, so unlike
+      dance.likes.splice(userLikeIndex, 1);
+    } else {
+      // User hasn't liked, so like
+      dance.likes.push(req.user._id);
+    }
+
+    await dance.save();
+
+    res.json({
+      likes: dance.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+// Add a comment to a dance
+app.post("/api/dance/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const dance = await Dance.findById(req.params.id);
+    if (!dance) {
+      return res.status(404).json({ error: "Dance not found" });
+    }
+
+    const newComment = {
+      user: req.user._id,
+      content: req.body.content,
+      createdAt: new Date(),
+    };
+
+    dance.comments.push(newComment);
+    await dance.save();
+
+    // Populate the comments with user details
+    await dance.populate("comments.user", "displayName");
+
+    res.status(201).json({
+      comments: dance.comments,
+    });
+  } catch (err) {
+    console.error("Comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+// Add a reply to a specific comment
+app.post(
+  "/api/dance/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const dance = await Dance.findById(req.params.id);
+      if (!dance) {
+        return res.status(404).json({ error: "Dance not found" });
+      }
+
+      // Find the specific comment
+      const comment = dance.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      // Create new reply
+      const newReply = {
+        user: req.user._id,
+        content: req.body.content,
+        createdAt: new Date(),
+      };
+
+      // Add reply to the comment
+      comment.replies.push(newReply);
+      await dance.save();
+
+      // Populate user details for the comment and its replies
+      await dance.populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+
+      // Find the updated comment to return
+      const updatedComment = dance.comments.id(req.params.commentId);
+
+      res.status(201).json({
+        comment: updatedComment,
+      });
+    } catch (err) {
+      console.error("Reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+// Remove a comment (admin only)
+app.delete(
+  "/api/dance/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const dance = await Dance.findById(req.params.id);
+      if (!dance) {
+        return res.status(404).json({ error: "Dance not found" });
+      }
+
+      // Remove the comment
+      dance.comments = dance.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await dance.save();
+
+      // Populate the comments with user details
+      await dance.populate("comments.user", "displayName");
+
+      res.json({
+        comments: dance.comments,
+      });
+    } catch (err) {
+      console.error("Remove comment error:", err);
+      res.status(500).json({ error: "Failed to remove comment" });
+    }
+  }
+);
+
+// Remove a reply from a comment (admin only)
+app.delete(
+  "/api/dance/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const dance = await Dance.findById(req.params.id);
+      if (!dance) {
+        return res.status(404).json({ error: "Dance not found" });
+      }
+
+      // Find the specific comment
+      const comment = dance.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      // Remove the specific reply
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await dance.save();
+
+      // Populate user details for the comment and its replies
+      await dance.populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+
+      // Find the updated comment to return
+      const updatedComment = dance.comments.id(req.params.commentId);
+
+      res.json({
+        comment: updatedComment,
+      });
+    } catch (err) {
+      console.error("Remove reply error:", err);
+      res.status(500).json({ error: "Failed to remove reply" });
+    }
+  }
+);
+
 // FOODS API ROUTES
 app.get("/api/foods", async (req, res) => {
   try {
@@ -805,9 +1652,32 @@ app.get("/api/foods", async (req, res) => {
 
 app.get("/api/foods/:id", async (req, res) => {
   try {
-    const food = await Food.findById(req.params.id);
+    const food = await Food.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!food) return res.status(404).json({ error: "Food not found" });
-    res.json(food);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = food.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...food.toObject(),
+      likes: food.likes.length,
+      userLiked,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch food" });
   }
@@ -827,6 +1697,7 @@ app.put("/api/foods/:id", ensureAdmin, async (req, res) => {
   try {
     const food = await Food.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
+      runValidators: true,
     });
     if (!food) return res.status(404).json({ error: "Food not found" });
     res.json(food);
@@ -857,9 +1728,32 @@ app.get("/api/festivals", async (req, res) => {
 
 app.get("/api/festivals/:id", async (req, res) => {
   try {
-    const festival = await Festival.findById(req.params.id);
+    const festival = await Festival.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!festival) return res.status(404).json({ error: "Festival not found" });
-    res.json(festival);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = festival.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...festival.toObject(),
+      likes: festival.likes.length,
+      userLiked,
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch festival" });
   }
@@ -905,12 +1799,34 @@ app.get("/api/ancientscience", async (req, res) => {
 
 app.get("/api/ancientscience/:id", async (req, res) => {
   try {
-    const science = await AncientScience.findById(req.params.id);
+    const science = await AncientScience.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!science)
       return res
         .status(404)
         .json({ error: "Ancient Science detail not found" });
-    res.json(science);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = science.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...science.toObject(),
+      userLiked,
+    });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -981,12 +1897,35 @@ app.post("/api/clothing", async (req, res) => {
 app.get("/api/clothing/:id", async (req, res) => {
   try {
     console.log("Fetching clothing with ID:", req.params.id); // Debugging
-    const clothing = await Clothing.findById(req.params.id);
+    const clothing = await Clothing.findById(req.params.id).populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
     if (!clothing) {
       console.log("Clothing not found for ID:", req.params.id); // Debugging
       return res.status(404).json({ error: "Clothing not found" });
     }
-    res.json(clothing);
+
+    // If a user is logged in, check if they've liked the article
+    let userLiked = false;
+    if (req.user) {
+      userLiked = clothing.likes.some(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({
+      ...clothing.toObject(),
+      likes: clothing.likes.length,
+      userLiked,
+    });
   } catch (err) {
     console.error("Error fetching clothing:", err); // Debugging
     res.status(500).json({ error: "Server error" });
@@ -1019,6 +1958,934 @@ app.delete("/api/clothing/:id", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// ===== LIKE AND COMMENT ROUTES FOR ALL COMPONENTS =====
+
+// Temple likes and comments
+app.post("/api/temples/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const temple = await Temple.findById(req.params.id);
+    if (!temple) {
+      return res.status(404).json({ error: "Temple not found" });
+    }
+
+    const userLikeIndex = temple.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      temple.likes.splice(userLikeIndex, 1);
+    } else {
+      temple.likes.push(req.user._id);
+    }
+
+    await temple.save();
+
+    res.json({
+      likes: temple.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Temple like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+app.post("/api/temples/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const temple = await Temple.findById(req.params.id);
+    if (!temple) {
+      return res.status(404).json({ error: "Temple not found" });
+    }
+
+    const comment = {
+      user: req.user._id,
+      content: req.body.content,
+    };
+
+    temple.comments.push(comment);
+    await temple.save();
+
+    // Populate user info for the new comment
+    const populatedTemple = await Temple.findById(req.params.id).populate(
+      "comments.user",
+      "displayName email"
+    );
+
+    res.json({ comments: populatedTemple.comments });
+  } catch (err) {
+    console.error("Temple comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+app.delete(
+  "/api/temples/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const temple = await Temple.findById(req.params.id);
+      if (!temple) {
+        return res.status(404).json({ error: "Temple not found" });
+      }
+
+      temple.comments = temple.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await temple.save();
+      res.json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      console.error("Delete temple comment error:", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+app.post(
+  "/api/temples/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const temple = await Temple.findById(req.params.id);
+      if (!temple) {
+        return res.status(404).json({ error: "Temple not found" });
+      }
+
+      const comment = temple.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const reply = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      comment.replies.push(reply);
+      await temple.save();
+
+      // Populate user info for the updated comment
+      const populatedTemple = await Temple.findById(req.params.id).populate(
+        "comments.user comments.replies.user",
+        "displayName email"
+      );
+      const updatedComment = populatedTemple.comments.id(req.params.commentId);
+
+      res.json({ comment: updatedComment });
+    } catch (err) {
+      console.error("Temple reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/temples/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const temple = await Temple.findById(req.params.id);
+      if (!temple) {
+        return res.status(404).json({ error: "Temple not found" });
+      }
+
+      const comment = temple.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await temple.save();
+      res.json({ message: "Reply deleted successfully" });
+    } catch (err) {
+      console.error("Delete temple reply error:", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Literature likes and comments
+app.post("/api/literature/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const literature = await Literature.findById(req.params.id);
+    if (!literature) {
+      return res.status(404).json({ error: "Literature not found" });
+    }
+
+    const userLikeIndex = literature.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      literature.likes.splice(userLikeIndex, 1);
+    } else {
+      literature.likes.push(req.user._id);
+    }
+
+    await literature.save();
+
+    res.json({
+      likes: literature.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Literature like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+app.post(
+  "/api/literature/:id/comments",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const literature = await Literature.findById(req.params.id);
+      if (!literature) {
+        return res.status(404).json({ error: "Literature not found" });
+      }
+
+      const comment = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      literature.comments.push(comment);
+      await literature.save();
+
+      const populatedLiterature = await Literature.findById(
+        req.params.id
+      ).populate("comments.user", "displayName email");
+
+      res.json({ comments: populatedLiterature.comments });
+    } catch (err) {
+      console.error("Literature comment error:", err);
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  }
+);
+
+app.delete(
+  "/api/literature/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const literature = await Literature.findById(req.params.id);
+      if (!literature) {
+        return res.status(404).json({ error: "Literature not found" });
+      }
+
+      literature.comments = literature.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await literature.save();
+      res.json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      console.error("Delete literature comment error:", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+app.post(
+  "/api/literature/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const literature = await Literature.findById(req.params.id);
+      if (!literature) {
+        return res.status(404).json({ error: "Literature not found" });
+      }
+
+      const comment = literature.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const reply = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      comment.replies.push(reply);
+      await literature.save();
+
+      const populatedLiterature = await Literature.findById(
+        req.params.id
+      ).populate("comments.user comments.replies.user", "displayName email");
+      const updatedComment = populatedLiterature.comments.id(
+        req.params.commentId
+      );
+
+      res.json({ comment: updatedComment });
+    } catch (err) {
+      console.error("Literature reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/literature/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const literature = await Literature.findById(req.params.id);
+      if (!literature) {
+        return res.status(404).json({ error: "Literature not found" });
+      }
+
+      const comment = literature.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await literature.save();
+      res.json({ message: "Reply deleted successfully" });
+    } catch (err) {
+      console.error("Delete literature reply error:", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Festival likes and comments
+app.post("/api/festivals/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const festival = await Festival.findById(req.params.id);
+    if (!festival) {
+      return res.status(404).json({ error: "Festival not found" });
+    }
+
+    const userLikeIndex = festival.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      festival.likes.splice(userLikeIndex, 1);
+    } else {
+      festival.likes.push(req.user._id);
+    }
+
+    await festival.save();
+
+    res.json({
+      likes: festival.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Festival like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+app.post(
+  "/api/festivals/:id/comments",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const festival = await Festival.findById(req.params.id);
+      if (!festival) {
+        return res.status(404).json({ error: "Festival not found" });
+      }
+
+      const comment = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      festival.comments.push(comment);
+      await festival.save();
+
+      const populatedFestival = await Festival.findById(req.params.id).populate(
+        "comments.user",
+        "displayName email"
+      );
+
+      res.json({ comments: populatedFestival.comments });
+    } catch (err) {
+      console.error("Festival comment error:", err);
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  }
+);
+
+app.delete(
+  "/api/festivals/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const festival = await Festival.findById(req.params.id);
+      if (!festival) {
+        return res.status(404).json({ error: "Festival not found" });
+      }
+
+      festival.comments = festival.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await festival.save();
+      res.json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      console.error("Delete festival comment error:", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+app.post(
+  "/api/festivals/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const festival = await Festival.findById(req.params.id);
+      if (!festival) {
+        return res.status(404).json({ error: "Festival not found" });
+      }
+
+      const comment = festival.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const reply = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      comment.replies.push(reply);
+      await festival.save();
+
+      const populatedFestival = await Festival.findById(req.params.id).populate(
+        "comments.user comments.replies.user",
+        "displayName email"
+      );
+      const updatedComment = populatedFestival.comments.id(
+        req.params.commentId
+      );
+
+      res.json({ comment: updatedComment });
+    } catch (err) {
+      console.error("Festival reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/festivals/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const festival = await Festival.findById(req.params.id);
+      if (!festival) {
+        return res.status(404).json({ error: "Festival not found" });
+      }
+
+      const comment = festival.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await festival.save();
+      res.json({ message: "Reply deleted successfully" });
+    } catch (err) {
+      console.error("Delete festival reply error:", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Food likes and comments
+app.post("/api/foods/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const food = await Food.findById(req.params.id);
+    if (!food) {
+      return res.status(404).json({ error: "Food not found" });
+    }
+
+    const userLikeIndex = food.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      food.likes.splice(userLikeIndex, 1);
+    } else {
+      food.likes.push(req.user._id);
+    }
+
+    await food.save();
+
+    res.json({
+      likes: food.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Food like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+app.post("/api/foods/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const food = await Food.findById(req.params.id);
+    if (!food) {
+      return res.status(404).json({ error: "Food not found" });
+    }
+
+    const comment = {
+      user: req.user._id,
+      content: req.body.content,
+    };
+
+    food.comments.push(comment);
+    await food.save();
+
+    const populatedFood = await Food.findById(req.params.id).populate(
+      "comments.user",
+      "displayName email"
+    );
+
+    res.json({ comments: populatedFood.comments });
+  } catch (err) {
+    console.error("Food comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+app.delete(
+  "/api/foods/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const food = await Food.findById(req.params.id);
+      if (!food) {
+        return res.status(404).json({ error: "Food not found" });
+      }
+
+      food.comments = food.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await food.save();
+      res.json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      console.error("Delete food comment error:", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+app.post(
+  "/api/foods/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const food = await Food.findById(req.params.id);
+      if (!food) {
+        return res.status(404).json({ error: "Food not found" });
+      }
+
+      const comment = food.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const reply = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      comment.replies.push(reply);
+      await food.save();
+
+      const populatedFood = await Food.findById(req.params.id).populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+
+      res.json({ comments: populatedFood.comments });
+    } catch (err) {
+      console.error("Food reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/foods/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const food = await Food.findById(req.params.id);
+      if (!food) {
+        return res.status(404).json({ error: "Food not found" });
+      }
+
+      const comment = food.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await food.save();
+      res.json({ message: "Reply deleted successfully" });
+    } catch (err) {
+      console.error("Delete food reply error:", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Clothing likes and comments
+app.post("/api/clothing/:id/like", ensureAuthenticated, async (req, res) => {
+  console.log("=== CLOTHING LIKE DEBUG ===");
+  console.log("Request params:", req.params);
+  console.log("Request user:", req.user);
+  console.log("Request body:", req.body);
+
+  try {
+    const clothing = await Clothing.findById(req.params.id);
+    if (!clothing) {
+      console.log("Clothing not found");
+      return res.status(404).json({ error: "Clothing not found" });
+    }
+
+    console.log("Found clothing:", clothing.name);
+    console.log("Current likes:", clothing.likes);
+
+    const userLikeIndex = clothing.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    console.log("User like index:", userLikeIndex);
+
+    if (userLikeIndex > -1) {
+      clothing.likes.splice(userLikeIndex, 1);
+      console.log("Removed like");
+    } else {
+      clothing.likes.push(req.user._id);
+      console.log("Added like");
+    }
+
+    await clothing.save();
+    console.log("Saved clothing with likes:", clothing.likes.length);
+
+    res.json({
+      likes: clothing.likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Clothing like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
+  }
+});
+
+app.post(
+  "/api/clothing/:id/comments",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const clothing = await Clothing.findById(req.params.id);
+      if (!clothing) {
+        return res.status(404).json({ error: "Clothing not found" });
+      }
+
+      const comment = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      clothing.comments.push(comment);
+      await clothing.save();
+
+      const populatedClothing = await Clothing.findById(req.params.id).populate(
+        "comments.user",
+        "displayName email"
+      );
+
+      res.json({ comments: populatedClothing.comments });
+    } catch (err) {
+      console.error("Clothing comment error:", err);
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  }
+);
+
+app.delete(
+  "/api/clothing/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const clothing = await Clothing.findById(req.params.id);
+      if (!clothing) {
+        return res.status(404).json({ error: "Clothing not found" });
+      }
+
+      clothing.comments = clothing.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await clothing.save();
+      res.json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      console.error("Delete clothing comment error:", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+app.post(
+  "/api/clothing/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const clothing = await Clothing.findById(req.params.id);
+      if (!clothing) {
+        return res.status(404).json({ error: "Clothing not found" });
+      }
+
+      const comment = clothing.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const reply = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      comment.replies.push(reply);
+      await clothing.save();
+
+      const populatedClothing = await Clothing.findById(req.params.id).populate(
+        [
+          {
+            path: "comments.user",
+            select: "displayName",
+          },
+          {
+            path: "comments.replies.user",
+            select: "displayName",
+          },
+        ]
+      );
+
+      res.json({ comments: populatedClothing.comments });
+    } catch (err) {
+      console.error("Clothing reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/clothing/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const clothing = await Clothing.findById(req.params.id);
+      if (!clothing) {
+        return res.status(404).json({ error: "Clothing not found" });
+      }
+
+      const comment = clothing.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await clothing.save();
+      res.json({ message: "Reply deleted successfully" });
+    } catch (err) {
+      console.error("Delete clothing reply error:", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Ancient Science likes and comments
+app.post(
+  "/api/ancientscience/:id/like",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const science = await AncientScience.findById(req.params.id);
+      if (!science) {
+        return res.status(404).json({ error: "Ancient Science not found" });
+      }
+
+      const userLikeIndex = science.likes.findIndex(
+        (likeId) => likeId.toString() === req.user._id.toString()
+      );
+
+      if (userLikeIndex > -1) {
+        science.likes.splice(userLikeIndex, 1);
+      } else {
+        science.likes.push(req.user._id);
+      }
+
+      await science.save();
+
+      res.json({
+        likes: science.likes.length,
+        userLiked: userLikeIndex === -1,
+      });
+    } catch (err) {
+      console.error("Ancient Science like error:", err);
+      res.status(500).json({ error: "Failed to process like" });
+    }
+  }
+);
+
+app.post(
+  "/api/ancientscience/:id/comments",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const science = await AncientScience.findById(req.params.id);
+      if (!science) {
+        return res.status(404).json({ error: "Ancient Science not found" });
+      }
+
+      const comment = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      science.comments.push(comment);
+      await science.save();
+
+      const populatedScience = await AncientScience.findById(
+        req.params.id
+      ).populate("comments.user", "displayName email");
+
+      res.json({ comments: populatedScience.comments });
+    } catch (err) {
+      console.error("Ancient Science comment error:", err);
+      res.status(500).json({ error: "Failed to add comment" });
+    }
+  }
+);
+
+app.delete(
+  "/api/ancientscience/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const science = await AncientScience.findById(req.params.id);
+      if (!science) {
+        return res.status(404).json({ error: "Ancient Science not found" });
+      }
+
+      science.comments = science.comments.filter(
+        (comment) => comment._id.toString() !== req.params.commentId
+      );
+
+      await science.save();
+      res.json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      console.error("Delete ancient science comment error:", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+app.post(
+  "/api/ancientscience/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const science = await AncientScience.findById(req.params.id);
+      if (!science) {
+        return res.status(404).json({ error: "Ancient Science not found" });
+      }
+
+      const comment = science.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      const reply = {
+        user: req.user._id,
+        content: req.body.content,
+      };
+
+      comment.replies.push(reply);
+      await science.save();
+
+      const populatedScience = await AncientScience.findById(
+        req.params.id
+      ).populate("comments.user comments.replies.user", "displayName email");
+      const updatedComment = populatedScience.comments.id(req.params.commentId);
+
+      res.json({ comment: updatedComment });
+    } catch (err) {
+      console.error("Ancient Science reply error:", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/ancientscience/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const science = await AncientScience.findById(req.params.id);
+      if (!science) {
+        return res.status(404).json({ error: "Ancient Science not found" });
+      }
+
+      const comment = science.comments.id(req.params.commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found" });
+      }
+
+      comment.replies = comment.replies.filter(
+        (reply) => reply._id.toString() !== req.params.replyId
+      );
+
+      await science.save();
+      res.json({ message: "Reply deleted successfully" });
+    } catch (err) {
+      console.error("Delete ancient science reply error:", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Serve uploaded files statically so the client can load /uploads/gallery/* URLs
+app.use(
+  "/uploads/gallery",
+  express.static(path.join(process.cwd(), "uploads/gallery"))
+);
+
+// Start the server
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Server accessible at http://localhost:${PORT}`);
 });

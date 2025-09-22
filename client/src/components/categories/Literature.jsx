@@ -29,6 +29,7 @@ import {
   Add,
   Star,
   Category,
+  Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 
@@ -46,70 +47,6 @@ export default function Literature({ user }) {
     image: "",
   });
 
-  // Dummy data with rich content
-  const dummyLiterature = [
-    {
-      _id: "1",
-      title: "Thirukkural",
-      author: "Thiruvalluvar",
-      period: "3rd Century BCE - 3rd Century CE",
-      category: "Ethics & Philosophy",
-      description:
-        "A classical Tamil text consisting of 1330 couplets dealing with ethics, political and social thought, and love.",
-      significance:
-        "One of the most important works in Tamil literature, translated into numerous languages worldwide.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The Thirukkural is divided into three books: Aram (Virtue), Porul (Wealth), and Inbam (Love). Each book contains chapters that systematically explore various aspects of human life and society.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "2",
-      title: "Silappatikaram",
-      author: "Ilango Adigal",
-      period: "5th-6th Century CE",
-      category: "Epic Poetry",
-      description:
-        "An epic Tamil poem that tells the story of Kannagi and her husband Kovalan, exploring themes of love, justice, and divine retribution.",
-      significance:
-        "First Tamil epic poem and one of the five great epics of Tamil literature.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The epic is structured in three cantos (kandams) - Pukhar Kandam, Madurai Kandam, and Vanci Kandam, each representing different cities and stages of the story.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "3",
-      title: "Manimekalai",
-      author: "Satthanar",
-      period: "6th Century CE",
-      category: "Epic Poetry",
-      description:
-        "The sequel to Silappatikaram, focusing on the spiritual journey of Manimekalai, Kovalan and Madhavi's daughter.",
-      significance:
-        "Important Buddhist epic that explores themes of compassion, dharma, and spiritual awakening.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "The epic follows Manimekalai's transformation from a dancer to a Buddhist nun, spreading the message of ahimsa and compassion.",
-      createdAt: new Date(),
-    },
-    {
-      _id: "4",
-      title: "Kambaramayanam",
-      author: "Kambar",
-      period: "12th Century CE",
-      category: "Epic Poetry",
-      description:
-        "Tamil version of the Ramayana, considered one of the greatest works in Tamil literature for its poetic excellence.",
-      significance:
-        "Demonstrates the height of Tamil literary achievement and poetic sophistication.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-      content:
-        "Kambar's retelling of the Ramayana adds Tamil cultural elements and showcases exceptional literary craftsmanship with unique poetic meters.",
-      createdAt: new Date(),
-    },
-  ];
-
   const handleCardClick = (literatureId) => {
     navigate(`/explore/literature/${literatureId}`);
   };
@@ -123,7 +60,7 @@ export default function Literature({ user }) {
       setLiterature(data);
     } catch (err) {
       console.error("Error fetching literature:", err);
-      setLiterature(dummyLiterature); // Fallback to dummy data
+      setLiterature([]); // Fallback to empty array instead of dummy data
     } finally {
       setLoading(false);
     }
@@ -195,20 +132,26 @@ export default function Literature({ user }) {
   };
 
   const handleDelete = (id) => {
-    if (
-      window.confirm("Are you sure you want to delete this literature work?")
-    ) {
+    if (window.confirm("Are you sure you want to delete this literature entry?")) {
       (async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/literature/${id}`, {
             method: "DELETE",
             credentials: "include",
           });
+          
           if (!res.ok) throw new Error("Delete failed");
+          
+          // Optimistic update
+          setLiterature(prevLiterature => 
+            prevLiterature.filter((lit) => lit._id !== id)
+          );
+          
+          // Optional: Refresh to ensure consistency
           await fetchLiterature();
         } catch (err) {
-          console.error("Error deleting literature:", err);
-          alert("Failed to delete literature");
+          console.error(err);
+          alert("Failed to delete literature entry");
         }
       })();
     }
@@ -228,14 +171,18 @@ export default function Literature({ user }) {
       <Box 
         sx={{ 
           mb: 6, 
-          textAlign: 'center', 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
+        <Typography
           variant="h2" 
-          sx={{ 
+            sx={{
             fontWeight: 900, 
             color: "#000", 
             position: 'relative',
@@ -281,19 +228,15 @@ export default function Literature({ user }) {
             },
           }}
         >
-          Tamil Literature
+          Literature
         </Typography>
         
         {user && user.role === "admin" && (
           <Box 
             sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                transform: 'scale(1.05)',
                 '& button': {
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -361,8 +304,10 @@ export default function Literature({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },  
+                  maxWidth: '100%',
+                  height: 'auto', 
+                  minHeight: 450,
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -400,7 +345,7 @@ export default function Literature({ user }) {
                 {(literature.image || literature.imageLink) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={literature.image || literature.imageLink}
                     alt={literature.title}
                     sx={{ 
@@ -447,18 +392,16 @@ export default function Literature({ user }) {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {user && user.role === "admin" && (
                     <Box 
                       sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
                         display: "flex", 
-                        gap: 1 
+                        justifyContent: 'flex-end',
+                        gap: 1,
+                        mb: 1,
                       }}
                     >
                       <IconButton
@@ -507,7 +450,7 @@ export default function Literature({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' },
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -521,7 +464,7 @@ export default function Literature({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: '0.8rem', md: '0.9rem' },
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
@@ -539,11 +482,26 @@ export default function Literature({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Ensures consistent height for 3 lines
                       }}
                     >
                       {literature.period}
                     </Typography>
+                    
+                    {/* Like Count Display */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#000', 
+                          fontSize: '0.875rem',
+                          fontWeight: 500 
+                        }}
+                      >
+                        {literature.likes ? literature.likes.length : 0} Likes
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Button

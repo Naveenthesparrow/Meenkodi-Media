@@ -43,6 +43,7 @@ import {
   Restaurant,
   Palette,
   Schedule,
+  Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 
@@ -85,31 +86,12 @@ export default function Festivals({ user }) {
       setFestivals(processedFestivals);
     } catch (err) {
       console.error("Error fetching Festivals data:", err);
-      // Fallback to dummy data if fetch fails
-      const dummyFestivals = [
-        {
-          _id: "1",
-          name: "Pongal Festival",
-          description: "A harvest festival celebrated in Tamil Nadu to honor the Sun God and agricultural abundance.",
-          image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-          type: "Harvest Festival",
-        },
-        {
-          _id: "2",
-          name: "Chithirai Festival",
-          description: "A significant festival marking the Tamil New Year, celebrated with great enthusiasm.",
-          image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-          type: "New Year Festival",
-        }
-      ];
-      setFestivals(dummyFestivals);
+      // Fallback to empty array if fetch fails
+      setFestivals([]);
     } finally {
       setLoading(false);
     }
   };
-
-  // Removed filteredFestivals
-
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
@@ -171,18 +153,26 @@ export default function Festivals({ user }) {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this festival?")) {
+    if (window.confirm("Are you sure you want to delete this festival entry?")) {
       (async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/festivals/${id}`, {
             method: "DELETE",
             credentials: "include",
           });
+          
           if (!res.ok) throw new Error("Delete failed");
+          
+          // Optimistic update
+          setFestivals(prevFestivals => 
+            prevFestivals.filter((festival) => festival._id !== id)
+          );
+          
+          // Optional: Refresh to ensure consistency
           await fetchFestivals();
         } catch (err) {
-          console.error("Error deleting festival:", err);
-          alert("Failed to delete festival");
+          console.error(err);
+          alert("Failed to delete festival entry");
         }
       })();
     }
@@ -204,30 +194,95 @@ export default function Festivals({ user }) {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box
         sx={{
-          mb: 4,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          mb: 6, 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <Typography variant="h3" sx={{ fontWeight: 700, color: "#000" }}>
-          Tamil Festivals
+        <Typography
+          variant="h2" 
+            sx={{
+            fontWeight: 900, 
+            color: "#000", 
+            position: 'relative',
+            display: 'inline-block',
+            letterSpacing: -1,
+            padding: '0 10px',
+            transition: 'all 0.3s ease',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              left: '-50px',
+              width: '40px',
+              height: '3px',
+              backgroundColor: '#000',
+              transform: 'translateY(-50%)',
+              transition: 'all 0.3s ease',
+            },
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: '50%',
+              right: '-50px',
+              width: '40px',
+              height: '3px',
+              backgroundColor: '#000',
+              transform: 'translateY(-50%)',
+              transition: 'all 0.3s ease',
+            },
+            '&:hover': {
+              color: '#333',
+              transform: 'scale(1.02)',
+              '&::before': {
+                width: '60px',
+                left: '-70px',
+                backgroundColor: '#666',
+              },
+              '&::after': {
+                width: '60px',
+                right: '-70px',
+                backgroundColor: '#666',
+              },
+            },
+          }}
+        >
+          Festivals
         </Typography>
         {user && user.role === "admin" && (
-          <Button
-            onClick={handleAdd}
-            variant="contained"
-            startIcon={<Add />}
-            sx={{
-              bgcolor: "#000",
-              color: "#fff",
-              "&:hover": { bgcolor: "#333" },
-              borderRadius: 0,
-              px: 3,
+          <Box 
+            sx={{ 
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.05)',
+                '& button': {
+                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
+                  transform: 'translateY(-3px)',
+                }
+              }
             }}
           >
-            Add Festival
-          </Button>
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<Add />}
+              sx={{
+                bgcolor: "#000",
+                color: "#fff",
+                "&:hover": { bgcolor: "#333" },
+                borderRadius: 0,
+                px: 3,
+                width: { xs: '100%', md: 'auto' }, // Full width on small screens
+              }}
+            >
+              Add Festival
+            </Button>
+          </Box>
         )}
       </Box>
 
@@ -236,17 +291,18 @@ export default function Festivals({ user }) {
       <Grid container spacing={4}>
         {festivals.map((festival, index) => (
           <Fade in={true} timeout={500 + index * 200} key={festival._id}>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={6} md={4}> {/* Added sm={6} for tablet layout */}
               <Card
                 sx={{
-                  width: 350,  // Fixed width
+                  width: { xs: '100%', sm: 350 },  // Responsive width: full on xs, fixed on sm+
+                  maxWidth: '100%', // Ensure it doesn't exceed parent on smaller screens
                   // height: 450, // Removed fixed height to allow dynamic content
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
                   borderRadius: 0,
                   bgcolor: "#fff",
-                  transition: "all 0.3s ease", // Changed to all for smoother transitions
+                  transition: "all 0.3s ease", 
                   cursor: "pointer",
                   position: 'relative',
                   overflow: 'hidden',
@@ -280,7 +336,7 @@ export default function Festivals({ user }) {
                 {(festival.image || festival.imageLink) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={festival.image || festival.imageLink}
                     alt={festival.name}
                     sx={{ 
@@ -320,63 +376,68 @@ export default function Festivals({ user }) {
                   </Box>
                 )}
                 <CardContent
+                  className="card-content" // Added for hover effect
                   sx={{
                     p: 3,
                     flexGrow: 1,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
+                    // position: 'relative', // Removed as admin buttons are no longer absolute within CardContent
+                    transition: 'all 0.3s ease',
                   }}
                 >
                   {user && user.role === "admin" && (
-                  <Box
-                    sx={{
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
-                      display: "flex",
-                        gap: 1 
+                    <Box
+                      sx={{
+                        // Removed absolute positioning for responsiveness
+                        // position: 'absolute', 
+                        // top: 10, 
+                        // right: 10, 
+                        display: "flex",
+                        justifyContent: 'flex-end', // Align buttons to the right
+                        gap: 1,
+                        mb: 2, // Margin bottom to separate from title
                       }}
                     >
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(festival);
-                          }}
-                          size="small"
-                          sx={{
-                            color: "#000",
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(festival);
+                        }}
+                        size="small"
+                        sx={{
+                          color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <Edit />
-                        </IconButton>
-                        <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(festival._id);
-                          }}
-                          size="small"
-                          sx={{
-                            color: "#000",
+                        }}
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(festival._id);
+                        }}
+                        size="small"
+                        sx={{
+                          color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    )}
+                        }}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  )}
                   <Box>
                     <Typography
                       variant="h5"
@@ -385,7 +446,7 @@ export default function Festivals({ user }) {
                         color: "#000",
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -399,7 +460,7 @@ export default function Festivals({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: '0.8rem', md: '0.9rem' }, // Responsive font size
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
@@ -417,13 +478,28 @@ export default function Festivals({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
                       }}
                     >
                       {festival.description.length > 150 
                         ? `${festival.description.substring(0, 150)}...` 
                         : festival.description}
                         </Typography>
+                        
+                        {/* Like Count Display */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: '#000', 
+                              fontSize: '0.875rem',
+                              fontWeight: 500 
+                            }}
+                          >
+                            {festival.likes ? festival.likes.length : 0} Likes
+                          </Typography>
+                        </Box>
                   </Box>
 
                   <Button

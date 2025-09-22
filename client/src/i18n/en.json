@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "Tamil Heritage",
+    "menu": "Menu",
+    "loading": "Loading...",
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile",
+    "loginWithGoogle": "Login with Google",
+    "pleaseLogin": "Please log in to view your profile"
+  },
+  "nav": {
+    "explore": "Explore",
+    "events": "Events",
+    "gallery": "Gallery",
+    "articles": "Articles",
+    "resources": "Resources",
+    "temples": "Temples",
+    "kings": "Kings",
+    "literature": "Literature",
+    "dance": "Dance",
+    "foods": "Foods",
+    "festivals": "Festivals",
+    "clothing": "Clothing",
+    "ancientScience": "Ancient Science"
+  },
+  "home": {
+    "heroTitle": "Meendezhum Pandiyam",
+    "didYouKnow": "Did You Know?",
+    "kuralTitle": "Thirukkural of the Day",
+    "translation": "Translation:",
+    "landscapes": "Landscapes of Tamil Heritage",
+    "exploreLandscape": "Explore {{name}} Landscape",
+    "close": "Close"
+  },
+  "errors": {
+    "notFound": "Page Not Found"
+  },
+  "footer": {
+    "brand": "Tamil Heritage",
+    "rights": "All rights reserved."
+  },
+  "explore": {
+    "title": "Explore Everything"
+  },
+  "common": {
+    "readMore": "Read More",
+    "cancel": "Cancel",
+    "save": "Save",
+    "download": "Download"
+  },
+  "articles": {
+    "add": "Add Article",
+    "addNew": "Add New Article",
+    "edit": "Edit Article",
+    "title": "Title",
+    "author": "Author",
+    "category": "Category",
+    "content": "Content",
+    "mediaLinks": "Media Links"
+  },
+  "events": {
+    "add": "Add Event",
+    "addNew": "Add New Event",
+    "edit": "Edit Event",
+    "title": "Title",
+    "date": "Date",
+    "location": "Location",
+    "description": "Description",
+    "mediaLinks": "Media Links"
+  },
+  "gallery": {
+    "add": "Add Gallery Item",
+    "addNew": "Add New Gallery Item",
+    "edit": "Edit Gallery Item",
+    "title": "Title",
+    "category": "Category",
+    "description": "Description",
+    "mediaLinks": "Media Links"
+  },
+  "resources": {
+    "add": "Add Resource",
+    "addNew": "Add New Resource",
+    "edit": "Edit Resource",
+    "title": "Title",
+    "author": "Author",
+    "category": "Category",
+    "description": "Description",
+    "downloadLink": "Download Link",
+    "downloadLinkPlaceholder": "Optional: Add a download link for the resource",
+    "mediaLinks": "Media Links"
+  },
+  "language": {
+    "english": "English",
+    "tamil": "Tamil"
+  }
+}

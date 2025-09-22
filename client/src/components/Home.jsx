@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -32,6 +33,7 @@ import {
 } from "@mui/icons-material";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import ExploreIcon from "@mui/icons-material/Explore";
+import YinYangAnimation from "./common/YinYangAnimation";
 
 const TAMIL_MOTIF =
   "https://upload.wikimedia.org/wikipedia/commons/6/6b/Tamil_om_symbol.svg";
@@ -47,6 +49,7 @@ function getRandomFact() {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
   const [lands, setLands] = useState([]);
   const [articles, setArticles] = useState([]);
   const [gallery, setGallery] = useState([]);
@@ -148,50 +151,40 @@ export default function Home() {
           சங்கம்
         </Typography>
       </Box>
-      {/* HERO SECTION (VIDEO ONLY) */}
+      {/* Yin-Yang animation: main hero visual (video removed) */}
       <Box
         sx={{
-          position: "relative",
-          minHeight: { xs: 400, md: 600 },
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          textAlign: "center",
-          py: 8,
-          mb: 6,
+          my: { xs: 1.5, md: 3 },
+          bgcolor: "#fff",
           width: "100%",
-          height: "80vh", // Maintain existing height
         }}
       >
-        <iframe
-          src={`https://www.youtube.com/embed/PD8850MZw18?autoplay=1&mute=1&loop=1&playlist=PD8850MZw18&controls=0&showinfo=0&modestbranding=1&iv_load_policy=3&rel=0`}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100vw", // Full viewport width
-            height: "100%", // Maintain container height
-            objectFit: "cover",
-            zIndex: 0,
-            opacity: 1,
-            border: "none",
-            pointerEvents: "none",
-            transform: "scale(1.4)", // Zoom to cover entire area
-            transformOrigin: "center"
+  <YinYangAnimation size={{ xs: 240, sm: 340, md: 480 }} bg="#fff" />
+        <Typography
+          sx={{
+            fontWeight: 500,
+            textAlign: "center",
+            fontSize: { xs: 18, sm: 24, md: 32 },
+            mt: { xs: 1, sm: 2 },
+            mb: { xs: 1.5, sm: 2 },
+            color: "#000",
+            letterSpacing: 0.5,
           }}
-          allow="autoplay; encrypted-media"
-          allowFullScreen={false}
-          frameBorder="0"
-        ></iframe>
+        >
+          {t('home.heroTitle')}
+        </Typography>
       </Box>
       <Divider
         sx={{
           bgcolor: "#eee",
           height: 2,
-          maxWidth: 120,
+          maxWidth: { xs: 80, sm: 120 },
           mx: "auto",
-          mb: 6,
+          mt: { xs: 0.5, sm: 0.5 },
+          mb: { xs: 2.5, sm: 4 },
           borderRadius: 2,
         }}
       />
@@ -238,7 +231,7 @@ export default function Home() {
               },
             }}
           >
-            Did You Know?
+            {t('home.didYouKnow')}
           </Typography>
           <Typography
             variant="body1"
@@ -333,7 +326,7 @@ export default function Home() {
                 textAlign: "center",
               }}
             >
-              Loading...
+              {t('app.loading')}
             </Typography>
           ) : kuralError ? (
             <Typography
@@ -381,7 +374,7 @@ export default function Home() {
                   fontFamily: "'Poppins', serif",
                 }}
               >
-                <b>Translation:</b> {kural.translation}
+                <b>{t('home.translation')}</b> {kural.translation}
               </Typography>
             </Box>
           ) : null}
@@ -428,7 +421,7 @@ export default function Home() {
               }
             }}
           >
-            Landscapes of Tamil Heritage
+            {t('home.landscapes')}
           </Typography>
 
           {/* Progressive Land Type Sections */}
@@ -589,7 +582,7 @@ export default function Home() {
                     land: lands.find(l => l.name.toLowerCase() === land.name.toLowerCase()) 
                   })}
                 >
-                  Explore {land.name} Landscape
+                  {t('home.exploreLandscape', { name: land.name })}
                 </Button>
               </Box>
             </Box>
@@ -626,10 +619,10 @@ export default function Home() {
             mb: 1,
           }}
         >
-          தமிழ் மரபு | Tamil Heritage
+          {t('footer.brand')} | {t('app.title')}
         </Typography>
         <Typography variant="body2" sx={{ color: "#111", mb: 1 }}>
-          © {new Date().getFullYear()} Tamil Heritage. All rights reserved.
+          © {new Date().getFullYear()} {t('footer.brand')}. {t('footer.rights')}
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 1 }}>
           <a
@@ -750,7 +743,7 @@ export default function Home() {
                   fontFamily: "Inter, Arial, sans-serif",
                 }}
               >
-                Close
+                {t('home.close')}
               </Button>
             </>
           )}

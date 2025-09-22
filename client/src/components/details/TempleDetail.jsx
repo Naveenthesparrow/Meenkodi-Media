@@ -6,7 +6,7 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
+  CardMedia,
   Container,
   IconButton,
   Dialog,
@@ -16,11 +16,22 @@ import {
   TextField,
   Alert,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import {
   ArrowBack,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  ThumbUp,
+  ThumbUpOutlined,
+  Share,
+  Send,
+  Reply,
+  EmojiEmotions,
+  Delete,
+  Favorite,
+  Close,
+  Add
 } from "@mui/icons-material";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
@@ -28,10 +39,18 @@ import MediaUpload from "../common/MediaUpload";
 function TempleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [temple, setTemple] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [user, setUser] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [newReply, setNewReply] = useState("");
+  const [likes, setLikes] = useState(0);
+  const [userLiked, setUserLiked] = useState(false);
+
+  // Entity state
+  const [temple, setTemple] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
@@ -46,20 +65,156 @@ function TempleDetail() {
   const [editVideoUrl, setEditVideoUrl] = useState("");
   const [editVideoLink, setEditVideoLink] = useState("");
 
+  // Delete confirmation states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteType, setDeleteType] = useState(""); // 'comment' or 'reply'
+  
+  // Comment reactions states
+  const [commentReactions, setCommentReactions] = useState({});
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
+
+  // Emoji options
+  const emojiOptions = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+
+  // Inline editing states
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableData, setEditableData] = useState({
+    name: "",
+    location: "",
+    deity: "",
+    period: "",
+    dynasty: "",
+    builder: "",
+    architecture: "", 
+    description: "",
+    significance: "",
+    image: "",
+    imageUrl: "",
+    imageLink: "",
+    videoUrl: "",
+    videoLink: "",
+    contentSections: [], // New field for multiple content sections
+  });
+
+  // Function to add a new content section
+  const addContentSection = () => {
+    console.log("Adding new content section");
+    setEditableData(prev => {
+      // Make sure contentSections is an array even if it's undefined
+      const currentSections = Array.isArray(prev.contentSections) ? prev.contentSections : [];
+      
+      return {
+        ...prev,
+        contentSections: [
+          ...currentSections, 
+          { 
+            subtitle: "", 
+            content: "",
+            imageUrl: "",
+            imageLink: "",
+            videoUrl: "",
+            videoTitle: "",
+            videoDescription: "",
+            id: Date.now() // Unique identifier
+          }
+        ]
+      };
+    });
+  };
+
+  // Function to remove a content section
+  const removeContentSection = (idToRemove) => {
+    console.log("Removing section with id or index:", idToRemove);
+    setEditableData(prev => {
+      // If idToRemove is a number less than array length, treat it as an index
+      if (typeof idToRemove === 'number' && idToRemove < prev.contentSections.length) {
+        return {
+          ...prev,
+          contentSections: [
+            ...prev.contentSections.slice(0, idToRemove),
+            ...prev.contentSections.slice(idToRemove + 1)
+          ]
+        };
+      } 
+      // Otherwise filter by id
+      else {
+        return {
+          ...prev,
+          contentSections: prev.contentSections.filter(section => section.id !== idToRemove)
+        };
+      }
+    });
+  };
+  
+  // Function to handle content section field changes
+  const handleContentSectionChange = (idx, field, value) => {
+    setEditableData(prev => ({
+      ...prev,
+      contentSections: prev.contentSections.map((section, i) => {
+        // Match either by ID (preferred) or by index as fallback
+        if ((section.id && section.id === idx) || i === idx) {
+          return { ...section, [field]: value };
+        }
+        return section;
+      })
+    }));
+  };
+
   useEffect(() => {
-    fetchUser();
-    fetchTemple();
+    const initializeData = async () => {
+      await fetchUser();
+      await fetchTemple();
+    };
+    initializeData();
   }, [id]);
+
+  // Update userLiked when user data becomes available
+  useEffect(() => {
+    if (user && temple) {
+      const likesArray = Array.isArray(temple.likes) ? temple.likes : [];
+      setUserLiked(
+        likesArray.some((likeId) => likeId.toString() === user._id.toString())
+      );
+    }
+  }, [user, temple]);
 
   const fetchUser = async () => {
     try {
-      const res = await fetch("/auth/user", { credentials: "include" });
-      if (res.ok) {
-        const userData = await res.json();
-        setUser(userData);
+      console.log("Fetching user in TempleDetail...");
+      const res = await fetch(
+        `${
+          import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
+        }/auth/user`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      console.log("User fetch response status:", res.status);
+
+      if (res.status === 401) {
+        console.log("User not authenticated");
+        setUser(null);
+        return;
       }
+
+      if (!res.ok) {
+        console.error("Failed to fetch user:", res.status, res.statusText);
+        setUser(null);
+        return;
+      }
+
+      const userData = await res.json();
+      console.log("Fetched User Data:", userData);
+      setUser(userData);
     } catch (err) {
       console.error("Error fetching user:", err);
+      setUser(null);
     }
   };
 
@@ -72,6 +227,39 @@ function TempleDetail() {
       }
       const data = await res.json();
       setTemple(data);
+      setComments(data.comments || []);
+      // Handle likes - ensure it's an array and check if user liked
+      const likesArray = Array.isArray(data.likes) ? data.likes : [];
+      setLikes(likesArray.length);
+      setUserLiked(
+        likesArray.some(
+          (likeId) => likeId.toString() === user?._id?.toString()
+        ) || false
+      );
+      
+      // Set editable data with all fields including contentSections
+      setEditableData({
+        name: data.name || "",
+        location: data.location || "",
+        deity: data.deity || "",
+        period: data.period || "",
+        dynasty: data.dynasty || "",
+        builder: data.builder || "",
+        architecture: data.architecture || "",
+        description: data.description || "",
+        significance: data.significance || "",
+        image: data.image || "",
+        imageUrl: data.imageUrl || "",
+        imageLink: data.imageLink || "",
+        videoUrl: data.videoUrl || "",
+        videoLink: data.videoLink || "",
+        contentSections: Array.isArray(data.contentSections) 
+          ? data.contentSections.map(section => ({
+              ...section,
+              id: section._id || Date.now() + Math.random().toString(36).substr(2, 9)  // Ensure each section has a client-side ID
+            }))
+          : [],
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -91,6 +279,41 @@ function TempleDetail() {
     setEditVideoUrl(temple.videoUrl || "");
     setEditVideoLink(temple.videoLink || "");
     setEditOpen(true);
+  };
+
+  const handleInlineSave = async () => {
+    try {
+      // Process content sections to ensure they're in the right format
+      // Remove temporary id properties before sending to the server
+      const formattedContentSections = editableData.contentSections.map(section => {
+        const { id, ...sectionWithoutId } = section;
+        return sectionWithoutId;
+      });
+
+      const updateData = {
+        ...editableData,
+        contentSections: formattedContentSections
+      };
+
+      const res = await fetch(`/api/temples/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updateData),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update temple");
+      }
+
+      // Update local state with new data
+      setTemple((prev) => ({ ...prev, ...updateData }));
+      setIsEditing(false);
+      setError(""); // Clear any previous errors
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handleEditSubmit = async () => {
@@ -134,10 +357,194 @@ function TempleDetail() {
           const data = await res.json();
           throw new Error(data.error || "Failed to delete temple");
         }
-        navigate("/temples");
+        navigate("/explore/temples");
       } catch (err) {
         setError(err.message);
       }
+    }
+  };
+
+  // Add like functionality
+  const handleLike = async () => {
+    if (!user) {
+      alert("Please log in to like this temple");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/temples/${id}/like`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to like/unlike");
+      }
+
+      const data = await res.json();
+      setLikes(data.likes);
+      setUserLiked(data.userLiked);
+    } catch (err) {
+      console.error("Like error:", err);
+      alert("Failed to like the temple");
+    }
+  };
+
+  // Add comment functionality
+  const handleAddComment = async () => {
+    if (!user) {
+      alert("Please log in to comment");
+      return;
+    }
+
+    if (!newComment.trim()) {
+      alert("Comment cannot be empty");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/temples/${id}/comments`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: newComment }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to add comment");
+      }
+
+      const data = await res.json();
+      setComments(data.comments);
+      setNewComment("");
+    } catch (err) {
+      console.error("Comment error:", err);
+      alert("Failed to add comment");
+    }
+  };
+
+  // Add reply functionality
+  const handleAddReply = async (commentId) => {
+    if (!user) {
+      alert("Please log in to reply");
+      return;
+    }
+
+    if (!newReply.trim()) {
+      alert("Reply cannot be empty");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/temples/${id}/comments/${commentId}/replies`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ content: newReply }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to add reply");
+      }
+
+      const data = await res.json();
+
+      // Update the specific comment in the comments array
+      const updatedComments = comments.map((comment) =>
+        comment._id === commentId ? data.comment : comment
+      );
+
+      setComments(updatedComments);
+      setNewReply("");
+      setReplyingTo(null);
+    } catch (err) {
+      console.error("Reply error:", err);
+      alert("Failed to add reply");
+    }
+  };
+
+  // Comment like functionality - REMOVED (not supported by temples backend)
+  const handleCommentLike = async (commentId) => {
+    alert("Comment likes not supported for temples");
+    return;
+  };
+
+  // Comment reaction functionality - REMOVED (not supported by temples backend)
+  const handleCommentReaction = async (commentId, emoji) => {
+    alert("Comment reactions not supported for temples");
+    return;
+  };
+
+  const handleDeleteComment = async () => {
+    try {
+      if (deleteType === "comment") {
+        const res = await fetch(`/api/temples/${id}/comments/${itemToDelete}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to delete comment");
+        }
+
+        setComments(comments.filter((comment) => comment._id !== itemToDelete));
+      } else if (deleteType === "reply") {
+        const [commentId, replyId] = itemToDelete.split("-");
+        const res = await fetch(
+          `/api/temples/${id}/comments/${commentId}/replies/${replyId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to delete reply");
+        }
+
+        setComments(
+          comments.map((comment) =>
+            comment._id === commentId
+              ? {
+                  ...comment,
+                  replies: comment.replies.filter(
+                    (reply) => reply._id !== replyId
+                  ),
+                }
+              : comment
+          )
+        );
+      }
+
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+      setDeleteType("");
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete " + deleteType);
+    }
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: temple.name,
+        text: `Check out this temple: ${temple.name}`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
     }
   };
 
@@ -180,115 +587,1426 @@ function TempleDetail() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: 4,
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    
+    >
       {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
-        <IconButton onClick={() => navigate("/explore/temples")} sx={{ mr: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          mb: 4,
+          width: "100%",
+          justifyContent: "space-between",
+        }}
+      >
+        <IconButton onClick={() => navigate("/explore/temples")}>
           <ArrowBack />
         </IconButton>
-        <Typography variant="h4" sx={{ fontWeight: 700, flex: 1 }}>
+
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
+            textTransform: "uppercase",
+            textAlign: "center",
+            flex: 1,
+            mx: 2,
+          }}
+        >
           {temple.name}
         </Typography>
+
         {user && user.role === "admin" && (
           <Box sx={{ display: "flex", gap: 1 }}>
-            <IconButton onClick={handleEditOpen} color="primary">
-              <EditIcon />
+            <IconButton
+              onClick={() => {
+                if (!isEditing) {
+                  // Prepare editable data when edit is clicked (copy all fields, including contentSections)
+                  setEditableData({
+                    name: temple.name || "",
+                    location: temple.location || "",
+                    period: temple.period || "",
+                    deity: temple.deity || "",
+                    architecture: temple.architecture || "",
+                    description: temple.description || "",
+                    significance: temple.significance || "",
+                    festivals: temple.festivals || "",
+                    image: temple.image || "",
+                    imageUrl: temple.imageUrl || "",
+                    imageLink: temple.imageLink || "",
+                    videoUrl: temple.videoUrl || "",
+                    videoLink: temple.videoLink || "",
+                    contentSections: Array.isArray(temple.contentSections)
+                      ? temple.contentSections.map(section => ({
+                          ...section,
+                          id: section._id || Date.now() + Math.random().toString(36).substr(2, 9)
+                        }))
+                      : [],
+                  });
+                }
+                setIsEditing(!isEditing);
+              }}
+              sx={{
+                color: "#000",
+                border: "1px solid #000",
+                transition: "all 0.3s ease",
+                '&:hover': {
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  transform: 'scale(1.1)'
+                }
+              }}
+              title={isEditing ? "Cancel Edit" : "Edit Temple"}
+            >
+              {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
-            <IconButton onClick={handleDelete} color="error">
+            <IconButton
+              onClick={handleDelete}
+              sx={{
+                color: "#000",
+                border: "1px solid #000",
+                transition: "all 0.3s ease",
+                '&:hover': {
+                  bgcolor: 'rgba(255,0,0,0.1)',
+                  transform: 'scale(1.1)'
+                }
+              }}
+              title="Delete Temple"
+            >
               <DeleteIcon />
             </IconButton>
           </Box>
         )}
       </Box>
 
-      {/* Main Content */}
-      <Card sx={{ mb: 4 }}>
-        {(temple.imageUrl || temple.videoUrl || temple.videoLink) && (
-          <MediaDisplay
-            imageUrl={temple.imageUrl}
-            videoUrl={temple.videoUrl}
-            videoLink={temple.videoLink}
-            title={temple.name}
-            height={400}
-          />
-        )}
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>
-            {temple.location && (
-              <Chip label={`Location: ${temple.location}`} color="primary" />
-            )}
-            {temple.period && (
-              <Chip label={`Period: ${temple.period}`} color="secondary" />
-            )}
-            {temple.deity && (
-              <Chip label={`Deity: ${temple.deity}`} color="info" />
-            )}
-            {temple.architecture && (
-              <Chip label={`Style: ${temple.architecture}`} color="success" />
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          gap: 4,
+        }}
+      >
+        {/* Image Section - Top */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "2px solid #000",
+            position: "relative",
+            maxWidth: 800,
+            mx: "auto",
+            width: "100%",
+          }}
+        >
+          {(isEditing ? editableData.imageUrl || editableData.videoUrl || editableData.videoLink : temple.imageUrl || temple.videoUrl || temple.videoLink) ? (
+            <MediaDisplay
+              imageUrl={isEditing ? editableData.imageUrl : temple.imageUrl}
+              videoUrl={isEditing ? editableData.videoUrl : temple.videoUrl}
+              videoLink={isEditing ? editableData.videoLink : temple.videoLink}
+              title={temple.name}
+              height={400}
+              style={{
+                maxWidth: "100%",
+                maxHeight: 400,
+                objectFit: "contain",
+                padding: 16,
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                width: "100%",
+                height: 400,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                bgcolor: "#f0f0f0",
+                color: "#666",
+                fontSize: "1.2rem",
+                fontWeight: 500,
+              }}
+            >
+              No image available
+            </Box>
+          )}
+        </Box>
+
+        {/* Information Sections */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            maxWidth: 800,
+            mx: "auto",
+            width: "100%",
+          }}
+        >
+          {/* Location and Period */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #000",
+              pb: 2,
+            }}
+          >
+            {!isEditing ? (
+              <>
+                {temple.location && (
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Location: {temple.location}
+                  </Typography>
+                )}
+                {temple.period && (
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Period: {temple.period}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
+                <TextField
+                  label="Location"
+                  value={editableData.location || ""}
+                  onChange={(e) =>
+                    setEditableData({
+                      ...editableData,
+                      location: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  variant="standard"
+                />
+                <TextField
+                  label="Period"
+                  value={editableData.period || ""}
+                  onChange={(e) =>
+                    setEditableData({ ...editableData, period: e.target.value })
+                  }
+                  fullWidth
+                  variant="standard"
+                />
+              </Box>
             )}
           </Box>
 
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-            Description
-          </Typography>
-          <Typography
-            variant="body1"
+          {/* Deity and Architecture */}
+          <Box
             sx={{
-              lineHeight: 1.8,
-              color: "#555",
-              whiteSpace: "pre-wrap",
+              display: "flex",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #000",
+              pb: 2,
             }}
           >
-            {temple.description}
+            {!isEditing ? (
+              <>
+                {temple.deity && (
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Deity: {temple.deity}
+                  </Typography>
+                )}
+                {temple.architecture && (
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Style: {temple.architecture}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
+                <TextField
+                  label="Deity"
+                  value={editableData.deity || ""}
+                  onChange={(e) =>
+                    setEditableData({ ...editableData, deity: e.target.value })
+                  }
+                  fullWidth
+                  variant="standard"
+                />
+                <TextField
+                  label="Architecture Style"
+                  value={editableData.architecture || ""}
+                  onChange={(e) =>
+                    setEditableData({
+                      ...editableData,
+                      architecture: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  variant="standard"
+                />
+              </Box>
+            )}
+          </Box>
+
+          {/* Description */}
+          {!isEditing ? (
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontWeight: 700,
+                  borderBottom: "2px solid #000",
+                  pb: 1,
+                }}
+              >
+                Description
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  lineHeight: 1.6,
+                }}
+              >
+                {temple.description}
+              </Typography>
+            </Box>
+          ) : (
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontWeight: 700,
+                  borderBottom: "2px solid #000",
+                  pb: 1,
+                }}
+              >
+                Description
+              </Typography>
+              <TextField
+                label="Description"
+                value={editableData.description || ""}
+                onChange={(e) =>
+                  setEditableData({
+                    ...editableData,
+                    description: e.target.value,
+                  })
+                }
+                fullWidth
+                multiline
+                rows={4}
+                variant="standard"
+              />
+            </Box>
+          )}
+
+          {/* Significance */}
+          {(temple.significance || isEditing) &&
+            (!isEditing ? (
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 700,
+                    borderBottom: "2px solid #000",
+                    pb: 1,
+                  }}
+                >
+                  Significance
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    whiteSpace: "pre-wrap",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {temple.significance}
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 700,
+                    borderBottom: "2px solid #000",
+                    pb: 1,
+                  }}
+                >
+                  Significance
+                </Typography>
+                <TextField
+                  label="Significance"
+                  value={editableData.significance || ""}
+                  onChange={(e) =>
+                    setEditableData({
+                      ...editableData,
+                      significance: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="standard"
+                />
+              </Box>
+            ))}
+
+          {/* Festivals */}
+          {(temple.festivals || isEditing) &&
+            (!isEditing ? (
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 700,
+                    borderBottom: "2px solid #000",
+                    pb: 1,
+                  }}
+                >
+                  Festivals
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    whiteSpace: "pre-wrap",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {temple.festivals}
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 700,
+                    borderBottom: "2px solid #000",
+                    pb: 1,
+                  }}
+                >
+                  Festivals
+                </Typography>
+                <TextField
+                  label="Festivals"
+                  value={editableData.festivals || ""}
+                  onChange={(e) =>
+                    setEditableData({
+                      ...editableData,
+                      festivals: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="standard"
+                />
+              </Box>
+            ))}
+
+          {/* Main Media URLs - only when editing */}
+          {isEditing && (
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontWeight: 700,
+                  borderBottom: "2px solid #000",
+                  pb: 1,
+                }}
+              >
+                Image URL
+              </Typography>
+              <TextField
+                label="Image URL"
+                value={editableData.imageUrl || ""}
+                onChange={(e) =>
+                  setEditableData({
+                    ...editableData,
+                    imageUrl: e.target.value,
+                  })
+                }
+                fullWidth
+                variant="standard"
+                InputLabelProps={{ shrink: true }}
+                sx={{ mb: 2 }}
+                placeholder="Enter full image URL"
+              />
+              {/* Upload from device for main image */}
+              <MediaUpload
+                onImageChange={(imageUrl) =>
+                  setEditableData((prev) => ({ ...prev, imageUrl }))
+                }
+                onImageLinkChange={(imageLink) =>
+                  setEditableData((prev) => ({ ...prev, imageLink }))
+                }
+                currentImage={editableData.imageUrl}
+                currentImageLink={editableData.imageLink}
+                label="Main Image"
+              />
+              {editableData.imageUrl && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    border: '1px solid #ddd',
+                    borderRadius: 1,
+                    p: 2,
+                  }}
+                >
+                  <img
+                    src={editableData.imageUrl}
+                    alt="Preview"
+                    style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }}
+                    onError={(e) => {
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                    }}
+                  />
+                </Box>
+              )}
+
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontWeight: 700,
+                  borderBottom: "2px solid #000",
+                  pb: 1,
+                }}
+              >
+                Video Details
+              </Typography>
+              <TextField
+                label="Video URL"
+                value={editableData.videoUrl || ""}
+                onChange={(e) =>
+                  setEditableData({
+                    ...editableData,
+                    videoUrl: e.target.value,
+                  })
+                }
+                fullWidth
+                variant="standard"
+                InputLabelProps={{ shrink: true }}
+                sx={{ mb: 2 }}
+                placeholder="Enter full YouTube video URL"
+              />
+              <TextField
+                label="Video Link (optional)"
+                value={editableData.videoLink || ""}
+                onChange={(e) =>
+                  setEditableData({
+                    ...editableData,
+                    videoLink: e.target.value,
+                  })
+                }
+                fullWidth
+                variant="standard"
+                InputLabelProps={{ shrink: true }}
+                sx={{ mb: 2 }}
+                placeholder="Alternate video link"
+              />
+            </Box>
+          )}
+
+          {/* Additional Content Sections */}
+          {isEditing && user && user.role === "admin" && (
+            <Box sx={{ mt: 4 }}>
+              <Typography 
+                variant="h6" 
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '1.25rem',
+                  letterSpacing: 0.5,
+                  mb: 0,
+                }}
+              >
+                Additional Content Sections
+              </Typography>
+              <Button
+                onClick={addContentSection}
+                variant="outlined"
+                startIcon={<Add />}
+                sx={{
+                  color: '#000',
+                  borderColor: '#000',
+                  background: '#fff',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.05)'
+                  },
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  borderRadius: 0,
+                  height: 42,
+                  minWidth: 190,
+                  boxShadow: 'none',
+                  mt: 2,
+                  mb: 2,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                Add Content Section
+              </Button>
+              <Box sx={{ borderBottom: '2px solid #000', width: '100%', mt: 0, mb: 0 }} />
+              {editableData.contentSections.map((section, index) => (
+                <Box 
+                  key={section.id || `editable-section-${index}`} 
+                  sx={{ 
+                    mb: 3, 
+                    p: 2, 
+                    border: '1px solid #000',
+                    position: 'relative' 
+                  }}
+                >
+                  <TextField
+                    label="Subtitle"
+                    value={section.subtitle}
+                    onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].subtitle = e.target.value;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    variant="standard"
+                  />
+                  
+                  <TextField
+                    label="Content"
+                    value={section.content}
+                    onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].content = e.target.value;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    fullWidth
+                    multiline
+                    rows={4}
+                    variant="standard"
+                    sx={{ mb: 2 }}
+                  />
+
+                  {/* Image URL for Content Section */}
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      mt: 2, 
+                      mb: 1, 
+                      fontWeight: 700,
+                      borderBottom: '1px solid #000',
+                      pb: 1,
+                    }}
+                  >
+                    Section Image
+                  </Typography>
+                  
+                  <TextField
+                    label="Image URL"
+                    value={section.imageUrl}
+                    onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].imageUrl = e.target.value;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    variant="standard"
+                    placeholder="Enter full image URL"
+                  />
+
+                  {/* Image Upload for Content Section */}
+                  <MediaUpload
+                    onImageChange={(imageUrl) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].imageUrl = imageUrl;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    onImageLinkChange={(imageLink) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].imageLink = imageLink;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    currentImage={section.imageUrl}
+                    currentImageLink={section.imageLink}
+                    label="Section Image"
+                  />
+
+                  {/* Preview of uploaded/entered image */}
+                  {section.imageUrl && (
+                    <Box 
+                      sx={{ 
+                        mt: 2, 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        border: '1px solid #ddd', 
+                        borderRadius: 1,
+                        p: 2 
+                      }}
+                    >
+                      <img 
+                        src={section.imageUrl} 
+                        alt="Preview" 
+                        style={{ 
+                          maxWidth: '100%', 
+                          maxHeight: 200, 
+                          objectFit: 'contain' 
+                        }}
+                        onError={(e) => {
+                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                        }}
+                      />
+                    </Box>
+                  )}
+
+                  {/* Video Details for Content Section */}
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      mt: 2, 
+                      mb: 1, 
+                      fontWeight: 700,
+                      borderBottom: '1px solid #000',
+                      pb: 1,
+                    }}
+                  >
+                    Section Video Details
+                  </Typography>
+                  
+                  <TextField
+                    label="Video URL"
+                    value={section.videoUrl}
+                    onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoUrl = e.target.value;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    variant="standard"
+                    placeholder="Enter full YouTube video URL"
+                  />
+                  
+                  <TextField
+                    label="Video Title"
+                    value={section.videoTitle}
+                    onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoTitle = e.target.value;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    variant="standard"
+                  />
+                  
+                  <TextField
+                    label="Video Description"
+                    value={section.videoDescription}
+                    onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoDescription = e.target.value;
+                      setEditableData(prev => ({
+                        ...prev,
+                        contentSections: updatedSections
+                      }));
+                    }}
+                    fullWidth
+                    multiline
+                    rows={3}
+                    variant="standard"
+                  />
+                  
+                  <IconButton
+                    onClick={() => removeContentSection(section.id)}
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      color: '#000',
+                    }}
+                  >
+                    <Delete />
+                  </IconButton>
+                </Box>
+              ))}
+            </Box>
+          )}
+
+          {/* Update Buttons - Only show when editing */}
+          {isEditing && user && user.role === "admin" && (
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 2,
+                pt: 0,
+                mt: 2,
+                borderTop: 'none',
+              }}
+            >
+              <Button
+                onClick={() => setIsEditing(false)}
+                variant="text"
+                sx={{
+                  color: "#000",
+                  textTransform: 'uppercase',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  borderRadius: 0,
+                  height: 42,
+                  minWidth: 140,
+                  ml: 0,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                CANCEL
+              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button
+                  onClick={addContentSection}
+                  variant="outlined"
+                  startIcon={<Add />}
+                  sx={{
+                    color: '#000',
+                    borderColor: '#000',
+                    background: '#fff',
+                    '&:hover': {
+                      bgcolor: 'rgba(0,0,0,0.05)'
+                    },
+                    textTransform: 'uppercase',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    borderRadius: 0,
+                    height: 42,
+                    minWidth: 190,
+                    boxShadow: 'none',
+                  }}
+                >
+                  Add Section
+                </Button>
+                <Button
+                  onClick={handleInlineSave}
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#000",
+                    color: "#fff",
+                    '&:hover': {
+                      bgcolor: "#222",
+                    },
+                    textTransform: 'uppercase',
+                    fontSize: '1rem',
+                    borderRadius: 0,
+                    fontWeight: 700,
+                    height: 42,
+                    minWidth: 190,
+                    boxShadow: 'none',
+                  }}
+                >
+                  UPDATE DETAILS
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+
+      {/* Comments Section - New UI */}
+      <Box 
+        sx={{ 
+          mt: 4, 
+          width: '100%', 
+          maxWidth: 800,  
+          mx: 'auto',    
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'stretch',
+          border: '1px solid #000',
+          p: 2,
+          backgroundColor: '#fff',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}
+      >
+        {/* Likes and Share Row */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 2,
+            pb: 1,
+            borderBottom: '1px solid #000'
+          }}
+        >
+          {/* Likes */}
+          <Button
+            startIcon={userLiked ? <ThumbUp /> : <ThumbUpOutlined />}
+            onClick={handleLike}
+            disabled={!user}
+            sx={{
+              color: '#000',
+              textTransform: 'uppercase',
+              fontSize: '0.75rem',
+              letterSpacing: 1,
+              border: '1px solid #000',
+              p: '4px 8px',
+              minWidth: 'auto',
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.05)'
+              },
+              '&.Mui-disabled': {
+                color: '#ccc',
+                borderColor: '#ccc'
+              }
+            }}
+          >
+            {likes} Likes
+          </Button>
+
+          {/* Share */}
+          <Tooltip title="Share this temple">
+            <IconButton 
+              onClick={handleShare}
+              sx={{
+                color: '#000',
+                border: '1px solid #000',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: 'rgba(0,0,0,0.05)',
+                  transform: 'scale(1.1)'
+                }
+              }}
+            >
+              <Share />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        <Typography 
+          variant="h6" 
+          sx={{
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            textAlign: 'center',
+            letterSpacing: '0.03em',
+            borderBottom: '1px solid #000',
+            pb: 1,
+            mb: 1,
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: '1.1rem',
+          }}
+        >
+          Comments ({comments.length})
+        </Typography>
+
+        {/* Comment Input */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            mb: 2,
+            position: 'relative',
+            gap: 1,
+          }}
+        >
+          <TextField
+            fullWidth
+            variant="standard"
+            placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            sx={{ 
+              flex: 1,
+              fontFamily: "'Open Sans', sans-serif",
+              '& .MuiInput-underline:before': {
+                borderBottomColor: '#000',
+              },
+              '& .MuiInput-underline:after': {
+                borderBottomColor: '#000',
+              },
+            }}
+          />
+          <IconButton 
+            onClick={handleAddComment}
+            disabled={!newComment.trim() || !user}
+            sx={{
+              position: 'absolute',
+              right: 0,
+              color: '#000',
+              '&:hover': {
+                bgcolor: 'transparent'
+              },
+              '&.Mui-disabled': {
+                color: '#ccc'
+              }
+            }}
+          >
+            <Send />
+          </IconButton>
+        </Box>
+
+        {/* Comments List */}
+        {comments.length === 0 ? (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              textAlign: 'center', 
+              py: 2,
+              color: '#666',
+              fontStyle: 'italic',
+              fontFamily: "'Open Sans', sans-serif"
+            }}
+          >
+            No comments yet. Be the first to comment!
           </Typography>
-
-          {temple.significance && (
-            <>
-              <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 600 }}>
-                Significance
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  lineHeight: 1.8,
-                  color: "#555",
-                  whiteSpace: "pre-wrap",
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {comments.map((comment) => (
+              <Box 
+                key={comment._id} 
+                sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  gap: 1,
+                  border: '1px solid #eee',
+                  borderRadius: 2,
+                  p: 2,
+                  position: 'relative'
                 }}
               >
-                {temple.significance}
-              </Typography>
-            </>
-          )}
+                {/* Main Comment */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 1
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ 
+                      fontFamily: "'Montserrat', sans-serif", 
+                      fontWeight: 700, 
+                      textTransform: 'uppercase',
+                      fontSize: '0.75rem',
+                      color: '#333',
+                      letterSpacing: 0.5
+                    }}
+                  >
+                    {comment.user?.displayName || 'Anonymous'}
+                  </Typography>
+                  <Typography 
+                    variant="caption"
+                    sx={{ 
+                      fontFamily: "'Roboto', sans-serif",
+                      color: '#666',
+                      fontSize: '0.625rem',
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </Typography>
+                </Box>
+                
+                <Typography 
+                  variant="body2"
+                  sx={{ 
+                    fontFamily: "'Open Sans', sans-serif",
+                    lineHeight: 1.6,
+                    wordBreak: 'break-word',
+                    mb: 1,
+                    fontSize: '0.875rem',
+                    color: '#333'
+                  }}
+                >
+                  {comment.content}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
 
-          {temple.festivals && (
-            <>
-              <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 600 }}>
-                Festivals
-              </Typography>
-              <Typography
-                variant="body1"
+      {/* Old Comments Section */}
+      <Box
+        sx={{
+          mt: 4,
+          width: "100%",
+          maxWidth: 800,
+          mx: "auto",
+          display: 'none', /* Hidden for now */
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            mb: 3,
+            color: "#000",
+            fontWeight: 700,
+            borderBottom: "2px solid #000",
+            pb: 1,
+          }}
+        >
+          Comments ({comments.length})
+        </Typography>
+
+        {/* Comment Input */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 3,
+            position: "relative",
+          }}
+        >
+          <TextField
+            fullWidth
+            variant="standard"
+            placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            sx={{
+              flex: 1,
+              "& .MuiInput-underline:before": {
+                borderBottomColor: "#000",
+              },
+              "& .MuiInput-underline:after": {
+                borderBottomColor: "#000",
+              },
+            }}
+          />
+          <Button
+            onClick={handleAddComment}
+            disabled={!newComment.trim() || !user}
+            sx={{
+              position: "absolute",
+              right: 0,
+              color: "#000",
+              "&:hover": {
+                bgcolor: "transparent",
+              },
+              "&.Mui-disabled": {
+                color: "#ccc",
+              },
+            }}
+          >
+            <Send />
+          </Button>
+        </Box>
+
+        {/* Comments List */}
+        {comments.length === 0 ? (
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              py: 2,
+              color: "#666",
+              fontStyle: "italic",
+            }}
+          >
+            No comments yet. Be the first to comment!
+          </Typography>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {comments.map((comment) => (
+              <Box
+                key={comment._id}
                 sx={{
-                  lineHeight: 1.8,
-                  color: "#555",
-                  whiteSpace: "pre-wrap",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1,
+                  border: "1px solid #eee",
+                  borderRadius: 2,
+                  p: 2,
+                  position: "relative",
                 }}
               >
-                {temple.festivals}
-              </Typography>
-            </>
-          )}
-        </CardContent>
-      </Card>
+                {/* Main Comment */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                      color: "#000",
+                    }}
+                  >
+                    {comment.user?.displayName || "Anonymous"}
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#666",
+                      }}
+                    >
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </Typography>
+                    {user?.role === "admin" && (
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setItemToDelete(comment._id);
+                          setDeleteType("comment");
+                          setDeleteDialogOpen(true);
+                        }}
+                        sx={{ color: "#d32f2f" }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Box>
+                </Box>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    lineHeight: 1.6,
+                    color: "#333",
+                  }}
+                >
+                  {comment.content}
+                </Typography>
+
+                {/* Comment actions section */}
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}
+                >
+                  {/* Reply button only - like and emoji features not supported for temples */}
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      setReplyingTo(
+                        replyingTo === comment._id ? null : comment._id
+                      )
+                    }
+                    sx={{
+                      color: "#666",
+                      textTransform: "none",
+                      fontSize: "0.75rem",
+                      "&:hover": {
+                        bgcolor: "rgba(0,0,0,0.05)",
+                      },
+                    }}
+                  >
+                    <Reply sx={{ fontSize: "1rem", mr: 0.5 }} />
+                    Reply
+                  </Button>
+                </Box>
+
+                {/* Emoji picker */}
+                {emojiPickerOpen[comment._id] && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                      p: 1,
+                      bgcolor: "#f9f9f9",
+                      borderRadius: 1,
+                      mt: 1,
+                    }}
+                  >
+                    {emojiOptions.map((emoji) => (
+                      <Button
+                        key={emoji}
+                        onClick={() => {
+                          handleCommentReaction(comment._id, emoji);
+                          setEmojiPickerOpen((prev) => ({
+                            ...prev,
+                            [comment._id]: false,
+                          }));
+                        }}
+                        sx={{
+                          fontSize: "1.2rem",
+                          minWidth: "auto",
+                          p: 0.5,
+                        }}
+                      >
+                        {emoji}
+                      </Button>
+                    ))}
+                  </Box>
+                )}
+
+                {/* Reply input */}
+                {replyingTo === comment._id && (
+                  <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Write a reply..."
+                      value={newReply}
+                      onChange={(e) => setNewReply(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => handleAddReply(comment._id)}
+                      disabled={!newReply.trim()}
+                      size="small"
+                    >
+                      Reply
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Replies */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <Box sx={{ mt: 2, pl: 2, borderLeft: "2px solid #e0e0e0" }}>
+                    {comment.replies.map((reply) => (
+                      <Box key={reply._id} sx={{ mb: 2 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: 1,
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            {reply.user?.displayName || "Anonymous"}
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#666" }}
+                            >
+                              {new Date(reply.createdAt).toLocaleDateString()}
+                            </Typography>
+                            {user?.role === "admin" && (
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setItemToDelete(
+                                    `${comment._id}-${reply._id}`
+                                  );
+                                  setDeleteType("reply");
+                                  setDeleteDialogOpen(true);
+                                }}
+                                sx={{ color: "#d32f2f" }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            )}
+                          </Box>
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: "0.875rem" }}
+                        >
+                          {reply.content}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
 
       {/* Edit Dialog */}
-      <Dialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        maxWidth="md"
-        fullWidth
+
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)}
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 0,
+            border: '2px solid #000',
+          },
+        }}
       >
-        <DialogTitle>Edit Temple</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          sx={{
+            fontWeight: 700,
+            bgcolor: '#000',
+            color: '#fff',
+            textAlign: 'center',
+          }}
+        >
+          Edit Temple Details
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
           <TextField
             label="Name"
             value={editName}
@@ -322,7 +2040,7 @@ function TempleDetail() {
             margin="normal"
           />
           <TextField
-            label="Architecture Style"
+            label="Architecture"
             value={editArchitecture}
             onChange={(e) => setEditArchitecture(e.target.value)}
             fullWidth
@@ -339,21 +2057,144 @@ function TempleDetail() {
             sx={{ mb: 2 }}
             margin="normal"
           />
-          <MediaUpload
-            imageUrl={editImageUrl}
-            imageLink={editImageLink}
-            videoUrl={editVideoUrl}
-            videoLink={editVideoLink}
-            onImageUpload={setEditImageUrl}
-            onImageLinkChange={setEditImageLink}
-            onVideoUpload={setEditVideoUrl}
-            onVideoLinkChange={setEditVideoLink}
+          <TextField
+            label="Image URL"
+            value={editImageUrl}
+            onChange={(e) => setEditImageUrl(e.target.value)}
+            fullWidth
+            sx={{ mb: 2 }}
+            margin="normal"
+          />
+          <TextField
+            label="Image Link"
+            value={editImageLink}
+            onChange={(e) => setEditImageLink(e.target.value)}
+            fullWidth
+            sx={{ mb: 2 }}
+            margin="normal"
+          />
+          <TextField
+            label="Video URL"
+            value={editVideoUrl}
+            onChange={(e) => setEditVideoUrl(e.target.value)}
+            fullWidth
+            sx={{ mb: 2 }}
+            margin="normal"
+          />
+          <TextField
+            label="Video Link"
+            value={editVideoLink}
+            onChange={(e) => setEditVideoLink(e.target.value)}
+            fullWidth
+            sx={{ mb: 2 }}
+            margin="normal"
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditSubmit} variant="contained">
+        <DialogActions
+          sx={{
+            p: 2,
+            justifyContent: "space-between",
+            bgcolor: "#f0f0f0",
+          }}
+        >
+          <Button
+            onClick={() => setEditOpen(false)}
+            sx={{
+              color: "#000",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                bgcolor: "rgba(0,0,0,0.05)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditSubmit}
+            variant="contained"
+            sx={{
+              bgcolor: "#000",
+              color: "#fff",
+              borderRadius: 0,
+              "&:hover": {
+                bgcolor: "#333",
+                transform: "translateY(-3px)",
+                boxShadow: "0 8px 15px rgba(0,0,0,0.2)",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
             Update
+          </Button>
+        </DialogActions>
+    </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        sx={{
+          "& .MuiDialog-paper": {
+            borderRadius: 0,
+            border: "2px solid #000",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: "#000",
+            color: "#fff",
+            textAlign: "center",
+            fontWeight: 700,
+          }}
+        >
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          <Typography
+            sx={{
+              textAlign: "center",
+              fontSize: "1rem",
+            }}
+          >
+            Are you sure you want to delete this {deleteType}? This action
+            cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            p: 2,
+            justifyContent: "center",
+            gap: 2,
+            bgcolor: "#f0f0f0",
+          }}
+        >
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{
+              color: "#000",
+              border: "1px solid #000",
+              px: 3,
+              "&:hover": {
+                bgcolor: "rgba(0,0,0,0.05)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteComment}
+            variant="contained"
+            sx={{
+              bgcolor: "#d32f2f",
+              color: "#fff",
+              px: 3,
+              "&:hover": {
+                bgcolor: "#b71c1c",
+              },
+            }}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
@@ -362,3 +2203,8 @@ function TempleDetail() {
 }
 
 export default TempleDetail;
+
+
+
+
+

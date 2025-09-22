@@ -19,7 +19,7 @@ import {
   IconButton,
   Fade,
 } from "@mui/material";
-import { Edit, Delete, Add } from "@mui/icons-material";
+import { Edit, Delete, Add, Favorite } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import API_BASE_URL from "../../utils/api";
 
@@ -46,7 +46,7 @@ export default function Clothing({ user }) {
       setClothing(data);
     } catch (err) {
       console.error("Error fetching clothing:", err);
-      setClothing(dummyClothing); // Fallback to dummy data
+      setClothing([]); // Fallback to an empty array instead of dummy data
     } finally {
       setLoading(false);
     }
@@ -55,24 +55,6 @@ export default function Clothing({ user }) {
   useEffect(() => {
     fetchClothing();
   }, []);
-
-  // Dummy data for Clothing
-  const dummyClothing = [
-    {
-      _id: "1",
-      name: "Saree",
-      type: "Traditional Women's Wear",
-      description: "A traditional garment from the Indian subcontinent, consisting of a drape varying from five to nine yards in length.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-    },
-    {
-      _id: "2",
-      name: "Dhoti",
-      type: "Traditional Men's Wear",
-      description: "A traditional attire for men in India. It is a rectangular piece of unstitched cloth, usually around 4.5 metres (15 ft) long, wrapped around the waist and legs.",
-      image: "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-    },
-  ];
 
   const handleEdit = (item) => {
     setEditItem(item);
@@ -135,17 +117,26 @@ export default function Clothing({ user }) {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this clothing item?")) {
+    if (window.confirm("Are you sure you want to delete this clothing entry?")) {
       (async () => {
         try {
           const res = await fetch(`${API_BASE_URL}/api/clothing/${id}`, {
             method: "DELETE",
             credentials: "include",
           });
+          
           if (!res.ok) throw new Error("Delete failed");
+          
+          // Optimistic update
+          setClothing(prevClothing => 
+            prevClothing.filter((item) => item._id !== id)
+          );
+          
+          // Optional: Refresh to ensure consistency
           await fetchClothing();
         } catch (err) {
-          alert("Failed to delete clothing");
+          console.error(err);
+          alert("Failed to delete clothing entry");
         }
       })();
     }
@@ -165,14 +156,18 @@ export default function Clothing({ user }) {
       <Box 
         sx={{ 
           mb: 6, 
-          textAlign: 'center', 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
+        <Typography
           variant="h2" 
-          sx={{ 
+            sx={{
             fontWeight: 900, 
             color: "#000", 
             position: 'relative',
@@ -218,19 +213,15 @@ export default function Clothing({ user }) {
             },
           }}
         >
-          Tamil Clothing
+          Clothing
         </Typography>
         
         {user && user.role === "admin" && (
           <Box 
             sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
-              transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                transform: 'scale(1.05)',
                 '& button': {
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -298,8 +289,10 @@ export default function Clothing({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },  
+                  maxWidth: '100%',
+                  height: 'auto', 
+                  minHeight: 450,
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -337,7 +330,7 @@ export default function Clothing({ user }) {
                 {(item.image || item.imageLink) ? (
                   <CardMedia
                     component="img"
-                    height="200"
+                    height={200}
                     image={item.image || item.imageLink}
                     alt={item.name}
                     sx={{ 
@@ -384,18 +377,16 @@ export default function Clothing({ user }) {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {user && user.role === "admin" && (
                     <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
+                      sx={{
                         display: "flex", 
-                        gap: 1 
+                        justifyContent: 'flex-end',
+                        gap: 1,
+                        mb: 1,
                       }}
                     >
                       <IconButton
@@ -444,7 +435,7 @@ export default function Clothing({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.25rem', md: '1.5rem' },
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -458,7 +449,7 @@ export default function Clothing({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: "0.9rem",
+                        fontSize: { xs: '0.8rem', md: '0.9rem' },
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
@@ -476,13 +467,28 @@ export default function Clothing({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
+                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Ensures consistent height for 3 lines
                       }}
                     >
                       {item.description.length > 150 
                         ? `${item.description.substring(0, 150)}...` 
                         : item.description}
                     </Typography>
+                    
+                    {/* Like Count Display */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#000', 
+                          fontSize: '0.875rem',
+                          fontWeight: 500 
+                        }}
+                      >
+                        {item.likes ? item.likes.length : 0} Likes
+                      </Typography>
+                    </Box>
                   </Box>
 
                   <Button
