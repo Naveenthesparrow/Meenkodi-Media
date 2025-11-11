@@ -6,6 +6,7 @@ import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import "@fontsource/poppins";
 import "@fontsource/noto-serif-tamil";
 import i18n from "./i18n/i18n";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 const theme = createTheme({
   palette: {
@@ -81,8 +82,10 @@ i18n.on('languageChanged', (lng) => {
 });
 
 root.render(
-  <ThemeProvider theme={theme}>
-    <CssBaseline />
-    <App />
-  </ThemeProvider>
+  <ErrorBoundary>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <App />
+    </ThemeProvider>
+  </ErrorBoundary>
 );
