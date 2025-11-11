@@ -23,19 +23,15 @@ export default defineConfig({
     historyApiFallback: true
   },
   build: {
-    // Ensure proper asset handling
     assetsDir: 'assets',
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('react-router')) return 'router-vendor';
-          if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
-          if (id.includes('@mui')) return 'mui-vendor';
-          if (id.includes('i18next') || id.includes('react-i18next')) return 'i18n-vendor';
-          if (id.includes('lucide-react')) return 'icons-vendor';
-          if (id.includes('swiper')) return 'swiper-vendor';
-          return 'vendor';
+        manualChunks: {
+          'react-core': ['react', 'react-dom'],
+          'react-router': ['react-router-dom'],
+          'mui': ['@mui/material', '@mui/icons-material'],
         }
       }
     }
