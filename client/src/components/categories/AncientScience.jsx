@@ -46,6 +46,8 @@ import {
   Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
+import { useTranslation } from 'react-i18next';
 import MediaUpload from "../common/MediaUpload";
 
 export default function AncientScience({ user }) {
@@ -56,13 +58,19 @@ export default function AncientScience({ user }) {
   const [editItem, setEditItem] = useState(null);
   // Removed filter-related state and methods
   const [formData, setFormData] = useState({
-    name: "",
-    period: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    period_en: "",
+    period_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
     imageLink: "",
     videoLink: "",
   });
+  // Bilingual content resolver
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchScience();
@@ -86,10 +94,25 @@ export default function AncientScience({ user }) {
   };
   const handleEdit = (item) => {
     setEditItem(item);
+    // map bilingual source (object {en,ta} or primitive) to inputs
+    const toStr = (val) => {
+      if (!val) return "";
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') return val.en || val.ta || "";
+      return "";
+    };
+    const toTa = (val) => {
+      if (!val) return "";
+      if (typeof val === 'object') return val.ta || "";
+      return ""; // primitive assumed EN only
+    };
     setFormData({
-      name: item.name,
-      period: item.period,
-      description: item.description,
+      name_en: toStr(item.name),
+      name_ta: toTa(item.name),
+      period_en: toStr(item.period),
+      period_ta: toTa(item.period),
+      description_en: toStr(item.description),
+      description_ta: toTa(item.description),
       image: item.image,
       imageLink: item.imageLink || "",
       videoLink: item.videoLink || "",
@@ -99,9 +122,12 @@ export default function AncientScience({ user }) {
 
   const handleAdd = () => {
     setFormData({
-      name: "",
-      period: "",
-      description: "",
+      name_en: "",
+      name_ta: "",
+      period_en: "",
+      period_ta: "",
+      description_en: "",
+      description_ta: "",
       image: "",
       imageLink: "",
       videoLink: "",
@@ -113,33 +139,27 @@ export default function AncientScience({ user }) {
     (async () => {
       try {
         let res;
+        const payload = {
+          name: { en: formData.name_en || "", ta: formData.name_ta || "" },
+          period: { en: formData.period_en || "", ta: formData.period_ta || "" },
+          description: { en: formData.description_en || "", ta: formData.description_ta || "" },
+          image: formData.image,
+          imageLink: formData.imageLink,
+          videoLink: formData.videoLink,
+        };
         if (editItem) {
           res = await fetch(`${API_BASE_URL}/api/ancientscience/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              period: formData.period,
-              description: formData.description,
-              image: formData.image,
-              imageLink: formData.imageLink,
-              videoLink: formData.videoLink,
-            }),
+            body: JSON.stringify(payload),
           });
         } else {
           res = await fetch(`${API_BASE_URL}/api/ancientscience`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              period: formData.period,
-              description: formData.description,
-              image: formData.image,
-              imageLink: formData.imageLink,
-              videoLink: formData.videoLink,
-            }),
+            body: JSON.stringify(payload),
           });
         }
 
@@ -271,7 +291,7 @@ export default function AncientScience({ user }) {
             },
           }}
         >
-          Ancient Science
+          {t('ancientScience.title','Ancient Science')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -304,8 +324,8 @@ export default function AncientScience({ user }) {
                 px: 3,
                 width: '100%', // Ensure button takes full width on small screens
               }}
-            >
-                Add Scientific Knowledge
+      >
+        {t('ancientScience.add','Add Scientific Knowledge')}
             </Button>
           </Box>
         )}
@@ -392,7 +412,7 @@ export default function AncientScience({ user }) {
                     component="img"
                     height={200}
                     image={science.image || science.imageLink}
-                    alt={science.name}
+                    alt={getContent(science.name)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -501,38 +521,43 @@ export default function AncientScience({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {science.name}
+                      {getContent(science.name)}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        fontStyle: "italic",
-                        fontSize: { xs: '0.8rem', md: '0.9rem' }, // Responsive font size
-                        mb: 2,
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {science.period}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#000",
-                        lineHeight: 1.6, 
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
-                      }}
-                    >
-                      {science.description.length > 150 
-                        ? `${science.description.substring(0, 150)}...` 
-                        : science.description}
-                    </Typography>
+                    {getContent(science.period) && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#666",
+                          fontStyle: "italic",
+                          fontSize: { xs: '0.8rem', md: '0.9rem' },
+                          mb: 2,
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {getContent(science.period)}
+                      </Typography>
+                    )}
+                    {getContent(science.description) && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#000",
+                          lineHeight: 1.6, 
+                          mb: 2,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          minHeight: { xs: '4.2rem', md: '4.8rem' },
+                        }}
+                      >
+                        {(() => {
+                          const desc = getContent(science.description) || "";
+                          return desc.length > 150 ? `${desc.substring(0,150)}...` : desc;
+                        })()}
+                      </Typography>
+                    )}
                     
                     {/* Like Count Display */}
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -563,7 +588,7 @@ export default function AncientScience({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -596,32 +621,59 @@ export default function AncientScience({ user }) {
             fontWeight: 700 
           }}
         >
-          {editItem ? "Edit Scientific Knowledge" : "Add New Scientific Knowledge"}
+          {editItem ? t('ancientScience.edit','Edit Scientific Knowledge') : t('ancientScience.addNew','Add New Scientific Knowledge')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
-              <TextField
-                fullWidth
-            label="Name"
-                value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Period"
-                value={formData.period}
-            onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label="Description"
-                value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                multiline
+          <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+            <TextField
+              fullWidth
+              label={t('form.name')+" (EN)"}
+              value={formData.name_en}
+              onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+              sx={{ mb: 2, flex:1 }}
+            />
+            <TextField
+              fullWidth
+              label={t('form.name')+" (TA)"}
+              value={formData.name_ta}
+              onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
+              sx={{ mb: 2, flex:1 }}
+            />
+          </Box>
+          <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+            <TextField
+              fullWidth
+              label={t('form.period', 'Period')+" (EN)"}
+              value={formData.period_en}
+              onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
+              sx={{ mb: 2, flex:1 }}
+            />
+            <TextField
+              fullWidth
+              label={t('form.period', 'Period')+" (TA)"}
+              value={formData.period_ta}
+              onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
+              sx={{ mb: 2, flex:1 }}
+            />
+          </Box>
+          <TextField
+            fullWidth
+            label={t('form.description')+" (EN)"}
+            value={formData.description_en}
+            onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
+            multiline
             minRows={3}
-                sx={{ mb: 2 }}
-              />
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={t('form.description')+" (TA)"}
+            value={formData.description_ta}
+            onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })}
+            multiline
+            minRows={3}
+            sx={{ mb: 2 }}
+          />
           <MediaUpload
             onImageChange={(imageUrl) => setFormData({ ...formData, image: imageUrl })}
             onImageLinkChange={(imageLink) => setFormData({ ...formData, imageLink: imageLink })}
@@ -629,7 +681,7 @@ export default function AncientScience({ user }) {
             currentImage={formData.image}
             currentImageLink={formData.imageLink}
             currentVideoLink={formData.videoLink}
-            label="Science Image/Video"
+            label={t('ancientScience.mediaLabel','Science Image/Video')}
           />
           
           {/* Image Preview */}
@@ -675,7 +727,7 @@ export default function AncientScience({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            Cancel
+            {t('actions.cancel','Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -687,7 +739,7 @@ export default function AncientScience({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
           </Button>
         </DialogActions>
       </Dialog>

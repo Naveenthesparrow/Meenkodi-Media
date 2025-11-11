@@ -46,11 +46,13 @@ import {
   EmojiEmotions,
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
+import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
 
 function DanceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [dance, setDance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -82,28 +84,43 @@ function DanceDetail() {
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    style: "",
-    period: "",
-    achievements: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    style_en: "",
+    style_ta: "",
+    origin_en: "",
+    origin_ta: "",
+    period_en: "",
+    period_ta: "",
+    achievements_en: "",
+    achievements_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
     videoUrl: "",
-    videoTitle: "",
-    videoDescription: "",
+    videoTitle_en: "",
+    videoTitle_ta: "",
+    videoDescription_en: "",
+    videoDescription_ta: "",
   });
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState({
-    name: "",
-    style: "",
-    origin: "",
-    period: "",
-    achievements: "",
-    description: "",
-    image: "",
-    contentSections: [], // Field for multiple content sections
+    name_en: "",
+    name_ta: "",
+    style_en: "",
+    style_ta: "",
+    origin_en: "",
+    origin_ta: "",
+    period_en: "",
+    period_ta: "",
+    achievements_en: "",
+    achievements_ta: "",
+    description_en: "",
+    description_ta: "",
+    imageUrl: "",
+    contentSections: [], // bilingual sections
   });
   
   // Function to add a new content section
@@ -111,16 +128,20 @@ function DanceDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...(prev.contentSections || []), 
-        { 
-          subtitle: "", 
-          content: "",
+        ...prev.contentSections,
+        {
+          subtitle_en: "",
+          subtitle_ta: "",
+          content_en: "",
+          content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
-          videoTitle: "",
-          videoDescription: "",
-          id: Date.now() // Unique identifier
+          videoTitle_en: "",
+          videoTitle_ta: "",
+          videoDescription_en: "",
+          videoDescription_ta: "",
+          id: Date.now()
         }
       ]
     }));
@@ -139,18 +160,45 @@ function DanceDetail() {
   // Function to open edit mode and initialize editableData
   const handleEditOpen = () => {
     if (dance) {
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
       setEditableData({
-        name: dance.name || "",
-        style: dance.style || "",
-        origin: dance.origin || "",
-        period: dance.period || "",
-        achievements: dance.achievements || "",
-        description: dance.description || "",
-        image: dance.image || "",
-        contentSections: dance.contentSections?.map(section => ({
-          ...section,
-          id: section.id || Date.now() + Math.random() // Ensure each section has an id
-        })) || [],
+        name_en: toStr(dance.name),
+        name_ta: toTa(dance.name),
+        style_en: toStr(dance.style),
+        style_ta: toTa(dance.style),
+        origin_en: toStr(dance.origin),
+        origin_ta: toTa(dance.origin),
+        period_en: toStr(dance.period),
+        period_ta: toTa(dance.period),
+        achievements_en: toStr(dance.achievements),
+        achievements_ta: toTa(dance.achievements),
+        description_en: toStr(dance.description),
+        description_ta: toTa(dance.description),
+        imageUrl: dance.image || "",
+        contentSections: (dance.contentSections || []).map(sec => ({
+          subtitle_en: toStr(sec.subtitle),
+          subtitle_ta: toTa(sec.subtitle),
+          content_en: toStr(sec.content),
+          content_ta: toTa(sec.content),
+          imageUrl: sec.imageUrl || "",
+          imageLink: sec.imageLink || "",
+          videoUrl: sec.videoUrl || "",
+          videoTitle_en: toStr(sec.videoTitle),
+          videoTitle_ta: toTa(sec.videoTitle),
+          videoDescription_en: toStr(sec.videoDescription),
+          videoDescription_ta: toTa(sec.videoDescription),
+          id: sec.id || sec._id || Date.now() + Math.random()
+        }))
       });
       setIsEditing(true);
     }
@@ -219,43 +267,42 @@ function DanceDetail() {
 
   const handleSave = async () => {
     try {
-      // Process content sections to ensure they're in the right format
-      // Remove temporary id properties before sending to the server
-      const formattedContentSections = editableData.contentSections && editableData.contentSections.length > 0
-        ? editableData.contentSections.map(section => {
-            const { id, ...sectionWithoutId } = section;
-            return sectionWithoutId;
-          })
-        : [];
-      
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
+      const formattedContentSections = editableData.contentSections.map(section => {
+        const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
+        return {
+          ...rest,
+            subtitle: toBilingual(subtitle_en, subtitle_ta),
+            content: toBilingual(content_en, content_ta),
+            videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+            videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+        };
+      });
+      const updateData = {
+        name: toBilingual(editableData.name_en, editableData.name_ta),
+        style: toBilingual(editableData.style_en, editableData.style_ta),
+        origin: toBilingual(editableData.origin_en, editableData.origin_ta),
+        period: toBilingual(editableData.period_en, editableData.period_ta),
+        achievements: toBilingual(editableData.achievements_en, editableData.achievements_ta),
+        description: toBilingual(editableData.description_en, editableData.description_ta),
+        image: editableData.imageUrl || "",
+        contentSections: formattedContentSections
+      };
       const res = await fetch(`/api/dance/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          name: editableData.name,
-          style: editableData.style,
-          origin: editableData.origin,
-          period: editableData.period,
-          achievements: editableData.achievements,
-          description: editableData.description,
-          image: editableData.image,
-          contentSections: formattedContentSections,
-        }),
+        body: JSON.stringify(updateData)
       });
-
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to update dance");
       }
-
-      // Show success message
       alert("Dance details updated successfully!");
-      
-      // Refresh the dance data
       await fetchDance();
-
-      // Exit editing mode
       setIsEditing(false);
     } catch (err) {
       console.error("Error saving dance details:", err);
@@ -594,7 +641,7 @@ function DanceDetail() {
             mx: 2,
           }}
         >
-          {dance.name}
+          {getContent(dance.name)}
         </Typography>
         {user && user.role === "admin" && (
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -659,10 +706,10 @@ function DanceDetail() {
             width: "100%",
           }}
         >
-          {(isEditing ? editableData.image : dance.image) ? (
+          {(isEditing ? editableData.imageUrl : dance.image) ? (
             <img
-              src={isEditing ? editableData.image : dance.image}
-              alt={dance.name}
+              src={isEditing ? editableData.imageUrl : dance.image}
+              alt={getContent(dance.name)}
               style={{
                 maxWidth: "100%",
                 maxHeight: 600,
@@ -719,7 +766,7 @@ function DanceDetail() {
             >
               {!isEditing ? (
                 <>
-                  {dance.style && dance.style.trim() !== '' && (
+                  {getContent(dance.style) && getContent(dance.style).trim() !== '' && (
                     <Typography
                       variant="subtitle1"
                       sx={{
@@ -728,10 +775,10 @@ function DanceDetail() {
                         letterSpacing: 1,
                       }}
                     >
-                      Style: {dance.style}
+                      Style: {getContent(dance.style)}
                     </Typography>
                   )}
-                  {dance.period && dance.period.trim() !== '' && (
+                  {getContent(dance.period) && getContent(dance.period).trim() !== '' && (
                     <Typography
                       variant="subtitle1"
                       sx={{
@@ -740,37 +787,27 @@ function DanceDetail() {
                         letterSpacing: 1,
                       }}
                     >
-                      Period: {dance.period}
+                      Period: {getContent(dance.period)}
                     </Typography>
                   )}
                 </>
               ) : (
                 <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                  <TextField
-                    label="Style"
-                    value={editableData.style || ''}
-                    onChange={(e) =>
-                      setEditableData({ ...editableData, style: e.target.value })
-                    }
-                    fullWidth
-                    variant="standard"
-                  />
-                  <TextField
-                    label="Period"
-                    value={editableData.period || ''}
-                    onChange={(e) =>
-                      setEditableData({ ...editableData, period: e.target.value })
-                    }
-                    fullWidth
-                    variant="standard"
-                  />
+                  <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                    <TextField label="Style (EN)" value={editableData.style_en} onChange={(e)=>setEditableData({ ...editableData, style_en: e.target.value })} fullWidth variant="standard" />
+                    <TextField label="Style (TA)" value={editableData.style_ta} onChange={(e)=>setEditableData({ ...editableData, style_ta: e.target.value })} fullWidth variant="standard" />
+                  </Box>
+                  <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                    <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                    <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                  </Box>
                 </Box>
               )}
             </Box>
           ) : null}
 
           {/* Achievements - Only show if there's content or in edit mode */}
-          {(!isEditing && dance.achievements) ? (
+          {(!isEditing && getContent(dance.achievements)) ? (
             <Box>
               <Typography
                 variant="h6"
@@ -790,7 +827,7 @@ function DanceDetail() {
                   lineHeight: 1.6,
                 }}
               >
-                {dance.achievements}
+                {getContent(dance.achievements)}
               </Typography>
             </Box>
           ) : isEditing ? (
@@ -806,25 +843,13 @@ function DanceDetail() {
               >
                 Achievements
               </Typography>
-              <TextField
-                label="Achievements"
-                value={editableData.achievements || ''}
-                onChange={(e) =>
-                  setEditableData({
-                    ...editableData,
-                    achievements: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                rows={3}
-                variant="standard"
-              />
+              <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e)=>setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e)=>setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
             </Box>
           ) : null}
 
           {/* Description - Only show if there's content or in edit mode */}
-          {(!isEditing && dance.description) ? (
+          {(!isEditing && getContent(dance.description)) ? (
             <Box>
               <Typography
                 variant="h6"
@@ -844,7 +869,7 @@ function DanceDetail() {
                   lineHeight: 1.6,
                 }}
               >
-                {dance.description}
+                {getContent(dance.description)}
               </Typography>
             </Box>
           ) : isEditing ? (
@@ -860,20 +885,8 @@ function DanceDetail() {
               >
                 Description
               </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description || ''}
-                onChange={(e) =>
-                  setEditableData({
-                    ...editableData,
-                    description: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           ) : null}
 
@@ -893,10 +906,8 @@ function DanceDetail() {
               </Typography>
               <TextField
                 label="Image URL"
-                value={editableData.image || ""}
-                onChange={(e) =>
-                  setEditableData({ ...editableData, image: e.target.value })
-                }
+                value={editableData.imageUrl || ""}
+                onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
                 fullWidth
                 variant="standard"
                 InputLabelProps={{ shrink: true }}
@@ -906,17 +917,13 @@ function DanceDetail() {
 
               {/* Upload from device for main image */}
               <MediaUpload
-                onImageChange={(imageUrl) =>
-                  setEditableData((prev) => ({ ...prev, image: imageUrl }))
-                }
-                onImageLinkChange={(imageLink) =>
-                  setEditableData((prev) => ({ ...prev, image: imageLink }))
-                }
-                currentImage={editableData.image}
+                onImageChange={(imageUrl) => setEditableData(prev => ({ ...prev, imageUrl }))}
+                onImageLinkChange={(imageLink) => setEditableData(prev => ({ ...prev, imageUrl: imageLink }))}
+                currentImage={editableData.imageUrl}
                 label="Main Image"
               />
 
-              {editableData.image && (
+              {editableData.imageUrl && (
                 <Box
                   sx={{
                     mt: 2,
@@ -928,7 +935,7 @@ function DanceDetail() {
                   }}
                 >
                   <img
-                    src={editableData.image}
+                    src={editableData.imageUrl}
                     alt="Preview"
                     style={{
                       maxWidth: "100%",
@@ -971,43 +978,31 @@ function DanceDetail() {
                       position: 'relative' 
                     }}
                   >
-                    <TextField
-                      label="Subtitle"
-                      value={section.subtitle}
-                      onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].subtitle = e.target.value;
-                        }
-                        setEditableData(prev => ({
-                          ...prev,
-                          contentSections: updatedSections
-                        }));
-                      }}
-                      fullWidth
-                      sx={{ mb: 2 }}
-                      variant="standard"
-                    />
+                    <Box sx={{ display:'flex', gap:2 }}>
+                      <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].subtitle_en = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth variant="standard" sx={{ mb:2 }} />
+                      <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].subtitle_ta = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth variant="standard" sx={{ mb:2 }} />
+                    </Box>
                     
-                    <TextField
-                      label="Content"
-                      value={section.content}
-                      onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].content = e.target.value;
-                        }
-                        setEditableData(prev => ({
-                          ...prev,
-                          contentSections: updatedSections
-                        }));
-                      }}
-                      fullWidth
-                      multiline
-                      rows={4}
-                      variant="standard"
-                      sx={{ mb: 2 }}
-                    />
+                    <Box sx={{ display:'flex', gap:2 }}>
+                      <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].content_en = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                      <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].content_ta = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                    </Box>
 
                     <Divider sx={{ my: 2 }} />
 
@@ -1137,42 +1132,30 @@ function DanceDetail() {
                       variant="standard"
                     />
                     
-                    <TextField
-                      label="Video Title"
-                      value={section.videoTitle}
-                      onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].videoTitle = e.target.value;
-                        }
-                        setEditableData(prev => ({
-                          ...prev,
-                          contentSections: updatedSections
-                        }));
-                      }}
-                      fullWidth
-                      sx={{ mb: 2 }}
-                      variant="standard"
-                    />
-                    
-                    <TextField
-                      label="Video Description"
-                      value={section.videoDescription}
-                      onChange={(e) => {
-                        const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                        if (updatedSections[index]) {
-                          updatedSections[index].videoDescription = e.target.value;
-                        }
-                        setEditableData(prev => ({
-                          ...prev,
-                          contentSections: updatedSections
-                        }));
-                      }}
-                      fullWidth
-                      multiline
-                      rows={3}
-                      variant="standard"
-                    />
+                    <Box sx={{ display:'flex', gap:2 }}>
+                      <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoTitle_en = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth variant="standard" sx={{ mb:2 }} />
+                      <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoTitle_ta = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth variant="standard" sx={{ mb:2 }} />
+                    </Box>
+                    <Box sx={{ display:'flex', gap:2 }}>
+                      <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoDescription_en = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                      <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e)=>{
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoDescription_ta = e.target.value;
+                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                      }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                    </Box>
                     
                     <IconButton
                       onClick={() => removeContentSection(section.id)}
@@ -1192,12 +1175,12 @@ function DanceDetail() {
             {!isEditing && dance.contentSections && dance.contentSections.length > 0 && (
               dance.contentSections.map((section, index) => {
                 // Only render sections that have at least one piece of content
-                const hasContent = section.subtitle || section.content || section.imageUrl || section.videoUrl;
+                const hasContent = getContent(section.subtitle) || getContent(section.content) || section.imageUrl || section.videoUrl;
                 if (!hasContent) return null;
                 
                 return (
                   <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
-                    {section.subtitle && (
+                    {getContent(section.subtitle) && (
                       <Typography 
                         variant="h6" 
                         sx={{
@@ -1207,11 +1190,11 @@ function DanceDetail() {
                           pb: 1,
                         }}
                       >
-                        {section.subtitle}
+                        {getContent(section.subtitle)}
                       </Typography>
                     )}
                     
-                    {section.content && (
+                    {getContent(section.content) && (
                       <Typography
                         variant="body1"
                         sx={{
@@ -1219,7 +1202,7 @@ function DanceDetail() {
                           lineHeight: 1.6,
                         }}
                       >
-                        {section.content}
+                        {getContent(section.content)}
                       </Typography>
                     )}
 
@@ -1245,30 +1228,30 @@ function DanceDetail() {
                     {section.videoUrl && (
                       <iframe 
                         src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
-                        title={section.videoTitle || `Section ${index + 1} Video`}
+                        title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
                         style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                         allowFullScreen
                       />
                     )}
                     
                     {/* Section Video Details - Only show if either title or description exists */}
-                    {(section.videoTitle || section.videoDescription) && (
+                    {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
                       <Box sx={{ mt: 2 }}>
-                        {section.videoTitle && section.videoTitle.trim() !== '' && (
+                        {getContent(section.videoTitle) && getContent(section.videoTitle).trim() !== '' && (
                           <Typography 
                             variant="subtitle1" 
                             sx={{ fontWeight: 600 }}
                           >
-                            {section.videoTitle}
+                            {getContent(section.videoTitle)}
                           </Typography>
                         )}
                         
-                        {section.videoDescription && section.videoDescription.trim() !== '' && (
+                        {getContent(section.videoDescription) && getContent(section.videoDescription).trim() !== '' && (
                           <Typography 
                             variant="body2" 
                             sx={{ color: '#555', fontStyle: 'italic' }}
                           >
-                            {section.videoDescription}
+                            {getContent(section.videoDescription)}
                           </Typography>
                         )}
                       </Box>

@@ -1,9 +1,7 @@
 import React from "react";
-import { useTranslation } from 'react-i18next';
 import { Box, Typography } from "@mui/material";
 
 export default function NotFound() {
-  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -23,7 +21,7 @@ export default function NotFound() {
         404
       </Typography>
       <Typography variant="h5" sx={{ color: "#111", mb: 2 }}>
-        {t('errors.notFound')}
+        Page Not Found
       </Typography>
     </Box>
   );

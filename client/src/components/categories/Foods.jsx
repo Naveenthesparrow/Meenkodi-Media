@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -36,8 +37,11 @@ import {
   Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 export default function Foods({ user }) {
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +50,12 @@ export default function Foods({ user }) {
   const [editItem, setEditItem] = useState(null);
   // Removed filter-related state and methods
   const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    category_en: "",
+    category_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
   });
 
@@ -73,12 +80,27 @@ export default function Foods({ user }) {
 
   // Removed filteredFoods
 
+  const toStr = (val) => {
+    if (!val) return "";
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.en || val.ta || "";
+    return "";
+  };
+  const toTa = (val) => {
+    if (!val) return "";
+    if (typeof val === 'object') return val.ta || "";
+    return "";
+  };
+
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
-      name: item.name,
-      category: item.category,
-      description: item.description,
+      name_en: toStr(item.name),
+      name_ta: toTa(item.name),
+      category_en: toStr(item.category),
+      category_ta: toTa(item.category),
+      description_en: toStr(item.description),
+      description_ta: toTa(item.description),
       image: item.image,
     });
     setEditOpen(true);
@@ -86,9 +108,12 @@ export default function Foods({ user }) {
 
   const handleAdd = () => {
     setFormData({
-      name: "",
-      category: "",
-      description: "",
+      name_en: "",
+      name_ta: "",
+      category_en: "",
+      category_ta: "",
+      description_en: "",
+      description_ta: "",
       image: "" 
     });
     setAddOpen(true);
@@ -97,17 +122,19 @@ export default function Foods({ user }) {
   const handleSave = () => {
     (async () => {
       try {
+    const payload = {
+      name: { en: formData.name_en, ta: formData.name_ta },
+      category: { en: formData.category_en, ta: formData.category_ta },
+      description: { en: formData.description_en, ta: formData.description_ta },
+      image: formData.image,
+    };
+
     if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/foods/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              category: formData.category,
-              description: formData.description,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Update failed");
         } else {
@@ -115,12 +142,7 @@ export default function Foods({ user }) {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              category: formData.category,
-              description: formData.description,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Create failed");
         }
@@ -235,7 +257,7 @@ export default function Foods({ user }) {
             },
           }}
         >
-          Foods
+          {t('foods.title','Foods')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -268,7 +290,7 @@ export default function Foods({ user }) {
                 px: 3,
               }}
             >
-              Add Recipe
+              {t('foods.add','Add Recipe')}
             </Button>
           </Box>
         )}
@@ -353,7 +375,7 @@ export default function Foods({ user }) {
                     component="img"
                     height={200}
                     image={food.image || food.imageLink}
-                    alt={food.name}
+                    alt={getContent(food.name)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -465,7 +487,7 @@ export default function Foods({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {food.name}
+                      {getContent(food.name)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -477,7 +499,7 @@ export default function Foods({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {food.category}
+            {getContent(food.category)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -493,9 +515,12 @@ export default function Foods({ user }) {
                         minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
                       }}
                     >
-                      {food.description.length > 150 
-                        ? `${food.description.substring(0, 150)}...` 
-                        : food.description}
+                      {(() => {
+                        const desc = getContent(food.description);
+                        return desc && desc.length > 150 
+                          ? `${desc.substring(0, 150)}...` 
+                          : desc;
+                      })()}
                     </Typography>
                     
                     {/* Like Count Display */}
@@ -527,7 +552,7 @@ export default function Foods({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -560,37 +585,60 @@ export default function Foods({ user }) {
             fontWeight: 700 
           }}
         >
-          {editItem ? "Edit Recipe" : "Add New Recipe"}
+          {editItem ? t('foods.edit','Edit Recipe') : t('foods.addNew','Add New Recipe')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
               <TextField
                 fullWidth
-            label="Name"
-                value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                label={`${t('form.name','Name')} (EN)`}
+                value={formData.name_en}
+                onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Category"
-                value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                label={`${t('form.name','Name')} (TA)`}
+                value={formData.name_ta}
+                onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Description"
-                value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                label={`${t('form.category','Category')} (EN)`}
+                value={formData.category_en}
+                onChange={(e) => setFormData({ ...formData, category_en: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.category','Category')} (TA)`}
+                value={formData.category_ta}
+                onChange={(e) => setFormData({ ...formData, category_ta: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.description','Description')} (EN)`}
+                value={formData.description_en}
+                onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
                 multiline
-            minRows={3}
+                minRows={3}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-            label="Image URL"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                label={`${t('form.description','Description')} (TA)`}
+                value={formData.description_ta}
+                onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })}
+                multiline
+                minRows={3}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={t('form.imageUrl','Image URL')}
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 sx={{ mb: 2 }}
               />
         </DialogContent>
@@ -608,7 +656,7 @@ export default function Foods({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            Cancel
+            {t('actions.cancel','Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -620,7 +668,7 @@ export default function Foods({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
           </Button>
         </DialogActions>
       </Dialog>

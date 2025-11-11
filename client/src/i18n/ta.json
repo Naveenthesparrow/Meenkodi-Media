@@ -1,97 +1,111 @@
-{
-  "app": {
-    "title": "தமிழ் மரபு",
-    "menu": "பட்டி",
-    "loading": "ஏற்றுகிறது...",
-    "login": "உள் நுழை",
-    "logout": "வெளியேறு",
-    "profile": "சுயவிவரம்",
-    "loginWithGoogle": "Google மூலம் உள்நுழை",
-    "pleaseLogin": "உங்கள் சுயவிவரத்தைப் பார்க்க தயவுசெய்து உள்நுழைக"
-  },
-  "nav": {
-    "explore": "ஆராய",
-    "events": "நிகழ்வுகள்",
-    "gallery": "அரங்ககம்",
-    "articles": "கட்டுரைகள்",
-    "resources": "வளங்கள்",
-    "temples": "கோயில்கள்",
-    "kings": "மன்னர்கள்",
-    "literature": "இலக்கியம்",
-    "dance": "நடனம்",
-    "foods": "உணவுகள்",
-    "festivals": "திருவிழாக்கள்",
-    "clothing": "ஆடைகள்",
-    "ancientScience": "பண்டைய அறிவியல்"
-  },
-  "home": {
-    "heroTitle": "மீண்டும் எழும் பாண்டியம்",
-    "didYouKnow": "உங்களுக்கு தெரியுமா?",
-    "kuralTitle": "இன்றைய திருக்குறள்",
-    "translation": "மொழிபெயர்ப்பு:",
-    "landscapes": "தமிழ் மரபின் நிலப்பரப்புகள்",
-    "exploreLandscape": "{{name}} நிலப்பரப்பை ஆராய",
-    "close": "மூடு"
-  },
-  "errors": {
-    "notFound": "பக்கம் கிடைக்கவில்லை"
-  },
-  "footer": {
-    "brand": "தமிழ் மரபு",
-    "rights": "அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை."
-  },
-  "explore": {
-    "title": "எல்லாவற்றையும் ஆராய"
-  },
-  "common": {
-    "readMore": "மேலும் படிக்க",
-    "cancel": "ரத்து செய்",
-    "save": "சேமிக்க",
-    "download": "பதிவிறக்கு"
-  },
-  "articles": {
-    "add": "கட்டுரை சேர்",
-    "addNew": "புதிய கட்டுரை சேர்",
-    "edit": "கட்டுரையை திருத்து",
-    "title": "தலைப்பு",
-    "author": "ஆசிரியர்",
-    "category": "வகை",
-    "content": "உள்ளடக்கம்",
-    "mediaLinks": "ஊடக இணைப்புகள்"
-  },
-  "events": {
-    "add": "நிகழ்வு சேர்",
-    "addNew": "புதிய நிகழ்வு சேர்",
-    "edit": "நிகழ்வை திருத்து",
-    "title": "தலைப்பு",
-    "date": "தேதி",
-    "location": "இடம்",
-    "description": "விளக்கம்",
-    "mediaLinks": "ஊடக இணைப்புகள்"
-  },
-  "gallery": {
-    "add": "அரங்கப் பொருள் சேர்",
-    "addNew": "புதிய அரங்கப் பொருள் சேர்",
-    "edit": "அரங்கப் பொருளை திருத்து",
-    "title": "தலைப்பு",
-    "category": "வகை",
-    "description": "விளக்கம்",
-    "mediaLinks": "ஊடக இணைப்புகள்"
-  },
-  "resources": {
-    "add": "வளத்தை சேர்",
-    "addNew": "புதிய வளம் சேர்",
-    "edit": "வளத்தை திருத்து",
-    "title": "தலைப்பு",
-    "author": "ஆசிரியர்",
-    "category": "வகை",
-    "description": "விளக்கம்",
-    "downloadLink": "பதிவிறக்க இணைப்பு",
-    "downloadLinkPlaceholder": "விருப்பம்: வளத்திற்கான பதிவிறக்க இணைப்பைச் சேர்க்கவும்",
-    "mediaLinks": "ஊடக இணைப்புகள்"
-  },
-  "language": {
-    "english": "ஆங்கிலம்",
-    "tamil": "தமிழ்"
-  }
+﻿{
+	"app.title": "மீன்கொடி",
+	"nav.explore": "ஆராய்வு",
+	"nav.events": "நிகழ்வுகள்",
+	"nav.gallery": "படத் தொகுப்பு",
+	"nav.articles": "கட்டுரைகள்",
+	"nav.resources": "ஆதாரங்கள்",
+	"nav.profile": "தனிப்பக்கம்",
+	"nav.login": "உள்நுழை",
+	"nav.logout": "வெளியேறு",
+	"nav.menu": "பட்டி",
+	"loading": "ஏற்றுகிறது...",
+	"actions.readMore": "மேலும் படிக்க",
+	"actions.viewAll": "அனைத்தையும் பார்",
+	"actions.back": "பின் செல்ல",
+	"actions.save": "சேமிக்க",
+	"actions.cancel": "ரத்து",
+	"language.select": "மொழி",
+	"language.english": "ஆங்கிலம்",
+	"language.tamil": "தமிழ்",
+	"explore.title": "அனைத்தையும் ஆராயுங்கள்",
+	"explore.temples": "கோவில்கள்",
+	"explore.kings": "மன்னர்கள்",
+	"explore.literature": "இலக்கியம்",
+	"explore.dance": "நடனம்",
+	"explore.foods": "உணவுகள்",
+	"explore.festivals": "திருவிழாக்கள்",
+	"explore.clothing": "உடைகள்",
+	"explore.ancientscience": "பண்டைய அறிவியல்"
+	,"lands.title": "நிலங்கள்"
+	,"lands.gods": "தெய்வங்கள்"
+	,"lands.people": "மக்கள்"
+	,"lands.type": "பரப்பு வகை"
+	,"lands.poetry": "பாடல்கள்"
+	,"events.title": "நிகழ்வுகள்"
+	,"events.add": "நிகழ்வு சேர்க்க"
+	,"events.edit": "நிகழ்வு திருத்த"
+	,"events.addNew": "புதிய நிகழ்வு சேர்க்க"
+	,"gallery.title": "படத் தொகுப்பு"
+	,"gallery.add": "புதிய படம் சேர்க்க"
+	,"gallery.edit": "படத் தொகுப்பு திருத்த"
+	,"gallery.addNew": "புதிய படத் தொகுப்பு சேர்க்க"
+	,"articles.title": "கட்டுரைகள்"
+	,"articles.add": "கட்டுரை சேர்க்க"
+	,"articles.edit": "கட்டுரை திருத்த"
+	,"articles.addNew": "புதிய கட்டுரை சேர்க்க"
+	,"resources.title": "ஆதாரங்கள்"
+	,"resources.add": "ஆதாரம் சேர்க்க"
+	,"resources.edit": "ஆதாரம் திருத்த"
+	,"resources.addNew": "புதிய ஆதாரம் சேர்க்க"
+	,"actions.download": "பதிவிறக்கு"
+	,"home.landsTitle": "தமிழின் இயற்கை நிலங்கள்"
+	,"actions.explore": "ஆராய்"
+	,"actions.close": "மூடு"
+	,"clothing.title": "உடைகள்"
+	,"clothing.add": "உடை சேர்க்க"
+	,"clothing.edit": "உடை விவரம் திருத்த"
+	,"clothing.addNew": "புதிய உடை சேர்க்க"
+	,"form.name": "பெயர்"
+	,"form.type": "வகை"
+	,"form.description": "விளக்கம்"
+	,"form.imageUrl": "பட URL"
+	,"actions.update": "புதுப்பித்து"
+	,"actions.add": "சேர்க்க"
+	,"common.noImage": "படம் இல்லை"
+	,"dance.title": "நடனம்"
+	,"dance.add": "நடன வடிவம் சேர்க்க"
+	,"foods.title": "உணவுகள்"
+	,"foods.add": "சமையல் செய்முறை சேர்க்க"
+	,"kings.title": "மன்னர்கள்"
+	,"kings.add": "மன்னர் சேர்க்க"
+	,"literature.title": "இலக்கியம்"
+	,"literature.add": "இலக்கியம் சேர்க்க"
+	,"temples.title": "கோவில்கள்"
+	,"temples.add": "கோவில் சேர்க்க"
+	,"ancientScience.title": "பண்டைய அறிவியல்"
+	,"ancientScience.add": "அறிவியல் அறிவு சேர்க்க"
+	,"ancientScience.edit": "அறிவியல் அறிவு திருத்த"
+	,"ancientScience.addNew": "புதிய அறிவியல் அறிவு சேர்க்க"
+	,"ancientScience.mediaLabel": "அறிவியல் படம்/காணொலி"
+	,"dance.edit": "நடன வடிவம் திருத்த"
+	,"dance.addNew": "புதிய நடன வடிவம் சேர்க்க"
+	,"foods.edit": "சமையல் செய்முறை திருத்த"
+	,"foods.addNew": "புதிய சமையல் செய்முறை சேர்க்க"
+	,"kings.edit": "மன்னர் விவரம் திருத்த"
+	,"kings.addNew": "புதிய மன்னர் விவரம் சேர்க்க"
+	,"literature.edit": "இலக்கியப் பணி திருத்த"
+	,"literature.addNew": "புதிய இலக்கியப் பணி சேர்க்க"
+	,"temples.edit": "கோவில் விவரம் திருத்த"
+	,"temples.addNew": "புதிய கோவில் சேர்க்க"
+	,"festivals.edit": "திருவிழா திருத்த"
+	,"festivals.addNew": "புதிய திருவிழா சேர்க்க"
+	,"festivals.title": "திருவிழாக்கள்"
+	,"festivals.add": "திருவிழா சேர்க்க"
+	,"form.period": "காலம்"
+	,"form.author": "எழுத்தாளர்"
+	,"form.location": "இடம்"
+	,"form.category": "வகை"
+	,"form.title": "தலைப்பு"
+	,"form.email": "மின்னஞ்சல்"
+	,"adminPortal.title": "நிர்வாக தளம்"
+	,"adminPortal.welcome": "வரவேற்பு, {{name}} ({{role}})"
+	,"adminPortal.logout": "வெளியேறு"
+	,"adminPortal.allUsers": "அனைத்து பயனர்கள்"
+	,"adminPortal.editUser": "பயனரை திருத்த"
+	,"adminPortal.deleteConfirm": "இந்த பயனரை நிச்சயமாக நீக்க வேண்டுமா?"
+	,"roles.user": "பயனர்"
+	,"roles.admin": "நிர்வாகி"
+	,"home.didYouKnow": "உங்களுக்கு தெரியுமா?"
+	,"home.thirukkuralOfDay": "திருக்குறள் - இன்றைய குறள்"
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -32,18 +33,24 @@ import {
   Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 export default function Literature({ user }) {
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const [literature, setLiterature] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    period: "",
+    title_en: "",
+    title_ta: "",
+    author_en: "",
+    author_ta: "",
+    period_en: "",
+    period_ta: "",
     image: "",
   });
 
@@ -70,12 +77,27 @@ export default function Literature({ user }) {
     fetchLiterature();
   }, []);
 
+  const toStr = (val) => {
+    if (!val) return "";
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.en || val.ta || "";
+    return "";
+  };
+  const toTa = (val) => {
+    if (!val) return "";
+    if (typeof val === 'object') return val.ta || "";
+    return "";
+  };
+
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
-      title: item.title,
-      author: item.author,
-      period: item.period,
+      title_en: toStr(item.title),
+      title_ta: toTa(item.title),
+      author_en: toStr(item.author),
+      author_ta: toTa(item.author),
+      period_en: toStr(item.period),
+      period_ta: toTa(item.period),
       image: item.image,
     });
     setEditOpen(true);
@@ -83,9 +105,12 @@ export default function Literature({ user }) {
 
   const handleAdd = () => {
     setFormData({
-      title: "",
-      author: "",
-      period: "",
+      title_en: "",
+      title_ta: "",
+      author_en: "",
+      author_ta: "",
+      period_en: "",
+      period_ta: "",
       image: "" 
     });
     setAddOpen(true);
@@ -94,17 +119,19 @@ export default function Literature({ user }) {
   const handleSave = () => {
     (async () => {
       try {
+        const payload = {
+          title: { en: formData.title_en, ta: formData.title_ta },
+          author: { en: formData.author_en, ta: formData.author_ta },
+          period: { en: formData.period_en, ta: formData.period_ta },
+          image: formData.image,
+        };
+
         if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/literature/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: formData.title,
-              author: formData.author,
-              period: formData.period,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Update failed");
         } else {
@@ -112,12 +139,7 @@ export default function Literature({ user }) {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: formData.title,
-              author: formData.author,
-              period: formData.period,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Create failed");
         }
@@ -228,7 +250,7 @@ export default function Literature({ user }) {
             },
           }}
         >
-          Literature
+          {t('literature.title','Literature')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -261,7 +283,7 @@ export default function Literature({ user }) {
                 px: 3,
               }}
             >
-              Add Literature
+              {t('literature.add','Add Literature')}
             </Button>
           </Box>
         )}
@@ -347,7 +369,7 @@ export default function Literature({ user }) {
                     component="img"
                     height={200}
                     image={literature.image || literature.imageLink}
-                    alt={literature.title}
+                    alt={getContent(literature.title)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -457,7 +479,7 @@ export default function Literature({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {literature.title}
+                      {getContent(literature.title)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -469,7 +491,7 @@ export default function Literature({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {literature.author}
+                      {getContent(literature.author)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -485,7 +507,7 @@ export default function Literature({ user }) {
                         minHeight: { xs: '4.2rem', md: '4.8rem' }, // Ensures consistent height for 3 lines
                       }}
                     >
-                      {literature.period}
+                      {getContent(literature.period)}
                     </Typography>
                     
                     {/* Like Count Display */}
@@ -517,7 +539,7 @@ export default function Literature({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -550,35 +572,56 @@ export default function Literature({ user }) {
             fontWeight: 700 
           }}
         >
-          {editItem ? "Edit Literature Work" : "Add New Literature Work"}
+          {editItem ? t('literature.edit','Edit Literature Work') : t('literature.addNew','Add New Literature Work')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
               <TextField
                 fullWidth
-                label="Title"
-                value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                label={`${t('form.name','Name')} / ${t('form.name','Name')} - ${t('literature.title','Title') || 'Title'} (EN)`}
+                value={formData.title_en}
+                onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Author"
-                value={formData.author}
-            onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                label={`${t('literature.title','Title') || 'Title'} (TA)`}
+                value={formData.title_ta}
+                onChange={(e) => setFormData({ ...formData, title_ta: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Period"
-                value={formData.period}
-            onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                label={`${t('form.author','Author')} (EN)`}
+                value={formData.author_en}
+                onChange={(e) => setFormData({ ...formData, author_en: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Image URL"
+                label={`${t('form.author','Author')} (TA)`}
+                value={formData.author_ta}
+                onChange={(e) => setFormData({ ...formData, author_ta: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.period','Period')} (EN)`}
+                value={formData.period_en}
+                onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.period','Period')} (TA)`}
+                value={formData.period_ta}
+                onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={t('form.imageUrl','Image URL')}
                 value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 sx={{ mb: 2 }}
               />
         </DialogContent>
@@ -596,7 +639,7 @@ export default function Literature({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            Cancel
+            {t('actions.cancel','Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -608,7 +651,7 @@ export default function Literature({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -33,20 +33,25 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const foodSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  region: String,
-  type: String,
-  ingredients: String,
-  recipe: String,
-  description: String,
-  occasion: String,
-  significance: String,
+  name: { type: bilingual, required: true },
+  region: bilingual,
+  type: bilingual,
+  ingredients: bilingual,
+  recipe: bilingual,
+  description: bilingual,
+  occasion: bilingual,
+  significance: bilingual,
   image: String,
   media: [String],
   contentSections: [{
-    subtitle: String,
-    content: String,
+    subtitle: bilingual,
+    content: bilingual,
     imageUrl: String,
     imageLink: String,
     videoUrl: String,

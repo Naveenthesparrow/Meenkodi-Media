@@ -36,9 +36,11 @@ import {
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 
+import { useBilingualContent } from "../../utils/bilingualContent";
 function FestivalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [festival, setFestival] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,30 +66,46 @@ function FestivalDetail() {
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    region: "",
-    season: "",
-    duration: "",
-    rituals: "",
-    description: "",
-    history: "",
-    significance: "",
+    name_en: "",
+    name_ta: "",
+    region_en: "",
+    region_ta: "",
+    season_en: "",
+    season_ta: "",
+    duration_en: "",
+    duration_ta: "",
+    rituals_en: "",
+    rituals_ta: "",
+    description_en: "",
+    description_ta: "",
+    history_en: "",
+    history_ta: "",
+    significance_en: "",
+    significance_ta: "",
     image: "",
   });
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState({
-    name: "",
-    region: "",
-    season: "",
-    duration: "",
-    rituals: "",
-    description: "",
-    history: "",
-    significance: "",
+    name_en: "",
+    name_ta: "",
+    region_en: "",
+    region_ta: "",
+    season_en: "",
+    season_ta: "",
+    duration_en: "",
+    duration_ta: "",
+    rituals_en: "",
+    rituals_ta: "",
+    description_en: "",
+    description_ta: "",
+    history_en: "",
+    history_ta: "",
+    significance_en: "",
+    significance_ta: "",
     imageUrl: "",
-    contentSections: [], // Add contentSections array
+    contentSections: [], // bilingual sections
   });
 
   // Function to add a new content section
@@ -96,14 +114,18 @@ function FestivalDetail() {
       ...prev,
       contentSections: [
         ...prev.contentSections, 
-        { 
-          subtitle: "", 
-          content: "",
+        {
+          subtitle_en: "",
+          subtitle_ta: "",
+          content_en: "",
+          content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
-          videoTitle: "",
-          videoDescription: "",
+          videoTitle_en: "",
+          videoTitle_ta: "",
+          videoDescription_en: "",
+          videoDescription_ta: "",
           id: Date.now() // Unique identifier
         }
       ]
@@ -184,25 +206,59 @@ function FestivalDetail() {
         throw new Error("Festival not found");
       }
       const data = await res.json();
-      setFestival(data);
+  setFestival(data);
       setComments(data.comments || []);
       // Handle likes - ensure it"s an array and check if user liked
       const likesArray = Array.isArray(data.likes) ? data.likes : [];
       setLikes(likesArray.length);
       setUserLiked(likesArray.some(likeId => likeId.toString() === user?._id?.toString()) || false);
       
-      // Set editable data with all fields including contentSections
+      // Prepare helpers to extract EN/TA strings from bilingual fields
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
+
+      // Set editable data with bilingual pairs and sections
       setEditableData({
-        name: data.name,
-        region: data.region,
-        season: data.season,
-        duration: data.duration,
-        rituals: data.rituals,
-        description: data.description,
-        history: data.history,
-        significance: data.significance,
-        imageUrl: data.image,
-        contentSections: data.contentSections || [], // Include contentSections
+        name_en: toStr(data.name),
+        name_ta: toTa(data.name),
+        region_en: toStr(data.region),
+        region_ta: toTa(data.region),
+        season_en: toStr(data.season),
+        season_ta: toTa(data.season),
+        duration_en: toStr(data.duration),
+        duration_ta: toTa(data.duration),
+        rituals_en: toStr(data.rituals),
+        rituals_ta: toTa(data.rituals),
+        description_en: toStr(data.description),
+        description_ta: toTa(data.description),
+        history_en: toStr(data.history),
+        history_ta: toTa(data.history),
+        significance_en: toStr(data.significance),
+        significance_ta: toTa(data.significance),
+        imageUrl: data.image || "",
+        contentSections: (data.contentSections || []).map(sec => ({
+          subtitle_en: toStr(sec.subtitle),
+          subtitle_ta: toTa(sec.subtitle),
+          content_en: toStr(sec.content),
+          content_ta: toTa(sec.content),
+          imageUrl: sec.imageUrl || "",
+          imageLink: sec.imageLink || "",
+          videoUrl: sec.videoUrl || "",
+          videoTitle_en: toStr(sec.videoTitle),
+          videoTitle_ta: toTa(sec.videoTitle),
+          videoDescription_en: toStr(sec.videoDescription),
+          videoDescription_ta: toTa(sec.videoDescription),
+          id: sec.id || sec._id || Date.now() + Math.random(),
+        })),
       });
     } catch (err) {
       setError(err.message);
@@ -421,20 +477,36 @@ function FestivalDetail() {
 
   const handleInlineSave = async () => {
     try {
-      // Process content sections to ensure they're in the right format
-      // Remove temporary id properties before sending to the server
+      // Helper to build bilingual objects
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
+
+      // Map content sections to bilingual format and drop local-only id
       const formattedContentSections = editableData.contentSections.map(section => {
-        const { id, ...sectionWithoutId } = section;
-        return sectionWithoutId;
+        const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
+        return {
+          ...rest,
+          subtitle: toBilingual(subtitle_en, subtitle_ta),
+          content: toBilingual(content_en, content_ta),
+          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+          videoDescription: toBilingual(videoDescription_en, videoDescription_ta),
+        };
       });
 
-      // Map client-side imageUrl to server-side image
       const updateData = {
-        ...editableData,
+        name: toBilingual(editableData.name_en, editableData.name_ta),
+        region: toBilingual(editableData.region_en, editableData.region_ta),
+        season: toBilingual(editableData.season_en, editableData.season_ta),
+        duration: toBilingual(editableData.duration_en, editableData.duration_ta),
+        rituals: toBilingual(editableData.rituals_en, editableData.rituals_ta),
+        description: toBilingual(editableData.description_en, editableData.description_ta),
+        history: toBilingual(editableData.history_en, editableData.history_ta),
+        significance: toBilingual(editableData.significance_en, editableData.significance_ta),
         image: editableData.imageUrl || "",
         contentSections: formattedContentSections,
       };
-      delete updateData.imageUrl;
 
       const res = await fetch(`/api/festivals/${id}`, {
         method: "PUT",
@@ -448,8 +520,8 @@ function FestivalDetail() {
         throw new Error(data.error || "Failed to update festival");
       }
 
-      // Update local state with new data
-      setFestival(prev => ({ ...prev, ...updateData }));
+      // Refresh from server for latest data
+      await fetchFestival();
       setIsEditing(false);
       setError(""); // Clear any previous errors
     } catch (err) {
@@ -477,15 +549,25 @@ function FestivalDetail() {
   };
 
   const handleEditOpen = () => {
+    const toStr = (val) => (typeof val === 'object' ? (val.en || val.ta || "") : (val || ""));
+    const toTa = (val) => (typeof val === 'object' ? (val.ta || "") : "");
     setFormData({
-      name: festival.name || "",
-      region: festival.region || "",
-      season: festival.season || "",
-      duration: festival.duration || "",
-      rituals: festival.rituals || "",
-      description: festival.description || "",
-      history: festival.history || "",
-      significance: festival.significance || "",
+      name_en: toStr(festival.name),
+      name_ta: toTa(festival.name),
+      region_en: toStr(festival.region),
+      region_ta: toTa(festival.region),
+      season_en: toStr(festival.season),
+      season_ta: toTa(festival.season),
+      duration_en: toStr(festival.duration),
+      duration_ta: toTa(festival.duration),
+      rituals_en: toStr(festival.rituals),
+      rituals_ta: toTa(festival.rituals),
+      description_en: toStr(festival.description),
+      description_ta: toTa(festival.description),
+      history_en: toStr(festival.history),
+      history_ta: toTa(festival.history),
+      significance_en: toStr(festival.significance),
+      significance_ta: toTa(festival.significance),
       image: festival.image || festival.imageUrl || "",
     });
     setEditOpen(true);
@@ -573,7 +655,7 @@ function FestivalDetail() {
             mx: 2,
           }}
         >
-          {festival.name}
+          {getContent(festival.name)}
         </Typography>
 
         {/* Admin Actions */}
@@ -581,18 +663,50 @@ function FestivalDetail() {
           <Box sx={{ display: "flex", gap: 1 }}>
             <IconButton 
               onClick={() => {
-                // Prepare editable data when edit is clicked
+                // Prepare editable bilingual data when edit is clicked
+                const toStr = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'string') return val;
+                  if (typeof val === 'object') return val.en || val.ta || "";
+                  return "";
+                };
+                const toTa = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'object') return val.ta || "";
+                  return "";
+                };
                 setEditableData({
-                  name: festival.name,
-                  region: festival.region,
-                  season: festival.season,
-                  duration: festival.duration,
-                  rituals: festival.rituals,
-                  description: festival.description,
-                  history: festival.history,
-                  significance: festival.significance,
+                  name_en: toStr(festival.name),
+                  name_ta: toTa(festival.name),
+                  region_en: toStr(festival.region),
+                  region_ta: toTa(festival.region),
+                  season_en: toStr(festival.season),
+                  season_ta: toTa(festival.season),
+                  duration_en: toStr(festival.duration),
+                  duration_ta: toTa(festival.duration),
+                  rituals_en: toStr(festival.rituals),
+                  rituals_ta: toTa(festival.rituals),
+                  description_en: toStr(festival.description),
+                  description_ta: toTa(festival.description),
+                  history_en: toStr(festival.history),
+                  history_ta: toTa(festival.history),
+                  significance_en: toStr(festival.significance),
+                  significance_ta: toTa(festival.significance),
                   imageUrl: festival.image || "",
-                  contentSections: festival.contentSections || [],
+                  contentSections: (festival.contentSections || []).map(sec => ({
+                    subtitle_en: toStr(sec.subtitle),
+                    subtitle_ta: toTa(sec.subtitle),
+                    content_en: toStr(sec.content),
+                    content_ta: toTa(sec.content),
+                    imageUrl: sec.imageUrl || "",
+                    imageLink: sec.imageLink || "",
+                    videoUrl: sec.videoUrl || "",
+                    videoTitle_en: toStr(sec.videoTitle),
+                    videoTitle_ta: toTa(sec.videoTitle),
+                    videoDescription_en: toStr(sec.videoDescription),
+                    videoDescription_ta: toTa(sec.videoDescription),
+                    id: sec.id || sec._id || Date.now() + Math.random()
+                  })),
                 });
                 // Toggle editing mode
                 setIsEditing(!isEditing);
@@ -690,7 +804,7 @@ function FestivalDetail() {
             width: "100%"
           }}
         >
-          {/* Region and Season */}
+          {/* Region and Season (Bilingual) */}
           <Box 
             sx={{ 
               display: "flex", 
@@ -701,7 +815,7 @@ function FestivalDetail() {
           >
             {!isEditing ? (
               <>
-                {festival.region && (
+                {getContent(festival.region) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -710,10 +824,10 @@ function FestivalDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Region: {festival.region}
+                    Region: {getContent(festival.region)}
                   </Typography>
                 )}
-                {festival.season && (
+                {getContent(festival.season) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -722,26 +836,20 @@ function FestivalDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Season: {festival.season}
+                    Season: {getContent(festival.season)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <TextField
-                  label="Region"
-                  value={editableData.region || ""}
-                  onChange={(e) => setEditableData({ ...editableData, region: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Season"
-                  value={editableData.season || ""}
-                  onChange={(e) => setEditableData({ ...editableData, season: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Region (EN)" value={editableData.region_en} onChange={(e)=>setEditableData({ ...editableData, region_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e)=>setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Season (EN)" value={editableData.season_en} onChange={(e)=>setEditableData({ ...editableData, season_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Season (TA)" value={editableData.season_ta} onChange={(e)=>setEditableData({ ...editableData, season_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -757,7 +865,7 @@ function FestivalDetail() {
           >
             {!isEditing ? (
               <>
-                {festival.duration && (
+                {getContent(festival.duration) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -766,10 +874,10 @@ function FestivalDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Duration: {festival.duration}
+                    Duration: {getContent(festival.duration)}
                   </Typography>
                 )}
-                {festival.rituals && (
+                {getContent(festival.rituals) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -778,26 +886,20 @@ function FestivalDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Rituals: {festival.rituals}
+                    Rituals: {getContent(festival.rituals)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <TextField
-                  label="Duration"
-                  value={editableData.duration || ""}
-                  onChange={(e) => setEditableData({ ...editableData, duration: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Rituals"
-                  value={editableData.rituals || ""}
-                  onChange={(e) => setEditableData({ ...editableData, rituals: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Duration (EN)" value={editableData.duration_en} onChange={(e)=>setEditableData({ ...editableData, duration_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Duration (TA)" value={editableData.duration_ta} onChange={(e)=>setEditableData({ ...editableData, duration_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Rituals (EN)" value={editableData.rituals_en} onChange={(e)=>setEditableData({ ...editableData, rituals_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Rituals (TA)" value={editableData.rituals_ta} onChange={(e)=>setEditableData({ ...editableData, rituals_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -823,7 +925,7 @@ function FestivalDetail() {
                   lineHeight: 1.6,
                 }}
               >
-                {festival.description}
+                {getContent(festival.description)}
               </Typography>
             </Box>
           ) : (
@@ -839,15 +941,8 @@ function FestivalDetail() {
               >
                 Description
               </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description || ""}
-                onChange={(e) => setEditableData({ ...editableData, description: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
             </Box>
           )}
 
@@ -927,7 +1022,7 @@ function FestivalDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {festival.history}
+                  {getContent(festival.history)}
                 </Typography>
               </Box>
             ) : (
@@ -943,15 +1038,8 @@ function FestivalDetail() {
                 >
                   History
                 </Typography>
-                <TextField
-                  label="History"
-                  value={editableData.history || ""}
-                  onChange={(e) => setEditableData({ ...editableData, history: e.target.value })}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="standard"
-                />
+                <TextField label="History (EN)" value={editableData.history_en} onChange={(e)=>setEditableData({ ...editableData, history_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+                <TextField label="History (TA)" value={editableData.history_ta} onChange={(e)=>setEditableData({ ...editableData, history_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
               </Box>
             )
           )}
@@ -978,7 +1066,7 @@ function FestivalDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {festival.significance}
+                  {getContent(festival.significance)}
                 </Typography>
               </Box>
             ) : (
@@ -994,289 +1082,352 @@ function FestivalDetail() {
                 >
                   Significance
                 </Typography>
-                <TextField
-                  label="Significance"
-                  value={editableData.significance || ""}
-                  onChange={(e) => setEditableData({ ...editableData, significance: e.target.value })}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="standard"
-                />
+                <TextField label="Significance (EN)" value={editableData.significance_en} onChange={(e)=>setEditableData({ ...editableData, significance_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+                <TextField label="Significance (TA)" value={editableData.significance_ta} onChange={(e)=>setEditableData({ ...editableData, significance_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
               </Box>
             )
           )}
           
           {/* Content Sections */}
-          {!isEditing && festival.contentSections && festival.contentSections.length > 0 && (
-            festival.contentSections.map((section, index) => (
-              <Box key={section._id || `content-section-${index}`} sx={{ mt: 4 }}>
-                {section.subtitle && (
-                  <Typography 
-                    variant="h6"
-                    key={`subtitle-${section._id || index}`}
-                    sx={{
-                      mb: 2, 
-                      fontWeight: 700,
-                      borderBottom: '2px solid #000',
-                      pb: 1,
-                    }}
-                  >
-                    {section.subtitle}
-                  </Typography>
-                )}
-                
-                {section.content && (
-                  <Typography
-                    variant="body1"
-                    key={`content-${section._id || index}`}
-                    sx={{
-                      whiteSpace: 'pre-wrap',
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    {section.content}
-                  </Typography>
-                )}
+            {!isEditing && festival.contentSections && festival.contentSections.length > 0 && (
+              festival.contentSections.map((section, index) => (
+                <Box key={section._id || `content-section-${index}`} sx={{ mt: 4 }}>
+                  {getContent(section.subtitle) && (
+                    <Typography 
+                      variant="h6"
+                      key={`subtitle-${section._id || index}`}
+                      sx={{
+                        mb: 2, 
+                        fontWeight: 700,
+                        borderBottom: '2px solid #000',
+                        pb: 1,
+                      }}
+                    >
+                      {getContent(section.subtitle)}
+                    </Typography>
+                  )}
 
-                {/* Section Image */}
-                {section.imageUrl && (
-                  <img 
-                    key={`image-${section._id || index}`}
-                    src={section.imageUrl} 
-                    alt={section.subtitle || `Section ${index + 1} Image`} 
-                    style={{ 
-                      maxWidth: '100%', 
-                      height: 'auto', 
-                      marginTop: 16,
-                      border: '1px solid #ddd',
-                      padding: 8
-                    }}
-                    onError={(e) => {
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                )}
+                  {getContent(section.content) && (
+                    <Typography
+                      variant="body1"
+                      key={`content-${section._id || index}`}
+                      sx={{
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {getContent(section.content)}
+                    </Typography>
+                  )}
 
-                {/* Section Video */}
-                {section.videoUrl && (
-                  <iframe 
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
-                    title={section.videoTitle || `Section ${index + 1} Video`}
-                    style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
-                    allowFullScreen
-                  />
-                )}
-                
-                {/* Section Video Details */}
-                {(section.videoTitle || section.videoDescription) && (
-                  <Box sx={{ mt: 2 }}>
-                    {section.videoTitle && (
-                      <Typography 
-                        variant="subtitle1" 
-                        sx={{ fontWeight: 600 }}
-                      >
-                        {section.videoTitle}
-                      </Typography>
-                    )}
-                    
-                    {section.videoDescription && (
-                      <Typography 
-                        variant="body2" 
-                        sx={{ color: '#555', fontStyle: 'italic' }}
-                      >
-                        {section.videoDescription}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            ))
-          )}
+                  {/* Section Image */}
+                  {section.imageUrl && (
+                    <img 
+                      key={`image-${section._id || index}`}
+                      src={section.imageUrl} 
+                      alt={getContent(section.subtitle) || `Section ${index + 1} Image`} 
+                      style={{ 
+                        maxWidth: '100%', 
+                        height: 'auto', 
+                        marginTop: 16,
+                        border: '1px solid #ddd',
+                        padding: 8
+                      }}
+                      onError={(e) => {
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                  )}
 
-          {/* Editable Content Sections */}
-          {isEditing && user && user.role === "admin" && (
-            <>
-              <Typography 
-                variant="h6" 
-                sx={{
-                  mt: 4,
-                  mb: 2, 
-                  fontWeight: 700,
-                  borderBottom: '1px solid #000',
-                  pb: 1,
-                }}
-              >
-                Additional Content Sections
-              </Typography>
-              
-              {editableData.contentSections.map((section, index) => (
-                <Box 
-                  key={section.id || `editable-section-${index}`} 
-                  sx={{ 
-                    mb: 3, 
-                    p: 2, 
-                    border: '1px solid #000',
-                    position: 'relative' 
+                  {/* Section Video */}
+                  {section.videoUrl && (
+                    <iframe 
+                      src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                      title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
+                      style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
+                      allowFullScreen
+                    />
+                  )}
+
+                  {/* Section Video Details */}
+                  {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
+                    <Box sx={{ mt: 2 }}>
+                      {getContent(section.videoTitle) && (
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ fontWeight: 600 }}
+                        >
+                          {getContent(section.videoTitle)}
+                        </Typography>
+                      )}
+
+                      {getContent(section.videoDescription) && (
+                        <Typography 
+                          variant="body2" 
+                          sx={{ color: '#555', fontStyle: 'italic' }}
+                        >
+                          {getContent(section.videoDescription)}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              ))
+            )}
+
+            {/* Editable Content Sections (Admin only) */}
+            {isEditing && user && user.role === "admin" && (
+              <>
+                <Typography 
+                  variant="h6" 
+                  sx={{
+                    mt: 4,
+                    fontWeight: 700,
+                    borderBottom: '1px solid #000',
+                    pb: 1,
                   }}
                 >
-                  <TextField
-                    label="Subtitle"
-                    value={section.subtitle || ""}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].subtitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
-                  
-                  <TextField
-                    label="Content"
-                    value={section.content || ""}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="standard"
-                    sx={{ mb: 2 }}
-                  />
+                  Additional Content Sections
+                </Typography>
 
-                  <Typography 
-                    variant="subtitle1" 
+                {editableData.contentSections.map((section, index) => (
+                  <Box 
+                    key={section.id || `editable-section-${index}`} 
                     sx={{ 
-                      fontWeight: 700,
-                      mt: 2
+                      mb: 3, 
+                      p: 2, 
+                      border: '1px solid #000',
+                      position: 'relative' 
                     }}
                   >
-                    Section Image
-                  </Typography>
-                  
-                  <TextField
-                    label="Image URL"
-                    value={section.imageUrl || ""}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].imageUrl = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField
+                        label="Subtitle (EN)"
+                        value={section.subtitle_en || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].subtitle_en = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                        variant="standard"
+                      />
+                      <TextField
+                        label="Subtitle (TA)"
+                        value={section.subtitle_ta || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].subtitle_ta = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                        variant="standard"
+                      />
+                    </Box>
 
-                  {/* Section Image Upload */}
-                  <MediaUpload
-                    onImageChange={(imageUrl) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].imageUrl = imageUrl;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    onImageLinkChange={(imageLink) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].imageLink = imageLink;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    currentImage={section.imageUrl}
-                    currentImageLink={section.imageLink}
-                    label="Section Image"
-                  />
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField
+                        label="Content (EN)"
+                        value={section.content_en || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].content_en = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        variant="standard"
+                        sx={{ mb: 2 }}
+                      />
+                      <TextField
+                        label="Content (TA)"
+                        value={section.content_ta || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].content_ta = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        variant="standard"
+                        sx={{ mb: 2 }}
+                      />
+                    </Box>
 
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700,
-                      mt: 3
-                    }}
-                  >
-                    Section Video Details
-                  </Typography>
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontWeight: 700,
+                        mt: 2
+                      }}
+                    >
+                      Section Image
+                    </Typography>
                   
-                  <TextField
-                    label="Video URL"
-                    value={section.videoUrl || ""}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoUrl = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                    <TextField
+                      label="Image URL"
+                      value={section.imageUrl || ""}
+                      onChange={(e) => {
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].imageUrl = e.target.value;
+                        setEditableData(prev => ({
+                          ...prev,
+                          contentSections: updatedSections
+                        }));
+                      }}
+                      fullWidth
+                      sx={{ mb: 2 }}
+                      variant="standard"
+                    />
+
+                    {/* Section Image Upload */}
+                    <MediaUpload
+                      onImageChange={(imageUrl) => {
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].imageUrl = imageUrl;
+                        setEditableData(prev => ({
+                          ...prev,
+                          contentSections: updatedSections
+                        }));
+                      }}
+                      onImageLinkChange={(imageLink) => {
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].imageLink = imageLink;
+                        setEditableData(prev => ({
+                          ...prev,
+                          contentSections: updatedSections
+                        }));
+                      }}
+                      currentImage={section.imageUrl}
+                      currentImageLink={section.imageLink}
+                      label="Section Image"
+                    />
+
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontWeight: 700,
+                        mt: 3
+                      }}
+                    >
+                      Section Video Details
+                    </Typography>
                   
-                  <TextField
-                    label="Video Title"
-                    value={section.videoTitle || ""}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoTitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                    <TextField
+                      label="Video URL"
+                      value={section.videoUrl || ""}
+                      onChange={(e) => {
+                        const updatedSections = [...editableData.contentSections];
+                        updatedSections[index].videoUrl = e.target.value;
+                        setEditableData(prev => ({
+                          ...prev,
+                          contentSections: updatedSections
+                        }));
+                      }}
+                      fullWidth
+                      sx={{ mb: 2 }}
+                      variant="standard"
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField
+                        label="Video Title (EN)"
+                        value={section.videoTitle_en || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].videoTitle_en = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                        variant="standard"
+                      />
+                      <TextField
+                        label="Video Title (TA)"
+                        value={section.videoTitle_ta || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].videoTitle_ta = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                        variant="standard"
+                      />
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField
+                        label="Video Description (EN)"
+                        value={section.videoDescription_en || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].videoDescription_en = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        multiline
+                        rows={3}
+                        variant="standard"
+                      />
+                      <TextField
+                        label="Video Description (TA)"
+                        value={section.videoDescription_ta || ""}
+                        onChange={(e) => {
+                          const updatedSections = [...editableData.contentSections];
+                          updatedSections[index].videoDescription_ta = e.target.value;
+                          setEditableData(prev => ({
+                            ...prev,
+                            contentSections: updatedSections
+                          }));
+                        }}
+                        fullWidth
+                        multiline
+                        rows={3}
+                        variant="standard"
+                      />
+                    </Box>
                   
-                  <TextField
-                    label="Video Description"
-                    value={section.videoDescription || ""}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoDescription = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    variant="standard"
-                  />
-                  
-                  <IconButton
-                    onClick={() => removeContentSection(section.id)}
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      color: '#000',
-                    }}
-                  >
-                    <Delete />
-                  </IconButton>
-                </Box>
-              ))}
-            </>
-          )}
+                    <IconButton
+                      onClick={() => removeContentSection(section.id)}
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        color: '#000',
+                      }}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                ))}
+              </>
+            )}
 
           {/* Update Buttons - Only show when editing */}
           {isEditing && user && user.role === "admin" && (

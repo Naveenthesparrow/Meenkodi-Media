@@ -46,9 +46,11 @@ import {
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 
+import { useBilingualContent } from "../../utils/bilingualContent";
 function LiteratureDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [literature, setLiterature] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -74,30 +76,46 @@ function LiteratureDetail() {
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
   const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    period: "",
-    genre: "",
-    language: "",
-    description: "",
-    content: "",
-    summary: "",
+    title_en: "",
+    title_ta: "",
+    author_en: "",
+    author_ta: "",
+    period_en: "",
+    period_ta: "",
+    genre_en: "",
+    genre_ta: "",
+    language_en: "",
+    language_ta: "",
+    description_en: "",
+    description_ta: "",
+    content_en: "",
+    content_ta: "",
+    summary_en: "",
+    summary_ta: "",
     image: "",
   });
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState({
-    title: "",
-    author: "",
-    period: "",
-    genre: "",
-    language: "",
-    description: "",
-    content: "",
-    summary: "",
-    image: "",
-    contentSections: [], // New field for multiple content sections
+    title_en: "",
+    title_ta: "",
+    author_en: "",
+    author_ta: "",
+    period_en: "",
+    period_ta: "",
+    genre_en: "",
+    genre_ta: "",
+    language_en: "",
+    language_ta: "",
+    description_en: "",
+    description_ta: "",
+    content_en: "",
+    content_ta: "",
+    summary_en: "",
+    summary_ta: "",
+    imageUrl: "",
+    contentSections: [], // bilingual sections
   });
   
   // Function to add a new content section
@@ -105,16 +123,20 @@ function LiteratureDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...(prev.contentSections || []), 
-        { 
-          subtitle: "", 
-          content: "",
+        ...prev.contentSections,
+        {
+          subtitle_en: "",
+            subtitle_ta: "",
+          content_en: "",
+            content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
-          videoTitle: "",
-          videoDescription: "",
-          id: Date.now() // Unique identifier
+          videoTitle_en: "",
+          videoTitle_ta: "",
+          videoDescription_en: "",
+          videoDescription_ta: "",
+          id: Date.now()
         }
       ]
     }));
@@ -443,20 +465,36 @@ function LiteratureDetail() {
 
   const handleInlineSave = async () => {
     try {
-      // Process content sections to ensure they're in the right format
-      // Remove temporary id properties before sending to the server
-      const formattedContentSections = editableData.contentSections && editableData.contentSections.length > 0
-        ? editableData.contentSections.map(section => {
-            const { id, ...sectionWithoutId } = section;
-            return sectionWithoutId;
-          })
-        : [];
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
+
+      // Map content sections to bilingual format and drop local id
+      const formattedContentSections = editableData.contentSections.map(section => {
+        const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
+        return {
+          ...rest,
+          subtitle: toBilingual(subtitle_en, subtitle_ta),
+          content: toBilingual(content_en, content_ta),
+          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+        };
+      });
 
       const updateData = {
-        ...editableData,
-        contentSections: formattedContentSections
+        title: toBilingual(editableData.title_en, editableData.title_ta),
+        author: toBilingual(editableData.author_en, editableData.author_ta),
+        period: toBilingual(editableData.period_en, editableData.period_ta),
+        genre: toBilingual(editableData.genre_en, editableData.genre_ta),
+        language: toBilingual(editableData.language_en, editableData.language_ta),
+        description: toBilingual(editableData.description_en, editableData.description_ta),
+        content: toBilingual(editableData.content_en, editableData.content_ta),
+        summary: toBilingual(editableData.summary_en, editableData.summary_ta),
+        image: editableData.imageUrl || "",
+        contentSections: formattedContentSections,
       };
-      
+
       const res = await fetch(`/api/literature/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -469,14 +507,10 @@ function LiteratureDetail() {
         throw new Error(data.error || "Failed to update literature");
       }
 
-      // Update local state with new data
-      setLiterature((prev) => ({ ...prev, ...updateData }));
+      await fetchLiterature();
       setIsEditing(false);
-      setError(""); // Clear any previous errors
+      setError("");
       alert("Literature details updated successfully!");
-      
-      // Refresh the literature data to ensure we have the latest
-      fetchLiterature();
     } catch (err) {
       setError(err.message);
       alert(`Failed to save details: ${err.message}`);
@@ -504,20 +538,49 @@ function LiteratureDetail() {
 
   const handleEditOpen = () => {
     if (literature) {
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
       setEditableData({
-        title: literature.title || "",
-        author: literature.author || "",
-        period: literature.period || "",
-        genre: literature.genre || "",
-        language: literature.language || "",
-        description: literature.description || "",
-        content: literature.content || "",
-        summary: literature.summary || "",
-        image: literature.image || "",
-        contentSections: literature.contentSections?.map(section => ({
-          ...section,
-          id: section.id || Date.now() + Math.random() // Ensure each section has an id
-        })) || [],
+        title_en: toStr(literature.title),
+        title_ta: toTa(literature.title),
+        author_en: toStr(literature.author),
+        author_ta: toTa(literature.author),
+        period_en: toStr(literature.period),
+        period_ta: toTa(literature.period),
+        genre_en: toStr(literature.genre),
+        genre_ta: toTa(literature.genre),
+        language_en: toStr(literature.language),
+        language_ta: toTa(literature.language),
+        description_en: toStr(literature.description),
+        description_ta: toTa(literature.description),
+        content_en: toStr(literature.content),
+        content_ta: toTa(literature.content),
+        summary_en: toStr(literature.summary),
+        summary_ta: toTa(literature.summary),
+        imageUrl: literature.image || "",
+        contentSections: (literature.contentSections || []).map(sec => ({
+          subtitle_en: toStr(sec.subtitle),
+          subtitle_ta: toTa(sec.subtitle),
+          content_en: toStr(sec.content),
+          content_ta: toTa(sec.content),
+          imageUrl: sec.imageUrl || "",
+          imageLink: sec.imageLink || "",
+          videoUrl: sec.videoUrl || "",
+          videoTitle_en: toStr(sec.videoTitle),
+          videoTitle_ta: toTa(sec.videoTitle),
+          videoDescription_en: toStr(sec.videoDescription),
+          videoDescription_ta: toTa(sec.videoDescription),
+          id: sec.id || sec._id || Date.now() + Math.random()
+        }))
       });
       setIsEditing(true);
     }
@@ -605,7 +668,7 @@ function LiteratureDetail() {
             mx: 2,
           }}
         >
-          {literature.title}
+          {getContent(literature.title)}
         </Typography>
 
         {/* Admin Actions */}
@@ -614,16 +677,49 @@ function LiteratureDetail() {
             <IconButton
               onClick={() => {
                 // Prepare editable data when edit is clicked
+                const toStr = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'string') return val;
+                  if (typeof val === 'object') return val.en || val.ta || "";
+                  return "";
+                };
+                const toTa = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'object') return val.ta || "";
+                  return "";
+                };
                 setEditableData({
-                  title: literature.title,
-                  author: literature.author,
-                  period: literature.period,
-                  genre: literature.genre,
-                  language: literature.language,
-                  description: literature.description,
-                  content: literature.content,
-                  summary: literature.summary,
-                  image: literature.image || "",
+                  title_en: toStr(literature.title),
+                  title_ta: toTa(literature.title),
+                  author_en: toStr(literature.author),
+                  author_ta: toTa(literature.author),
+                  period_en: toStr(literature.period),
+                  period_ta: toTa(literature.period),
+                  genre_en: toStr(literature.genre),
+                  genre_ta: toTa(literature.genre),
+                  language_en: toStr(literature.language),
+                  language_ta: toTa(literature.language),
+                  description_en: toStr(literature.description),
+                  description_ta: toTa(literature.description),
+                  content_en: toStr(literature.content),
+                  content_ta: toTa(literature.content),
+                  summary_en: toStr(literature.summary),
+                  summary_ta: toTa(literature.summary),
+                  imageUrl: literature.image || "",
+                  contentSections: (literature.contentSections || []).map(sec => ({
+                    subtitle_en: toStr(sec.subtitle),
+                    subtitle_ta: toTa(sec.subtitle),
+                    content_en: toStr(sec.content),
+                    content_ta: toTa(sec.content),
+                    imageUrl: sec.imageUrl || "",
+                    imageLink: sec.imageLink || "",
+                    videoUrl: sec.videoUrl || "",
+                    videoTitle_en: toStr(sec.videoTitle),
+                    videoTitle_ta: toTa(sec.videoTitle),
+                    videoDescription_en: toStr(sec.videoDescription),
+                    videoDescription_ta: toTa(sec.videoDescription),
+                    id: sec.id || sec._id || Date.now() + Math.random()
+                  }))
                 });
                 // Toggle editing mode
                 setIsEditing(!isEditing);
@@ -680,10 +776,10 @@ function LiteratureDetail() {
             width: "100%",
           }}
         >
-          {(isEditing ? editableData.image : literature.image) ? (
+          {(isEditing ? editableData.imageUrl : literature.image) ? (
             <img
-              src={isEditing ? editableData.image : literature.image}
-              alt={literature.title}
+              src={isEditing ? editableData.imageUrl : literature.image}
+              alt={getContent(literature.title)}
               style={{
                 maxWidth: "100%",
                 maxHeight: 400,
@@ -735,7 +831,7 @@ function LiteratureDetail() {
           >
             {!isEditing ? (
               <>
-                {literature.author && (
+                {getContent(literature.author) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -744,10 +840,10 @@ function LiteratureDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Author: {literature.author}
+                    Author: {getContent(literature.author)}
                   </Typography>
                 )}
-                {literature.period && (
+                {getContent(literature.period) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -756,30 +852,20 @@ function LiteratureDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Period: {literature.period}
+                    Period: {getContent(literature.period)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <TextField
-                  label="Author"
-                  value={editableData.author || ""}
-                  onChange={(e) =>
-                    setEditableData({ ...editableData, author: e.target.value })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Period"
-                  value={editableData.period || ""}
-                  onChange={(e) =>
-                    setEditableData({ ...editableData, period: e.target.value })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Author (EN)" value={editableData.author_en} onChange={(e)=>setEditableData({ ...editableData, author_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Author (TA)" value={editableData.author_ta} onChange={(e)=>setEditableData({ ...editableData, author_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -795,7 +881,7 @@ function LiteratureDetail() {
           >
             {!isEditing ? (
               <>
-                {literature.genre && (
+                {getContent(literature.genre) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -804,10 +890,10 @@ function LiteratureDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Genre: {literature.genre}
+                    Genre: {getContent(literature.genre)}
                   </Typography>
                 )}
-                {literature.language && (
+                {getContent(literature.language) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -816,33 +902,20 @@ function LiteratureDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Language: {literature.language}
+                    Language: {getContent(literature.language)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <TextField
-                  label="Genre"
-                  value={editableData.genre || ""}
-                  onChange={(e) =>
-                    setEditableData({ ...editableData, genre: e.target.value })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Language"
-                  value={editableData.language || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      language: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Genre (EN)" value={editableData.genre_en} onChange={(e)=>setEditableData({ ...editableData, genre_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Genre (TA)" value={editableData.genre_ta} onChange={(e)=>setEditableData({ ...editableData, genre_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Language (EN)" value={editableData.language_en} onChange={(e)=>setEditableData({ ...editableData, language_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Language (TA)" value={editableData.language_ta} onChange={(e)=>setEditableData({ ...editableData, language_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -868,7 +941,7 @@ function LiteratureDetail() {
                   lineHeight: 1.6,
                 }}
               >
-                {literature.description}
+                {getContent(literature.description)}
               </Typography>
             </Box>
           ) : (
@@ -884,20 +957,8 @@ function LiteratureDetail() {
               >
                 Description
               </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description || ""}
-                onChange={(e) =>
-                  setEditableData({
-                    ...editableData,
-                    description: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           )}
 
@@ -917,10 +978,8 @@ function LiteratureDetail() {
               </Typography>
               <TextField
                 label="Image URL"
-                value={editableData.image || ""}
-                onChange={(e) =>
-                  setEditableData({ ...editableData, image: e.target.value })
-                }
+                value={editableData.imageUrl || ""}
+                onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
                 fullWidth
                 variant="standard"
                 InputLabelProps={{ shrink: true }}
@@ -930,17 +989,13 @@ function LiteratureDetail() {
 
               {/* Upload from device for main image */}
               <MediaUpload
-                onImageChange={(imageUrl) =>
-                  setEditableData((prev) => ({ ...prev, image: imageUrl }))
-                }
-                onImageLinkChange={(imageLink) =>
-                  setEditableData((prev) => ({ ...prev, image: imageLink }))
-                }
-                currentImage={editableData.image}
+                onImageChange={(imageUrl) => setEditableData(prev => ({ ...prev, imageUrl }))}
+                onImageLinkChange={(imageLink) => setEditableData(prev => ({ ...prev, imageUrl: imageLink }))}
+                currentImage={editableData.imageUrl}
                 label="Main Image"
               />
 
-              {editableData.image && (
+              {editableData.imageUrl && (
                 <Box
                   sx={{
                     mt: 2,
@@ -952,7 +1007,7 @@ function LiteratureDetail() {
                   }}
                 >
                   <img
-                    src={editableData.image}
+                    src={editableData.imageUrl}
                     alt="Preview"
                     style={{
                       maxWidth: "100%",
@@ -991,7 +1046,7 @@ function LiteratureDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {literature.summary}
+                  {getContent(literature.summary)}
                 </Typography>
               </Box>
             ) : (
@@ -1007,20 +1062,8 @@ function LiteratureDetail() {
                 >
                   Summary
                 </Typography>
-                <TextField
-                  label="Summary"
-                  value={editableData.summary || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      summary: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="standard"
-                />
+                <TextField label="Summary (EN)" value={editableData.summary_en} onChange={(e)=>setEditableData({ ...editableData, summary_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+                <TextField label="Summary (TA)" value={editableData.summary_ta} onChange={(e)=>setEditableData({ ...editableData, summary_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
               </Box>
             ))}
 
@@ -1046,7 +1089,7 @@ function LiteratureDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {literature.content}
+                  {getContent(literature.content)}
                 </Typography>
               </Box>
             ) : (
@@ -1062,20 +1105,8 @@ function LiteratureDetail() {
                 >
                   Content
                 </Typography>
-                <TextField
-                  label="Content"
-                  value={editableData.content || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      content: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  multiline
-                  rows={4}
-                  variant="standard"
-                />
+                <TextField label="Content (EN)" value={editableData.content_en} onChange={(e)=>setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
+                <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e)=>setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
               </Box>
             ))}
             
@@ -1083,7 +1114,7 @@ function LiteratureDetail() {
           {!isEditing && literature.contentSections && literature.contentSections.length > 0 && 
             literature.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
-                {section.subtitle && (
+                {getContent(section.subtitle) && (
                   <Typography 
                     variant="h6" 
                     sx={{
@@ -1093,11 +1124,11 @@ function LiteratureDetail() {
                       pb: 1,
                     }}
                   >
-                    {section.subtitle}
+                    {getContent(section.subtitle)}
                   </Typography>
                 )}
                 
-                {section.content && (
+                {getContent(section.content) && (
                   <Typography
                     variant="body1"
                     sx={{
@@ -1105,7 +1136,7 @@ function LiteratureDetail() {
                       lineHeight: 1.6,
                     }}
                   >
-                    {section.content}
+                    {getContent(section.content)}
                   </Typography>
                 )}
 
@@ -1131,30 +1162,30 @@ function LiteratureDetail() {
                 {section.videoUrl && (
                   <iframe 
                     src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
-                    title={section.videoTitle || `Section ${index + 1} Video`}
+                    title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
                     style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                     allowFullScreen
                   />
                 )}
                 
                 {/* Section Video Details */}
-                {(section.videoTitle || section.videoDescription) && (
+                {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
                   <Box sx={{ mt: 2 }}>
-                    {section.videoTitle && (
+                    {getContent(section.videoTitle) && (
                       <Typography 
                         variant="subtitle1" 
                         sx={{ fontWeight: 600 }}
                       >
-                        {section.videoTitle}
+                        {getContent(section.videoTitle)}
                       </Typography>
                     )}
                     
-                    {section.videoDescription && (
+                    {getContent(section.videoDescription) && (
                       <Typography 
                         variant="body2" 
                         sx={{ color: '#555', fontStyle: 'italic' }}
                       >
-                        {section.videoDescription}
+                        {getContent(section.videoDescription)}
                       </Typography>
                     )}
                   </Box>
@@ -1188,43 +1219,31 @@ function LiteratureDetail() {
                     position: 'relative' 
                   }}
                 >
-                  <TextField
-                    label="Subtitle"
-                    value={section.subtitle}
-                    onChange={(e) => {
-                      const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                      if (updatedSections[index]) {
-                        updatedSections[index].subtitle = e.target.value;
-                      }
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].subtitle_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].subtitle_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                  </Box>
                   
-                  <TextField
-                    label="Content"
-                    value={section.content}
-                    onChange={(e) => {
-                      const updatedSections = editableData.contentSections ? [...editableData.contentSections] : [];
-                      if (updatedSections[index]) {
-                        updatedSections[index].content = e.target.value;
-                      }
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="standard"
-                    sx={{ mb: 2 }}
-                  />
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].content_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].content_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                  </Box>
 
                   {/* Image URL for Content Section */}
                   <Typography 
@@ -1344,38 +1363,30 @@ function LiteratureDetail() {
                     placeholder="Enter full YouTube video URL"
                   />
                   
-                  <TextField
-                    label="Video Title"
-                    value={section.videoTitle}
-                    onChange={(e) => {
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e)=>{
                       const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoTitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
-                  
-                  <TextField
-                    label="Video Description"
-                    value={section.videoDescription}
-                    onChange={(e) => {
+                      updatedSections[index].videoTitle_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e)=>{
                       const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoDescription = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    variant="standard"
-                  />
+                      updatedSections[index].videoTitle_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                  </Box>
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoDescription_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoDescription_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                  </Box>
                   
                   <IconButton
                     onClick={() => removeContentSection(section.id)}

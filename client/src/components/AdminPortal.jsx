@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -21,6 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 
 export default function AdminPortal({ user, logout }) {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [editUser, setEditUser] = useState(null);
   const [editName, setEditName] = useState("");
@@ -52,7 +54,7 @@ export default function AdminPortal({ user, logout }) {
   }, []);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+    if (window.confirm(t("adminPortal.deleteConfirm"))) {
       await axios.delete(`/api/admin/users/${id}`, {
         withCredentials: true,
       });
@@ -104,7 +106,7 @@ export default function AdminPortal({ user, logout }) {
       }}
     >
       <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
-        Admin Portal
+        {t("adminPortal.title")}
       </Typography>
       <Box 
         sx={{
@@ -115,7 +117,7 @@ export default function AdminPortal({ user, logout }) {
         }}
       >
         <Typography variant="h6">
-          Welcome, {user.displayName} (Admin)
+          {t("adminPortal.welcome", { name: user.displayName, role: t(`roles.${user.role || 'admin'}`) })}
         </Typography>
         <Button
           variant="contained"
@@ -127,11 +129,11 @@ export default function AdminPortal({ user, logout }) {
             py: { xs: 1, sm: 1.5 }
           }}
         >
-          Logout
+          {t("adminPortal.logout")}
         </Button>
       </Box>
       <Typography variant="h6" sx={{ mt: { xs: 2, sm: 2 }, mb: 1 }}>
-        All Users
+        {t("adminPortal.allUsers")}
       </Typography>
       <List>
         {users.map((u, idx) => (
@@ -165,8 +167,8 @@ export default function AdminPortal({ user, logout }) {
                       mr: { xs: 0, sm: 1 },
                     }}
                   >
-                    <MenuItem value="user">User</MenuItem>
-                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="user">{t("roles.user")}</MenuItem>
+                    <MenuItem value="admin">{t("roles.admin")}</MenuItem>
                   </Select>
                   <IconButton 
                     onClick={() => handleEditOpen(u)} 
@@ -225,7 +227,7 @@ export default function AdminPortal({ user, logout }) {
                       mt: 0.5,
                     }}
                   >
-                    {u.role}
+                    {t(`roles.${u.role}`)}
                   </Typography>
                 }
                 sx={{ 
@@ -240,17 +242,17 @@ export default function AdminPortal({ user, logout }) {
         ))}
       </List>
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit User</DialogTitle>
-        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}> // Responsive padding
+        <DialogTitle>{t("adminPortal.editUser")}</DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>{/* Responsive padding */}
           <TextField
-            label="Name"
+            label={t("form.name")}
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
             fullWidth
             sx={{ mb: 2 }}
           />
           <TextField
-            label="Email"
+            label={t("form.email", { defaultValue: "Email" })}
             value={editEmail}
             onChange={(e) => setEditEmail(e.target.value)}
             fullWidth
@@ -262,14 +264,14 @@ export default function AdminPortal({ user, logout }) {
             fullWidth
             sx={{ mb: 2 }}
           >
-            <MenuItem value="user">User</MenuItem>
-            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="user">{t("roles.user")}</MenuItem>
+            <MenuItem value="admin">{t("roles.admin")}</MenuItem>
           </Select>
         </DialogContent>
-        <DialogActions sx={{ p: { xs: 1, sm: 2 } }}> // Responsive padding
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>{/* Responsive padding */}
+          <Button onClick={() => setOpen(false)}>{t("actions.cancel")}</Button>
           <Button onClick={handleEditSave} variant="contained">
-            Save
+            {t("actions.save")}
           </Button>
         </DialogActions>
       </Dialog>

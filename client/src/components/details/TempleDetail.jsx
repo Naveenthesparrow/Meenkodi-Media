@@ -35,10 +35,12 @@ import {
 } from "@mui/icons-material";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 function TempleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [user, setUser] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
@@ -80,24 +82,35 @@ function TempleDetail() {
   // Inline editing states
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState({
-    name: "",
-    location: "",
-    deity: "",
-    period: "",
-    dynasty: "",
-    builder: "",
-    architecture: "", 
-    description: "",
-    significance: "",
+    name_en: "",
+    name_ta: "",
+    location_en: "",
+    location_ta: "",
+    deity_en: "",
+    deity_ta: "",
+    period_en: "",
+    period_ta: "",
+    dynasty_en: "",
+    dynasty_ta: "",
+    builder_en: "",
+    builder_ta: "",
+    architecture_en: "", 
+    architecture_ta: "",
+    description_en: "",
+    description_ta: "",
+    significance_en: "",
+    significance_ta: "",
+    festivals_en: "",
+    festivals_ta: "",
     image: "",
     imageUrl: "",
     imageLink: "",
     videoUrl: "",
     videoLink: "",
-    contentSections: [], // New field for multiple content sections
+    contentSections: [], // bilingual sections
   });
 
-  // Function to add a new content section
+  // Function to add a new content section (initialize bilingual fields)
   const addContentSection = () => {
     console.log("Adding new content section");
     setEditableData(prev => {
@@ -109,13 +122,17 @@ function TempleDetail() {
         contentSections: [
           ...currentSections, 
           { 
-            subtitle: "", 
-            content: "",
+            subtitle_en: "", 
+            subtitle_ta: "",
+            content_en: "",
+            content_ta: "",
             imageUrl: "",
             imageLink: "",
             videoUrl: "",
-            videoTitle: "",
-            videoDescription: "",
+            videoTitle_en: "",
+            videoTitle_ta: "",
+            videoDescription_en: "",
+            videoDescription_ta: "",
             id: Date.now() // Unique identifier
           }
         ]
@@ -237,17 +254,39 @@ function TempleDetail() {
         ) || false
       );
       
-      // Set editable data with all fields including contentSections
+      // Set editable data with all fields including contentSections (bilingual)
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
       setEditableData({
-        name: data.name || "",
-        location: data.location || "",
-        deity: data.deity || "",
-        period: data.period || "",
-        dynasty: data.dynasty || "",
-        builder: data.builder || "",
-        architecture: data.architecture || "",
-        description: data.description || "",
-        significance: data.significance || "",
+        name_en: toStr(data.name),
+        name_ta: toTa(data.name),
+        location_en: toStr(data.location),
+        location_ta: toTa(data.location),
+        deity_en: toStr(data.deity),
+        deity_ta: toTa(data.deity),
+        period_en: toStr(data.period),
+        period_ta: toTa(data.period),
+        dynasty_en: toStr(data.dynasty),
+        dynasty_ta: toTa(data.dynasty),
+        builder_en: toStr(data.builder),
+        builder_ta: toTa(data.builder),
+        architecture_en: toStr(data.architecture),
+        architecture_ta: toTa(data.architecture),
+        description_en: toStr(data.description),
+        description_ta: toTa(data.description),
+        significance_en: toStr(data.significance),
+        significance_ta: toTa(data.significance),
+        festivals_en: toStr(data.festivals),
+        festivals_ta: toTa(data.festivals),
         image: data.image || "",
         imageUrl: data.imageUrl || "",
         imageLink: data.imageLink || "",
@@ -255,8 +294,18 @@ function TempleDetail() {
         videoLink: data.videoLink || "",
         contentSections: Array.isArray(data.contentSections) 
           ? data.contentSections.map(section => ({
-              ...section,
-              id: section._id || Date.now() + Math.random().toString(36).substr(2, 9)  // Ensure each section has a client-side ID
+              subtitle_en: toStr(section.subtitle),
+              subtitle_ta: toTa(section.subtitle),
+              content_en: toStr(section.content),
+              content_ta: toTa(section.content),
+              imageUrl: section.imageUrl || "",
+              imageLink: section.imageLink || "",
+              videoUrl: section.videoUrl || "",
+              videoTitle_en: toStr(section.videoTitle),
+              videoTitle_ta: toTa(section.videoTitle),
+              videoDescription_en: toStr(section.videoDescription),
+              videoDescription_ta: toTa(section.videoDescription),
+              id: section._id || Date.now() + Math.random().toString(36).substr(2, 9)
             }))
           : [],
       });
@@ -283,15 +332,39 @@ function TempleDetail() {
 
   const handleInlineSave = async () => {
     try {
-      // Process content sections to ensure they're in the right format
-      // Remove temporary id properties before sending to the server
+      // Build bilingual objects from paired EN/TA fields
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
+      
+      // Process content sections to bilingual format
       const formattedContentSections = editableData.contentSections.map(section => {
-        const { id, ...sectionWithoutId } = section;
-        return sectionWithoutId;
+        const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
+        return {
+          ...rest,
+          subtitle: toBilingual(subtitle_en, subtitle_ta),
+          content: toBilingual(content_en, content_ta),
+          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+        };
       });
 
       const updateData = {
-        ...editableData,
+        name: toBilingual(editableData.name_en, editableData.name_ta),
+        location: toBilingual(editableData.location_en, editableData.location_ta),
+        deity: toBilingual(editableData.deity_en, editableData.deity_ta),
+        period: toBilingual(editableData.period_en, editableData.period_ta),
+        dynasty: toBilingual(editableData.dynasty_en, editableData.dynasty_ta),
+        builder: toBilingual(editableData.builder_en, editableData.builder_ta),
+        architecture: toBilingual(editableData.architecture_en, editableData.architecture_ta),
+        description: toBilingual(editableData.description_en, editableData.description_ta),
+        significance: toBilingual(editableData.significance_en, editableData.significance_ta),
+        festivals: toBilingual(editableData.festivals_en, editableData.festivals_ta),
+        imageUrl: editableData.imageUrl,
+        imageLink: editableData.imageLink,
+        videoUrl: editableData.videoUrl,
+        videoLink: editableData.videoLink,
         contentSections: formattedContentSections
       };
 
@@ -307,10 +380,10 @@ function TempleDetail() {
         throw new Error(data.error || "Failed to update temple");
       }
 
-      // Update local state with new data
-      setTemple((prev) => ({ ...prev, ...updateData }));
+      const updatedTemple = await res.json();
+      setTemple(updatedTemple);
       setIsEditing(false);
-      setError(""); // Clear any previous errors
+      setError("");
     } catch (err) {
       setError(err.message);
     }
@@ -622,7 +695,7 @@ function TempleDetail() {
             mx: 2,
           }}
         >
-          {temple.name}
+          {getContent(temple.name)}
         </Typography>
 
         {user && user.role === "admin" && (
@@ -630,16 +703,35 @@ function TempleDetail() {
             <IconButton
               onClick={() => {
                 if (!isEditing) {
-                  // Prepare editable data when edit is clicked (copy all fields, including contentSections)
+                  // Prepare bilingual editable data
+                  const toStr = (val) => {
+                    if (!val) return "";
+                    if (typeof val === 'string') return val;
+                    if (typeof val === 'object') return val.en || val.ta || "";
+                    return "";
+                  };
+                  const toTa = (val) => {
+                    if (!val) return "";
+                    if (typeof val === 'object') return val.ta || "";
+                    return "";
+                  };
                   setEditableData({
-                    name: temple.name || "",
-                    location: temple.location || "",
-                    period: temple.period || "",
-                    deity: temple.deity || "",
-                    architecture: temple.architecture || "",
-                    description: temple.description || "",
-                    significance: temple.significance || "",
-                    festivals: temple.festivals || "",
+                    name_en: toStr(temple.name),
+                    name_ta: toTa(temple.name),
+                    location_en: toStr(temple.location),
+                    location_ta: toTa(temple.location),
+                    period_en: toStr(temple.period),
+                    period_ta: toTa(temple.period),
+                    deity_en: toStr(temple.deity),
+                    deity_ta: toTa(temple.deity),
+                    architecture_en: toStr(temple.architecture),
+                    architecture_ta: toTa(temple.architecture),
+                    description_en: toStr(temple.description),
+                    description_ta: toTa(temple.description),
+                    significance_en: toStr(temple.significance),
+                    significance_ta: toTa(temple.significance),
+                    festivals_en: toStr(temple.festivals),
+                    festivals_ta: toTa(temple.festivals),
                     image: temple.image || "",
                     imageUrl: temple.imageUrl || "",
                     imageLink: temple.imageLink || "",
@@ -647,7 +739,17 @@ function TempleDetail() {
                     videoLink: temple.videoLink || "",
                     contentSections: Array.isArray(temple.contentSections)
                       ? temple.contentSections.map(section => ({
-                          ...section,
+                          subtitle_en: toStr(section.subtitle),
+                          subtitle_ta: toTa(section.subtitle),
+                          content_en: toStr(section.content),
+                          content_ta: toTa(section.content),
+                          imageUrl: section.imageUrl || "",
+                          imageLink: section.imageLink || "",
+                          videoUrl: section.videoUrl || "",
+                          videoTitle_en: toStr(section.videoTitle),
+                          videoTitle_ta: toTa(section.videoTitle),
+                          videoDescription_en: toStr(section.videoDescription),
+                          videoDescription_ta: toTa(section.videoDescription),
                           id: section._id || Date.now() + Math.random().toString(36).substr(2, 9)
                         }))
                       : [],
@@ -763,7 +865,7 @@ function TempleDetail() {
           >
             {!isEditing ? (
               <>
-                {temple.location && (
+                {getContent(temple.location) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -772,10 +874,10 @@ function TempleDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Location: {temple.location}
+                    Location: {getContent(temple.location)}
                   </Typography>
                 )}
-                {temple.period && (
+                {getContent(temple.period) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -784,33 +886,20 @@ function TempleDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Period: {temple.period}
+                    Period: {getContent(temple.period)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <TextField
-                  label="Location"
-                  value={editableData.location || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      location: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Period"
-                  value={editableData.period || ""}
-                  onChange={(e) =>
-                    setEditableData({ ...editableData, period: e.target.value })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Location (EN)" value={editableData.location_en} onChange={(e)=>setEditableData({ ...editableData, location_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Location (TA)" value={editableData.location_ta} onChange={(e)=>setEditableData({ ...editableData, location_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -826,7 +915,7 @@ function TempleDetail() {
           >
             {!isEditing ? (
               <>
-                {temple.deity && (
+                {getContent(temple.deity) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -835,10 +924,10 @@ function TempleDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Deity: {temple.deity}
+                    Deity: {getContent(temple.deity)}
                   </Typography>
                 )}
-                {temple.architecture && (
+                {getContent(temple.architecture) && (
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -847,33 +936,20 @@ function TempleDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Style: {temple.architecture}
+                    Style: {getContent(temple.architecture)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <TextField
-                  label="Deity"
-                  value={editableData.deity || ""}
-                  onChange={(e) =>
-                    setEditableData({ ...editableData, deity: e.target.value })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Architecture Style"
-                  value={editableData.architecture || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      architecture: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Deity (EN)" value={editableData.deity_en} onChange={(e)=>setEditableData({ ...editableData, deity_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Deity (TA)" value={editableData.deity_ta} onChange={(e)=>setEditableData({ ...editableData, deity_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Architecture (EN)" value={editableData.architecture_en} onChange={(e)=>setEditableData({ ...editableData, architecture_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Architecture (TA)" value={editableData.architecture_ta} onChange={(e)=>setEditableData({ ...editableData, architecture_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -899,7 +975,7 @@ function TempleDetail() {
                   lineHeight: 1.6,
                 }}
               >
-                {temple.description}
+                {getContent(temple.description)}
               </Typography>
             </Box>
           ) : (
@@ -915,20 +991,8 @@ function TempleDetail() {
               >
                 Description
               </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description || ""}
-                onChange={(e) =>
-                  setEditableData({
-                    ...editableData,
-                    description: e.target.value,
-                  })
-                }
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
             </Box>
           )}
 
@@ -954,7 +1018,7 @@ function TempleDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {temple.significance}
+                  {getContent(temple.significance)}
                 </Typography>
               </Box>
             ) : (
@@ -970,20 +1034,8 @@ function TempleDetail() {
                 >
                   Significance
                 </Typography>
-                <TextField
-                  label="Significance"
-                  value={editableData.significance || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      significance: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="standard"
-                />
+                <TextField label="Significance (EN)" value={editableData.significance_en} onChange={(e)=>setEditableData({ ...editableData, significance_en: e.target.value })} fullWidth multiline rows={2} variant="standard" sx={{ mb:1 }} />
+                <TextField label="Significance (TA)" value={editableData.significance_ta} onChange={(e)=>setEditableData({ ...editableData, significance_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
               </Box>
             ))}
 
@@ -1009,7 +1061,7 @@ function TempleDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {temple.festivals}
+                  {getContent(temple.festivals)}
                 </Typography>
               </Box>
             ) : (
@@ -1025,20 +1077,8 @@ function TempleDetail() {
                 >
                   Festivals
                 </Typography>
-                <TextField
-                  label="Festivals"
-                  value={editableData.festivals || ""}
-                  onChange={(e) =>
-                    setEditableData({
-                      ...editableData,
-                      festivals: e.target.value,
-                    })
-                  }
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="standard"
-                />
+                <TextField label="Festivals (EN)" value={editableData.festivals_en} onChange={(e)=>setEditableData({ ...editableData, festivals_en: e.target.value })} fullWidth multiline rows={2} variant="standard" sx={{ mb:1 }} />
+                <TextField label="Festivals (TA)" value={editableData.festivals_ta} onChange={(e)=>setEditableData({ ...editableData, festivals_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
               </Box>
             ))}
 
@@ -1199,39 +1239,27 @@ function TempleDetail() {
                     position: 'relative' 
                   }}
                 >
-                  <TextField
-                    label="Subtitle"
-                    value={section.subtitle}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].subtitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                  <TextField label="Subtitle (EN)" value={section.subtitle_en} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].subtitle_en = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb:1 }} variant="standard" />
+                  <TextField label="Subtitle (TA)" value={section.subtitle_ta} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].subtitle_ta = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb:2 }} variant="standard" />
                   
-                  <TextField
-                    label="Content"
-                    value={section.content}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="standard"
-                    sx={{ mb: 2 }}
-                  />
+                  <TextField label="Content (EN)" value={section.content_en} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].content_en = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+                  <TextField label="Content (TA)" value={section.content_ta} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].content_ta = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
 
                   {/* Image URL for Content Section */}
                   <Typography 
@@ -1328,55 +1356,33 @@ function TempleDetail() {
                     Section Video Details
                   </Typography>
                   
-                  <TextField
-                    label="Video URL"
-                    value={section.videoUrl}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoUrl = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                    placeholder="Enter full YouTube video URL"
-                  />
+                  <TextField label="Video URL" value={section.videoUrl} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].videoUrl = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb:2 }} variant="standard" placeholder="Enter full YouTube video URL" />
                   
-                  <TextField
-                    label="Video Title"
-                    value={section.videoTitle}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoTitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                  <TextField label="Video Title (EN)" value={section.videoTitle_en} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].videoTitle_en = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb:1 }} variant="standard" />
+                  <TextField label="Video Title (TA)" value={section.videoTitle_ta} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].videoTitle_ta = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb:2 }} variant="standard" />
                   
-                  <TextField
-                    label="Video Description"
-                    value={section.videoDescription}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoDescription = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    variant="standard"
-                  />
+                  <TextField label="Video Description (EN)" value={section.videoDescription_en} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].videoDescription_en = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth multiline rows={2} variant="standard" sx={{ mb:1 }} />
+                  <TextField label="Video Description (TA)" value={section.videoDescription_ta} onChange={(e)=>{
+                    const updated=[...editableData.contentSections];
+                    updated[index].videoDescription_ta = e.target.value;
+                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                  }} fullWidth multiline rows={2} variant="standard" />
                   
                   <IconButton
                     onClick={() => removeContentSection(section.id)}

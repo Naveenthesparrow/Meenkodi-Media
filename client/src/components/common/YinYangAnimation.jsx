@@ -8,7 +8,15 @@ import { Box } from "@mui/material";
  * - One-time 360° rotation using transform + transition (no infinite)
  * - Adapted to this codebase (no Tailwind, no styled-jsx)
  */
-export default function YinYangAnimation({ size = 288, bg = "#f5f5f5" }) {
+export default function YinYangAnimation({
+  size = 288,
+  bg = "#f5f5f5",
+  strokeColor = "#000",
+  yinColor = "#000",
+  yangColor = "#fff",
+  dotLightColor = "#fff",
+  dotDarkColor = "#000",
+}) {
   const [spin, setSpin] = useState(false);
 
   // Responsive size: allow size to be an object { xs, sm, md }
@@ -57,7 +65,7 @@ export default function YinYangAnimation({ size = 288, bg = "#f5f5f5" }) {
             transform: spin ? "rotate(360deg)" : "rotate(0deg)",
             "& .outline": {
               fill: "none",
-              stroke: "#000",
+              stroke: strokeColor,
               strokeWidth: 4,
               strokeDasharray: 1000,
               strokeDashoffset: 1000,
@@ -83,15 +91,15 @@ export default function YinYangAnimation({ size = 288, bg = "#f5f5f5" }) {
             <path
               d="M50,2 A48,48 0 0,0 50,98 A24,24 0 0,1 50,50 A24,24 0 0,0 50,2 Z"
               className="yin"
-              fill="#000"
+              fill={yinColor}
             />
             <path
               d="M50,98 A48,48 0 0,0 50,2 A24,24 0 0,1 50,50 A24,24 0 0,0 50,98 Z"
               className="yang"
-              fill="#fff"
+              fill={yangColor}
             />
-            <circle cx="50" cy="25" r="6" className="dot" fill="#fff" />
-            <circle cx="50" cy="75" r="6" className="dot" fill="#000" />
+              <circle cx="50" cy="25" r="6" className="dot" fill={dotLightColor} />
+              <circle cx="50" cy="75" r="6" className="dot" fill={dotDarkColor} />
           </g>
         </Box>
       </Box>

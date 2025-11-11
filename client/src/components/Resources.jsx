@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Grid, 
@@ -23,18 +22,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
+import { useBilingualContent } from "../utils/bilingualContent";
+import { useTranslation } from 'react-i18next';
 
 export default function Resources({ user }) {
+  const getContent = useBilingualContent();
   const { t } = useTranslation();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentResource, setCurrentResource] = useState({
-    title: '',
-    description: '',
-    category: '',
-    author: '',
+    title_en: '', title_ta: '',
+    description_en: '', description_ta: '',
+    category_en: '', category_ta: '',
+    author_en: '', author_ta: '',
     image: '',
     downloadLink: '',
   });
@@ -88,10 +90,10 @@ export default function Resources({ user }) {
 
   const handleAdd = () => {
     setCurrentResource({
-      title: '',
-      description: '',
-      category: '',
-      author: '',
+      title_en: '', title_ta: '',
+      description_en: '', description_ta: '',
+      category_en: '', category_ta: '',
+      author_en: '', author_ta: '',
       image: '',
       downloadLink: '',
     });
@@ -99,7 +101,20 @@ export default function Resources({ user }) {
   };
 
   const handleEdit = (resource) => {
-    setCurrentResource(resource);
+    const part = (val, lang) => {
+      if (!val) return '';
+      if (typeof val === 'string') return lang === 'en' ? val : '';
+      return val[lang] || '';
+    };
+    setCurrentResource({
+      _id: resource._id,
+      title_en: part(resource.title,'en'), title_ta: part(resource.title,'ta'),
+      description_en: part(resource.description,'en'), description_ta: part(resource.description,'ta'),
+      category_en: part(resource.category,'en'), category_ta: part(resource.category,'ta'),
+      author_en: part(resource.author,'en'), author_ta: part(resource.author,'ta'),
+      image: resource.image || '',
+      downloadLink: resource.downloadLink || '',
+    });
     setOpenDialog(true);
   };
 
@@ -115,10 +130,10 @@ export default function Resources({ user }) {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          title: currentResource.title,
-          description: currentResource.description,
-          category: currentResource.category,
-          author: currentResource.author,
+          title: { en: currentResource.title_en, ta: currentResource.title_ta },
+          description: { en: currentResource.description_en, ta: currentResource.description_ta },
+          category: { en: currentResource.category_en, ta: currentResource.category_ta },
+          author: { en: currentResource.author_en, ta: currentResource.author_ta },
           image: currentResource.image,
           downloadLink: currentResource.downloadLink,
         }),
@@ -245,7 +260,7 @@ export default function Resources({ user }) {
             },
           }}
         >
-          {t('nav.resources')}
+          {t('resources.title', 'Resources')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -366,7 +381,7 @@ export default function Resources({ user }) {
                     component="img"
                     height="200"
                     image={resource.image}
-                    alt={resource.title}
+                    alt={getContent(resource.title)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -479,7 +494,7 @@ export default function Resources({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {resource.title}
+                      {getContent(resource.title)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -491,7 +506,7 @@ export default function Resources({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {resource.author || resource.category}
+                      {getContent(resource.author) || getContent(resource.category)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -507,9 +522,9 @@ export default function Resources({ user }) {
                         minHeight: '4.8rem', // Ensures consistent height for 3 lines
                       }}
                     >
-                      {resource.description.length > 150 
-                        ? `${resource.description.substring(0, 150)}...` 
-                        : resource.description}
+                      {getContent(resource.description).length > 150 
+                        ? `${getContent(resource.description).substring(0, 150)}...` 
+                        : getContent(resource.description)}
                     </Typography>
                   </Box>
 
@@ -531,7 +546,7 @@ export default function Resources({ user }) {
                         "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                       }}
                     >
-                      {t('common.readMore', 'Read More')}
+                      {t('actions.readMore', 'Read more')}
                     </Button>
                     {resource.downloadLink && (
                       <Button
@@ -548,7 +563,7 @@ export default function Resources({ user }) {
                           },
                         }}
                       >
-                        {t('common.download', 'Download')}
+                        {t('actions.download', 'Download')}
                       </Button>
                     )}
                   </Box>
@@ -570,43 +585,21 @@ export default function Resources({ user }) {
           {currentResource._id ? t('resources.edit', 'Edit Resource') : t('resources.addNew', 'Add New Resource')}
         </DialogTitle>
         <DialogContent>
+          <TextField label="Title (EN)" fullWidth sx={{ mb:2 }} value={currentResource.title_en} onChange={(e)=>setCurrentResource({...currentResource,title_en:e.target.value})} />
+          <TextField label="Title (TA)" fullWidth sx={{ mb:2 }} value={currentResource.title_ta} onChange={(e)=>setCurrentResource({...currentResource,title_ta:e.target.value})} />
+          <TextField label="Author (EN)" fullWidth sx={{ mb:2 }} value={currentResource.author_en} onChange={(e)=>setCurrentResource({...currentResource,author_en:e.target.value})} />
+          <TextField label="Author (TA)" fullWidth sx={{ mb:2 }} value={currentResource.author_ta} onChange={(e)=>setCurrentResource({...currentResource,author_ta:e.target.value})} />
+          <TextField label="Category (EN)" fullWidth sx={{ mb:2 }} value={currentResource.category_en} onChange={(e)=>setCurrentResource({...currentResource,category_en:e.target.value})} />
+          <TextField label="Category (TA)" fullWidth sx={{ mb:2 }} value={currentResource.category_ta} onChange={(e)=>setCurrentResource({...currentResource,category_ta:e.target.value})} />
+          <TextField label="Description (EN)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentResource.description_en} onChange={(e)=>setCurrentResource({...currentResource,description_en:e.target.value})} />
+          <TextField label="Description (TA)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentResource.description_ta} onChange={(e)=>setCurrentResource({...currentResource,description_ta:e.target.value})} />
           <TextField
-            label={t('resources.title', 'Title')}
-            fullWidth
-            sx={{ mb: 2 }}
-            value={currentResource.title}
-            onChange={(e) => setCurrentResource({...currentResource, title: e.target.value})}
-          />
-          <TextField
-            label={t('resources.author', 'Author')}
-            fullWidth
-            sx={{ mb: 2 }}
-            value={currentResource.author}
-            onChange={(e) => setCurrentResource({...currentResource, author: e.target.value})}
-          />
-          <TextField
-            label={t('resources.category', 'Category')}
-            fullWidth
-            sx={{ mb: 2 }}
-            value={currentResource.category}
-            onChange={(e) => setCurrentResource({...currentResource, category: e.target.value})}
-          />
-          <TextField
-            label={t('resources.description', 'Description')}
-            fullWidth
-            multiline
-            minRows={5}
-            sx={{ mb: 2 }}
-            value={currentResource.description}
-            onChange={(e) => setCurrentResource({...currentResource, description: e.target.value})}
-          />
-          <TextField
-            label={t('resources.downloadLink', 'Download Link')}
+            label="Download Link"
             fullWidth
             sx={{ mb: 2 }}
             value={currentResource.downloadLink}
             onChange={(e) => setCurrentResource({...currentResource, downloadLink: e.target.value})}
-            placeholder={t('resources.downloadLinkPlaceholder', 'Optional: Add a download link for the resource')}
+            placeholder="Optional: Add a download link for the resource"
           />
           <MediaUpload
             onImageLinkChange={(link) => {
@@ -623,13 +616,13 @@ export default function Resources({ user }) {
             currentVideoLink={''} // No video link in this dialog
             currentImage={currentResource.image}
             currentVideo={''} // No video URL in this dialog
-            label={t('resources.mediaLinks', 'Media Links')}
+            label="Media Links"
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
     </Container>

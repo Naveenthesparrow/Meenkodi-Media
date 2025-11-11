@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -46,9 +47,12 @@ import {
   Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 export default function Dance({ user }) {
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const [dances, setDances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -56,9 +60,12 @@ export default function Dance({ user }) {
   const [editItem, setEditItem] = useState(null);
   // Removed filter-related state and methods
   const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    type_en: "",
+    type_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
   });
 
@@ -89,10 +96,24 @@ export default function Dance({ user }) {
 
   const handleEdit = (item) => {
     setEditItem(item);
+    const toStr = (val) => {
+      if (!val) return "";
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') return val.en || val.ta || "";
+      return "";
+    };
+    const toTa = (val) => {
+      if (!val) return "";
+      if (typeof val === 'object') return val.ta || "";
+      return "";
+    };
     setFormData({
-      name: item.name,
-      type: item.type,
-      description: item.description,
+      name_en: toStr(item.name),
+      name_ta: toTa(item.name),
+      type_en: toStr(item.type),
+      type_ta: toTa(item.type),
+      description_en: toStr(item.description),
+      description_ta: toTa(item.description),
       image: item.image,
     });
     setEditOpen(true);
@@ -100,9 +121,12 @@ export default function Dance({ user }) {
 
   const handleAdd = () => {
     setFormData({
-      name: "",
-      type: "",
-      description: "",
+      name_en: "",
+      name_ta: "",
+      type_en: "",
+      type_ta: "",
+      description_en: "",
+      description_ta: "",
       image: "",
     });
     setAddOpen(true);
@@ -111,17 +135,18 @@ export default function Dance({ user }) {
   const handleSave = () => {
     (async () => {
       try {
+        const payload = {
+          name: { en: formData.name_en || "", ta: formData.name_ta || "" },
+          type: { en: formData.type_en || "", ta: formData.type_ta || "" },
+          description: { en: formData.description_en || "", ta: formData.description_ta || "" },
+          image: formData.image,
+        };
         if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/dance/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              type: formData.type,
-              description: formData.description,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Update failed");
         } else {
@@ -129,12 +154,7 @@ export default function Dance({ user }) {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              type: formData.type,
-              description: formData.description,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Create failed");
         }
@@ -252,7 +272,7 @@ export default function Dance({ user }) {
             },
           }}
         >
-          Dance
+          {t('dance.title','Dance')}
         </Typography>
 
         {user && user.role === "admin" && (
@@ -285,7 +305,7 @@ export default function Dance({ user }) {
                 px: 3,
               }}
             >
-              Add Dance Form
+              {t('dance.add','Add Dance Form')}
             </Button>
           </Box>
         )}
@@ -374,7 +394,7 @@ export default function Dance({ user }) {
                     component="img"
                     height={200}
                     image={dance.image || dance.imageLink}
-                    alt={dance.name}
+                    alt={getContent(dance.name)}
                     sx={{
                       objectFit: "contain",
                       width: "100%",
@@ -488,7 +508,7 @@ export default function Dance({ user }) {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {dance.name}
+                      {getContent(dance.name)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -500,7 +520,7 @@ export default function Dance({ user }) {
                         textTransform: "capitalize",
                       }}
                     >
-                      {dance.type}
+                      {getContent(dance.type)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -516,9 +536,10 @@ export default function Dance({ user }) {
                         minHeight: { xs: "4.2rem", md: "4.8rem" }, // Ensures consistent height for 3 lines
                       }}
                     >
-                      {dance.description.length > 150
-                        ? `${dance.description.substring(0, 150)}...`
-                        : dance.description}
+                      {(() => {
+                        const desc = getContent(dance.description) || "";
+                        return desc.length > 150 ? `${desc.substring(0,150)}...` : desc;
+                      })()}
                     </Typography>
 
                     {/* Like Count Display */}
@@ -552,7 +573,7 @@ export default function Dance({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -585,37 +606,22 @@ export default function Dance({ user }) {
             fontWeight: 700,
           }}
         >
-          {editItem ? "Edit Dance Form" : "Add New Dance Form"}
+          {editItem ? t('dance.edit','Edit Dance Form') : t('dance.addNew','Add New Dance Form')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
+          <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+            <TextField fullWidth label={t('form.name')+" (EN)"} value={formData.name_en} onChange={(e)=>setFormData({...formData, name_en: e.target.value})} sx={{ mb:2, flex:1 }} />
+            <TextField fullWidth label={t('form.name')+" (TA)"} value={formData.name_ta} onChange={(e)=>setFormData({...formData, name_ta: e.target.value})} sx={{ mb:2, flex:1 }} />
+          </Box>
+          <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+            <TextField fullWidth label={t('form.type')+" (EN)"} value={formData.type_en} onChange={(e)=>setFormData({...formData, type_en: e.target.value})} sx={{ mb:2, flex:1 }} />
+            <TextField fullWidth label={t('form.type')+" (TA)"} value={formData.type_ta} onChange={(e)=>setFormData({...formData, type_ta: e.target.value})} sx={{ mb:2, flex:1 }} />
+          </Box>
+          <TextField fullWidth label={t('form.description')+" (EN)"} value={formData.description_en} onChange={(e)=>setFormData({...formData, description_en: e.target.value})} multiline minRows={3} sx={{ mb:2 }} />
+          <TextField fullWidth label={t('form.description')+" (TA)"} value={formData.description_ta} onChange={(e)=>setFormData({...formData, description_ta: e.target.value})} multiline minRows={3} sx={{ mb:2 }} />
           <TextField
             fullWidth
-            label="Name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Type"
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Description"
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            multiline
-            minRows={3}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Image URL"
+            label={t('form.imageUrl','Image URL')}
             value={formData.image}
             onChange={(e) =>
               setFormData({ ...formData, image: e.target.value })
@@ -637,7 +643,7 @@ export default function Dance({ user }) {
             }}
             sx={{ color: "#000" }}
           >
-            Cancel
+            {t('actions.cancel','Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -649,7 +655,7 @@ export default function Dance({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
           </Button>
         </DialogActions>
       </Dialog>

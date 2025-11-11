@@ -33,21 +33,26 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const literatureSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  author: String,
-  period: String,
-  genre: String,
-  language: String,
-  summary: String,
-  description: String,
-  content: String,
-  significance: String,
+  title: { type: bilingual, required: true },
+  author: bilingual,
+  period: bilingual,
+  genre: bilingual,
+  language: bilingual,
+  summary: bilingual,
+  description: bilingual,
+  content: bilingual,
+  significance: bilingual,
   image: String,
   media: [String],
   contentSections: [{
-    subtitle: String,
-    content: String,
+    subtitle: bilingual,
+    content: bilingual,
     imageUrl: String,
     imageLink: String,
     videoUrl: String,

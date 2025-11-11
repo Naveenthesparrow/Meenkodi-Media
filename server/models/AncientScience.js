@@ -33,18 +33,23 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const ancientScienceSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  field: String,
-  scholar: String,
+  name: { type: bilingual, required: true },
+  description: { type: bilingual, required: true },
+  field: bilingual,
+  scholar: bilingual,
   image: String,
   imageLink: String,
   videoLink: String,
-  period: String,
+  period: bilingual,
   contentSections: [{
-    subtitle: String,
-    content: String,
+    subtitle: bilingual,
+    content: bilingual,
     imageUrl: String,
     imageLink: String,
     videoUrl: String,

@@ -1,0 +1,44 @@
+.shiny-text{
+  display: inline-block;
+  position: relative;
+  color: #ffffff; /* base text stays visible */
+}
+
+/* overlay highlight using a duplicate text content */
+.shiny-text::after{
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* Neutral silver/white highlight (customizable via CSS vars) */
+  background-image: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 38%,
+    var(--shine-color, rgba(255, 255, 255, 0.98)) 50%,
+    rgba(255,255,255,0) 62%
+  );
+  background-size: 320% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  pointer-events: none;
+  animation-name: shine;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: inherit; /* inherit from parent inline style */
+  /* Subtle neutral glow to make the sweep apparent */
+  filter: drop-shadow(0 0 10px var(--shine-glow, rgb(255, 255, 255)));
+  /* blend mode optional; comment out if it looks odd on some backgrounds */
+  /* mix-blend-mode: screen; */
+  opacity: var(--shine-opacity, 1);
+  transform: translateZ(0);
+}
+
+.shiny-disabled::after{
+  display: none; /* no shine overlay */
+}
+
+@keyframes shine{
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

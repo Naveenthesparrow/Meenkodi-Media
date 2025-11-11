@@ -1,12 +1,40 @@
-# React + Vite
+# Meenkodi client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite app using MUI, Tailwind CSS, and shadcn-style UI primitives.
 
-Currently, two official plugins are available:
+## New: Radial Orbital Timeline for Five Lands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Component: `src/components/ui/radial-orbital-timeline.tsx`
+- Demo: `src/components/ui/radial-orbital-timeline-demo.tsx`
+- Data adapter: `src/components/FiveLandsTimeline.jsx`
+- Embedded In: `src/components/Explore.jsx` (scroll below the category carousel)
 
-## Expanding the ESLint configuration
+### Use it elsewhere
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+import FiveLandsTimeline from '@/components/FiveLandsTimeline';
+
+export default function SomePage() {
+	return (
+		<div style={{ background: '#111', color: '#fff', borderRadius: 16, padding: 16 }}>
+			<FiveLandsTimeline />
+		</div>
+	);
+}
+```
+
+The adapter fetches `/api/lands?lang=en|ta` and maps the first five records to timeline items without modifying server data. It respects the current i18n language and will show Tamil or English.
+
+### Tailwind & shadcn
+
+- Tailwind config: `tailwind.config.cjs` and `postcss.config.cjs`
+- Global styles: `src/styles/globals.css` (includes timeline animations)
+- UI primitives: `src/components/ui/{button,badge,card}.tsx`
+
+## Develop
+
+Run the dev server from this `client` folder.
+
+```
+pnpm dev # or npm run dev / yarn dev
+```

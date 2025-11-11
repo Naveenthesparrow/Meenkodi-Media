@@ -33,19 +33,24 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const kingSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  dynasty: String,
-  period: String,
-  capital: String,
-  achievements: String,
-  description: String,
-  content: String,
+  name: { type: bilingual, required: true },
+  dynasty: bilingual,
+  period: bilingual,
+  capital: bilingual,
+  achievements: bilingual,
+  description: bilingual,
+  content: bilingual,
   image: String,
   media: [String],
   contentSections: [{
-    subtitle: String,
-    content: String,
+    subtitle: bilingual,
+    content: bilingual,
     imageUrl: String,
     imageLink: String,
     videoUrl: String,

@@ -9,18 +9,23 @@ import {
 } from "@mui/material";
 import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
+import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function ArticleDetail({ user }) {
+  const getContent = useBilingualContent();
   const { id } = useParams();
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
+  const [title_en, setTitleEn] = useState("");
+  const [title_ta, setTitleTa] = useState("");
+  const [content_en, setContentEn] = useState("");
+  const [content_ta, setContentTa] = useState("");
+  const [author_en, setAuthorEn] = useState("");
+  const [author_ta, setAuthorTa] = useState("");
   const [imageLink, setImageLink] = useState("");
   const [image, setImage] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -32,9 +37,17 @@ export default function ArticleDetail({ user }) {
       .then((res) => res.json())
       .then((data) => {
         setArticle(data);
-        setTitle(data.title);
-        setContent(data.content);
-        setAuthor(data.author);
+        const part = (val, lang) => {
+          if (!val) return '';
+          if (typeof val === 'string') return lang === 'en' ? val : '';
+          return val[lang] || '';
+        };
+        setTitleEn(part(data.title,'en'));
+        setTitleTa(part(data.title,'ta'));
+        setContentEn(part(data.content,'en'));
+        setContentTa(part(data.content,'ta'));
+        setAuthorEn(part(data.author,'en'));
+        setAuthorTa(part(data.author,'ta'));
         setImageLink(data.imageLink || "");
         setImage(data.image || "");
         setVideoUrl(data.videoUrl || "");
@@ -50,7 +63,7 @@ export default function ArticleDetail({ user }) {
   const handleSave = async () => {
     setSubmitting(true);
     setError(null);
-    if (!title.trim()) {
+    if (!title_en.trim() && !title_ta.trim()) {
       setError("Title is required");
       setSubmitting(false);
       return;
@@ -61,9 +74,9 @@ export default function ArticleDetail({ user }) {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          title,
-          content,
-          author,
+          title: { en: title_en, ta: title_ta },
+          content: { en: content_en, ta: content_ta },
+          author: { en: author_en, ta: author_ta },
           imageLink,
           image,
           videoUrl,
@@ -115,33 +128,16 @@ export default function ArticleDetail({ user }) {
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", p: 2 }}>
       <Typography variant="h4" gutterBottom>
-        {editMode ? "Edit Article" : article.title}
+        {editMode ? "Edit Article" : getContent(article.title)}
       </Typography>
       {editMode ? (
         <Box>
-          <TextField
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            fullWidth
-            multiline
-            minRows={4}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Author"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
+          <TextField label="Title (EN)" value={title_en} onChange={(e)=>setTitleEn(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label="Title (TA)" value={title_ta} onChange={(e)=>setTitleTa(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label="Content (EN)" value={content_en} onChange={(e)=>setContentEn(e.target.value)} fullWidth multiline minRows={4} sx={{ mb: 2 }} />
+          <TextField label="Content (TA)" value={content_ta} onChange={(e)=>setContentTa(e.target.value)} fullWidth multiline minRows={4} sx={{ mb: 2 }} />
+          <TextField label="Author (EN)" value={author_en} onChange={(e)=>setAuthorEn(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label="Author (TA)" value={author_ta} onChange={(e)=>setAuthorTa(e.target.value)} fullWidth sx={{ mb: 2 }} />
           <MediaUpload
             onImageLinkChange={setImageLink}
             onVideoLinkChange={setVideoLink}
@@ -166,10 +162,10 @@ export default function ArticleDetail({ user }) {
       ) : (
         <Box>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            {article.content}
+            {getContent(article.content)}
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Author: {article.author}
+            Author: {getContent(article.author)}
           </Typography>
           <MediaDisplay
             imageUrl={article.image}

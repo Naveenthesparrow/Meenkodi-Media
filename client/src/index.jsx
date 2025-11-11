@@ -1,12 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import './styles/globals.css';
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import "@fontsource/poppins";
 import "@fontsource/noto-serif-tamil";
-import "@fontsource/noto-sans-tamil";
-// Initialize i18n
-import "./utils/i18n";
+import i18n from "./i18n/i18n";
 
 const theme = createTheme({
   palette: {
@@ -23,17 +22,64 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Inter, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif",
-    h1: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
-    h2: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
-    h3: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
-    h4: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
-    h5: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
-    h6: { fontFamily: "Poppins, 'Noto Sans Tamil', 'Noto Serif Tamil', Arial, sans-serif" },
+    // Global font stack: Latin-first, with high-quality Tamil fallbacks
+    fontFamily:
+      "Inter, 'Hind Madurai', 'Tiro Tamil', 'Noto Serif Tamil', 'Noto Sans Tamil', Arial, sans-serif",
+    h1: {
+      fontFamily:
+        "Poppins, 'Tiro Tamil', 'Hind Madurai', 'Noto Serif Tamil', serif",
+    },
+    h2: {
+      fontFamily:
+        "Poppins, 'Tiro Tamil', 'Hind Madurai', 'Noto Serif Tamil', serif",
+    },
+    h3: {
+      fontFamily:
+        "Poppins, 'Tiro Tamil', 'Hind Madurai', 'Noto Serif Tamil', serif",
+    },
+    h4: {
+      fontFamily:
+        "Poppins, 'Tiro Tamil', 'Hind Madurai', 'Noto Serif Tamil', serif",
+    },
+    h5: {
+      fontFamily:
+        "Poppins, 'Tiro Tamil', 'Hind Madurai', 'Noto Serif Tamil', serif",
+    },
+    h6: {
+      fontFamily:
+        "Poppins, 'Tiro Tamil', 'Hind Madurai', 'Noto Serif Tamil', serif",
+    },
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          textRendering: "optimizeLegibility",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+          fontFeatureSettings: '"kern" 1, "liga" 1',
+        },
+        // When the active language is Tamil, ensure Tamil fonts are used across the UI
+        ':lang(ta)': {
+          fontFamily:
+            "'Hind Madurai', 'Tiro Tamil', 'Noto Serif Tamil', 'Noto Sans Tamil', system-ui, sans-serif !important",
+        },
+        '::selection': {
+          backgroundColor: '#ffe08a',
+          color: '#111',
+        },
+      },
+    },
   },
 });
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
+// Keep the <html lang> in sync with i18n so :lang(ta) rules apply
+document.documentElement.setAttribute('lang', i18n.language || 'en');
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.setAttribute('lang', lng || 'en');
+});
+
 root.render(
   <ThemeProvider theme={theme}>
     <CssBaseline />

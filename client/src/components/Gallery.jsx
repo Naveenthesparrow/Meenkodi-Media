@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Container, 
   Grid, 
@@ -23,6 +22,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
+import { useTranslation } from 'react-i18next';
 
 export default function Gallery({ user }) {
   const { t } = useTranslation();
@@ -215,7 +215,7 @@ export default function Gallery({ user }) {
             },
           }}
         >
-          {t('nav.gallery')}
+          {t('gallery.title', 'Gallery')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -252,7 +252,7 @@ export default function Gallery({ user }) {
                 px: 3,
               }}
             >
-        {t('gallery.add', 'Add Gallery Item')}
+              {t('gallery.add', 'Add Gallery Item')}
           </Button>
         </Box>
       )}
@@ -495,7 +495,7 @@ export default function Gallery({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    {t('common.readMore', 'Read More')}
+                    {t('actions.readMore', 'Read more')}
                   </Button>
             </CardContent>
           </Card>
@@ -516,21 +516,21 @@ export default function Gallery({ user }) {
         </DialogTitle>
         <DialogContent>
           <TextField
-            label={t('gallery.title', 'Title')}
+            label="Title"
             fullWidth
             sx={{ mb: 2 }}
             value={currentGalleryItem.title}
             onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, title: e.target.value})}
           />
           <TextField
-            label={t('gallery.category', 'Category')}
+            label="Category"
             fullWidth
             sx={{ mb: 2 }}
             value={currentGalleryItem.category}
             onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, category: e.target.value})}
           />
           <TextField
-            label={t('gallery.description', 'Description')}
+            label="Description"
             fullWidth
             multiline
             minRows={3}
@@ -547,13 +547,13 @@ export default function Gallery({ user }) {
             currentVideoLink={currentGalleryItem.videoLink}
             currentImage={currentGalleryItem.imageUrl}
             currentVideo={currentGalleryItem.videoUrl}
-            label={t('gallery.mediaLinks', 'Media Links')}
+            label="Media Links"
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
     </Container>

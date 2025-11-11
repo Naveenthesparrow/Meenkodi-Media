@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -32,18 +33,24 @@ import {
   Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 export default function Temples({ user }) {
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const [temples, setTemples] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
-    period: "",
+    name_en: "",
+    name_ta: "",
+    location_en: "",
+    location_ta: "",
+    period_en: "",
+    period_ta: "",
     image: "",
   });
 
@@ -71,12 +78,27 @@ export default function Temples({ user }) {
     fetchTemples();
   }, []);
 
+  const toStr = (val) => {
+    if (!val) return "";
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.en || val.ta || "";
+    return "";
+  };
+  const toTa = (val) => {
+    if (!val) return "";
+    if (typeof val === 'object') return val.ta || "";
+    return "";
+  };
+
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
-      name: item.name,
-      location: item.location,
-      period: item.period,
+      name_en: toStr(item.name),
+      name_ta: toTa(item.name),
+      location_en: toStr(item.location),
+      location_ta: toTa(item.location),
+      period_en: toStr(item.period),
+      period_ta: toTa(item.period),
       image: item.image,
     });
     setEditOpen(true);
@@ -84,9 +106,12 @@ export default function Temples({ user }) {
 
   const handleAdd = () => {
     setFormData({
-      name: "",
-      location: "",
-      period: "",
+      name_en: "",
+      name_ta: "",
+      location_en: "",
+      location_ta: "",
+      period_en: "",
+      period_ta: "",
       image: "" 
     });
     setAddOpen(true);
@@ -95,17 +120,19 @@ export default function Temples({ user }) {
   const handleSave = () => {
     (async () => {
       try {
+        const payload = {
+          name: { en: formData.name_en, ta: formData.name_ta },
+          location: { en: formData.location_en, ta: formData.location_ta },
+          period: { en: formData.period_en, ta: formData.period_ta },
+          image: formData.image,
+        };
+
         if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/temples/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              location: formData.location,
-              period: formData.period,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Update failed");
         } else {
@@ -113,12 +140,7 @@ export default function Temples({ user }) {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              location: formData.location,
-              period: formData.period,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Create failed");
         }
@@ -227,7 +249,7 @@ export default function Temples({ user }) {
             },
           }}
         >
-          Temples
+          {t('temples.title','Temples')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -260,7 +282,7 @@ export default function Temples({ user }) {
                 px: 3,
               }}
             >
-              Add Temple
+              {t('temples.add','Add Temple')}
             </Button>
           </Box>
         )}
@@ -346,7 +368,7 @@ export default function Temples({ user }) {
                     component="img"
                     height={200}
                     image={temple.image || temple.imageLink}
-                    alt={temple.name}
+                    alt={getContent(temple.name)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -464,7 +486,7 @@ export default function Temples({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {temple.name}
+                      {getContent(temple.name)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -476,7 +498,7 @@ export default function Temples({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {temple.location}
+                      {getContent(temple.location)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -492,7 +514,7 @@ export default function Temples({ user }) {
                         minHeight: { xs: '4.2rem', md: '4.8rem' }, // Ensures consistent height for 3 lines
                       }}
                     >
-                      {temple.period}
+                      {getContent(temple.period)}
                     </Typography>
                     
                     {/* Like Count Display */}
@@ -524,7 +546,7 @@ export default function Temples({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -557,36 +579,60 @@ export default function Temples({ user }) {
             fontWeight: 700 
           }}
         >
-          {editItem ? "Edit Temple" : "Add New Temple"}
+          {editItem ? t('temples.edit','Edit Temple') : t('temples.addNew','Add New Temple')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
               <TextField
                 fullWidth
-                label="Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                label={`${t('form.name','Name')} (EN)`}
+                value={formData.name_en}
+                onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
                 sx={{ mb: 2, mt: 3 }}
                 InputLabelProps={{ shrink: true }}
               />
               <TextField
                 fullWidth
-                label="Location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                label={`${t('form.name','Name')} (TA)`}
+                value={formData.name_ta}
+                onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
                 sx={{ mb: 2 }}
                 InputLabelProps={{ shrink: true }}
               />
               <TextField
                 fullWidth
-                label="Period"
-                value={formData.period}
-                onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                label={`${t('form.location','Location')} (EN)`}
+                value={formData.location_en}
+                onChange={(e) => setFormData({ ...formData, location_en: e.target.value })}
                 sx={{ mb: 2 }}
                 InputLabelProps={{ shrink: true }}
               />
               <TextField
                 fullWidth
-                label="Image URL"
+                label={`${t('form.location','Location')} (TA)`}
+                value={formData.location_ta}
+                onChange={(e) => setFormData({ ...formData, location_ta: e.target.value })}
+                sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.period','Period')} (EN)`}
+                value={formData.period_en}
+                onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
+                sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.period','Period')} (TA)`}
+                value={formData.period_ta}
+                onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
+                sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                label={t('form.imageUrl','Image URL')}
                 value={formData.image}
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 sx={{ mb: 2 }}
@@ -607,7 +653,7 @@ export default function Temples({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            Cancel
+            {t('actions.cancel','Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -619,7 +665,7 @@ export default function Temples({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
           </Button>
         </DialogActions>
       </Dialog>

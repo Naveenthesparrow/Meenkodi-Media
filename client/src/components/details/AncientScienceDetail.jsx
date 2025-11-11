@@ -37,9 +37,11 @@ import {
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 
+import { useBilingualContent } from "../../utils/bilingualContent";
 function AncientScienceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [science, setScience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,15 +51,20 @@ function AncientScienceDetail() {
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
-  // Update state to include content sections
+  // Update state to include content sections (bilingual fields)
   const [editableData, setEditableData] = useState({
-    name: "",
-    period: "",
-    field: "",
-    scholar: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    period_en: "",
+    period_ta: "",
+    field_en: "",
+    field_ta: "",
+    scholar_en: "",
+    scholar_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
-    contentSections: [], // New field for multiple content sections
+    contentSections: [], // Array of bilingual sections
   });
 
   // Comments and likes states
@@ -80,15 +87,17 @@ function AncientScienceDetail() {
   // Emoji options
   const emojiOptions = ['❤️', '👍', '👎', '😊', '😍', '🤔', '👏', '🙏', '🔥', '💯'];
 
-  // Function to add a new content section
+  // Function to add a new content section (bilingual subtitle/content)
   const addContentSection = () => {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
         ...prev.contentSections, 
         { 
-          subtitle: "", 
-          content: "",
+          subtitle_en: "", 
+          subtitle_ta: "",
+          content_en: "",
+          content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
@@ -108,16 +117,43 @@ function AncientScienceDetail() {
     }));
   };
 
-  // Update handleEditOpen to include content sections
+  // Update handleEditOpen to include content sections (bilingual mapping)
   const handleEditOpen = () => {
+    const toStr = (val) => {
+      if (!val) return "";
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') return val.en || val.ta || "";
+      return "";
+    };
+    const toTa = (val) => {
+      if (!val) return "";
+      if (typeof val === 'object') return val.ta || "";
+      return "";
+    };
     setEditableData({
-      name: science.name,
-      period: science.period,
-      field: science.field,
-      scholar: science.scholar,
-      description: science.description,
+      name_en: toStr(science.name),
+      name_ta: toTa(science.name),
+      period_en: toStr(science.period),
+      period_ta: toTa(science.period),
+      field_en: toStr(science.field),
+      field_ta: toTa(science.field),
+      scholar_en: toStr(science.scholar),
+      scholar_ta: toTa(science.scholar),
+      description_en: toStr(science.description),
+      description_ta: toTa(science.description),
       image: science.image || "",
-      contentSections: science.contentSections || [],
+      contentSections: (science.contentSections || []).map(sec => ({
+        subtitle_en: toStr(sec.subtitle),
+        subtitle_ta: toTa(sec.subtitle),
+        content_en: toStr(sec.content),
+        content_ta: toTa(sec.content),
+        imageUrl: sec.imageUrl || "",
+        imageLink: sec.imageLink || "",
+        videoUrl: sec.videoUrl || "",
+        videoTitle: sec.videoTitle || "",
+        videoDescription: sec.videoDescription || "",
+        id: sec.id || sec._id || Date.now() + Math.random()
+      })),
     });
     setIsEditing(true);
   };
@@ -211,7 +247,7 @@ function AncientScienceDetail() {
 
 
 
-  // Update handleInlineSave to include content sections
+  // Update handleInlineSave to include content sections (serialize bilingual)
   const handleInlineSave = async () => {
     try {
       const res = await fetch(`/api/ancientscience/${id}`, {
@@ -219,13 +255,22 @@ function AncientScienceDetail() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          name: editableData.name,
-          period: editableData.period,
-          field: editableData.field,
-          scholar: editableData.scholar,
-          description: editableData.description,
+          name: { en: editableData.name_en || "", ta: editableData.name_ta || "" },
+          period: { en: editableData.period_en || "", ta: editableData.period_ta || "" },
+          field: { en: editableData.field_en || "", ta: editableData.field_ta || "" },
+          scholar: { en: editableData.scholar_en || "", ta: editableData.scholar_ta || "" },
+          description: { en: editableData.description_en || "", ta: editableData.description_ta || "" },
           image: editableData.image,
-          contentSections: editableData.contentSections,
+          contentSections: editableData.contentSections.map(sec => ({
+            subtitle: { en: sec.subtitle_en || "", ta: sec.subtitle_ta || "" },
+            content: { en: sec.content_en || "", ta: sec.content_ta || "" },
+            imageUrl: sec.imageUrl || "",
+            imageLink: sec.imageLink || "",
+            videoUrl: sec.videoUrl || "",
+            videoTitle: sec.videoTitle || "",
+            videoDescription: sec.videoDescription || "",
+            id: sec.id
+          })),
         }),
       });
       
@@ -311,8 +356,8 @@ function AncientScienceDetail() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: science.name,
-          text: science.description,
+          title: getContent(science.name),
+          text: getContent(science.description),
           url: window.location.href,
         });
       } catch (err) {
@@ -525,21 +570,48 @@ function AncientScienceDetail() {
           <ArrowBack />
         </IconButton>
         <Typography variant="h4" sx={{ fontWeight: 700, flex: 1 }}>
-          {science.name}
+          {getContent(science.name)}
         </Typography>
         {user && user.role === "admin" && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton 
               onClick={() => {
-                // Prepare editable data when edit is clicked
+                // Prepare editable data when edit is clicked (bilingual)
+                const toStr = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'string') return val;
+                  if (typeof val === 'object') return val.en || val.ta || "";
+                  return "";
+                };
+                const toTa = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'object') return val.ta || "";
+                  return "";
+                };
                 setEditableData({
-                  name: science.name,
-                  period: science.period,
-                  field: science.field,
-                  scholar: science.scholar,
-                  description: science.description,
+                  name_en: toStr(science.name),
+                  name_ta: toTa(science.name),
+                  period_en: toStr(science.period),
+                  period_ta: toTa(science.period),
+                  field_en: toStr(science.field),
+                  field_ta: toTa(science.field),
+                  scholar_en: toStr(science.scholar),
+                  scholar_ta: toTa(science.scholar),
+                  description_en: toStr(science.description),
+                  description_ta: toTa(science.description),
                   image: science.image || "",
-                  contentSections: science.contentSections || [],
+                  contentSections: (science.contentSections || []).map(sec => ({
+                    subtitle_en: toStr(sec.subtitle),
+                    subtitle_ta: toTa(sec.subtitle),
+                    content_en: toStr(sec.content),
+                    content_ta: toTa(sec.content),
+                    imageUrl: sec.imageUrl || "",
+                    imageLink: sec.imageLink || "",
+                    videoUrl: sec.videoUrl || "",
+                    videoTitle: sec.videoTitle || "",
+                    videoDescription: sec.videoDescription || "",
+                    id: sec.id || sec._id || Date.now() + Math.random()
+                  })),
                 });
                 // Toggle editing mode
                 setIsEditing(!isEditing);
@@ -591,7 +663,7 @@ function AncientScienceDetail() {
           {science.image ? (
             <img 
               src={science.image} 
-              alt={science.name}
+              alt={getContent(science.name)}
               style={{
                 maxWidth: '100%',
                 maxHeight: 600,
@@ -619,8 +691,8 @@ function AncientScienceDetail() {
                 No Image Available
         </Typography>
               <Typography variant="body2">
-                {science.name} - {science.field || 'Ancient Science'}
-        </Typography>
+                {getContent(science.name)} - {getContent(science.field) || 'Ancient Science'}
+              </Typography>
               <Typography variant="caption" sx={{ mt: 1, fontStyle: 'italic' }}>
                 Add an image URL in edit mode to display an image here
         </Typography>
@@ -650,7 +722,7 @@ function AncientScienceDetail() {
           >
             {!isEditing ? (
               <>
-                {science.period && (
+                {getContent(science.period) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -659,10 +731,10 @@ function AncientScienceDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Period: {science.period}
+                    Period: {getContent(science.period)}
                   </Typography>
                 )}
-                {science.field && (
+                {getContent(science.field) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -671,10 +743,10 @@ function AncientScienceDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Field: {science.field}
+                    Field: {getContent(science.field)}
                   </Typography>
                 )}
-                {science.scholar && (
+                {getContent(science.scholar) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -683,33 +755,24 @@ function AncientScienceDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Scholar: {science.scholar}
+                    Scholar: {getContent(science.scholar)}
                   </Typography>
                 )}
               </>
             ) : (
-              <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
-                <TextField
-                  label="Period"
-                  value={editableData.period}
-                  onChange={(e) => setEditableData({ ...editableData, period: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Field"
-                  value={editableData.field}
-                  onChange={(e) => setEditableData({ ...editableData, field: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Scholar"
-                  value={editableData.scholar}
-                  onChange={(e) => setEditableData({ ...editableData, scholar: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
+              <Box sx={{ display: 'flex', width: '100%', gap: 2, flexWrap:'wrap' }}>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, flex:1, minWidth:220 }}>
+                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, flex:1, minWidth:220 }}>
+                  <TextField label="Field (EN)" value={editableData.field_en} onChange={(e)=>setEditableData({ ...editableData, field_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Field (TA)" value={editableData.field_ta} onChange={(e)=>setEditableData({ ...editableData, field_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, flex:1, minWidth:220 }}>
+                  <TextField label="Scholar (EN)" value={editableData.scholar_en} onChange={(e)=>setEditableData({ ...editableData, scholar_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Scholar (TA)" value={editableData.scholar_ta} onChange={(e)=>setEditableData({ ...editableData, scholar_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
@@ -735,7 +798,7 @@ function AncientScienceDetail() {
                   lineHeight: 1.6,
                 }}
               >
-        {science.description}
+                {getContent(science.description)}
       </Typography>
             </Box>
           ) : (
@@ -751,15 +814,8 @@ function AncientScienceDetail() {
               >
                 Description
               </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description}
-                onChange={(e) => setEditableData({ ...editableData, description: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           )}
 
@@ -818,21 +874,21 @@ function AncientScienceDetail() {
           {!isEditing && science.contentSections && science.contentSections.length > 0 && (
             science.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
-                {section.subtitle && (
+                {getContent(section.subtitle) && (
                   <Typography 
                     variant="h6" 
                     key={`subtitle-${section.id || index}`}
                   >
-                    {section.subtitle}
+                    {getContent(section.subtitle)}
                   </Typography>
                 )}
                 
-                {section.content && (
+                {getContent(section.content) && (
                   <Typography
                     variant="body1"
                     key={`content-${section.id || index}`}
                   >
-                    {section.content}
+                    {getContent(section.content)}
                   </Typography>
                 )}
 
@@ -911,39 +967,13 @@ function AncientScienceDetail() {
                     position: 'relative' 
                   }}
                 >
-          <TextField
-                    label="Subtitle"
-                    value={section.subtitle}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].subtitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-            fullWidth
-            sx={{ mb: 2 }}
-                    variant="standard"
-          />
+                  <Box sx={{ display:'flex', gap:2, mb:2, flexWrap:'wrap' }}>
+                    <TextField label="Subtitle (EN)" value={section.subtitle_en} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].subtitle_en=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth variant="standard" />
+                    <TextField label="Subtitle (TA)" value={section.subtitle_ta} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].subtitle_ta=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth variant="standard" />
+                  </Box>
                   
-          <TextField
-                    label="Content"
-                    value={section.content}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-            fullWidth
-                    multiline
-                    rows={4}
-                    variant="standard"
-            sx={{ mb: 2 }}
-          />
+                  <TextField label="Content (EN)" value={section.content_en} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].content_en=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                  <TextField label="Content (TA)" value={section.content_ta} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].content_ta=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
 
                   {/* Image URL for Content Section */}
                   <Typography 

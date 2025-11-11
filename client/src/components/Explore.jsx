@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from "react";
-import { useTranslation } from 'react-i18next';
 import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import {
   Home,
   AccountBalance,
@@ -12,26 +12,26 @@ import {
   Celebration,
   Checkroom,
 } from "@mui/icons-material";
+import GlowCard from "./common/GlowCard";
 
 function Explore() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-  const GOLD_CENTER = "#FFBF00"; // bright gold per reference
-  const GOLD_SIDE = "#E6B800"; // slightly deeper side gold
+  // Removed gold accents; using neutral styling
 
   const categories = useMemo(
     () => [
-      { icon: Home, title: t('nav.temples', 'Temples'), path: "temples" },
-      { icon: AccountBalance, title: t('nav.kings', 'Kings'), path: "kings" },
-      { icon: MenuBook, title: t('nav.literature', 'Literature'), path: "literature" },
-      { icon: SportsKabaddi, title: t('nav.dance', 'Dance'), path: "dance" },
-      { icon: RestaurantMenu, title: t('nav.foods', 'Foods'), path: "foods" },
-      { icon: Celebration, title: t('nav.festivals', 'Festivals'), path: "festivals" },
-      { icon: Checkroom, title: t('nav.clothing', 'Clothing'), path: "clothing" },
-      { icon: Science, title: t('nav.ancientScience', 'Ancient Science'), path: "ancientscience" },
+      { icon: Home, titleKey: "explore.temples", path: "temples" },
+      { icon: AccountBalance, titleKey: "explore.kings", path: "kings" },
+      { icon: MenuBook, titleKey: "explore.literature", path: "literature" },
+      { icon: SportsKabaddi, titleKey: "explore.dance", path: "dance" },
+      { icon: RestaurantMenu, titleKey: "explore.foods", path: "foods" },
+      { icon: Celebration, titleKey: "explore.festivals", path: "festivals" },
+      { icon: Checkroom, titleKey: "explore.clothing", path: "clothing" },
+      { icon: Science, titleKey: "explore.ancientscience", path: "ancientscience" },
     ],
-    [t]
+    []
   );
 
   // Carousel state
@@ -269,7 +269,7 @@ function Explore() {
         component="h1"
         sx={{ fontWeight: 900, color: "#000", textAlign: "center", fontSize: { xs: "1.8rem", sm: "3rem" } }}
       >
-        {t('explore.title', 'Explore Everything')}
+        {t('explore.title')}
       </Typography>
 
       <Box
@@ -297,10 +297,6 @@ function Explore() {
         onTouchStart={onPointerDown}
         onTouchMove={onPointerMove}
         onTouchEnd={onPointerUp}
-        onWheel={(e) => {
-          e.preventDefault();
-          onWheel(e);
-        }}
       >
         {/* Left/Right invisible edges for tap to rotate on mobile if desired (optional) */}
         <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -324,111 +320,26 @@ function Explore() {
                 }}
                 style={getCardStyle(pos)}
               >
-                <Box
+                <GlowCard
                   onClick={() => handleCardClick(itemIndex, categories[itemIndex].path, isCenter)}
-                  sx={{
-                    bgcolor: "#fff",
-                    backgroundImage: "linear-gradient(180deg, #ffffff 0%, #fafafa 100%)",
-                    borderRadius: 4,
-                    height: "100%",
-                    boxShadow: isCenter ? "0 16px 36px rgba(0,0,0,0.18)" : "0 10px 26px rgba(0,0,0,0.12)",
-                    border: "1px solid #eaeaea",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 1,
-                    cursor: "pointer",
-                    transition: "box-shadow 200ms ease",
-                    position: "relative",
-                    // Animated glowing border: only for center card; runs once slowly then leaves a glow
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "inherit",
-                      padding: "1.5px",
-                      background: `linear-gradient(180deg, rgba(233, 232, 222, 0.35), rgba(166, 187, 166, 0.35))`,
-                      WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                      WebkitMaskComposite: "xor",
-                      maskComposite: "exclude",
-                      pointerEvents: "none",
-                      opacity: isCenter ? 0 : 0,
-                      filter: "none",
-                      animation: isCenter ? "borderSettle 0.7s ease-out 4.8s forwards" : "none",
-                      transition: "opacity 240ms ease",
-                    },
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "inherit",
-                      padding: "1.5px",
-                      background: `linear-gradient(90deg,
-                          rgba(255,191,0,0) 0%,
-                          rgba(255, 191, 0, 1) 30%,
-                          rgba(255, 221, 0, 0.91) 50%,
-                          rgba(255,191,0,0.14) 70%,
-                          rgba(255,191,0,0) 100%)`,
-                      backgroundSize: "200% 100%",
-                      backgroundRepeat: "no-repeat",
-                      WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                      WebkitMaskComposite: "xor",
-                      maskComposite: "exclude",
-                      pointerEvents: "none",
-                      animation: isCenter ? "borderSweep 4.8s linear 1 forwards" : "none",
-                      filter: isCenter ? "drop-shadow(0 0 12px rgba(255,191,0,0.6))" : "none",
-                      opacity: isCenter ? 1 : 0,
-                    },
-                    "@keyframes borderSweep": {
-                      "0%": {
-                        backgroundPosition: "0% 0%",
-                        filter: "drop-shadow(0 0 16px rgba(255,191,0,0.95))",
-                      },
-                      "8%": {
-                        filter: "drop-shadow(0 0 9px rgba(255,191,0,0.45))",
-                      },
-                      "92%": {
-                        filter: "drop-shadow(0 0 9px rgba(255,191,0,0.45))",
-                      },
-                      "100%": {
-                        backgroundPosition: "100% 0%",
-                        filter: "drop-shadow(0 0 16px rgba(255,191,0,0.95))",
-                        opacity: 0,
-                      },
-                    },
-                    "@keyframes borderSettle": {
-                      "0%": {
-                        opacity: 0,
-                        padding: "1.5px",
-                        filter: "none",
-                      },
-                      "100%": {
-                        opacity: 1,
-                        padding: "4px",
-                        filter: "drop-shadow(0 0 36px rgba(255,191,0,0.95)) drop-shadow(0 0 84px rgba(255,191,0,0.55))",
-                      },
-                    },
-                  }}
+                  customSize
+                  width="100%"
+                  height="100%"
+                  className={`!flex !flex-col !items-center !justify-center gap-3 cursor-pointer transition-shadow duration-200 ${isCenter ? "shadow-[0_16px_36px_rgba(0,0,0,0.28)]" : "shadow-[0_10px_26px_rgba(0,0,0,0.18)]"}`}
+                  style={{ borderRadius: "16px", backgroundColor: "rgba(255,255,255,0.86)", border: "1px solid rgba(255,255,255,0.4)" }}
                 >
                   <Cat
                     sx={{
                       fontSize: { xs: 56, sm: 80 },
-                      color: isCenter ? GOLD_CENTER : GOLD_SIDE,
-                      // increase brightness; no shadows
-                      filter: isCenter
-                        ? "brightness(1.12) saturate(1.12)"
-                        : "brightness(1.06) saturate(1.08)",
-                      "& path": {
-                        stroke: "rgba(255,255,255,0.25)",
-                        strokeWidth: 0.2,
-                      },
+                      color: "#000",
+                      position: "relative",
+                      zIndex: 1,
                     }}
                   />
-                  <Typography sx={{ fontWeight: 800, letterSpacing: 0.3, color: "#000", fontSize: { xs: 15, sm: 18 } }}>
-                    {categories[itemIndex].title}
+                  <Typography sx={{ fontWeight: 900, letterSpacing: 0.4, color: "#000", fontSize: { xs: 15, sm: 18 }, textTransform: "uppercase", position: "relative", zIndex: 1 }}>
+                    {t(categories[itemIndex].titleKey)}
                   </Typography>
-                </Box>
+                </GlowCard>
               </Box>
             );
           })}
@@ -446,7 +357,7 @@ function Explore() {
                 width: isActive ? 9 : 7,
                 height: isActive ? 9 : 7,
                 borderRadius: "50%",
-                backgroundColor: isActive ? GOLD_CENTER : "#cfcfcf",
+                backgroundColor: isActive ? "#000" : "#cfcfcf",
                 transition: "all 180ms ease",
               }}
             />

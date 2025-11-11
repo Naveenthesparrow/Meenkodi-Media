@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -46,9 +47,12 @@ import {
   Favorite,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 export default function Festivals({ user }) {
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const [festivals, setFestivals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -56,9 +60,12 @@ export default function Festivals({ user }) {
   const [editItem, setEditItem] = useState(null);
   // Removed filter-related state and methods
   const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    type_en: "",
+    type_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
   });
 
@@ -92,12 +99,27 @@ export default function Festivals({ user }) {
       setLoading(false);
     }
   };
+  const toStr = (val) => {
+    if (!val) return "";
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') return val.en || val.ta || "";
+    return "";
+  };
+  const toTa = (val) => {
+    if (!val) return "";
+    if (typeof val === 'object') return val.ta || "";
+    return "";
+  };
+
   const handleEdit = (item) => {
     setEditItem(item);
     setFormData({
-      name: item.name,
-      type: item.type,
-      description: item.description,
+      name_en: toStr(item.name),
+      name_ta: toTa(item.name),
+      type_en: toStr(item.type),
+      type_ta: toTa(item.type),
+      description_en: toStr(item.description),
+      description_ta: toTa(item.description),
       image: item.image,
     });
     setEditOpen(true);
@@ -105,9 +127,12 @@ export default function Festivals({ user }) {
 
   const handleAdd = () => {
     setFormData({
-      name: "",
-      type: "",
-      description: "",
+      name_en: "",
+      name_ta: "",
+      type_en: "",
+      type_ta: "",
+      description_en: "",
+      description_ta: "",
       image: "" 
     });
     setAddOpen(true);
@@ -116,17 +141,19 @@ export default function Festivals({ user }) {
   const handleSave = () => {
     (async () => {
       try {
+    const payload = {
+      name: { en: formData.name_en, ta: formData.name_ta },
+      type: { en: formData.type_en, ta: formData.type_ta },
+      description: { en: formData.description_en, ta: formData.description_ta },
+      image: formData.image,
+    };
+
     if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/festivals/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              type: formData.type,
-              description: formData.description,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Update failed");
         } else {
@@ -134,12 +161,7 @@ export default function Festivals({ user }) {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: formData.name,
-              type: formData.type,
-              description: formData.description,
-              image: formData.image,
-            }),
+            body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error("Create failed");
         }
@@ -252,7 +274,7 @@ export default function Festivals({ user }) {
             },
           }}
         >
-          Festivals
+          {t('festivals.title','Festivals')}
         </Typography>
         {user && user.role === "admin" && (
           <Box 
@@ -338,7 +360,7 @@ export default function Festivals({ user }) {
                     component="img"
                     height={200}
                     image={festival.image || festival.imageLink}
-                    alt={festival.name}
+                    alt={getContent(festival.name)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -453,7 +475,7 @@ export default function Festivals({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {festival.name}
+                      {getContent(festival.name)}
                   </Typography>
                     <Typography
                       variant="body2"
@@ -465,7 +487,7 @@ export default function Festivals({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {festival.type}
+                      {getContent(festival.type)}
                     </Typography>
                         <Typography
                           variant="body2"
@@ -481,9 +503,10 @@ export default function Festivals({ user }) {
                         minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
                       }}
                     >
-                      {festival.description.length > 150 
-                        ? `${festival.description.substring(0, 150)}...` 
-                        : festival.description}
+                      {(() => {
+                        const desc = getContent(festival.description) || "";
+                        return desc.length > 150 ? `${desc.substring(0,150)}...` : desc;
+                      })()}
                         </Typography>
                         
                         {/* Like Count Display */}
@@ -515,7 +538,7 @@ export default function Festivals({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -548,37 +571,60 @@ export default function Festivals({ user }) {
             fontWeight: 700 
           }}
         >
-          {editItem ? "Edit Festival" : "Add New Festival"}
+          {editItem ? t('festivals.edit','Edit Festival') : t('festivals.addNew','Add New Festival')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
               <TextField
                 fullWidth
-            label="Name"
-                value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                label={`${t('form.name','Name')} (EN)`}
+                value={formData.name_en}
+                onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-            label="Type"
-                value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                label={`${t('form.name','Name')} (TA)`}
+                value={formData.name_ta}
+                onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Description"
-                value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                label={`${t('form.type','Type')} (EN)`}
+                value={formData.type_en}
+                onChange={(e) => setFormData({ ...formData, type_en: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.type','Type')} (TA)`}
+                value={formData.type_ta}
+                onChange={(e) => setFormData({ ...formData, type_ta: e.target.value })}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={`${t('form.description','Description')} (EN)`}
+                value={formData.description_en}
+                onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
                 multiline
-            minRows={3}
+                minRows={3}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-            label="Image URL"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                label={`${t('form.description','Description')} (TA)`}
+                value={formData.description_ta}
+                onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })}
+                multiline
+                minRows={3}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label={t('form.imageUrl','Image URL')}
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 sx={{ mb: 2 }}
               />
         </DialogContent>
@@ -596,7 +642,7 @@ export default function Festivals({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            Cancel
+            {t('actions.cancel','Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -608,7 +654,7 @@ export default function Festivals({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
           </Button>
         </DialogActions>
       </Dialog>

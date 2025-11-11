@@ -33,16 +33,21 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const templeSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  location: String,
-  deity: String,
-  period: String,
-  dynasty: String,
-  builder: String,
-  architecture: String,
-  description: String,
-  significance: String,
+  name: { type: bilingual, required: true },
+  location: bilingual,
+  deity: bilingual,
+  period: bilingual,
+  dynasty: bilingual,
+  builder: bilingual,
+  architecture: bilingual,
+  description: bilingual,
+  significance: bilingual,
   image: String,
   imageUrl: String,
   imageLink: String,
@@ -50,8 +55,8 @@ const templeSchema = new mongoose.Schema({
   videoLink: String,
   media: [String],
   contentSections: [{
-    subtitle: String,
-    content: String,
+    subtitle: bilingual,
+    content: bilingual,
     imageUrl: String,
     imageLink: String,
     videoUrl: String,

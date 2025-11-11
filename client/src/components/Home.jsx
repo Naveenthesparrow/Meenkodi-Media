@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Typography,
@@ -31,32 +31,51 @@ import {
   Close,
   Star,
 } from "@mui/icons-material";
+import FiveLandsTimeline from "./FiveLandsTimeline";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import ExploreIcon from "@mui/icons-material/Explore";
 import YinYangAnimation from "./common/YinYangAnimation";
+import Particles from "./Particles";
+import ShinyText from "./common/ShinyText";
+import RevealTamilTitle from "./common/RevealTamilTitle";
+import { useBilingualContent } from "../utils/bilingualContent";
 
 const TAMIL_MOTIF =
   "https://upload.wikimedia.org/wikipedia/commons/6/6b/Tamil_om_symbol.svg";
+// Bilingual facts for the Did You Know section
 const FACTS = [
-  "Tamil is one of the world's oldest living languages, with a literary tradition spanning over 2,000 years!",
-  "The Sangam period produced more than 2,000 poems by over 400 poets.",
-  "The Brihadeeswarar Temple in Thanjavur is a UNESCO World Heritage site built over 1,000 years ago.",
-  "The Kurinji flower blooms only once every 12 years in the Western Ghats.",
+  {
+    en: "Tamil is one of the world's oldest living languages, with a literary tradition spanning over 2,000 years!",
+    ta: "உலகின் தொன்மையான உயிர்மொழிகளில் ஒன்றான தமிழ், 2000 ஆண்டுகளுக்கும் மேலான செழுமையான இலக்கிய மரபைக் கொண்டுள்ளது!",
+  },
+  {
+    en: "The Sangam period produced more than 2,000 poems by over 400 poets.",
+    ta: "சங்கக் காலத்தில் 400-க்கும் மேற்பட்ட புலவர்கள் 2,000-க்கும் அதிகமானப் பாடல்கள் படைத்துள்ளனர்.",
+  },
+  {
+    en: "The Brihadeeswarar Temple in Thanjavur is a UNESCO World Heritage site built over 1,000 years ago.",
+    ta: "தஞ்சாவூரில் அமைந்துள்ள பிரகதீஸ்வரர் (பெரிய) கோவில் 1,000 ஆண்டுகளுக்கு முன் கட்டப்பட்ட யுனெஸ்கோ உலக பாரம்பரிய தளம் ஆகும்.",
+  },
+  {
+    en: "The Kurinji flower blooms only once every 12 years in the Western Ghats.",
+    ta: "மேற்கு தொடர்ச்சி மலையில் குரிஞ்சி மலர் 12 ஆண்டுகளுக்கு ஒருமுறை மட்டுமே மலர்கிறது.",
+  },
 ];
 
-function getRandomFact() {
-  return FACTS[Math.floor(Math.random() * FACTS.length)];
+function getRandomFactIndex() {
+  return Math.floor(Math.random() * FACTS.length);
 }
 
 export default function Home() {
-  const { t } = useTranslation();
+  const getContent = useBilingualContent();
+  const { t, i18n } = useTranslation();
   const [lands, setLands] = useState([]);
   const [articles, setArticles] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [events, setEvents] = useState([]);
   const [resources, setResources] = useState([]);
   const [show, setShow] = useState(false);
-  const [fact, setFact] = useState(getRandomFact());
+  const [factIndex, setFactIndex] = useState(getRandomFactIndex());
   const [featuredOpen, setFeaturedOpen] = useState(true);
   const [mapModal, setMapModal] = useState({ open: false, land: null });
   const [kural, setKural] = useState(null);
@@ -81,7 +100,7 @@ export default function Home() {
     fetch(`${import.meta.env.VITE_APP_API_URL || "http://localhost:5000"}/api/resources`)
       .then((res) => res.json())
       .then(setResources);
-    setFact(getRandomFact());
+  setFactIndex(getRandomFactIndex());
     // Fetch random Thirukkural
     const randomKuralNum = Math.floor(Math.random() * 1330) + 1;
     setKuralLoading(true);
@@ -104,91 +123,47 @@ export default function Home() {
   const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 10 });
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        position: "relative",
-        bgcolor: "#fff",
-        fontFamily: "Inter, Arial, sans-serif",
-      }}
-    >
-      {/* Floating Tamil script */}
-      <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      >
-        <Typography
-          sx={{
-            position: "absolute",
-            top: 60,
-            left: 30,
-            fontSize: 60,
-            color: "#eee",
-            opacity: 0.15,
-            fontFamily: "Inter, Arial, sans-serif",
-          }}
-        >
-          தமிழ்
-        </Typography>
-        <Typography
-          sx={{
-            position: "absolute",
-            bottom: 80,
-            right: 40,
-            fontSize: 48,
-            color: "#eee",
-            opacity: 0.1,
-            fontFamily: "Inter, Arial, sans-serif",
-          }}
-        >
-          சங்கம்
-        </Typography>
+    <Box sx={{ bgcolor: "#fff", color: "#111", fontFamily: "Inter, Arial, sans-serif" }}>
+      {/* Hero with particle background and Yin-Yang */}
+      <Box sx={{ position: "relative", width: "100%", height: { xs: "90vh", md: "90vh" }, bgcolor: "#000", overflow: "hidden" }}>
+        <Box sx={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          <Particles
+            particleColors={["#ffffff", "#e6e6e6", "#d9d9d9"]}
+            particleCount={220}
+            particleSpread={10}
+            speed={0.1}
+            particleBaseSize={90}
+            moveParticlesOnHover={true}
+            alphaParticles={true}
+            disableRotation={true}
+            showWatermark={false}
+            enableDrag={true}
+            enableClickBurst={true}
+          />
+        </Box>
+        <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+          <Box sx={{ textAlign: "center", color: "#fff" }}>
+            <Box sx={{ filter: "drop-shadow(0 8px 28px rgba(0,0,0,0.65))" }}>
+              <YinYangAnimation
+                size={{ xs: 220, sm: 320, md: 460 }}
+                bg="transparent"
+                strokeColor="#ffffff"
+                yinColor="#121212"
+                yangColor="#ffffff"
+                dotLightColor="#ffffff"
+                dotDarkColor="#000000"
+              />
+            </Box>
+            <Typography variant="h3" component="div" sx={{ fontWeight: 800, mt: 2, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
+              <RevealTamilTitle />
+            </Typography>
+          </Box>
+        </Box>
       </Box>
-      {/* Yin-Yang animation: main hero visual (video removed) */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          my: { xs: 1.5, md: 3 },
-          bgcolor: "#fff",
-          width: "100%",
-        }}
-      >
-  <YinYangAnimation size={{ xs: 240, sm: 340, md: 480 }} bg="#fff" />
-        <Typography
-          sx={{
-            fontWeight: 500,
-            textAlign: "center",
-            fontSize: { xs: 18, sm: 24, md: 32 },
-            mt: { xs: 1, sm: 2 },
-            mb: { xs: 1.5, sm: 2 },
-            color: "#000",
-            letterSpacing: 0.5,
-          }}
-        >
-          {t('home.heroTitle')}
-        </Typography>
-      </Box>
-      <Divider
-        sx={{
-          bgcolor: "#eee",
-          height: 2,
-          maxWidth: { xs: 80, sm: 120 },
-          mx: "auto",
-          mt: { xs: 0.5, sm: 0.5 },
-          mb: { xs: 2.5, sm: 4 },
-          borderRadius: 2,
-        }}
-      />
-      {/* DID YOU KNOW SECTION (REALISTIC OLAICHUVADI STYLE) */}
+
+      <Divider sx={{ bgcolor: "#eee", height: 2, maxWidth: 100, mx: "auto", my: 6, borderRadius: 2 }} />
+
+  {/* DID YOU KNOW SECTION */}
       <Box sx={{ mb: 6, display: "flex", justifyContent: "center" }}>
         <Paper
           elevation={12}
@@ -199,80 +174,31 @@ export default function Home() {
             p: 4,
             borderRadius: "24px",
             position: "relative",
-            background: "#fff", // Solid white background
-            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.3)", // Enhanced shadow
-            border: "none", // Removed border
+            background: "#fff",
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.2)",
             overflow: "hidden",
-            fontFamily: "'Poppins', 'Noto Serif Tamil', serif",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
-            transition: "transform 0.3s ease, box-shadow 0.3s ease", // Added transitions
+            transition: "transform 0.3s ease, box-shadow 0.3s ease",
             "&:hover": {
-              transform: "scale(1.05)",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
+              transform: "translateY(-4px)",
+              boxShadow: "0 24px 64px rgba(0, 0, 0, 0.25)",
             },
           }}
         >
-          <Typography
-            variant="h4"
-            sx={{
-              color: "#000", // Black text
-              fontWeight: 800,
-              mb: 2,
-              fontFamily: "'Poppins', serif",
-              letterSpacing: 1.5,
-              textAlign: "center",
-              textTransform: "uppercase",
-              transition: "color 0.3s ease", // Added transition
-              "&:hover": {
-                color: "#333", // Darker black on hover
-              },
-            }}
-          >
+          <Typography variant="h4" sx={{ color: "#000", fontWeight: 800, mb: 2, letterSpacing: 1.5, textAlign: "center", textTransform: "uppercase" }}>
             {t('home.didYouKnow')}
           </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              color: "#333", // Dark gray text
-              fontSize: 20,
-              fontWeight: 500,
-              fontFamily: "'Poppins', serif",
-              textAlign: "center",
-              lineHeight: 1.6,
-              transition: "color 0.3s ease", // Added transition
-              "&:hover": {
-                color: "#000", // Black on hover
-              },
-            }}
-          >
-            {fact}
+          <Typography variant="body1" sx={{ color: "#333", fontSize: 18, fontWeight: 500, textAlign: "center", lineHeight: 1.6 }}>
+            {FACTS[factIndex]?.[i18n.language] || FACTS[factIndex]?.en}
           </Typography>
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "radial-gradient(circle, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0) 70%)", // Subtle radial overlay
-              zIndex: 1,
-              pointerEvents: "none",
-            }}
-          />
         </Paper>
       </Box>
-      <Divider
-        sx={{
-          bgcolor: "#eee",
-          height: 2,
-          maxWidth: 100,
-          mx: "auto",
-          mb: 6,
-          borderRadius: 2,
-        }}
-      />
-      {/* THIRUKKURAL OF THE DAY SECTION (REALISTIC OLAICHUVADI STYLE) */}
+
+      <Divider sx={{ bgcolor: "#eee", height: 2, maxWidth: 80, mx: "auto", mb: 6, borderRadius: 2 }} />
+
+  {/* THIRUKKURAL OF THE DAY SECTION */}
       <Box sx={{ mb: 6, display: "flex", justifyContent: "center" }}>
         <Paper
           elevation={12}
@@ -283,467 +209,107 @@ export default function Home() {
             p: 5,
             borderRadius: "24px",
             position: "relative",
-            background: "#fff", // Solid white background
-            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.3)", // Enhanced shadow
-            border: "none", // Removed border
+            background: "#fff",
+            boxShadow: "0 16px 48px rgba(0, 0, 0, 0.2)",
             overflow: "hidden",
-            fontFamily: "'Poppins', 'Noto Serif Tamil', serif",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            transition: "transform 0.3s ease, box-shadow 0.3s ease", // Added transitions
-            "&:hover": {
-              transform: "scale(1.05)",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
-            },
           }}
         >
-          <Typography
-            variant="h4"
-            sx={{
-              color: "#000", // Black text
-              fontWeight: 800,
-              mb: 2,
-              fontFamily: "'Poppins', serif",
-              letterSpacing: 1.5,
-              textAlign: "center",
-              textTransform: "uppercase",
-              transition: "color 0.3s ease", // Added transition
-              "&:hover": {
-                color: "#333", // Darker black on hover
-              },
-            }}
-          >
-            திருக்குறள் (Thirukkural) of the Day
+          <Typography variant="h4" sx={{ color: "#000", fontWeight: 800, mb: 2, letterSpacing: 1.5, textAlign: "center", textTransform: "uppercase" }}>
+            {t('home.thirukkuralOfDay')}
           </Typography>
           {kuralLoading ? (
-            <Typography
-              sx={{
-                color: "#333", // Dark gray text
-                mt: 2,
-                fontFamily: "'Poppins', serif",
-                textAlign: "center",
-              }}
-            >
-              {t('app.loading')}
-            </Typography>
+            <Typography sx={{ color: "#333", mt: 2, textAlign: "center" }}>Loading...</Typography>
           ) : kuralError ? (
-            <Typography
-              color="error"
-              sx={{
-                mt: 2,
-                fontFamily: "'Poppins', serif",
-                textAlign: "center",
-              }}
-            >
-              {kuralError}
-            </Typography>
+            <Typography color="error" sx={{ mt: 2, textAlign: "center" }}>{kuralError}</Typography>
           ) : kural ? (
             <Box sx={{ mt: 2, textAlign: "center" }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: "'Noto Serif Tamil', serif",
-                  color: "#000", // Black text
-                  fontSize: 24,
-                  mb: 2,
-                  lineHeight: 1.6,
-                }}
-              >
+              <Typography variant="h6" sx={{ color: "#000", fontSize: 22, mb: 2, lineHeight: 1.6, fontFamily: "'Noto Serif Tamil', serif" }}>
                 {kural.line1}
                 <br />
                 {kural.line2}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#333", // Dark gray text
-                  fontStyle: "italic",
-                  mb: 2,
-                  fontFamily: "'Noto Serif Tamil', serif",
-                }}
-              >
+              <Typography variant="body2" sx={{ color: "#333", fontStyle: "italic", mb: 2, fontFamily: "'Noto Serif Tamil', serif" }}>
                 {kural.urai1}
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#000", // Black text
-                  fontWeight: 500,
-                  fontFamily: "'Poppins', serif",
-                }}
-              >
-                <b>{t('home.translation')}</b> {kural.translation}
+              <Typography variant="body2" sx={{ color: "#000", fontWeight: 500 }}>
+                <b>Translation:</b> {kural.translation}
               </Typography>
             </Box>
           ) : null}
         </Paper>
       </Box>
-      <Divider
-        sx={{
-          bgcolor: "#eee",
-          height: 2,
-          maxWidth: 80,
-          mx: "auto",
-          mb: 6,
-          borderRadius: 2,
-        }}
-      />
-      {/* LANDS DISCOVERY SECTION */}
-      <Box 
-        sx={{ 
-          px: { xs: 2, md: 4 },
-          py: 6,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
-        }}
-      >
-        <Container maxWidth="lg">
-          <Typography 
-            variant="h3" 
-            sx={{ 
-              textAlign: 'center', 
-              mb: 6, 
-              fontWeight: 700, 
-              color: '#000000',
-              position: 'relative',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -10,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 150,
-                height: 4,
-                bgcolor: '#000000',
-                opacity: 0.7,
-                borderRadius: 2,
-              }
-            }}
-          >
-            {t('home.landscapes')}
+
+      <Divider sx={{ bgcolor: "#eee", height: 2, maxWidth: 80, mx: "auto", mb: 6, borderRadius: 2 }} />
+
+      {/* Five Lands Radial Timeline (replaces previous static cards) */}
+      <Box sx={{ px: { xs: 2, md: 4 }, py: 6, background: "#111", color: "#fff" }}>
+        <Container maxWidth="lg" sx={{ textAlign: 'center' }}>
+          <Typography variant="h3" sx={{ fontWeight: 700, mb: 4 }}>
+            {i18n.language === 'ta' ? 'ஐந்து நிலங்கள்' : 'Five Tamil Lands'}
           </Typography>
-
-          {/* Progressive Land Type Sections */}
-          {[
-            {
-              name: 'Kurinji',
-              type: 'Mountain Landscape',
-              image: lands.find(land => land.name.toLowerCase() === 'kurinji')?.image || "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-              description: "The mountainous region of Tamil lands, characterized by its lush green forests, misty peaks, and rich biodiversity. Kurinji represents the highland ecosystems that are home to unique flora and fauna.",
-              accentColor: '#808080'
-            },
-            {
-              name: 'Mullai',
-              type: 'Forest Landscape',
-              image: lands.find(land => land.name.toLowerCase() === 'mullai')?.image || "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-              description: "The verdant forest lands, symbolizing abundance, wildlife, and the deep connection between nature and Tamil culture. Mullai represents the dense, life-giving forests that have sustained communities for generations.",
-              accentColor: '#a0a0a0'
-            },
-            {
-              name: 'Marutham',
-              type: 'Agricultural Landscape',
-              image: lands.find(land => land.name.toLowerCase() === 'marutham')?.image || "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-              description: "The fertile agricultural plains, the heartland of Tamil agricultural heritage. Marutham represents the rich, irrigated lands where rice cultivation and farming traditions have thrived for centuries.",
-              accentColor: '#c0c0c0'
-            },
-            {
-              name: 'Neithal',
-              type: 'Coastal Landscape',
-              image: lands.find(land => land.name.toLowerCase() === 'neithal')?.image || "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-              description: "The coastal regions that define Tamil maritime culture. Neithal represents the sandy shores, fishing communities, and the vast marine ecosystems that have shaped Tamil maritime traditions.",
-              accentColor: '#d0d0d0'
-            },
-            {
-              name: 'Palai',
-              type: 'Arid Landscape',
-              image: lands.find(land => land.name.toLowerCase() === 'palai')?.image || "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E",
-              description: "The arid and desert-like regions, representing resilience and adaptation. Palai symbolizes the challenging landscapes that have tested and shaped the spirit of Tamil people.",
-              accentColor: '#e0e0e0'
-            }
-          ].map((land, index) => (
-            <Box 
-              key={land.name}
-              sx={{ 
-                display: 'flex', 
-                flexDirection: index % 2 === 0 ? 'row' : 'row-reverse',
-                alignItems: 'center',
-                mb: 6,
-                borderRadius: 4,
-                overflow: 'hidden',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-10px)',
-                  boxShadow: '0 12px 20px rgba(0,0,0,0.15)',
-                }
-              }}
-            >
-              {/* Image Section */}
-              <Box 
-                sx={{ 
-                  width: { xs: '100%', md: '50%' }, 
-                  height: { xs: 300, md: 500 },
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  image={land.image}
-                  alt={land.name}
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.3s ease',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                    }
-                  }}
-                />
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    width: '100%',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)',
-                    color: 'white',
-                    p: 3
-                  }}
-                >
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#ffffff' }}>
-                    {land.name}
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ textTransform: 'uppercase', letterSpacing: 1, color: '#ffffff' }}>
-                    {land.type}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Description Section */}
-              <Box 
-                sx={{ 
-                  width: { xs: '100%', md: '50%' }, 
-                  p: { xs: 2, md: 4 },
-                  bgcolor: '#ffffff',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  height: { xs: 'auto', md: 500 }
-                }}
-              >
-                <Typography 
-                  variant="h5" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    mb: 3, 
-                    color: '#000000',
-                    borderBottom: `3px solid ${land.accentColor}`,
-                    pb: 1
-                  }}
-                >
-                  {land.name} Landscape
-                </Typography>
-                <Typography 
-                  variant="body1" 
-                  paragraph 
-                  sx={{ 
-                    mb: 3, 
-                    color: '#333333',
-                    lineHeight: 1.6
-                  }}
-                >
-                  {land.description}
-                </Typography>
-                <Button 
-                  variant="outlined"
-                  startIcon={<ExploreIcon />}
-                  sx={{ 
-                    color: '#000000',
-                    borderColor: '#000000',
-                    borderRadius: 4,
-                    px: 3,
-                    py: 1.5,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    letterSpacing: 1,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      bgcolor: '#000000',
-                      color: '#ffffff',
-                      transform: 'translateY(-5px)',
-                      boxShadow: '0 6px 12px rgba(0,0,0,0.2)',
-                    }
-                  }}
-                  onClick={() => setMapModal({ 
-                    open: true, 
-                    land: lands.find(l => l.name.toLowerCase() === land.name.toLowerCase()) 
-                  })}
-                >
-                  {t('home.exploreLandscape', { name: land.name })}
-                </Button>
-              </Box>
-            </Box>
-          ))}
+          <Typography variant="body1" sx={{ maxWidth: 720, mx: 'auto', mb: 6, color: 'white', opacity: 0.85 }}>
+            {i18n.language === 'ta'
+              ? 'தமிழர் பண்பாட்டு அடையாளத்தை உருவாக்கிய பண்டைய ஐந்து நிலங்களை சுற்றிவரும் வட்ட வடிவ காட்சி.'
+              : 'A circular interactive view of the classical five eco-cultural regions that shape Tamil heritage.'}
+          </Typography>
+          <FiveLandsTimeline />
         </Container>
       </Box>
-      <Divider
-        sx={{
-          bgcolor: "#eee",
-          height: 2,
-          maxWidth: 80,
-          mx: "auto",
-          mb: 6,
-          borderRadius: 2,
-        }}
-      />
+
+      <Divider sx={{ bgcolor: "#eee", height: 2, maxWidth: 80, mx: "auto", mb: 6, borderRadius: 2 }} />
+
       {/* Footer */}
-      <Box
-        sx={{
-          mt: 8,
-          py: 4,
-          bgcolor: "#fff",
-          textAlign: "center",
-          borderTopLeftRadius: 32,
-          borderTopRightRadius: 32,
-          boxShadow: 3,
-        }}
-      >
-        <Typography
-          variant="h5"
-          sx={{
-            color: "#111",
-            fontWeight: 900,
-            mb: 1,
-          }}
-        >
-          {t('footer.brand')} | {t('app.title')}
+      <Box sx={{ mt: 8, py: 4, bgcolor: "#fff", textAlign: "center", borderTopLeftRadius: 32, borderTopRightRadius: 32, boxShadow: 3 }}>
+        <Typography variant="h5" sx={{ color: "#111", fontWeight: 900, mb: 1 }}>
+          மீன்கொடி | Meenkodi
         </Typography>
         <Typography variant="body2" sx={{ color: "#111", mb: 1 }}>
-          © {new Date().getFullYear()} {t('footer.brand')}. {t('footer.rights')}
+          © {new Date().getFullYear()} Meenkodi. All rights reserved.
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 1 }}>
-          <a
-            href="https://www.facebook.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg"
-              alt="Facebook"
-              style={{ width: 28, filter: "grayscale(1) brightness(0.7)" }}
-            />
+          <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" style={{ width: 28, filter: "grayscale(1) brightness(0.7)" }} />
           </a>
-          <a
-            href="https://www.instagram.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
-              alt="Instagram"
-              style={{ width: 28, filter: "grayscale(1) brightness(0.7)" }}
-            />
+          <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram" style={{ width: 28, filter: "grayscale(1) brightness(0.7)" }} />
           </a>
-          <a
-            href="https://www.youtube.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg"
-              alt="YouTube"
-              style={{ width: 28, filter: "grayscale(1) brightness(0.7)" }}
-            />
+          <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" alt="YouTube" style={{ width: 28, filter: "grayscale(1) brightness(0.7)" }} />
           </a>
         </Box>
       </Box>
+
       {/* Interactive Map Modal */}
-      <Modal
-        open={mapModal.open}
-        onClose={() => setMapModal({ open: false, land: null })}
-      >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "#fffdf6",
-            p: 4,
-            borderRadius: 4,
-            boxShadow: 8,
-            minWidth: 320,
-            maxWidth: 400,
-          }}
-        >
+      <Modal open={mapModal.open} onClose={() => setMapModal({ open: false, land: null })}>
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", bgcolor: "#fffdf6", p: 4, borderRadius: 4, boxShadow: 8, minWidth: 320, maxWidth: 420 }}>
           {mapModal.land && (
             <>
-              <Typography
-                variant="h5"
-                sx={{ color: "primary.main", fontWeight: 700 }}
-              >
-                {mapModal.land.name} ({mapModal.land.type})
+              <Typography variant="h5" sx={{ color: "primary.main", fontWeight: 700 }}>
+                {typeof mapModal.land?.name === 'object' 
+                  ? (mapModal.land.name?.[i18n.language] || '') 
+                  : (mapModal.land?.name || '')}
               </Typography>
               {mapModal.land.image && (
-                <img
-                  src={mapModal.land.image}
-                  alt={mapModal.land.name}
-                  style={{ width: "100%", borderRadius: 8, margin: "16px 0" }}
-                />
+                <img src={mapModal.land.image} alt={typeof mapModal.land?.name === 'object' ? (mapModal.land.name?.[i18n.language] || '') : (mapModal.land?.name || '')} style={{ width: "100%", borderRadius: 8, margin: "16px 0" }} />
               )}
-              <Typography
-                variant="body2"
-                dangerouslySetInnerHTML={{ __html: mapModal.land.description }}
-              />
+              <Typography variant="body2" dangerouslySetInnerHTML={{ __html: getContent(mapModal.land.description) }} />
               <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>
-                Gods: {mapModal.land.gods?.join(", ")}
-              </Typography>
-              <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>
-                People: {mapModal.land.people?.join(", ")}
-              </Typography>
+              <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>{t('lands.gods', 'Gods')}: {mapModal.land.gods?.join(", ")}</Typography>
+              <Typography variant="subtitle2" sx={{ color: "secondary.main" }}>{t('lands.people', 'People')}: {mapModal.land.people?.join(", ")}</Typography>
               <Box sx={{ mt: 1, mb: 1 }}>
                 {mapModal.land.flora?.map((f) => (
-                  <Chip
-                    key={f}
-                    label={f}
-                    size="small"
-                    sx={{
-                      mr: 0.5,
-                      mb: 0.5,
-                      bgcolor: "#f5f5f5",
-                      color: "#111",
-                    }}
-                  />
+                  <Chip key={f} label={f} size="small" sx={{ mr: 0.5, mb: 0.5, bgcolor: "#f5f5f5", color: "#111" }} />
                 ))}
                 {mapModal.land.fauna?.map((f) => (
-                  <Chip
-                    key={f}
-                    label={f}
-                    size="small"
-                    sx={{
-                      mr: 0.5,
-                      mb: 0.5,
-                      bgcolor: "#f5f5f5",
-                      color: "#111",
-                    }}
-                  />
+                  <Chip key={f} label={f} size="small" sx={{ mr: 0.5, mb: 0.5, bgcolor: "#f5f5f5", color: "#111" }} />
                 ))}
               </Box>
-              <Button
-                onClick={() => setMapModal({ open: false, land: null })}
-                variant="outlined"
-                sx={{
-                  mt: 2,
-                  color: "#111",
-                  borderColor: "#111",
-                  fontFamily: "Inter, Arial, sans-serif",
-                }}
-              >
-                {t('home.close')}
+              <Button onClick={() => setMapModal({ open: false, land: null })} variant="outlined" sx={{ mt: 2, color: "#111", borderColor: "#111" }}>
+                {t('actions.close', 'Close')}
               </Button>
             </>
           )}

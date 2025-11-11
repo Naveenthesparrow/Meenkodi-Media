@@ -36,9 +36,13 @@ import {
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 
+import { useBilingualContent } from "../../utils/bilingualContent";
 function ClothingDetail() {
+  // Centralized API base for all requests
+  const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [clothing, setClothing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,27 +67,40 @@ function ClothingDetail() {
 
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
+  // Edit dialog bilingual form data (legacy dialog converted to bilingual)
   const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    region: "",
-    materials: "",
-    description: "",
-    history: "",
-    imageUrl: "",
+    name_en: "",
+    name_ta: "",
+    type_en: "",
+    type_ta: "",
+    region_en: "",
+    region_ta: "",
+    materials_en: "",
+    materials_ta: "",
+    description_en: "",
+    description_ta: "",
+    history_en: "",
+    history_ta: "",
+    image: "",
   });
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState({
-    name: "",
-    type: "",
-    region: "",
-    materials: "",
-    description: "",
-    history: "",
+    name_en: "",
+    name_ta: "",
+    type_en: "",
+    type_ta: "",
+    region_en: "",
+    region_ta: "",
+    materials_en: "",
+    materials_ta: "",
+    description_en: "",
+    description_ta: "",
+    history_en: "",
+    history_ta: "",
     imageUrl: "",
-    contentSections: [], // New field for multiple content sections
+    contentSections: [], // New field for multiple bilingual content sections
   });
 
   // Function to add a new content section
@@ -91,16 +108,20 @@ function ClothingDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...prev.contentSections, 
-        { 
-          subtitle: "", 
-          content: "",
+        ...prev.contentSections,
+        {
+          subtitle_en: "",
+          subtitle_ta: "",
+          content_en: "",
+          content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
-          videoTitle: "",
-          videoDescription: "",
-          id: Date.now() // Unique identifier
+          videoTitle_en: "",
+          videoTitle_ta: "",
+          videoDescription_en: "",
+          videoDescription_ta: "",
+          id: Date.now()
         }
       ]
     }));
@@ -173,9 +194,12 @@ function ClothingDetail() {
   };
 
   const fetchClothing = async () => {
+
     try {
       setLoading(true);
-      const res = await fetch(`/api/clothing/${id}`);
+      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
+        credentials: "include"
+      });
       if (!res.ok) {
         throw new Error("Clothing not found");
       }
@@ -188,15 +212,45 @@ function ClothingDetail() {
       setUserLiked(likesArray.some(likeId => likeId.toString() === user?._id?.toString()) || false);
       
       // Set editable data with all fields including contentSections
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
       setEditableData({
-        name: data.name,
-        type: data.type,
-        region: data.region || "",
-        materials: data.materials || "",
-        description: data.description || "",
-        history: data.history || "",
+        name_en: toStr(data.name),
+        name_ta: toTa(data.name),
+        type_en: toStr(data.type),
+        type_ta: toTa(data.type),
+        region_en: toStr(data.region),
+        region_ta: toTa(data.region),
+        materials_en: toStr(data.materials),
+        materials_ta: toTa(data.materials),
+        description_en: toStr(data.description),
+        description_ta: toTa(data.description),
+        history_en: toStr(data.history),
+        history_ta: toTa(data.history),
         imageUrl: data.image || "",
-        contentSections: data.contentSections || [], // Include contentSections
+        contentSections: (data.contentSections || []).map(sec => ({
+          subtitle_en: toStr(sec.subtitle),
+          subtitle_ta: toTa(sec.subtitle),
+          content_en: toStr(sec.content),
+          content_ta: toTa(sec.content),
+          imageUrl: sec.imageUrl || "",
+          imageLink: sec.imageLink || "",
+          videoUrl: sec.videoUrl || "",
+          videoTitle_en: toStr(sec.videoTitle),
+          videoTitle_ta: toTa(sec.videoTitle),
+          videoDescription_en: toStr(sec.videoDescription),
+          videoDescription_ta: toTa(sec.videoDescription),
+          id: sec.id || sec._id || Date.now() + Math.random()
+        }))
       });
     } catch (err) {
       setError(err.message);
@@ -213,7 +267,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`/api/clothing/${id}/like`, {
+    const res = await fetch(`${API_BASE}/api/clothing/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -247,7 +301,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`/api/clothing/${id}/comments`, {
+  const res = await fetch(`${API_BASE}/api/clothing/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -282,7 +336,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`/api/clothing/${id}/comments/${commentId}/replies`, {
+  const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -312,7 +366,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`/api/clothing/${id}/comments/${commentId}/reactions`, {
+  const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/reactions`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -345,7 +399,7 @@ function ClothingDetail() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/clothing/${id}`, {
+      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
         method: "DELETE",
         credentials: "include"
       });
@@ -364,7 +418,7 @@ function ClothingDetail() {
   const handleDeleteConfirmation = async () => {
     if (deleteType === 'comment') {
       try {
-        const res = await fetch(`/api/clothing/${id}/comments/${itemToDelete}`, {
+        const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${itemToDelete}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -382,7 +436,7 @@ function ClothingDetail() {
     } else if (deleteType === 'reply') {
       try {
         const [commentId, replyId] = itemToDelete.split('-');
-        const res = await fetch(`/api/clothing/${id}/comments/${commentId}/replies/${replyId}`, {
+        const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/replies/${replyId}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -415,36 +469,44 @@ function ClothingDetail() {
 
   const handleInlineSave = async () => {
     try {
-      // Process content sections to ensure they're in the right format
-      // Remove temporary id properties before sending to the server
-      const formattedContentSections = editableData.contentSections.map(section => {
-        const { id, ...sectionWithoutId } = section;
-        return sectionWithoutId;
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
+      const formattedContentSections = editableData.contentSections.map(sec => {
+        const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = sec;
+        return {
+          ...rest,
+          subtitle: toBilingual(subtitle_en, subtitle_ta),
+          content: toBilingual(content_en, content_ta),
+          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+        };
       });
-
-      const { imageUrl, ...rest } = editableData;
       const updateData = {
-        ...rest,
-        image: imageUrl || clothing.image || "",
+        name: toBilingual(editableData.name_en, editableData.name_ta),
+        type: toBilingual(editableData.type_en, editableData.type_ta),
+        region: toBilingual(editableData.region_en, editableData.region_ta),
+        materials: toBilingual(editableData.materials_en, editableData.materials_ta),
+        description: toBilingual(editableData.description_en, editableData.description_ta),
+        history: toBilingual(editableData.history_en, editableData.history_ta),
+        image: editableData.imageUrl || clothing.image || "",
         contentSections: formattedContentSections
       };
-
-      const res = await fetch(`/api/clothing/${id}`, {
+  const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(updateData)
       });
-
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to update clothing");
       }
-
-      // Update local state with new data
-      setClothing(prev => ({ ...prev, ...updateData }));
+      // Refresh data
+      await fetchClothing();
       setIsEditing(false);
-      setError(""); // Clear any previous errors
+      setError("");
     } catch (err) {
       setError(err.message);
     }
@@ -452,11 +514,21 @@ function ClothingDetail() {
 
   const handleEditSubmit = async () => {
     try {
-      const res = await fetch(`/api/clothing/${id}`, {
+      const toBilingual = (en, ta) => ({ en: en || "", ta: ta || "" });
+      const updateData = {
+        name: toBilingual(formData.name_en, formData.name_ta),
+        type: toBilingual(formData.type_en, formData.type_ta),
+        region: toBilingual(formData.region_en, formData.region_ta),
+        materials: toBilingual(formData.materials_en, formData.materials_ta),
+        description: toBilingual(formData.description_en, formData.description_ta),
+        history: toBilingual(formData.history_en, formData.history_ta),
+        image: formData.image || clothing.image || "",
+      };
+      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(updateData),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -470,13 +542,30 @@ function ClothingDetail() {
   };
 
   const handleEditOpen = () => {
+    const toStr = (val) => {
+      if (!val) return "";
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') return val.en || val.ta || "";
+      return "";
+    };
+    const toTa = (val) => {
+      if (!val) return "";
+      if (typeof val === 'object') return val.ta || "";
+      return "";
+    };
     setFormData({
-      name: clothing.name || "",
-      type: clothing.type || "",
-      region: clothing.region || "",
-      materials: clothing.materials || "",
-      description: clothing.description || "",
-      history: clothing.history || "",
+      name_en: toStr(clothing.name),
+      name_ta: toTa(clothing.name),
+      type_en: toStr(clothing.type),
+      type_ta: toTa(clothing.type),
+      region_en: toStr(clothing.region),
+      region_ta: toTa(clothing.region),
+      materials_en: toStr(clothing.materials),
+      materials_ta: toTa(clothing.materials),
+      description_en: toStr(clothing.description),
+      description_ta: toTa(clothing.description),
+      history_en: toStr(clothing.history),
+      history_ta: toTa(clothing.history),
       image: clothing.image || "",
     });
     setEditOpen(true);
@@ -564,7 +653,7 @@ function ClothingDetail() {
             mx: 2,
           }}
         >
-          {clothing.name}
+          {getContent(clothing.name)}
         </Typography>
 
         {/* Admin Actions */}
@@ -572,18 +661,46 @@ function ClothingDetail() {
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton 
               onClick={() => {
-                // Prepare editable data when edit is clicked
+                const toStr = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'string') return val;
+                  if (typeof val === 'object') return val.en || val.ta || "";
+                  return "";
+                };
+                const toTa = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'object') return val.ta || "";
+                  return "";
+                };
                 setEditableData({
-                  name: clothing.name,
-                  type: clothing.type,
-                  region: clothing.region || "",
-                  materials: clothing.materials || "",
-                  description: clothing.description || "",
-                  history: clothing.history || "",
+                  name_en: toStr(clothing.name),
+                  name_ta: toTa(clothing.name),
+                  type_en: toStr(clothing.type),
+                  type_ta: toTa(clothing.type),
+                  region_en: toStr(clothing.region),
+                  region_ta: toTa(clothing.region),
+                  materials_en: toStr(clothing.materials),
+                  materials_ta: toTa(clothing.materials),
+                  description_en: toStr(clothing.description),
+                  description_ta: toTa(clothing.description),
+                  history_en: toStr(clothing.history),
+                  history_ta: toTa(clothing.history),
                   imageUrl: clothing.image || "",
-                  contentSections: clothing.contentSections || [],
+                  contentSections: (clothing.contentSections || []).map(sec => ({
+                    subtitle_en: toStr(sec.subtitle),
+                    subtitle_ta: toTa(sec.subtitle),
+                    content_en: toStr(sec.content),
+                    content_ta: toTa(sec.content),
+                    imageUrl: sec.imageUrl || "",
+                    imageLink: sec.imageLink || "",
+                    videoUrl: sec.videoUrl || "",
+                    videoTitle_en: toStr(sec.videoTitle),
+                    videoTitle_ta: toTa(sec.videoTitle),
+                    videoDescription_en: toStr(sec.videoDescription),
+                    videoDescription_ta: toTa(sec.videoDescription),
+                    id: sec.id || sec._id || Date.now() + Math.random()
+                  }))
                 });
-                // Toggle editing mode
                 setIsEditing(!isEditing);
               }}
               sx={{
@@ -641,7 +758,7 @@ function ClothingDetail() {
           {(isEditing ? editableData.imageUrl : clothing.image) ? (
             <img
               src={isEditing ? editableData.imageUrl : clothing.image}
-              alt={clothing.name}
+              alt={getContent(clothing.name)}
               style={{
                 maxWidth: '100%',
                 maxHeight: 400,
@@ -693,7 +810,7 @@ function ClothingDetail() {
           >
             {!isEditing ? (
               <>
-                {clothing.type && (
+                {getContent(clothing.type) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -702,10 +819,10 @@ function ClothingDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Type: {clothing.type}
+                    Type: {getContent(clothing.type)}
                   </Typography>
                 )}
-                {clothing.region && (
+                {getContent(clothing.region) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -714,32 +831,26 @@ function ClothingDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Region: {clothing.region}
+                    Region: {getContent(clothing.region)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
-                <TextField
-                  label="Type"
-                  value={editableData.type || ""}
-                  onChange={(e) => setEditableData({ ...editableData, type: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Region"
-                  value={editableData.region || ""}
-                  onChange={(e) => setEditableData({ ...editableData, region: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Type (EN)" value={editableData.type_en} onChange={(e)=>setEditableData({ ...editableData, type_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e)=>setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Region (EN)" value={editableData.region_en} onChange={(e)=>setEditableData({ ...editableData, region_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e)=>setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
 
           {/* Materials */}
-          {(clothing.materials || isEditing) && (
+          {(getContent(clothing.materials) || isEditing) && (
             <Box 
               sx={{ 
                 borderBottom: '1px solid #000',
@@ -755,16 +866,13 @@ function ClothingDetail() {
                     letterSpacing: 1,
                   }}
                 >
-                  Materials: {clothing.materials}
+                  Materials: {getContent(clothing.materials)}
                 </Typography>
               ) : (
-                <TextField
-                  label="Materials"
-                  value={editableData.materials || ""}
-                  onChange={(e) => setEditableData({ ...editableData, materials: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1 }}>
+                  <TextField label="Materials (EN)" value={editableData.materials_en} onChange={(e)=>setEditableData({ ...editableData, materials_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Materials (TA)" value={editableData.materials_ta} onChange={(e)=>setEditableData({ ...editableData, materials_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               )}
             </Box>
           )}
@@ -790,7 +898,7 @@ function ClothingDetail() {
                   lineHeight: 1.6,
                 }}
               >
-                {clothing.description}
+                {getContent(clothing.description)}
               </Typography>
             </Box>
           ) : (
@@ -806,20 +914,13 @@ function ClothingDetail() {
               >
                 Description
               </Typography>
-              <TextField
-                label="Description"
-                value={editableData.description || ""}
-                onChange={(e) => setEditableData({ ...editableData, description: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-                variant="standard"
-              />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           )}
 
           {/* History */}
-          {(clothing.history || isEditing) && (
+          {(getContent(clothing.history) || isEditing) && (
             !isEditing ? (
               <Box>
                 <Typography 
@@ -840,7 +941,7 @@ function ClothingDetail() {
                     lineHeight: 1.6,
                   }}
                 >
-                  {clothing.history}
+                  {getContent(clothing.history)}
                 </Typography>
               </Box>
             ) : (
@@ -856,15 +957,8 @@ function ClothingDetail() {
                 >
                   History
                 </Typography>
-                <TextField
-                  label="History"
-                  value={editableData.history || ""}
-                  onChange={(e) => setEditableData({ ...editableData, history: e.target.value })}
-                  fullWidth
-                  multiline
-                  rows={3}
-                  variant="standard"
-                />
+                <TextField label="History (EN)" value={editableData.history_en} onChange={(e)=>setEditableData({ ...editableData, history_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+                <TextField label="History (TA)" value={editableData.history_ta} onChange={(e)=>setEditableData({ ...editableData, history_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
               </Box>
             )
           )}
@@ -918,7 +1012,7 @@ function ClothingDetail() {
           {!isEditing && clothing.contentSections && clothing.contentSections.length > 0 && (
             clothing.contentSections.map((section, index) => (
               <Box key={section._id || `content-section-${index}`} sx={{ mt: 4 }}>
-                {section.subtitle && (
+                {getContent(section.subtitle) && (
                   <Typography 
                     variant="h6"
                     key={`subtitle-${section._id || index}`}
@@ -929,11 +1023,11 @@ function ClothingDetail() {
                       pb: 1,
                     }}
                   >
-                    {section.subtitle}
+                    {getContent(section.subtitle)}
                   </Typography>
                 )}
                 
-                {section.content && (
+                {getContent(section.content) && (
                   <Typography
                     variant="body1"
                     key={`content-${section._id || index}`}
@@ -942,7 +1036,7 @@ function ClothingDetail() {
                       lineHeight: 1.6,
                     }}
                   >
-                    {section.content}
+                    {getContent(section.content)}
                   </Typography>
                 )}
 
@@ -976,23 +1070,23 @@ function ClothingDetail() {
                 )}
                 
                 {/* Section Video Details */}
-                {(section.videoTitle || section.videoDescription) && (
+                {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
                   <Box sx={{ mt: 2 }}>
-                    {section.videoTitle && (
+                    {getContent(section.videoTitle) && (
                       <Typography 
                         variant="subtitle1" 
                         sx={{ fontWeight: 600 }}
                       >
-                        {section.videoTitle}
+                        {getContent(section.videoTitle)}
                       </Typography>
                     )}
                     
-                    {section.videoDescription && (
+                    {getContent(section.videoDescription) && (
                       <Typography 
                         variant="body2" 
                         sx={{ color: '#555', fontStyle: 'italic' }}
                       >
-                        {section.videoDescription}
+                        {getContent(section.videoDescription)}
                       </Typography>
                     )}
                   </Box>
@@ -1027,39 +1121,31 @@ function ClothingDetail() {
                     position: 'relative' 
                   }}
                 >
-                  <TextField
-                    label="Subtitle"
-                    value={section.subtitle || ""}
-                    onChange={(e) => {
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e)=>{
                       const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].subtitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                      updatedSections[index].subtitle_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].subtitle_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                  </Box>
                   
-                  <TextField
-                    label="Content"
-                    value={section.content || ""}
-                    onChange={(e) => {
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e)=>{
                       const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={4}
-                    variant="standard"
-                    sx={{ mb: 2 }}
-                  />
+                      updatedSections[index].content_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].content_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                  </Box>
 
                   <Typography 
                     variant="subtitle1" 
@@ -1136,38 +1222,31 @@ function ClothingDetail() {
                     variant="standard"
                   />
                   
-                  <TextField
-                    label="Video Title"
-                    value={section.videoTitle || ""}
-                    onChange={(e) => {
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e)=>{
                       const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoTitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
+                      updatedSections[index].videoTitle_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoTitle_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                  </Box>
                   
-                  <TextField
-                    label="Video Description"
-                    value={section.videoDescription || ""}
-                    onChange={(e) => {
+                  <Box sx={{ display:'flex', gap:2 }}>
+                    <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e)=>{
                       const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoDescription = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    variant="standard"
-                  />
+                      updatedSections[index].videoDescription_en = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                    <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e)=>{
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].videoDescription_ta = e.target.value;
+                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                  </Box>
                   
                   <IconButton
                     onClick={() => removeContentSection(section.id)}

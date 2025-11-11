@@ -1,13 +1,22 @@
 import mongoose from "mongoose";
 
+// Bilingual sub-schema reused for key textual fields
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const landSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  // Keep canonical ecological type code (enum) for filtering / logic
   type: {
     type: String,
     enum: ["Kurinji", "Mullai", "Marutham", "Neithal", "Palai"],
     required: true,
   },
-  description: String,
+  // Store bilingual display name independent of enum code
+  name: { type: bilingual, required: true },
+  description: bilingual,
+  // Retain arrays as simple strings for now (future: could be bilingual array)
   poetry: [String],
   gods: [String],
   flora: [String],

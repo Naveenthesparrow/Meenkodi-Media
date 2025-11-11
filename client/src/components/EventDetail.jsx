@@ -10,8 +10,10 @@ import {
 import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import { useParams, useNavigate } from "react-router-dom";
+import { useBilingualContent } from '../utils/bilingualContent';
 
 export default function EventDetail({ user }) {
+  const getContent = useBilingualContent();
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -33,10 +35,11 @@ export default function EventDetail({ user }) {
       .then((res) => res.json())
       .then((data) => {
         setEvent(data);
-        setTitle(data.title);
-        setDescription(data.description);
+        // Handle both old string format and new bilingual object format
+        setTitle(typeof data.title === 'object' ? data.title : { en: data.title || '', ta: data.title || '' });
+        setDescription(typeof data.description === 'object' ? data.description : { en: data.description || '', ta: data.description || '' });
         setDate(data.date ? data.date.substring(0, 10) : "");
-        setLocation(data.location);
+        setLocation(typeof data.location === 'object' ? data.location : { en: data.location || '', ta: data.location || '' });
         setImageLink(data.imageLink || "");
         setImageUrl(data.imageUrl || "");
         setVideoUrl(data.videoUrl || "");
@@ -118,14 +121,21 @@ export default function EventDetail({ user }) {
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", p: 2 }}>
       <Typography variant="h4" gutterBottom>
-        {editMode ? "Edit Event" : event.title}
+        {editMode ? "Edit Event" : getContent(event.title)}
       </Typography>
       {editMode ? (
         <Box>
           <TextField
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            label="Title (English)"
+            value={title?.en || ''}
+            onChange={(e) => setTitle({ ...title, en: e.target.value })}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="தலைப்பு (தமிழ்)"
+            value={title?.ta || ''}
+            onChange={(e) => setTitle({ ...title, ta: e.target.value })}
             fullWidth
             sx={{ mb: 2 }}
           />
@@ -139,16 +149,32 @@ export default function EventDetail({ user }) {
             InputLabelProps={{ shrink: true }}
           />
           <TextField
-            label="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            label="Location (English)"
+            value={location?.en || ''}
+            onChange={(e) => setLocation({ ...location, en: e.target.value })}
             fullWidth
             sx={{ mb: 2 }}
           />
           <TextField
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            label="இடம் (தமிழ்)"
+            value={location?.ta || ''}
+            onChange={(e) => setLocation({ ...location, ta: e.target.value })}
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Description (English)"
+            value={description?.en || ''}
+            onChange={(e) => setDescription({ ...description, en: e.target.value })}
+            fullWidth
+            multiline
+            minRows={2}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="விவரம் (தமிழ்)"
+            value={description?.ta || ''}
+            onChange={(e) => setDescription({ ...description, ta: e.target.value })}
             fullWidth
             multiline
             minRows={2}
@@ -178,19 +204,19 @@ export default function EventDetail({ user }) {
       ) : (
         <Box>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            {event.description}
+            {getContent(event.description)}
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
             {event.date}
           </Typography>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            {event.location}
+            {getContent(event.location)}
           </Typography>
           <MediaDisplay
             imageUrl={event.imageUrl}
             videoUrl={event.videoUrl}
             videoLink={event.videoLink}
-            title={event.title}
+            title={getContent(event.title)}
           />
           {user && user.role === "admin" && (
             <Box sx={{ mt: 2 }}>

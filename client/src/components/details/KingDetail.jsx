@@ -3,13 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Chip,
-  Container,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -18,6 +11,9 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
+  Button,
+  Container,
+  IconButton
 } from "@mui/material";
 import {
   ArrowBack,
@@ -40,12 +36,15 @@ import {
   Reply,
   SentimentSatisfied,
   EmojiEmotions,
+  EditNote,
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
 
+import { useBilingualContent } from "../../utils/bilingualContent";
 function KingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [king, setKing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,46 +74,66 @@ function KingDetail() {
 
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
-  // Update form data state to include video details
+  // Update form data state to include video details (bilingual)
   const [formData, setFormData] = useState({
-    name: "",
-    dynasty: "",
-    period: "",
-    achievements: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    dynasty_en: "",
+    dynasty_ta: "",
+    period_en: "",
+    period_ta: "",
+    achievements_en: "",
+    achievements_ta: "",
+    description_en: "",
+    description_ta: "",
     image: "",
     videoUrl: "",
-    videoTitle: "",
-    videoDescription: "",
+    videoTitle_en: "",
+    videoTitle_ta: "",
+    videoDescription_en: "",
+    videoDescription_ta: "",
   });
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
-  // Update state to include content sections
+  // Update state to include content sections (bilingual)
   const [editableData, setEditableData] = useState({
-    name: "",
-    dynasty: "",
-    period: "",
-    achievements: "",
-    description: "",
+    name_en: "",
+    name_ta: "",
+    dynasty_en: "",
+    dynasty_ta: "",
+    period_en: "",
+    period_ta: "",
+    achievements_en: "",
+    achievements_ta: "",
+    description_en: "",
+    description_ta: "",
+    capital_en: "",
+    capital_ta: "",
+    content_en: "",
+    content_ta: "",
     image: "",
-    contentSections: [], // New field for multiple content sections
+    contentSections: [], // bilingual sections
   });
 
-  // Function to add a new content section
+  // Function to add a new content section (bilingual)
   const addContentSection = () => {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
         ...prev.contentSections, 
         { 
-          subtitle: "", 
-          content: "",
+          subtitle_en: "", 
+          subtitle_ta: "",
+          content_en: "",
+          content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
-          videoTitle: "",
-          videoDescription: "",
+          videoTitle_en: "",
+          videoTitle_ta: "",
+          videoDescription_en: "",
+          videoDescription_ta: "",
           id: Date.now() // Unique identifier
         }
       ]
@@ -129,18 +148,86 @@ function KingDetail() {
     }));
   };
 
-  // Update handleEditOpen to include content sections
+  // Update handleEditOpen to include content sections (bilingual)
   const handleEditOpen = () => {
+    const toStr = (val) => {
+      if (!val) return "";
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') return val.en || val.ta || "";
+      return "";
+    };
+    const toTa = (val) => {
+      if (!val) return "";
+      if (typeof val === 'object') return val.ta || "";
+      return "";
+    };
+    
     setEditableData({
-      name: king.name,
-      dynasty: king.dynasty,
-      period: king.period,
-      achievements: king.achievements,
-      description: king.description,
+      name_en: toStr(king.name),
+      name_ta: toTa(king.name),
+      dynasty_en: toStr(king.dynasty),
+      dynasty_ta: toTa(king.dynasty),
+      period_en: toStr(king.period),
+      period_ta: toTa(king.period),
+      achievements_en: toStr(king.achievements),
+      achievements_ta: toTa(king.achievements),
+      description_en: toStr(king.description),
+      description_ta: toTa(king.description),
+      capital_en: toStr(king.capital),
+      capital_ta: toTa(king.capital),
+      content_en: toStr(king.content),
+      content_ta: toTa(king.content),
       image: king.image || "",
-      contentSections: king.contentSections || [], // Ensure this matches your backend model
+      contentSections: (king.contentSections || []).map(sec => ({
+        subtitle_en: toStr(sec.subtitle),
+        subtitle_ta: toTa(sec.subtitle),
+        content_en: toStr(sec.content),
+        content_ta: toTa(sec.content),
+        imageUrl: sec.imageUrl || "",
+        imageLink: sec.imageLink || "",
+        videoUrl: sec.videoUrl || "",
+        videoTitle_en: toStr(sec.videoTitle),
+        videoTitle_ta: toTa(sec.videoTitle),
+        videoDescription_en: toStr(sec.videoDescription),
+        videoDescription_ta: toTa(sec.videoDescription),
+        id: sec.id || sec._id || Date.now() + Math.random()
+      })),
     });
     setIsEditing(true);
+  };
+
+  // Open dialog editor: populate bilingual formData from king and open dialog
+  const openDialogEdit = () => {
+    const toStr = (val) => {
+      if (!val) return "";
+      if (typeof val === 'string') return val;
+      if (typeof val === 'object') return val.en || val.ta || "";
+      return "";
+    };
+    const toTa = (val) => {
+      if (!val) return "";
+      if (typeof val === 'object') return val.ta || "";
+      return "";
+    };
+    setFormData({
+      name_en: toStr(king?.name),
+      name_ta: toTa(king?.name),
+      dynasty_en: toStr(king?.dynasty),
+      dynasty_ta: toTa(king?.dynasty),
+      period_en: toStr(king?.period),
+      period_ta: toTa(king?.period),
+      achievements_en: toStr(king?.achievements),
+      achievements_ta: toTa(king?.achievements),
+      description_en: toStr(king?.description),
+      description_ta: toTa(king?.description),
+      image: king?.image || "",
+      videoUrl: king?.videoUrl || "",
+      videoTitle_en: toStr(king?.videoTitle),
+      videoTitle_ta: toTa(king?.videoTitle),
+      videoDescription_en: toStr(king?.videoDescription),
+      videoDescription_ta: toTa(king?.videoDescription),
+    });
+    setEditOpen(true);
   };
 
   useEffect(() => {
@@ -499,21 +586,41 @@ function KingDetail() {
     { type: 'star', emoji: '⭐', color: '#ffd700', label: 'Star' }
   ];
 
-  // Update handleInlineSave to include content sections
+  // Update handleInlineSave to include content sections (bilingual)
   const handleInlineSave = async () => {
     try {
+      // Build bilingual objects from paired EN/TA fields
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
+      
+      // Process content sections to bilingual format
+      const formattedContentSections = editableData.contentSections.map(section => {
+        const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
+        return {
+          ...rest,
+          subtitle: toBilingual(subtitle_en, subtitle_ta),
+          content: toBilingual(content_en, content_ta),
+          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+        };
+      });
+      
       const res = await fetch(`/api/kings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          name: editableData.name,
-          dynasty: editableData.dynasty,
-          period: editableData.period,
-          achievements: editableData.achievements,
-          description: editableData.description,
+          name: toBilingual(editableData.name_en, editableData.name_ta),
+          dynasty: toBilingual(editableData.dynasty_en, editableData.dynasty_ta),
+          period: toBilingual(editableData.period_en, editableData.period_ta),
+          capital: toBilingual(editableData.capital_en, editableData.capital_ta),
+          achievements: toBilingual(editableData.achievements_en, editableData.achievements_ta),
+          description: toBilingual(editableData.description_en, editableData.description_ta),
+          content: toBilingual(editableData.content_en, editableData.content_ta),
           image: editableData.image,
-          contentSections: editableData.contentSections,
+          contentSections: formattedContentSections,
         }),
       });
       
@@ -535,20 +642,24 @@ function KingDetail() {
 
   const handleEditSubmit = async () => {
     try {
+      const toBilingual = (en, ta) => {
+        if (!en && !ta) return undefined;
+        return { en: en || "", ta: ta || "" };
+      };
       const res = await fetch(`/api/kings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          name: formData.name,
-          dynasty: formData.dynasty,
-          period: formData.period,
-          achievements: formData.achievements,
-          description: formData.description,
+          name: toBilingual(formData.name_en, formData.name_ta),
+          dynasty: toBilingual(formData.dynasty_en, formData.dynasty_ta),
+          period: toBilingual(formData.period_en, formData.period_ta),
+          achievements: toBilingual(formData.achievements_en, formData.achievements_ta),
+          description: toBilingual(formData.description_en, formData.description_ta),
           image: formData.image,
           videoUrl: formData.videoUrl,
-          videoTitle: formData.videoTitle,
-          videoDescription: formData.videoDescription,
+          videoTitle: toBilingual(formData.videoTitle_en, formData.videoTitle_ta),
+          videoDescription: toBilingual(formData.videoDescription_en, formData.videoDescription_ta),
         }),
       });
       
@@ -632,13 +743,13 @@ function KingDetail() {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="error">{error}</Alert>
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate("/explore/kings")}
-          sx={{ mt: 2 }}
-        >
-          Back to Kings
-        </Button>
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => navigate("/explore/kings")}
+            sx={{ mt: 2 }}
+          >
+            மன்னர்கள் பட்டியலுக்கு திரும்பு | Back to Kings
+          </Button>
       </Container>
     );
   }
@@ -647,13 +758,13 @@ function KingDetail() {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="info">King not found</Alert>
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => navigate("/explore/kings")}
-          sx={{ mt: 2 }}
-        >
-          Back to Kings
-        </Button>
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => navigate("/explore/kings")}
+            sx={{ mt: 2 }}
+          >
+            மன்னர்கள் பட்டியலுக்கு திரும்பு | Back to Kings
+          </Button>
       </Container>
     );
   }
@@ -692,7 +803,7 @@ function KingDetail() {
             mx: 2 
           }}
         >
-          {king.name}
+          {getContent(king.name)}
         </Typography>
 
         {/* Admin Actions */}
@@ -700,15 +811,48 @@ function KingDetail() {
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton 
               onClick={() => {
-                // Prepare editable data when edit is clicked
+                // Prepare editable data when edit is clicked (bilingual)
+                const toStr = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'string') return val;
+                  if (typeof val === 'object') return val.en || val.ta || "";
+                  return "";
+                };
+                const toTa = (val) => {
+                  if (!val) return "";
+                  if (typeof val === 'object') return val.ta || "";
+                  return "";
+                };
                 setEditableData({
-                  name: king.name,
-                  dynasty: king.dynasty,
-                  period: king.period,
-                  achievements: king.achievements,
-                  description: king.description,
+                  name_en: toStr(king.name),
+                  name_ta: toTa(king.name),
+                  dynasty_en: toStr(king.dynasty),
+                  dynasty_ta: toTa(king.dynasty),
+                  period_en: toStr(king.period),
+                  period_ta: toTa(king.period),
+                  achievements_en: toStr(king.achievements),
+                  achievements_ta: toTa(king.achievements),
+                  description_en: toStr(king.description),
+                  description_ta: toTa(king.description),
+                  capital_en: toStr(king.capital),
+                  capital_ta: toTa(king.capital),
+                  content_en: toStr(king.content),
+                  content_ta: toTa(king.content),
                   image: king.image || "",
-                  contentSections: king.contentSections || [],
+                  contentSections: (king.contentSections || []).map(sec => ({
+                    subtitle_en: toStr(sec.subtitle),
+                    subtitle_ta: toTa(sec.subtitle),
+                    content_en: toStr(sec.content),
+                    content_ta: toTa(sec.content),
+                    imageUrl: sec.imageUrl || "",
+                    imageLink: sec.imageLink || "",
+                    videoUrl: sec.videoUrl || "",
+                    videoTitle_en: toStr(sec.videoTitle),
+                    videoTitle_ta: toTa(sec.videoTitle),
+                    videoDescription_en: toStr(sec.videoDescription),
+                    videoDescription_ta: toTa(sec.videoDescription),
+                    id: sec.id || sec._id || Date.now() + Math.random()
+                  })),
                 });
                 // Toggle editing mode
                 setIsEditing(!isEditing);
@@ -725,6 +869,22 @@ function KingDetail() {
             >
               {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
+            <Tooltip title="Open dialog editor">
+              <IconButton
+                onClick={openDialogEdit}
+                sx={{
+                  color: '#000',
+                  border: '1px solid #000',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.1)',
+                    transform: 'scale(1.1)'
+                  }
+                }}
+              >
+                <EditNote />
+              </IconButton>
+            </Tooltip>
             <IconButton 
               onClick={handleDelete}
               sx={{
@@ -765,34 +925,6 @@ function KingDetail() {
             width: '100%'
           }}
         >
-        {king.image && (
-            <img 
-              src={king.image} 
-            alt={king.name}
-              style={{
-                maxWidth: '100%',
-                maxHeight: 600,
-                objectFit: 'contain',
-                padding: 16,
-              }}
-              onError={(e) => {
-                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
-            }}
-          />
-        )}
-        </Box>
-
-        {/* Details Section - Bottom */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 3,
-            maxWidth: 800,
-            mx: 'auto',
-            width: '100%'
-          }}
-        >
           {/* Dynasty and Period */}
           <Box 
             sx={{ 
@@ -804,7 +936,7 @@ function KingDetail() {
           >
             {!isEditing ? (
               <>
-            {king.dynasty && (
+            {getContent(king.dynasty) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -813,10 +945,10 @@ function KingDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Dynasty: {king.dynasty}
+                    குல வரிசை | Dynasty: {getContent(king.dynasty)}
                   </Typography>
             )}
-            {king.period && (
+            {getContent(king.period) && (
                   <Typography 
                     variant="subtitle1" 
                     sx={{ 
@@ -825,106 +957,176 @@ function KingDetail() {
                       letterSpacing: 1,
                     }}
                   >
-                    Period: {king.period}
+                    காலம் | Period: {getContent(king.period)}
                   </Typography>
                 )}
               </>
             ) : (
               <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
-                <TextField
-                  label="Dynasty"
-                  value={editableData.dynasty}
-                  onChange={(e) => setEditableData({ ...editableData, dynasty: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
-                <TextField
-                  label="Period"
-                  value={editableData.period}
-                  onChange={(e) => setEditableData({ ...editableData, period: e.target.value })}
-                  fullWidth
-                  variant="standard"
-                />
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Dynasty (EN)" value={editableData.dynasty_en} onChange={(e)=>setEditableData({ ...editableData, dynasty_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Dynasty (TA)" value={editableData.dynasty_ta} onChange={(e)=>setEditableData({ ...editableData, dynasty_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
+                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
+                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                </Box>
               </Box>
             )}
           </Box>
 
-          {/* Key Achievements */}
-          {!isEditing ? (
-            king.achievements && (
-              <Box>
+          {/* Achievements - Only show if there's content or in edit mode */}
+          {(!isEditing && king.achievements && getContent(king.achievements).trim() !== '') || isEditing ? (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #000',
+                pb: 2,
+              }}
+            >
+            {!isEditing ? (
+              king.achievements && (
                 <Typography 
-                  variant="h6" 
+                  variant="subtitle1" 
                   sx={{ 
-                    mb: 2, 
-                    fontWeight: 700,
-                    borderBottom: '2px solid #000',
-                    pb: 1,
+                    fontWeight: 700, 
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
                   }}
                 >
-                Key Achievements
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                    whiteSpace: 'pre-wrap',
-                    lineHeight: 1.6,
-                }}
-              >
-                {king.achievements}
-              </Typography>
+                  சிறப்புகள் | Achievements: {getContent(king.achievements)}
+                </Typography>
+              )
+            ) : (
+              <Box sx={{ display:'flex', flexDirection:'column', width:'100%', gap:1 }}>
+                <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e)=>setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth variant="standard" />
+                <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e)=>setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth variant="standard" />
               </Box>
-            )
-          ) : (
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
-                  fontWeight: 700,
-                  borderBottom: '2px solid #000',
-                  pb: 1,
-                }}
-              >
-                Key Achievements
-              </Typography>
-              <TextField
-                label="Achievements"
-                value={editableData.achievements}
-                onChange={(e) => setEditableData({ ...editableData, achievements: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-                variant="standard"
-              />
+            )}
             </Box>
-          )}
+          ) : null}
+
+          {/* Capital - Only show if there's content or in edit mode */}
+          {(!isEditing && king.capital && getContent(king.capital).trim() !== '') || isEditing ? (
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #000',
+                pb: 2,
+              }}
+            >
+            {!isEditing ? (
+              king.capital && (
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                  }}
+                >
+                  அரச மையம் | Capital: {getContent(king.capital)}
+                </Typography>
+              )
+            ) : (
+              <Box sx={{ display:'flex', flexDirection:'column', width:'100%', gap:1 }}>
+                <TextField label="Capital (EN)" value={editableData.capital_en} onChange={(e)=>setEditableData({ ...editableData, capital_en: e.target.value })} fullWidth variant="standard" />
+                <TextField label="Capital (TA)" value={editableData.capital_ta} onChange={(e)=>setEditableData({ ...editableData, capital_ta: e.target.value })} fullWidth variant="standard" />
+              </Box>
+            )}
+            </Box>
+          ) : null}
 
           {/* Description */}
           {!isEditing ? (
             <Box>
               <Typography 
                 variant="h6" 
-                sx={{ 
+                sx={{
                   mb: 2, 
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
                 }}
               >
-            Description
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
+                விளக்கம் | Description
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
                   whiteSpace: 'pre-wrap',
                   lineHeight: 1.6,
-            }}
-          >
-            {king.description}
-          </Typography>
+                }}
+              >
+                {getContent(king.description)}
+              </Typography>
             </Box>
           ) : (
+            <Box>
+              <Typography 
+                variant="h6" 
+                sx={{
+                  mb: 2, 
+                  fontWeight: 700,
+                  borderBottom: '2px solid #000',
+                  pb: 1,
+                }}
+              >
+                விளக்கம் | Description
+              </Typography>
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+            </Box>
+          )}
+
+          {/* Content - Additional field */}
+          {(!isEditing && king.content && getContent(king.content).trim() !== '') || isEditing ? (
+            !isEditing ? (
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{
+                    mb: 2, 
+                    fontWeight: 700,
+                    borderBottom: '2px solid #000',
+                    pb: 1,
+                  }}
+                >
+                  கூடுதல் தகவல் | Additional Information
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {getContent(king.content)}
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{
+                    mb: 2, 
+                    fontWeight: 700,
+                    borderBottom: '2px solid #000',
+                    pb: 1,
+                  }}
+                >
+                  கூடுதல் தகவல் | Additional Information
+                </Typography>
+                <TextField label="Content (EN)" value={editableData.content_en} onChange={(e)=>setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
+                <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e)=>setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+              </Box>
+            )
+          ) : null}
+
+          {/* Main Image (URL + Upload) - Edit mode only */}
+          {isEditing && (
             <Box>
               <Typography 
                 variant="h6" 
@@ -935,84 +1137,62 @@ function KingDetail() {
                   pb: 1,
                 }}
               >
-                Description
+                படம் | Image
               </Typography>
               <TextField
-                label="Description"
-                value={editableData.description}
-                onChange={(e) => setEditableData({ ...editableData, description: e.target.value })}
+                label="Image URL"
+                value={editableData.image}
+                onChange={(e) => setEditableData(prev => ({ ...prev, image: e.target.value }))}
                 fullWidth
-                multiline
-                rows={4}
                 variant="standard"
+                sx={{ mb: 2 }}
               />
-            </Box>
-          )}
-
-          {/* Content Sections */}
+              <MediaUpload
+                label="Upload Main Image"
+                currentImage={editableData.image}
+                onImageChange={(imageUrl) => setEditableData(prev => ({ ...prev, image: imageUrl }))}
+              />
+              </Box>
+            )}
+          {/* Content Sections (Bilingual View) */}
           {!isEditing && king.contentSections && king.contentSections.length > 0 && (
             king.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
-                {section.subtitle && (
-                  <Typography 
-                    variant="h6" 
-                    key={`subtitle-${section.id || index}`}
-                  >
-                    {section.subtitle}
-              </Typography>
-                )}
-                
-                {section.content && (
-              <Typography
-                variant="body1"
-                    key={`content-${section.id || index}`}
-                  >
-                    {section.content}
+                {getContent(section.subtitle) && (
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                    {getContent(section.subtitle)}
                   </Typography>
                 )}
-
-                {/* Section Image */}
+                {getContent(section.content) && (
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                    {getContent(section.content)}
+                  </Typography>
+                )}
                 {section.imageUrl && (
-                  <img 
-                    key={`image-${section.id || index}`}
-                    src={section.imageUrl} 
-                    alt={section.subtitle || `Section ${index + 1} Image`} 
+                  <img
+                    src={section.imageUrl}
+                    alt={getContent(section.subtitle) || `Section ${index + 1} Image`}
                     style={{ maxWidth: '100%', height: 'auto', marginTop: 16 }}
                   />
                 )}
-
-                {/* Section Video */}
                 {section.videoUrl && (
-                  <iframe 
-                    key={`video-${section.id || index}`}
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
-                    title={section.videoTitle || `Section ${index + 1} Video`}
+                  <iframe
+                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
+                    title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
                     style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                     allowFullScreen
                   />
                 )}
-                
-                {/* Section Video Details */}
-                {(section.videoTitle || section.videoDescription) && (
-                  <Box 
-                    key={`video-details-${section.id || index}`} 
-                    sx={{ mt: 2 }}
-                  >
-                    {section.videoTitle && (
-                      <Typography 
-                        variant="subtitle1" 
-                        key={`video-title-${section.id || index}`}
-                      >
-                        {section.videoTitle}
+                {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
+                  <Box sx={{ mt: 2 }}>
+                    {getContent(section.videoTitle) && (
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {getContent(section.videoTitle)}
                       </Typography>
                     )}
-                    
-                    {section.videoDescription && (
-                      <Typography 
-                        variant="body2" 
-                        key={`video-description-${section.id || index}`}
-                      >
-                        {section.videoDescription}
+                    {getContent(section.videoDescription) && (
+                      <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+                        {getContent(section.videoDescription)}
                       </Typography>
                     )}
                   </Box>
@@ -1021,296 +1201,216 @@ function KingDetail() {
             ))
           )}
 
-          {/* Editable Content Sections */}
-          {isEditing && user && user.role === "admin" && (
+          {/* Editable Content Sections (Bilingual Editing) */}
+          {isEditing && user && user.role === 'admin' && (
             <Box sx={{ mt: 4 }}>
-              <Typography 
-                variant="h6" 
-                sx={{
-                  mb: 2, 
-                  fontWeight: 700,
-                  borderBottom: '2px solid #000',
-                  pb: 1,
-                }}
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, fontWeight: 700, borderBottom: '2px solid #000', pb: 1 }}
               >
-                Additional Content Sections
+                கூடுதல் பகுதிகள் | Additional Content Sections
               </Typography>
-              
               {editableData.contentSections.map((section, index) => (
-                <Box 
-                  key={section.id || `editable-section-${index}`} 
-                  sx={{ 
-                    mb: 3, 
-                    p: 2, 
-                    border: '1px solid #000',
-                    position: 'relative' 
-                  }}
+                <Box
+                  key={section.id || `editable-section-${index}`}
+                  sx={{ mb: 3, p: 2, border: '1px solid #000', position: 'relative' }}
                 >
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                    <TextField
+                      label="Subtitle (EN)"
+                      value={section.subtitle_en}
+                      onChange={(e) => {
+                        const updated = [...editableData.contentSections];
+                        updated[index].subtitle_en = e.target.value;
+                        setEditableData(prev => ({ ...prev, contentSections: updated }));
+                      }}
+                      fullWidth
+                      variant="standard"
+                    />
+                    <TextField
+                      label="Subtitle (TA)"
+                      value={section.subtitle_ta}
+                      onChange={(e) => {
+                        const updated = [...editableData.contentSections];
+                        updated[index].subtitle_ta = e.target.value;
+                        setEditableData(prev => ({ ...prev, contentSections: updated }));
+                      }}
+                      fullWidth
+                      variant="standard"
+                    />
+                  </Box>
                   <TextField
-                    label="Subtitle"
-                    value={section.subtitle}
+                    label="Content (EN)"
+                    value={section.content_en}
                     onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].subtitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    fullWidth
-                    sx={{ mb: 2 }}
-                    variant="standard"
-                  />
-                  
-                  <TextField
-                    label="Content"
-                    value={section.content}
-                    onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
+                      const updated = [...editableData.contentSections];
+                      updated[index].content_en = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
                     }}
                     fullWidth
                     multiline
-                    rows={4}
+                    rows={3}
                     variant="standard"
                     sx={{ mb: 2 }}
                   />
-
-                  {/* Image URL for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
-                      fontWeight: 700,
-                      borderBottom: '1px solid #000',
-                      pb: 1,
+                  <TextField
+                    label="Content (TA)"
+                    value={section.content_ta}
+                    onChange={(e) => {
+                      const updated = [...editableData.contentSections];
+                      updated[index].content_ta = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
                     }}
-                  >
-                    Section Image
+                    fullWidth
+                    multiline
+                    rows={3}
+                    variant="standard"
+                    sx={{ mb: 2 }}
+                  />
+                  <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 700, borderBottom: '1px solid #000', pb: 1 }}>
+                    பகுதி படம் | Section Image
                   </Typography>
-                  
                   <TextField
                     label="Image URL"
                     value={section.imageUrl}
                     onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].imageUrl = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
+                      const updated = [...editableData.contentSections];
+                      updated[index].imageUrl = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
                     }}
                     fullWidth
-                    sx={{ mb: 2 }}
                     variant="standard"
-                    placeholder="Enter full image URL"
+                    sx={{ mb: 2 }}
                   />
-
-                  {/* Image Upload for Content Section */}
                   <MediaUpload
-                    onImageChange={(imageUrl) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].imageUrl = imageUrl;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
-                    onImageLinkChange={(imageLink) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].imageLink = imageLink;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
-                    }}
+                    label="Upload Section Image"
                     currentImage={section.imageUrl}
                     currentImageLink={section.imageLink}
-                    label="Section Image"
+                    onImageChange={(imageUrl) => {
+                      const updated = [...editableData.contentSections];
+                      updated[index].imageUrl = imageUrl;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
+                    }}
+                    onImageLinkChange={(imageLink) => {
+                      const updated = [...editableData.contentSections];
+                      updated[index].imageLink = imageLink;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
+                    }}
                   />
-
-                  {/* Preview of uploaded/entered image */}
                   {section.imageUrl && (
-                    <Box 
-                      sx={{ 
-                        mt: 2, 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        border: '1px solid #ddd', 
-                        borderRadius: 1,
-                        p: 2 
-                      }}
-                    >
-                      <img 
-                        src={section.imageUrl} 
-                        alt="Preview" 
-                        style={{ 
-                          maxWidth: '100%', 
-                          maxHeight: 200, 
-                          objectFit: 'contain' 
-                        }}
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1, p: 2 }}>
+                      <img
+                        src={section.imageUrl}
+                        alt="Preview"
+                        style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }}
                         onError={(e) => {
                           e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
                         }}
                       />
                     </Box>
                   )}
-
-                  {/* Video Details for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
-                      fontWeight: 700,
-                      borderBottom: '1px solid #000',
-                      pb: 1,
-                    }}
-                  >
-                    Section Video Details
+                  <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 700, borderBottom: '1px solid #000', pb: 1 }}>
+                    பகுதி காணொலி விவரம் | Section Video Details
                   </Typography>
-                  
                   <TextField
                     label="Video URL"
                     value={section.videoUrl}
                     onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoUrl = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
+                      const updated = [...editableData.contentSections];
+                      updated[index].videoUrl = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
                     }}
                     fullWidth
-                    sx={{ mb: 2 }}
                     variant="standard"
-                    placeholder="Enter full YouTube video URL"
+                    sx={{ mb: 2 }}
                   />
-                  
                   <TextField
-                    label="Video Title"
-                    value={section.videoTitle}
+                    label="Video Title (EN)"
+                    value={section.videoTitle_en}
                     onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoTitle = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
+                      const updated = [...editableData.contentSections];
+                      updated[index].videoTitle_en = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
                     }}
                     fullWidth
-                    sx={{ mb: 2 }}
                     variant="standard"
+                    sx={{ mb: 2 }}
                   />
-                  
                   <TextField
-                    label="Video Description"
-                    value={section.videoDescription}
+                    label="Video Title (TA)"
+                    value={section.videoTitle_ta}
                     onChange={(e) => {
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].videoDescription = e.target.value;
-                      setEditableData(prev => ({
-                        ...prev,
-                        contentSections: updatedSections
-                      }));
+                      const updated = [...editableData.contentSections];
+                      updated[index].videoTitle_ta = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
+                    }}
+                    fullWidth
+                    variant="standard"
+                    sx={{ mb: 2 }}
+                  />
+                  <TextField
+                    label="Video Description (EN)"
+                    value={section.videoDescription_en}
+                    onChange={(e) => {
+                      const updated = [...editableData.contentSections];
+                      updated[index].videoDescription_en = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
                     }}
                     fullWidth
                     multiline
                     rows={3}
                     variant="standard"
+                    sx={{ mb: 2 }}
                   />
-                  
+                  <TextField
+                    label="Video Description (TA)"
+                    value={section.videoDescription_ta}
+                    onChange={(e) => {
+                      const updated = [...editableData.contentSections];
+                      updated[index].videoDescription_ta = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updated }));
+                    }}
+                    fullWidth
+                    multiline
+                    rows={3}
+                    variant="standard"
+                    sx={{ mb: 2 }}
+                  />
                   <IconButton
                     onClick={() => removeContentSection(section.id)}
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      color: '#000',
-                    }}
+                    sx={{ position: 'absolute', top: 0, right: 0, color: '#000' }}
                   >
                     <Delete />
                   </IconButton>
                 </Box>
               ))}
-              
               <Button
                 onClick={addContentSection}
                 variant="outlined"
                 startIcon={<Add />}
-                sx={{
-                  color: '#000',
-                  borderColor: '#000',
-                  '&:hover': {
-                    bgcolor: 'rgba(0,0,0,0.05)'
-                  }
-                }}
+                sx={{ color: '#000', borderColor: '#000', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}
               >
                 Add Content Section
               </Button>
-            </Box>
-          )}
-
-          {/* Separate Update Button for Content Sections */}
-          {isEditing && user && user.role === "admin" && (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                mt: 4,
-                pt: 2,
-                borderTop: '1px solid #000' 
-              }}
-            >
-              <Button
-                onClick={() => setIsEditing(false)}
-                sx={{ 
-                  color: '#000',
-                  '&:hover': { 
-                    bgcolor: 'rgba(0,0,0,0.05)' 
-                  }
-                }}
-              >
-                Cancel
-              </Button>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, gap: 2 }}>
                 <Button
-                  onClick={addContentSection}
-                  variant="outlined"
-                  startIcon={<Add />}
-                  sx={{
-                    color: '#000',
-                    borderColor: '#000',
-                    '&:hover': {
-                      bgcolor: 'rgba(0, 0, 0, 0.05)'
-                    }
-                  }}
+                  onClick={() => setIsEditing(false)}
+                  sx={{ color: '#000', '&:hover': { bgcolor: 'rgba(0,0,0,0.05)' } }}
                 >
-                  Add Section
+                  Cancel
                 </Button>
                 <Button
                   onClick={handleInlineSave}
                   variant="contained"
-                  sx={{
-                    bgcolor: '#000',
-                    color: '#fff',
-                    '&:hover': { 
-                      bgcolor: '#333' 
-                    }
-                  }}
+                  sx={{ bgcolor: '#000', color: '#fff', '&:hover': { bgcolor: '#333' } }}
                 >
                   Update Details
                 </Button>
               </Box>
             </Box>
           )}
+          </Box>
         </Box>
-      </Box>
 
       {/* Comments Section */}
       <Box 
@@ -1365,7 +1465,7 @@ function KingDetail() {
           </Button>
 
           {/* Share */}
-          <Tooltip title="Share this article">
+          <Tooltip title="இந்த பக்கத்தை பகிர் (Share this page)">
             <IconButton 
               onClick={() => {
                 if (navigator.share) {
@@ -1408,7 +1508,7 @@ function KingDetail() {
             fontFamily: "'Montserrat', sans-serif"
           }}
         >
-          Comments ({comments.length})
+          கருத்துக்கள் | Comments ({comments.length})
         </Typography>
 
         {/* Comment Input */}
@@ -1423,7 +1523,7 @@ function KingDetail() {
           <TextField
             fullWidth
             variant="standard"
-            placeholder="Write a comment..."
+            placeholder="கருத்து எழுதவும் | Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             sx={{ 
@@ -1468,7 +1568,7 @@ function KingDetail() {
               fontFamily: "'Open Sans', sans-serif"
             }}
           >
-            No comments yet. Be the first to comment!
+            கருத்துகள் இல்லை. முதலில் எழுதுங்கள்! | No comments yet. Be the first to comment!
           </Typography>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1642,7 +1742,7 @@ function KingDetail() {
                         }}
                         onClick={() => setReplyingTo(comment._id)}
                       >
-                        Reply
+                        பதில் | Reply
                       </Button>
                     )}
 
@@ -1673,7 +1773,7 @@ function KingDetail() {
                           setComments(updatedComments);
                         }}
                       >
-                        {comment.showReplies ? 'Hide Replies' : `Show ${comment.replies.length} Replies`}
+                        {comment.showReplies ? 'பதில்களை மறை | Hide Replies' : `பதில்கள் ${comment.replies.length} காண் | Show ${comment.replies.length} Replies`}
                       </Button>
                     )}
                   </Box>
@@ -1769,7 +1869,7 @@ function KingDetail() {
                         pb: 1
                       }}
                     >
-                      Replies
+                      பதில்கள் | Replies
                     </Typography>
                     {comment.replies.map((reply) => (
                       <Box
@@ -1947,85 +2047,63 @@ function KingDetail() {
             fontWeight: 700 
           }}
         >
-          Edit King Details
+          அரசர் விவரங்கள் திருத்த | Edit King Details
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <TextField
-            label="Name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Dynasty"
-            value={formData.dynasty}
-            onChange={(e) => setFormData({ ...formData, dynasty: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Period"
-            value={formData.period}
-            onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Achievements"
-            value={formData.achievements}
-            onChange={(e) => setFormData({ ...formData, achievements: e.target.value })}
-            multiline
-            rows={3}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            multiline
-            rows={4}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Image URL"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Video URL"
-            value={formData.videoUrl}
-            onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Video Title"
-            value={formData.videoTitle}
-            onChange={(e) => setFormData({ ...formData, videoTitle: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
-          <TextField
-            label="Video Description"
-            value={formData.videoDescription}
-            onChange={(e) => setFormData({ ...formData, videoDescription: e.target.value })}
-            fullWidth
-            sx={{ mb: 2 }}
-            margin="normal"
-          />
+  <DialogContent sx={{ p: 3 }}>
+          {/* Name */}
+          <Box sx={{ display:'flex', gap:2, mb:2 }}>
+            <TextField
+              label="Name (EN)"
+              value={formData.name_en}
+              onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+              fullWidth
+              margin="normal"
+              variant="standard"
+            />
+            <TextField
+              label="Name (TA)"
+              value={formData.name_ta}
+              onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
+              fullWidth
+              margin="normal"
+              variant="standard"
+            />
+          </Box>
+          {/* Dynasty + Period */}
+          <Box sx={{ display:'flex', gap:2, mb:2 }}>
+            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
+              <TextField label="Dynasty (EN)" value={formData.dynasty_en} onChange={(e)=>setFormData({ ...formData, dynasty_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Dynasty (TA)" value={formData.dynasty_ta} onChange={(e)=>setFormData({ ...formData, dynasty_ta: e.target.value })} fullWidth variant="standard" />
+            </Box>
+            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
+              <TextField label="Period (EN)" value={formData.period_en} onChange={(e)=>setFormData({ ...formData, period_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Period (TA)" value={formData.period_ta} onChange={(e)=>setFormData({ ...formData, period_ta: e.target.value })} fullWidth variant="standard" />
+            </Box>
+          </Box>
+          {/* Achievements */}
+          <Box sx={{ display:'flex', gap:2, mb:2 }}>
+            <TextField label="Achievements (EN)" value={formData.achievements_en} onChange={(e)=>setFormData({ ...formData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+            <TextField label="Achievements (TA)" value={formData.achievements_ta} onChange={(e)=>setFormData({ ...formData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+          </Box>
+          {/* Description */}
+          <Box sx={{ display:'flex', gap:2, mb:2 }}>
+            <TextField label="Description (EN)" value={formData.description_en} onChange={(e)=>setFormData({ ...formData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+            <TextField label="Description (TA)" value={formData.description_ta} onChange={(e)=>setFormData({ ...formData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+          </Box>
+          {/* Media URLs */}
+          <TextField label="Image URL" value={formData.image} onChange={(e)=>setFormData({ ...formData, image: e.target.value })} fullWidth sx={{ mb:2 }} margin="normal" />
+          <TextField label="Video URL" value={formData.videoUrl} onChange={(e)=>setFormData({ ...formData, videoUrl: e.target.value })} fullWidth sx={{ mb:2 }} margin="normal" />
+          {/* Video Meta */}
+          <Box sx={{ display:'flex', gap:2 }}>
+            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
+              <TextField label="Video Title (EN)" value={formData.videoTitle_en} onChange={(e)=>setFormData({ ...formData, videoTitle_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Video Title (TA)" value={formData.videoTitle_ta} onChange={(e)=>setFormData({ ...formData, videoTitle_ta: e.target.value })} fullWidth variant="standard" />
+            </Box>
+            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
+              <TextField label="Video Description (EN)" value={formData.videoDescription_en} onChange={(e)=>setFormData({ ...formData, videoDescription_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Video Description (TA)" value={formData.videoDescription_ta} onChange={(e)=>setFormData({ ...formData, videoDescription_ta: e.target.value })} fullWidth variant="standard" />
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions
           sx={{ 
@@ -2087,14 +2165,14 @@ function KingDetail() {
             fontWeight: 700 
           }}
         >
-          Confirm Delete
+          நீக்கம் உறுதிப்படுத்த | Confirm Delete
         </DialogTitle>
         <DialogContent sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Are you sure you want to delete this {deleteType}?
+            இந்த {deleteType} ஐ நீக்க விரும்புகிறீர்களா? (Are you sure you want to delete this {deleteType}?)
           </Typography>
           <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic' }}>
-            This action cannot be undone.
+            இந்த செயலை மீண்டும் செய்ய முடியாது. (This action cannot be undone.)
           </Typography>
         </DialogContent>
         <DialogActions
@@ -2115,7 +2193,7 @@ function KingDetail() {
               }
             }}
           >
-            Cancel
+            ரத்து செய் | Cancel
           </Button>
           <Button
             onClick={deleteType === 'comment' ? confirmDeleteComment : confirmDeleteReply}
@@ -2128,7 +2206,7 @@ function KingDetail() {
               }
             }}
           >
-            Delete {deleteType === 'comment' ? 'Comment' : 'Reply'}
+            நீக்கு | Delete {deleteType === 'comment' ? 'Comment' : 'Reply'}
           </Button>
         </DialogActions>
       </Dialog>

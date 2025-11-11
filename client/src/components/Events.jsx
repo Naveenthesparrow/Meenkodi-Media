@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Grid, 
@@ -23,8 +22,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
+import { useBilingualContent } from '../utils/bilingualContent';
+import { useTranslation } from 'react-i18next';
 
 export default function Events({ user }) {
+  const getContent = useBilingualContent();
   const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -245,7 +247,7 @@ export default function Events({ user }) {
             },
           }}
         >
-          {t('nav.events')}
+          {t('events.title', 'Events')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -366,7 +368,7 @@ export default function Events({ user }) {
                     component="img"
                     height="200"
                     image={event.imageUrl || event.imageLink}
-                    alt={event.title}
+                    alt={getContent(event.title)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -478,7 +480,7 @@ export default function Events({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {event.title}
+                      {getContent(event.title)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -506,9 +508,12 @@ export default function Events({ user }) {
                         minHeight: '4.8rem', // Ensures consistent height for 3 lines
                       }}
                     >
-                      {event.description.length > 150 
-                        ? `${event.description.substring(0, 150)}...` 
-                        : event.description}
+                      {(() => {
+                        const desc = getContent(event.description);
+                        return desc && desc.length > 150 
+                          ? `${desc.substring(0, 150)}...` 
+                          : desc;
+                      })()}
                     </Typography>
                   </Box>
 
@@ -525,7 +530,7 @@ export default function Events({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    {t('common.readMore', 'Read More')}
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -546,14 +551,14 @@ export default function Events({ user }) {
         </DialogTitle>
         <DialogContent>
           <TextField
-            label={t('events.title', 'Title')}
+            label="Title"
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.title}
             onChange={(e) => setCurrentEvent({...currentEvent, title: e.target.value})}
           />
           <TextField
-            label={t('events.date', 'Date')}
+            label="Date"
             type="date"
             fullWidth
             sx={{ mb: 2 }}
@@ -562,14 +567,14 @@ export default function Events({ user }) {
             InputLabelProps={{ shrink: true }}
           />
           <TextField
-            label={t('events.location', 'Location')}
+            label="Location"
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.location}
             onChange={(e) => setCurrentEvent({...currentEvent, location: e.target.value})}
           />
           <TextField
-            label={t('events.description', 'Description')}
+            label="Description"
             fullWidth
             multiline
             minRows={3}
@@ -586,13 +591,13 @@ export default function Events({ user }) {
             currentVideoLink={currentEvent.videoLink}
             currentImage={currentEvent.imageUrl}
             currentVideo={currentEvent.videoUrl}
-            label={t('events.mediaLinks', 'Media Links')}
+            label="Media Links"
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
     </Container>

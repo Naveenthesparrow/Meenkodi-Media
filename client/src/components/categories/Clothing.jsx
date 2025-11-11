@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -22,9 +23,12 @@ import {
 import { Edit, Delete, Add, Favorite } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import API_BASE_URL from "../../utils/api";
+import { useBilingualContent } from "../../utils/bilingualContent";
 
 export default function Clothing({ user }) {
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const [clothing, setClothing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -213,7 +217,7 @@ export default function Clothing({ user }) {
             },
           }}
         >
-          Clothing
+          {t('clothing.title', 'Clothing')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -246,7 +250,7 @@ export default function Clothing({ user }) {
                 px: 3,
               }}
             >
-              Add Clothing
+              {t('clothing.add', 'Add Clothing')}
             </Button>
           </Box>
         )}
@@ -332,7 +336,7 @@ export default function Clothing({ user }) {
                     component="img"
                     height={200}
                     image={item.image || item.imageLink}
-                    alt={item.name}
+                    alt={getContent(item.name)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -365,7 +369,7 @@ export default function Clothing({ user }) {
                       color="textSecondary"
                       sx={{ textAlign: 'center' }}
                     >
-                      No Image Available
+                      {t('common.noImage', 'No Image Available')}
                     </Typography>
                   </Box>
                 )}
@@ -442,7 +446,7 @@ export default function Clothing({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {item.name}
+                      {getContent(item.name)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -454,7 +458,7 @@ export default function Clothing({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {item.type}
+                      {getContent(item.type)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -470,9 +474,10 @@ export default function Clothing({ user }) {
                         minHeight: { xs: '4.2rem', md: '4.8rem' }, // Ensures consistent height for 3 lines
                       }}
                     >
-                      {item.description.length > 150 
-                        ? `${item.description.substring(0, 150)}...` 
-                        : item.description}
+                      {(() => {
+                        const desc = getContent(item.description) || "";
+                        return desc.length > 150 ? `${desc.substring(0,150)}...` : desc;
+                      })()}
                     </Typography>
                     
                     {/* Like Count Display */}
@@ -504,7 +509,7 @@ export default function Clothing({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    Read More
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -537,26 +542,26 @@ export default function Clothing({ user }) {
             fontWeight: 700 
           }}
         >
-          {editItem ? "Edit Clothing Item" : "Add New Clothing Item"}
+          {editItem ? t('clothing.edit', 'Edit Clothing Item') : t('clothing.addNew', 'Add New Clothing Item')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
           <TextField
             fullWidth
-            label="Name"
+            label={t('form.name', 'Name')}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
-            label="Type"
+            label={t('form.type', 'Type')}
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value })}
             sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
-            label="Description"
+            label={t('form.description', 'Description')}
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
@@ -567,7 +572,7 @@ export default function Clothing({ user }) {
           />
           <TextField
             fullWidth
-            label="Image URL"
+            label={t('form.imageUrl', 'Image URL')}
             value={formData.image}
             onChange={(e) =>
               setFormData({ ...formData, image: e.target.value })
@@ -589,7 +594,7 @@ export default function Clothing({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            Cancel
+            {t('actions.cancel', 'Cancel')}
           </Button>
           <Button 
             onClick={handleSave}
@@ -601,7 +606,7 @@ export default function Clothing({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? "Update" : "Add"}
+            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,36 +1,38 @@
 import React, { useState, useEffect } from 'react';
+import './i18n/i18n.js';
 import { useTranslation } from 'react-i18next';
-import TempleDetail from "./components/details/TempleDetail";
-import KingDetail from "./components/details/KingDetail";
-import LiteratureDetail from "./components/details/LiteratureDetail";
-import DanceDetail from "./components/details/DanceDetail";
-import FoodDetail from "./components/details/FoodDetail";
-import FestivalDetail from "./components/details/FestivalDetail";
-import EventDetail from "./components/EventDetail";
+// Route-split heavier pages and details
+const TempleDetail = React.lazy(() => import("./components/details/TempleDetail"));
+const KingDetail = React.lazy(() => import("./components/details/KingDetail"));
+const LiteratureDetail = React.lazy(() => import("./components/details/LiteratureDetail"));
+const DanceDetail = React.lazy(() => import("./components/details/DanceDetail"));
+const FoodDetail = React.lazy(() => import("./components/details/FoodDetail"));
+const FestivalDetail = React.lazy(() => import("./components/details/FestivalDetail"));
+const EventDetail = React.lazy(() => import("./components/EventDetail"));
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Link as RouterLink,
 } from "react-router-dom";
-import AdminPortal from "./components/AdminPortal";
-import UserPortal from "./components/UserPortal";
+const AdminPortal = React.lazy(() => import("./components/AdminPortal"));
+const UserPortal = React.lazy(() => import("./components/UserPortal"));
 import Home from "./components/Home";
-import Articles from "./components/Articles";
-import Gallery from "./components/Gallery";
-import Events from "./components/Events";
-import Resources from "./components/Resources";
-import NotFound from "./components/NotFound";
-import Explore from "./components/Explore";
-import Lands from "./components/Lands";
-import Kings from "./components/categories/Kings";
-import Literature from "./components/categories/Literature";
-import Dance from "./components/categories/Dance";
-import Temples from "./components/categories/Temples";
-import Clothing from "./components/categories/Clothing";
-import Festivals from "./components/categories/Festivals";
-import Foods from "./components/categories/Foods";
-import AncientScience from "./components/categories/AncientScience";
+const Articles = React.lazy(() => import("./components/Articles"));
+const Gallery = React.lazy(() => import("./components/Gallery"));
+const Events = React.lazy(() => import("./components/Events"));
+const Resources = React.lazy(() => import("./components/Resources"));
+const NotFound = React.lazy(() => import("./components/NotFound"));
+const Explore = React.lazy(() => import("./components/Explore"));
+const Lands = React.lazy(() => import("./components/Lands"));
+const Kings = React.lazy(() => import("./components/categories/Kings"));
+const Literature = React.lazy(() => import("./components/categories/Literature"));
+const Dance = React.lazy(() => import("./components/categories/Dance"));
+const Temples = React.lazy(() => import("./components/categories/Temples"));
+const Clothing = React.lazy(() => import("./components/categories/Clothing"));
+const Festivals = React.lazy(() => import("./components/categories/Festivals"));
+const Foods = React.lazy(() => import("./components/categories/Foods"));
+const AncientScience = React.lazy(() => import("./components/categories/AncientScience"));
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
 import { 
@@ -48,12 +50,16 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
-import GalleryDetail from "./components/GalleryDetail";
-import ArticleDetail from "./components/ArticleDetail";
-import ResourceDetail from "./components/ResourceDetail";
-import AncientScienceDetail from "./components/details/AncientScienceDetail";
-import ClothingDetail from "./components/details/ClothingDetail";
 import LanguageSwitcher from './components/common/LanguageSwitcher';
+const GalleryDetail = React.lazy(() => import("./components/GalleryDetail"));
+const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
+const ResourceDetail = React.lazy(() => import("./components/ResourceDetail"));
+const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
+const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
+import Particles from "./components/Particles";
+import DockText from "./components/common/DockText";
+import LanguageDockToggle from "./components/common/LanguageDockToggle";
+import SiteLogo from "./components/common/SiteLogo";
 
 // Debug function for tracking 404 errors
 function setupResourceErrorLogging() {
@@ -149,20 +155,20 @@ function App() {
   };
 
   const navItems = [
-    { text: t('nav.explore'), path: "/explore" },
-    { text: t('nav.events'), path: "/events" },
-    { text: t('nav.gallery'), path: "/gallery" },
-    { text: t('nav.articles'), path: "/articles" },
-    { text: t('nav.resources'), path: "/resources" },
+    { key: 'nav.explore', path: '/explore' },
+    { key: 'nav.events', path: '/events' },
+    { key: 'nav.gallery', path: '/gallery' },
+    { key: 'nav.articles', path: '/articles' },
+    { key: 'nav.resources', path: '/resources' },
   ];
 
   const userNavItems = user 
     ? [
-        { text: t('app.profile'), path: "/profile" },
-        { text: t('app.logout'), action: logout }
+        { key: 'nav.profile', path: '/profile' },
+        { key: 'nav.logout', action: logout }
       ]
     : [
-        { text: t('app.loginWithGoogle'), action: login }
+        { key: 'nav.login', action: login }
       ];
 
   if (loading) {
@@ -175,7 +181,7 @@ function App() {
           height: "100vh",
         }}
       >
-        <Typography>{t('app.loading')}</Typography>
+        <Typography>{t('loading')}</Typography>
       </Box>
     );
   }
@@ -186,11 +192,27 @@ function App() {
         position="static"
         elevation={0}
         sx={{ 
-          bgcolor: "#fff", 
-          color: "#111", 
-          boxShadow: 1 
+          bgcolor: "#000",
+          color: "#fff",
+          boxShadow: 1,
+          position: 'relative'
         }}
       >
+        {/* Particles background inside navbar for seamless look */}
+        <Box sx={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+          <Particles
+            particleColors={["#ffffff", "#e6e6e6", "#d9d9d9"]}
+            particleCount={110}
+            particleSpread={8}
+            speed={0.06}
+            particleBaseSize={85}
+            moveParticlesOnHover={false}
+            alphaParticles={true}
+            disableRotation={true}
+            showWatermark={false}
+            style={{ opacity: 0.9 }}
+          />
+        </Box>
         <Toolbar 
           sx={{ 
             display: 'flex',
@@ -200,98 +222,74 @@ function App() {
             py: { xs: 1, sm: 2 }
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 900,
-              color: "#111",
-              fontFamily: "Poppins, Arial, sans-serif",
-              letterSpacing: 1,
-              textTransform: "uppercase",
-            }}
-          >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, zIndex: 1 }}>
+            <SiteLogo height={48} />
             <Link
               component={RouterLink}
               to="/"
-              color="#111"
+              color="#fff"
               underline="none"
               sx={{
                 fontWeight: 900,
                 fontFamily: "Poppins, Arial, sans-serif",
                 letterSpacing: 1,
                 textTransform: "uppercase",
-                fontSize: { xs: 20, sm: 24 },
+                fontSize: { xs: 18, sm: 24 },
               }}
             >
               {t('app.title')}
             </Link>
-          </Typography>
+          </Box>
 
           {/* Desktop Navigation */}
           <Box 
             sx={{ 
               display: { xs: 'none', sm: 'flex' },
               alignItems: 'center',
-              gap: 2 
+              gap: 3,
+              zIndex: 1
             }}
           >
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                variant="text"
-                component={RouterLink}
-                to={item.path}
-                sx={{
-                  color: "#111",
-                  fontFamily: "Poppins, Arial, sans-serif",
-                  fontWeight: 600,
-                  letterSpacing: 0.5,
-                }}
-              >
-                {item.text}
-              </Button>
+            {navItems.map((ni) => (
+              <DockText
+                key={ni.key}
+                text={t(ni.key)}
+                to={ni.path}
+                baseSize={16}
+                magnification={70}
+                letterGap={2}
+                color="#fff"
+              />
             ))}
-            <LanguageSwitcher />
             {user && (
-              <Button
-                variant="text"
-                component={RouterLink}
+              <DockText
+                text={t('nav.profile')}
                 to="/profile"
-                sx={{
-                  color: "#111",
-                  fontFamily: "Poppins, Arial, sans-serif",
-                  fontWeight: 600,
-                  letterSpacing: 0.5,
-                }}
-              >
-                {t('app.profile')}
-              </Button>
+                baseSize={16}
+                letterGap={2}
+                color="#fff"
+              />
             )}
             {user ? (
-              <Button
-                variant="outlined"
+              <DockText
+                text={t('nav.logout')}
                 onClick={logout}
-                sx={{
-                  color: "#111",
-                  borderColor: "#111",
-                  fontFamily: "Poppins, Arial, sans-serif",
-                }}
-              >
-                {t('app.logout')}
-              </Button>
+                baseSize={16}
+                letterGap={2}
+                color="#fff"
+              />
             ) : (
-              <Button
-                variant="outlined"
+              <DockText
+                text={t('nav.login')}
                 onClick={login}
-                sx={{
-                  color: "#111",
-                  borderColor: "#111",
-                  fontFamily: "Poppins, Arial, sans-serif",
-                }}
-              >
-                {t('app.login')}
-              </Button>
+                baseSize={16}
+                letterGap={2}
+                color="#fff"
+              />
             )}
+            <Box sx={{ ml: 2, display: { xs: 'none', sm: 'block' } }}>
+              <LanguageDockToggle />
+            </Box>
           </Box>
 
           {/* Mobile Navigation Hamburger */}
@@ -302,7 +300,7 @@ function App() {
             onClick={handleDrawerToggle}
             sx={{ 
               display: { sm: 'none' }, 
-              color: '#111' 
+              color: '#fff' 
             }}
           >
             <MenuIcon />
@@ -322,8 +320,8 @@ function App() {
               '& .MuiDrawer-paper': { 
                 boxSizing: 'border-box', 
                 width: 240,
-                bgcolor: '#fff',
-                color: '#111'
+                bgcolor: '#000',
+                color: '#fff'
               },
             }}
           >
@@ -335,31 +333,36 @@ function App() {
                 p: 2 
               }}
             >
-              <Typography variant="h6">{t('app.menu')}</Typography>
-              <LanguageSwitcher size="small" />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <SiteLogo height={40} />
+                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
+                  {t('app.title')}
+                </Typography>
+              </Box>
               <IconButton onClick={handleDrawerToggle}>
-                <CloseIcon />
+                <CloseIcon sx={{ color: '#fff' }} />
               </IconButton>
             </Box>
             <List>
               {navItems.map((item) => (
                 <ListItem 
-                  key={item.path}
+                  key={item.key}
                   component={RouterLink}
                   to={item.path}
                   onClick={handleDrawerToggle}
                   sx={{ 
-                    color: '#111',
+                    color: '#fff',
                     '&:hover': { 
-                      bgcolor: '#f0f0f0' 
+                      bgcolor: 'rgba(255,255,255,0.08)'
                     }
                   }}
                 >
                   <ListItemText 
-                    primary={item.text} 
+                    primary={t(item.key)} 
                     primaryTypographyProps={{
                       fontFamily: "Poppins, Arial, sans-serif",
                       fontWeight: 600,
+                      color: '#fff'
                     }}
                   />
                 </ListItem>
@@ -370,17 +373,18 @@ function App() {
                   to="/profile"
                   onClick={handleDrawerToggle}
                   sx={{ 
-                    color: '#111',
+                    color: '#fff',
                     '&:hover': { 
-                      bgcolor: '#f0f0f0' 
+                      bgcolor: 'rgba(255,255,255,0.08)'
                     }
                   }}
                 >
                   <ListItemText 
-                    primary={t('app.profile')} 
+                    primary={t('nav.profile')} 
                     primaryTypographyProps={{
                       fontFamily: "Poppins, Arial, sans-serif",
                       fontWeight: 600,
+                      color: '#fff'
                     }}
                   />
                 </ListItem>
@@ -392,17 +396,18 @@ function App() {
                     handleDrawerToggle();
                   }}
                   sx={{ 
-                    color: '#111',
+                    color: '#fff',
                     '&:hover': { 
-                      bgcolor: '#f0f0f0' 
+                      bgcolor: 'rgba(255,255,255,0.08)'
                     }
                   }}
                 >
                   <ListItemText 
-                    primary={t('app.logout')} 
+                    primary={t('nav.logout')} 
                     primaryTypographyProps={{
                       fontFamily: "Poppins, Arial, sans-serif",
                       fontWeight: 600,
+                      color: '#fff'
                     }}
                   />
                 </ListItem>
@@ -413,27 +418,32 @@ function App() {
                     handleDrawerToggle();
                   }}
                   sx={{ 
-                    color: '#111',
+                    color: '#fff',
                     '&:hover': { 
-                      bgcolor: '#f0f0f0' 
+                      bgcolor: 'rgba(255,255,255,0.08)'
                     }
                   }}
                 >
                   <ListItemText 
-                    primary={t('app.login')} 
+                    primary={t('nav.login')} 
                     primaryTypographyProps={{
                       fontFamily: "Poppins, Arial, sans-serif",
                       fontWeight: 600,
+                      color: '#fff'
                     }}
                   />
                 </ListItem>
               )}
+              <Box sx={{ px: 2, py: 1 }}>
+                <LanguageSwitcher size="small" />
+              </Box>
             </List>
           </Drawer>
         </Toolbar>
       </AppBar>
-      <Box sx={{ mt: 4 }}>
-        <Routes>
+      <Box sx={{ mt: 0 }}>
+  <React.Suspense fallback={<Box sx={{ p:4, textAlign:'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
+  <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth/google/callback" element={<AuthCallback />} />
           <Route path="/auth/failure" element={<AuthFailure />} />
@@ -488,7 +498,7 @@ function App() {
               ) : (
                 <Box sx={{ textAlign: "center", mt: 4 }}>
                   <Typography variant="h4" sx={{ mb: 2 }}>
-                    {t('app.pleaseLogin')}
+                    Please log in to view your profile
                   </Typography>
                   <Button
                     variant="contained"
@@ -499,7 +509,7 @@ function App() {
                       "&:hover": { bgcolor: "#333" },
                     }}
                   >
-                    {t('app.loginWithGoogle')}
+                    Login with Google
                   </Button>
                 </Box>
               )
@@ -511,7 +521,8 @@ function App() {
           />
           <Route path="/explore/clothing/:id" element={<ClothingDetail />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
+  </Routes>
+  </React.Suspense>
       </Box>
     </Router>
   );

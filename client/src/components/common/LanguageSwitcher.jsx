@@ -1,42 +1,33 @@
 import React from 'react';
-import { Button, ButtonGroup } from '@mui/material';
-import i18n from '../../utils/i18n';
+import { useTranslation } from 'react-i18next';
+import { Box, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 
-export default function LanguageSwitcher({ size = 'small' }) {
-  const current = i18n.language?.startsWith('ta') ? 'ta' : 'en';
+export default function LanguageSwitcher({ size = 'small', sx = {} }) {
+	const { i18n, t } = useTranslation();
+	const [lang, setLang] = React.useState(i18n.language || 'en');
 
-  const switchTo = (lng) => {
-    i18n.changeLanguage(lng);
-  };
+	const handleChange = (e) => {
+		const value = e.target.value;
+		setLang(value);
+		i18n.changeLanguage(value);
+		try { localStorage.setItem('lang', value); } catch (_) {}
+	};
 
-  return (
-    <ButtonGroup variant="outlined" size={size} aria-label="language switcher">
-      <Button
-        onClick={() => switchTo('en')}
-        sx={{
-          fontWeight: 600,
-          ...(current === 'en' && {
-            bgcolor: '#111',
-            color: '#fff',
-            '&:hover': { bgcolor: '#333' }
-          })
-        }}
-      >
-        EN
-      </Button>
-      <Button
-        onClick={() => switchTo('ta')}
-        sx={{
-          fontWeight: 600,
-          ...(current === 'ta' && {
-            bgcolor: '#111',
-            color: '#fff',
-            '&:hover': { bgcolor: '#333' }
-          })
-        }}
-      >
-        TA
-      </Button>
-    </ButtonGroup>
-  );
+	return (
+		<Box sx={sx}>      
+			<FormControl size={size} variant="outlined">
+				<InputLabel id="lang-select-label">{t('language.select')}</InputLabel>
+				<Select
+					labelId="lang-select-label"
+					value={lang}
+					label={t('language.select')}
+					onChange={handleChange}
+					sx={{ bgcolor: '#fff', minWidth: 120 }}
+				>
+					<MenuItem value="en">{t('language.english')}</MenuItem>
+					<MenuItem value="ta">{t('language.tamil')}</MenuItem>
+				</Select>
+			</FormControl>
+		</Box>
+	);
 }

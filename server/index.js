@@ -23,6 +23,7 @@ import path from "path";
 import fs from "fs";
 import AncientScience from "./models/AncientScience.js";
 import Clothing from "./models/Clothing.js";
+import { localizeCollection, localizeSingle, resolveLang } from './translationMap.js';
 
 dotenv.config();
 
@@ -206,12 +207,15 @@ app.get("/api/user/profile", ensureAuthenticated, (req, res) => {
 
 // Article routes
 app.get("/api/articles", async (req, res) => {
+  const lang = resolveLang(req);
   const articles = await Article.find();
-  res.json(articles);
+  res.json(localizeCollection(articles, 'articles', lang));
 });
 app.get("/api/articles/:id", async (req, res) => {
+  const lang = resolveLang(req);
   const article = await Article.findById(req.params.id);
-  res.json(article);
+  if (!article) return res.status(404).json({ error: 'Not found'});
+  res.json(localizeSingle(article, 'articles', lang));
 });
 app.post("/api/articles", ensureAdmin, async (req, res) => {
   try {
@@ -249,14 +253,16 @@ app.delete("/api/articles/:id", ensureAdmin, async (req, res) => {
 
 // Gallery routes
 app.get("/api/gallery", async (req, res) => {
+  const lang = resolveLang(req);
   const gallery = await Gallery.find();
-  res.json(gallery);
+  res.json(localizeCollection(gallery, 'gallery', lang));
 });
 app.get("/api/gallery/:id", async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const item = await Gallery.findById(req.params.id);
     if (!item) return res.status(404).json({ error: "Gallery item not found" });
-    res.json(item);
+    res.json(localizeSingle(item, 'gallery', lang));
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -297,14 +303,16 @@ app.delete("/api/gallery/:id", ensureAdmin, async (req, res) => {
 
 // Event routes
 app.get("/api/events", async (req, res) => {
+  const lang = resolveLang(req);
   const events = await Event.find();
-  res.json(events);
+  res.json(localizeCollection(events, 'events', lang));
 });
 app.get("/api/events/:id", async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: "Event not found" });
-    res.json(event);
+    res.json(localizeSingle(event, 'events', lang));
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -345,20 +353,19 @@ app.delete("/api/events/:id", ensureAdmin, async (req, res) => {
 
 // Resource routes
 app.get("/api/resources", async (req, res) => {
+  const lang = resolveLang(req);
   const resources = await Resource.find();
-  res.json(resources);
+  res.json(localizeCollection(resources, 'resources', lang));
 });
 app.get("/api/resources/:id", async (req, res) => {
   try {
-    console.log("GET /api/resources/:id", req.params.id);
+    const lang = resolveLang(req);
     const resource = await Resource.findById(req.params.id);
     if (!resource) {
-      console.error("Resource not found", req.params.id);
       return res.status(404).json({ error: "Resource not found" });
     }
-    res.json(resource);
+    res.json(localizeSingle(resource, 'resources', lang));
   } catch (err) {
-    console.error("Error fetching resource", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -453,12 +460,15 @@ app.delete("/api/admin/users/:id", ensureAdmin, async (req, res) => {
 
 // Land routes
 app.get("/api/lands", async (req, res) => {
+  const lang = resolveLang(req);
   const lands = await Land.find();
-  res.json(lands);
+  res.json(localizeCollection(lands, 'lands', lang));
 });
 app.get("/api/lands/:id", async (req, res) => {
+  const lang = resolveLang(req);
   const land = await Land.findById(req.params.id);
-  res.json(land);
+  if (!land) return res.status(404).json({ error: 'Land not found'});
+  res.json(localizeSingle(land, 'lands', lang));
 });
 app.post("/api/lands", ensureAdmin, async (req, res) => {
   try {
@@ -1013,8 +1023,9 @@ app.delete("/api/temples/:id", ensureAdmin, async (req, res) => {
 // KINGS API ROUTES
 app.get("/api/kings", async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const kings = await King.find().sort({ createdAt: -1 });
-    res.json(kings);
+    res.json(localizeCollection(kings, 'kings', lang));
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch kings" });
   }
@@ -1643,8 +1654,9 @@ app.delete(
 // FOODS API ROUTES
 app.get("/api/foods", async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const foods = await Food.find().sort({ createdAt: -1 });
-    res.json(foods);
+    res.json(localizeCollection(foods, 'foods', lang));
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch foods" });
   }
@@ -1719,8 +1731,9 @@ app.delete("/api/foods/:id", ensureAdmin, async (req, res) => {
 // FESTIVALS API ROUTES
 app.get("/api/festivals", async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const festivals = await Festival.find().sort({ createdAt: -1 });
-    res.json(festivals);
+    res.json(localizeCollection(festivals, 'festivals', lang));
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch festivals" });
   }
@@ -1728,32 +1741,18 @@ app.get("/api/festivals", async (req, res) => {
 
 app.get("/api/festivals/:id", async (req, res) => {
   try {
+    const lang = resolveLang(req);
     const festival = await Festival.findById(req.params.id).populate([
-      {
-        path: "comments.user",
-        select: "displayName",
-      },
-      {
-        path: "comments.replies.user",
-        select: "displayName",
-      },
+      { path: "comments.user", select: "displayName" },
+      { path: "comments.replies.user", select: "displayName" },
     ]);
-
     if (!festival) return res.status(404).json({ error: "Festival not found" });
-
-    // If a user is logged in, check if they've liked the article
     let userLiked = false;
     if (req.user) {
-      userLiked = festival.likes.some(
-        (likeId) => likeId.toString() === req.user._id.toString()
-      );
+      userLiked = festival.likes.some(likeId => likeId.toString() === req.user._id.toString());
     }
-
-    res.json({
-      ...festival.toObject(),
-      likes: festival.likes.length,
-      userLiked,
-    });
+    const base = { ...festival.toObject(), likes: festival.likes.length, userLiked };
+    res.json(localizeSingle(base, 'festivals', lang));
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch festival" });
   }
@@ -1874,89 +1873,215 @@ app.delete("/api/ancientscience/:id", ensureAdmin, async (req, res) => {
   }
 });
 
-// Clothing routes
+// Clothing routes (CRUD + likes + comments + replies + reactions)
 app.get("/api/clothing", async (req, res) => {
   try {
-    const clothing = await Clothing.find();
-    res.json(clothing);
+    const lang = resolveLang(req);
+    const items = await Clothing.find().sort({ createdAt: -1 });
+    // Optional localization: mirror other entities using localizeCollection if categories defined
+    // For now, return raw bilingual docs
+    res.json(items);
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-app.post("/api/clothing", async (req, res) => {
-  try {
-    const newClothing = new Clothing(req.body);
-    await newClothing.save();
-    res.status(201).json(newClothing);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Clothing list error", err);
+    res.status(500).json({ error: "Failed to fetch clothing list" });
   }
 });
 
 app.get("/api/clothing/:id", async (req, res) => {
   try {
-    console.log("Fetching clothing with ID:", req.params.id); // Debugging
-    const clothing = await Clothing.findById(req.params.id).populate([
-      {
-        path: "comments.user",
-        select: "displayName",
-      },
-      {
-        path: "comments.replies.user",
-        select: "displayName",
-      },
+    const item = await Clothing.findById(req.params.id).populate([
+      { path: "comments.user", select: "displayName" },
+      { path: "comments.replies.user", select: "displayName" },
     ]);
-
-    if (!clothing) {
-      console.log("Clothing not found for ID:", req.params.id); // Debugging
-      return res.status(404).json({ error: "Clothing not found" });
-    }
-
-    // If a user is logged in, check if they've liked the article
+    if (!item) return res.status(404).json({ error: "Clothing not found" });
     let userLiked = false;
     if (req.user) {
-      userLiked = clothing.likes.some(
+      userLiked = item.likes.some(
         (likeId) => likeId.toString() === req.user._id.toString()
       );
     }
+    res.json({ ...item.toObject(), likes: item.likes.length, userLiked });
+  } catch (err) {
+    console.error("Clothing get error", err);
+    res.status(500).json({ error: "Failed to fetch clothing item" });
+  }
+});
 
-    res.json({
-      ...clothing.toObject(),
-      likes: clothing.likes.length,
-      userLiked,
+app.post("/api/clothing", ensureAdmin, async (req, res) => {
+  try {
+    const item = new Clothing(req.body);
+    await item.save();
+    res.status(201).json(item);
+  } catch (err) {
+    console.error("Clothing create error", err);
+    res.status(500).json({ error: "Failed to create clothing" });
+  }
+});
+
+app.put("/api/clothing/:id", ensureAdmin, async (req, res) => {
+  try {
+    const updated = await Clothing.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
     });
+    if (!updated) return res.status(404).json({ error: "Clothing not found" });
+    res.json(updated);
   } catch (err) {
-    console.error("Error fetching clothing:", err); // Debugging
-    res.status(500).json({ error: "Server error" });
+    console.error("Clothing update error", err);
+    res.status(500).json({ error: "Failed to update clothing" });
   }
 });
 
-app.put("/api/clothing/:id", async (req, res) => {
+app.delete("/api/clothing/:id", ensureAdmin, async (req, res) => {
   try {
-    const updatedClothing = await Clothing.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
+    const deleted = await Clothing.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Clothing not found" });
+    res.json({ message: "Clothing deleted successfully" });
+  } catch (err) {
+    console.error("Clothing delete error", err);
+    res.status(500).json({ error: "Failed to delete clothing" });
+  }
+});
+
+// Like toggle
+app.post("/api/clothing/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const item = await Clothing.findById(req.params.id);
+    if (!item) return res.status(404).json({ error: "Clothing not found" });
+    const idx = item.likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
     );
-    if (!updatedClothing)
-      return res.status(404).json({ error: "Clothing not found" });
-    res.json(updatedClothing);
+    if (idx > -1) {
+      item.likes.splice(idx, 1);
+    } else {
+      item.likes.push(req.user._id);
+    }
+    await item.save();
+    res.json({ likes: item.likes.length, userLiked: idx === -1 });
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Clothing like error", err);
+    res.status(500).json({ error: "Failed to process like" });
   }
 });
 
-app.delete("/api/clothing/:id", async (req, res) => {
+// Comments
+app.post("/api/clothing/:id/comments", ensureAuthenticated, async (req, res) => {
   try {
-    const deletedClothing = await Clothing.findByIdAndDelete(req.params.id);
-    if (!deletedClothing)
-      return res.status(404).json({ error: "Clothing not found" });
-    res.json(deletedClothing);
+    const item = await Clothing.findById(req.params.id);
+    if (!item) return res.status(404).json({ error: "Clothing not found" });
+    if (!req.body.content || !req.body.content.trim()) {
+      return res.status(400).json({ error: "Comment content required" });
+    }
+    const comment = { user: req.user._id, content: req.body.content.trim() };
+    item.comments.push(comment);
+    await item.save();
+    const populated = await Clothing.findById(req.params.id).populate(
+      "comments.user",
+      "displayName"
+    );
+    res.json({ comments: populated.comments });
   } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Clothing comment error", err);
+    res.status(500).json({ error: "Failed to add comment" });
   }
 });
+
+app.delete(
+  "/api/clothing/:id/comments/:commentId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const item = await Clothing.findById(req.params.id);
+      if (!item) return res.status(404).json({ error: "Clothing not found" });
+      item.comments = item.comments.filter(
+        (c) => c._id.toString() !== req.params.commentId
+      );
+      await item.save();
+      res.json({ message: "Comment deleted" });
+    } catch (err) {
+      console.error("Clothing delete comment error", err);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  }
+);
+
+// Replies
+app.post(
+  "/api/clothing/:id/comments/:commentId/replies",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const item = await Clothing.findById(req.params.id);
+      if (!item) return res.status(404).json({ error: "Clothing not found" });
+      const comment = item.comments.id(req.params.commentId);
+      if (!comment) return res.status(404).json({ error: "Comment not found" });
+      if (!req.body.content || !req.body.content.trim()) {
+        return res.status(400).json({ error: "Reply content required" });
+      }
+      comment.replies.push({ user: req.user._id, content: req.body.content.trim() });
+      await item.save();
+      const populated = await Clothing.findById(req.params.id).populate(
+        "comments.user comments.replies.user",
+        "displayName"
+      );
+      const updatedComment = populated.comments.id(req.params.commentId);
+      res.json({ comment: updatedComment });
+    } catch (err) {
+      console.error("Clothing reply error", err);
+      res.status(500).json({ error: "Failed to add reply" });
+    }
+  }
+);
+
+app.delete(
+  "/api/clothing/:id/comments/:commentId/replies/:replyId",
+  ensureAdmin,
+  async (req, res) => {
+    try {
+      const item = await Clothing.findById(req.params.id);
+      if (!item) return res.status(404).json({ error: "Clothing not found" });
+      const comment = item.comments.id(req.params.commentId);
+      if (!comment) return res.status(404).json({ error: "Comment not found" });
+      comment.replies = comment.replies.filter(
+        (r) => r._id.toString() !== req.params.replyId
+      );
+      await item.save();
+      res.json({ message: "Reply deleted" });
+    } catch (err) {
+      console.error("Clothing delete reply error", err);
+      res.status(500).json({ error: "Failed to delete reply" });
+    }
+  }
+);
+
+// Reactions on comments
+app.post(
+  "/api/clothing/:id/comments/:commentId/reactions",
+  ensureAuthenticated,
+  async (req, res) => {
+    try {
+      const { emoji } = req.body;
+      if (!emoji) return res.status(400).json({ error: "Emoji required" });
+      const item = await Clothing.findById(req.params.id);
+      if (!item) return res.status(404).json({ error: "Clothing not found" });
+      const comment = item.comments.id(req.params.commentId);
+      if (!comment) return res.status(404).json({ error: "Comment not found" });
+      const existing = comment.reactions.find(
+        (r) => r.user.toString() === req.user._id.toString()
+      );
+      if (existing) {
+        existing.emoji = emoji; // update reaction
+      } else {
+        comment.reactions.push({ user: req.user._id, emoji });
+      }
+      await item.save();
+      res.json({ reactions: comment.reactions });
+    } catch (err) {
+      console.error("Clothing reaction error", err);
+      res.status(500).json({ error: "Failed to add reaction" });
+    }
+  }
+);
 
 // ===== LIKE AND COMMENT ROUTES FOR ALL COMPONENTS =====
 

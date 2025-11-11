@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { 
   Container, 
   Grid, 
@@ -23,18 +22,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import API_BASE_URL from "../utils/api";
+import { useBilingualContent } from "../utils/bilingualContent";
+import { useTranslation } from 'react-i18next';
 
 export default function Articles({ user }) {
+  const getContent = useBilingualContent();
   const { t } = useTranslation();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  // Separate bilingual edit fields
   const [currentArticle, setCurrentArticle] = useState({
-    title: '',
-    author: '',
-    content: '',
-    category: '',
+    title_en: '',
+    title_ta: '',
+    author_en: '',
+    author_ta: '',
+    content_en: '',
+    content_ta: '',
+    category_en: '',
+    category_ta: '',
     image: '',
   });
   const navigate = useNavigate();
@@ -63,17 +70,34 @@ export default function Articles({ user }) {
 
   const handleAdd = () => {
     setCurrentArticle({
-      title: '',
-      author: '',
-      content: '',
-      category: '',
+      title_en: '', title_ta: '',
+      author_en: '', author_ta: '',
+      content_en: '', content_ta: '',
+      category_en: '', category_ta: '',
       image: '',
     });
     setOpenDialog(true);
   };
 
   const handleEdit = (article) => {
-    setCurrentArticle(article);
+    // Map incoming bilingual fields (may be localized with .translated)
+    const toPart = (val, part) => {
+      if (!val) return '';
+      if (typeof val === 'string') return part === 'en' ? val : '';
+      return val[part] || '';
+    };
+    setCurrentArticle({
+      _id: article._id,
+      title_en: toPart(article.title, 'en'),
+      title_ta: toPart(article.title, 'ta'),
+      author_en: toPart(article.author, 'en'),
+      author_ta: toPart(article.author, 'ta'),
+      content_en: toPart(article.content, 'en'),
+      content_ta: toPart(article.content, 'ta'),
+      category_en: toPart(article.category, 'en'),
+      category_ta: toPart(article.category, 'ta'),
+      image: article.image || '',
+    });
     setOpenDialog(true);
   };
 
@@ -89,10 +113,10 @@ export default function Articles({ user }) {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          title: currentArticle.title,
-          author: currentArticle.author,
-          content: currentArticle.content,
-          category: currentArticle.category,
+          title: { en: currentArticle.title_en, ta: currentArticle.title_ta },
+          author: { en: currentArticle.author_en, ta: currentArticle.author_ta },
+          content: { en: currentArticle.content_en, ta: currentArticle.content_ta },
+          category: { en: currentArticle.category_en, ta: currentArticle.category_ta },
           image: currentArticle.image,
         }),
       });
@@ -223,7 +247,7 @@ export default function Articles({ user }) {
             },
           }}
         >
-          {t('nav.articles')}
+          {t('articles.title', 'Articles')}
         </Typography>
         
         {user && user.role === "admin" && (
@@ -347,7 +371,7 @@ export default function Articles({ user }) {
                     component="img"
                     height={200} // Explicitly set height
                     image={article.image}
-                    alt={article.title}
+                    alt={getContent(article.title)}
                     sx={{ 
                       objectFit: "contain",
                       width: '100%',
@@ -463,7 +487,7 @@ export default function Articles({ user }) {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {article.title}
+                      {getContent(article.title)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -475,7 +499,7 @@ export default function Articles({ user }) {
                         textTransform: 'capitalize',
                       }}
                     >
-                      {article.author}
+                      {getContent(article.author)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -491,9 +515,9 @@ export default function Articles({ user }) {
                         minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
                       }}
                     >
-                      {article.content.length > 150 
-                        ? `${article.content.substring(0, 150)}...` 
-                        : article.content}
+                      {getContent(article.content).length > 150 
+                        ? `${getContent(article.content).substring(0, 150)}...` 
+                        : getContent(article.content)}
                     </Typography>
                   </Box>
 
@@ -510,7 +534,7 @@ export default function Articles({ user }) {
                       "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
                     }}
                   >
-                    {t('common.readMore', 'Read More')}
+                    {t('actions.readMore', 'Read more')}
                   </Button>
                 </CardContent>
               </Card>
@@ -530,36 +554,14 @@ export default function Articles({ user }) {
           {currentArticle._id ? t('articles.edit', 'Edit Article') : t('articles.addNew', 'Add New Article')}
         </DialogTitle>
         <DialogContent>
-          <TextField
-            label={t('articles.title', 'Title')}
-            fullWidth
-            sx={{ mb: 2 }}
-            value={currentArticle.title}
-            onChange={(e) => setCurrentArticle({...currentArticle, title: e.target.value})}
-          />
-          <TextField
-            label={t('articles.author', 'Author')}
-            fullWidth
-            sx={{ mb: 2 }}
-            value={currentArticle.author}
-            onChange={(e) => setCurrentArticle({...currentArticle, author: e.target.value})}
-          />
-          <TextField
-            label={t('articles.category', 'Category')}
-            fullWidth
-            sx={{ mb: 2 }}
-            value={currentArticle.category}
-            onChange={(e) => setCurrentArticle({...currentArticle, category: e.target.value})}
-          />
-          <TextField
-            label={t('articles.content', 'Content')}
-            fullWidth
-            multiline
-            minRows={5}
-            sx={{ mb: 2 }}
-            value={currentArticle.content}
-            onChange={(e) => setCurrentArticle({...currentArticle, content: e.target.value})}
-          />
+          <TextField label="Title (EN)" fullWidth sx={{ mb:2 }} value={currentArticle.title_en} onChange={(e)=>setCurrentArticle({...currentArticle,title_en:e.target.value})} />
+          <TextField label="Title (TA)" fullWidth sx={{ mb:2 }} value={currentArticle.title_ta} onChange={(e)=>setCurrentArticle({...currentArticle,title_ta:e.target.value})} />
+          <TextField label="Author (EN)" fullWidth sx={{ mb:2 }} value={currentArticle.author_en} onChange={(e)=>setCurrentArticle({...currentArticle,author_en:e.target.value})} />
+          <TextField label="Author (TA)" fullWidth sx={{ mb:2 }} value={currentArticle.author_ta} onChange={(e)=>setCurrentArticle({...currentArticle,author_ta:e.target.value})} />
+          <TextField label="Category (EN)" fullWidth sx={{ mb:2 }} value={currentArticle.category_en} onChange={(e)=>setCurrentArticle({...currentArticle,category_en:e.target.value})} />
+          <TextField label="Category (TA)" fullWidth sx={{ mb:2 }} value={currentArticle.category_ta} onChange={(e)=>setCurrentArticle({...currentArticle,category_ta:e.target.value})} />
+          <TextField label="Content (EN)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentArticle.content_en} onChange={(e)=>setCurrentArticle({...currentArticle,content_en:e.target.value})} />
+          <TextField label="Content (TA)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentArticle.content_ta} onChange={(e)=>setCurrentArticle({...currentArticle,content_ta:e.target.value})} />
           <MediaUpload
             onImageLinkChange={(link) => setCurrentArticle({...currentArticle, image: link})}
             onVideoLinkChange={(link) => setCurrentArticle({...currentArticle, videoLink: link})}
@@ -569,13 +571,13 @@ export default function Articles({ user }) {
             currentVideoLink={currentArticle.videoLink}
             currentImage={currentArticle.image}
             currentVideo={currentArticle.videoUrl}
-            label={t('articles.mediaLinks', 'Media Links')}
+            label="Media Links"
             showInputsOnly={true}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>{t('common.cancel', 'Cancel')}</Button>
-          <Button onClick={handleSave} variant="contained">{t('common.save', 'Save')}</Button>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
     </Container>

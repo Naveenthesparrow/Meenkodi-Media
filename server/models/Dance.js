@@ -35,20 +35,25 @@ const commentSchema = new mongoose.Schema({
   },
 });
 
+const bilingual = {
+  en: { type: String, trim: true },
+  ta: { type: String, trim: true }
+};
+
 const danceSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  style: String,
-  origin: String,
-  period: String,
-  achievements: String,
-  description: String,
-  content: String,
+  name: { type: bilingual, required: true },
+  style: bilingual,
+  origin: bilingual,
+  period: bilingual,
+  achievements: bilingual,
+  description: bilingual,
+  content: bilingual,
   image: String,
   media: [String],
   contentSections: [
     {
-      subtitle: String,
-      content: String,
+      subtitle: bilingual,
+      content: bilingual,
       imageUrl: String,
       imageLink: String,
       videoUrl: String,
