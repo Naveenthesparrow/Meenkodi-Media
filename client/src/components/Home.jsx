@@ -25,6 +25,11 @@ import {
   Stack,
   Zoom,
 } from "@mui/material";
+import KurnjiImage from "../assests/Kurnji.avif";
+import MullaiImage from "../assests/mullai.avif";
+import MaruthamImage from "../assests/marutham.avif";
+import NeithalImage from "../assests/neithal.avif";
+import PalaiImage from "../assests/palai.avif";
 import {
   AutoAwesome,
   ArrowForward,
@@ -1711,7 +1716,7 @@ export default function Home() {
                     {/* Full Background Image */}
                     <Box
                       component="img"
-                      src="/src/assests/Kurnji.avif"
+                      src={KurnjiImage}
                       alt="Kurinji Landscape"
                       sx={{
                         position: 'absolute',
@@ -1874,7 +1879,7 @@ export default function Home() {
                     {/* Full Background Image */}
                     <Box
                       component="img"
-                      src="/src/assests/mullai.avif"
+                      src={MullaiImage}
                       alt="Mullai Landscape"
                       sx={{
                         position: 'absolute',
@@ -2037,7 +2042,7 @@ export default function Home() {
                     {/* Full Background Image */}
                     <Box
                       component="img"
-                      src="/src/assests/marutham.avif"
+                      src={MaruthamImage}
                       alt="Marutham Landscape"
                       sx={{
                         position: 'absolute',
@@ -2200,7 +2205,7 @@ export default function Home() {
                     {/* Full Background Image */}
                     <Box
                       component="img"
-                      src="/src/assests/neithal.avif"
+                      src={NeithalImage}
                       alt="Neithal Landscape"
                       sx={{
                         position: 'absolute',
@@ -2363,7 +2368,7 @@ export default function Home() {
                     {/* Full Background Image */}
                     <Box
                       component="img"
-                      src="/src/assests/palai.avif"
+                      src={PalaiImage}
                       alt="Palai Landscape"
                       sx={{
                         position: 'absolute',
