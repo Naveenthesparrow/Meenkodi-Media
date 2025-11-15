@@ -3,8 +3,6 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import './styles/globals.css';
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
-import "@fontsource/poppins";
-import "@fontsource/noto-serif-tamil";
 import i18n from "./i18n/i18n";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 

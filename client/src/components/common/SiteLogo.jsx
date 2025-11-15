@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import logoImage from '../../assests/meenkodi.png';
 
-export default function SiteLogo({ height = 48, width = 'auto' }) {
+export default function SiteLogo({ height = { xs: 36, md: 44 }, width = 'auto' }) {
   return (
     <Box
       component={RouterLink}
@@ -16,14 +16,16 @@ export default function SiteLogo({ height = 48, width = 'auto' }) {
         zIndex: 1,
       }}
     >
-      <img
+      <Box
+        component="img"
         src={logoImage}
         alt="Meenkodi Logo"
-        style={{
-          height: `${height}px`,
-          width: width,
+        sx={{
+          height,
+          width,
           objectFit: 'contain',
           display: 'block',
+          filter: 'drop-shadow(0 1.5px 3px rgba(0,0,0,0.22))'
         }}
       />
     </Box>

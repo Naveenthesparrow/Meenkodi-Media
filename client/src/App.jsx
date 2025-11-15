@@ -33,32 +33,30 @@ const Clothing = React.lazy(() => import("./components/categories/Clothing"));
 const Festivals = React.lazy(() => import("./components/categories/Festivals"));
 const Foods = React.lazy(() => import("./components/categories/Foods"));
 const AncientScience = React.lazy(() => import("./components/categories/AncientScience"));
+const ResourceDetail = React.lazy(() => import("./components/ResourceDetail"));
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
-import { 
-  AppBar, 
-  Toolbar, 
-  Button, 
-  Box, 
-  Link, 
-  Typography, 
-  IconButton, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemText 
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  Box,
+  Link,
+  Typography,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Container
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import LanguageSwitcher from './components/common/LanguageSwitcher';
 const GalleryDetail = React.lazy(() => import("./components/GalleryDetail"));
 const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
-const ResourceDetail = React.lazy(() => import("./components/ResourceDetail"));
 const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
 const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
-import Particles from "./components/Particles";
-import DockText from "./components/common/DockText";
-import LanguageDockToggle from "./components/common/LanguageDockToggle";
 import SiteLogo from "./components/common/SiteLogo";
 
 // Debug function for tracking 404 errors
@@ -189,122 +187,177 @@ function App() {
   return (
     <Router>
       <AppBar
-        position="static"
+        position="sticky"
         elevation={0}
         sx={{ 
-          bgcolor: "#000",
-          color: "#fff",
-          boxShadow: 1,
-          position: 'relative'
+          bgcolor: '#ffffff',
+          color: '#1f140e',
+          boxShadow: '0 1px 6px rgba(15,10,8,0.08)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1100,
+          borderBottom: '2px solid rgba(186,29,22,0.08)'
         }}
       >
-        {/* Particles background inside navbar for seamless look */}
-        <Box sx={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-          <Particles
-            particleColors={["#ffffff", "#e6e6e6", "#d9d9d9"]}
-            particleCount={110}
-            particleSpread={8}
-            speed={0.06}
-            particleBaseSize={85}
-            moveParticlesOnHover={false}
-            alphaParticles={true}
-            disableRotation={true}
-            showWatermark={false}
-            style={{ opacity: 0.9 }}
-          />
-        </Box>
-        <Toolbar 
-          sx={{ 
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            px: { xs: 2, sm: 3 },
-            py: { xs: 1, sm: 2 }
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, zIndex: 1 }}>
-            <SiteLogo height={48} />
-            <Link
-              component={RouterLink}
-              to="/"
-              color="#fff"
-              underline="none"
-              sx={{
-                fontWeight: 900,
-                fontFamily: "Poppins, Arial, sans-serif",
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                fontSize: { xs: 18, sm: 24 },
+        <Container maxWidth="xl">
+          <Toolbar 
+            disableGutters
+            sx={{ 
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              minHeight: { xs: "50px", md: "62px" },
+              py: { xs: 0.7, md: 1 },
+              px: { xs: 1.25, md: 2.2 }
+            }}
+          >
+            {/* Logo Section */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SiteLogo height={{ xs: 34, md: 42 }} />
+              <Link
+                component={RouterLink}
+                to="/"
+                color="#1f140e"
+                underline="none"
+                sx={{
+                  fontWeight: 600,
+                  fontFamily: "'Poppins', sans-serif",
+                      fontSize: { xs: 15, md: 18 },
+                  transition: "color 0.2s ease",
+                  display: { xs: 'none', sm: 'block' },
+                  "&:hover": {
+                    color: "#ba1d16"
+                  }
+                }}
+              >
+                {t('app.title')}
+              </Link>
+            </Box>
+
+            {/* Desktop Navigation */}
+            <Box 
+              sx={{ 
+                display: { xs: 'none', md: 'flex' },
+                alignItems: 'center',
+                  gap: 2.6,
+                flex: '1 1 auto',
+                justifyContent: 'center',
+                ml: 2
               }}
             >
-              {t('app.title')}
-            </Link>
-          </Box>
-
-          {/* Desktop Navigation */}
-          <Box 
-            sx={{ 
-              display: { xs: 'none', sm: 'flex' },
-              alignItems: 'center',
-              gap: 3,
-              zIndex: 1
-            }}
-          >
-            {navItems.map((ni) => (
-              <DockText
-                key={ni.key}
-                text={t(ni.key)}
-                to={ni.path}
-                baseSize={16}
-                magnification={70}
-                letterGap={2}
-                color="#fff"
-              />
-            ))}
-            {user && (
-              <DockText
-                text={t('nav.profile')}
-                to="/profile"
-                baseSize={16}
-                letterGap={2}
-                color="#fff"
-              />
-            )}
-            {user ? (
-              <DockText
-                text={t('nav.logout')}
-                onClick={logout}
-                baseSize={16}
-                letterGap={2}
-                color="#fff"
-              />
-            ) : (
-              <DockText
-                text={t('nav.login')}
-                onClick={login}
-                baseSize={16}
-                letterGap={2}
-                color="#fff"
-              />
-            )}
-            <Box sx={{ ml: 2, display: { xs: 'none', sm: 'block' } }}>
-              <LanguageDockToggle />
+              <Link
+                component={RouterLink}
+                to="/"
+                underline="none"
+                sx={{
+                  color: '#1f140e',
+                    fontSize: 15,
+                  fontWeight: 600,
+                  transition: 'color 0.2s ease',
+                  '&:hover': {
+                    color: '#ba1d16'
+                  }
+                }}
+              >
+                {t('nav.home')}
+              </Link>
+              {navItems.map((ni) => (
+                <Link
+                  key={ni.key}
+                  component={RouterLink}
+                  to={ni.path}
+                  underline="none"
+                  sx={{
+                    color: '#1f140e',
+                      fontSize: 15,
+                    fontWeight: 600,
+                    transition: 'color 0.2s ease',
+                    '&:hover': {
+                      color: '#ba1d16'
+                    }
+                  }}
+                >
+                  {t(ni.key)}
+                </Link>
+              ))}
+              {user && (
+                <Link
+                  component={RouterLink}
+                  to="/profile"
+                  underline="none"
+                  sx={{
+                    color: '#1f140e',
+                      fontSize: 15,
+                    fontWeight: 600,
+                    transition: 'color 0.2s ease',
+                    '&:hover': {
+                      color: '#ba1d16'
+                    }
+                  }}
+                >
+                  {t('nav.profile')}
+                </Link>
+              )}
             </Box>
-          </Box>
 
-          {/* Mobile Navigation Hamburger */}
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ 
-              display: { sm: 'none' }, 
-              color: '#fff' 
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
+            {/* Right Section - Language, Login */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1.25 }}>
+              <LanguageSwitcher />
+              {user ? (
+                <Button
+                  onClick={logout}
+                  sx={{
+                    color: '#1f140e',
+                      fontSize: 14,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    px: 1.5,
+                    '&:hover': {
+                      color: '#ba1d16',
+                      bgcolor: 'transparent'
+                    }
+                  }}
+                >
+                  {t('nav.logout')}
+                </Button>
+              ) : (
+                <Button
+                  onClick={login}
+                  sx={{
+                    color: '#1f140e',
+                      fontSize: 14,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    px: 1.5,
+                    '&:hover': {
+                      color: '#ba1d16',
+                      bgcolor: 'transparent'
+                    }
+                  }}
+                >
+                  {t('nav.login')}
+                </Button>
+              )}
+            </Box>
+
+            {/* Mobile Navigation Hamburger */}
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ 
+                display: { md: 'none' }, 
+                color: '#1f140e',
+                ml: 'auto'
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Toolbar>
+        </Container>
 
           {/* Mobile Drawer */}
           <Drawer
@@ -313,15 +366,15 @@ function App() {
             open={mobileOpen}
             onClose={handleDrawerToggle}
             ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
+              keepMounted: true,
             }}
             sx={{
-              display: { xs: 'block', sm: 'none' },
+              display: { xs: 'block', md: 'none' },
               '& .MuiDrawer-paper': { 
                 boxSizing: 'border-box', 
-                width: 240,
-                bgcolor: '#000',
-                color: '#fff'
+                width: 280,
+                bgcolor: '#ffffff',
+                color: '#1f140e'
               },
             }}
           >
@@ -330,20 +383,42 @@ function App() {
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'center', 
-                p: 2 
+                p: 2,
+                borderBottom: '1px solid rgba(0,0,0,0.08)'
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <SiteLogo height={40} />
-                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
+                <SiteLogo height={32} />
+                <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 600, fontSize: 16 }}>
                   {t('app.title')}
                 </Typography>
               </Box>
               <IconButton onClick={handleDrawerToggle}>
-                <CloseIcon sx={{ color: '#fff' }} />
+                <CloseIcon sx={{ color: '#1f140e' }} />
               </IconButton>
             </Box>
-            <List>
+            <List sx={{ pt: 2 }}>
+              <ListItem 
+                component={RouterLink}
+                to="/"
+                onClick={handleDrawerToggle}
+                sx={{ 
+                  color: '#000',
+                  py: 1.5,
+                  '&:hover': { 
+                    bgcolor: 'rgba(139,0,0,0.05)'
+                  }
+                }}
+              >
+                <ListItemText 
+                  primary={t('nav.home')} 
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                    fontSize: 15,
+                    color: '#000'
+                  }}
+                />
+              </ListItem>
               {navItems.map((item) => (
                 <ListItem 
                   key={item.key}
@@ -351,18 +426,19 @@ function App() {
                   to={item.path}
                   onClick={handleDrawerToggle}
                   sx={{ 
-                    color: '#fff',
+                    color: '#000',
+                    py: 1.5,
                     '&:hover': { 
-                      bgcolor: 'rgba(255,255,255,0.08)'
+                      bgcolor: 'rgba(139,0,0,0.05)'
                     }
                   }}
                 >
                   <ListItemText 
                     primary={t(item.key)} 
                     primaryTypographyProps={{
-                      fontFamily: "Poppins, Arial, sans-serif",
-                      fontWeight: 600,
-                      color: '#fff'
+                      fontWeight: 500,
+                      fontSize: 15,
+                      color: '#000'
                     }}
                   />
                 </ListItem>
@@ -373,18 +449,19 @@ function App() {
                   to="/profile"
                   onClick={handleDrawerToggle}
                   sx={{ 
-                    color: '#fff',
+                    color: '#000',
+                    py: 1.5,
                     '&:hover': { 
-                      bgcolor: 'rgba(255,255,255,0.08)'
+                      bgcolor: 'rgba(139,0,0,0.05)'
                     }
                   }}
                 >
                   <ListItemText 
                     primary={t('nav.profile')} 
                     primaryTypographyProps={{
-                      fontFamily: "Poppins, Arial, sans-serif",
-                      fontWeight: 600,
-                      color: '#fff'
+                      fontWeight: 500,
+                      fontSize: 15,
+                      color: '#000'
                     }}
                   />
                 </ListItem>
@@ -396,18 +473,19 @@ function App() {
                     handleDrawerToggle();
                   }}
                   sx={{ 
-                    color: '#fff',
+                    color: '#000',
+                    py: 1.5,
                     '&:hover': { 
-                      bgcolor: 'rgba(255,255,255,0.08)'
+                      bgcolor: 'rgba(139,0,0,0.05)'
                     }
                   }}
                 >
                   <ListItemText 
                     primary={t('nav.logout')} 
                     primaryTypographyProps={{
-                      fontFamily: "Poppins, Arial, sans-serif",
-                      fontWeight: 600,
-                      color: '#fff'
+                      fontWeight: 500,
+                      fontSize: 15,
+                      color: '#000'
                     }}
                   />
                 </ListItem>
@@ -418,28 +496,28 @@ function App() {
                     handleDrawerToggle();
                   }}
                   sx={{ 
-                    color: '#fff',
+                    color: '#000',
+                    py: 1.5,
                     '&:hover': { 
-                      bgcolor: 'rgba(255,255,255,0.08)'
+                      bgcolor: 'rgba(139,0,0,0.05)'
                     }
                   }}
                 >
                   <ListItemText 
                     primary={t('nav.login')} 
                     primaryTypographyProps={{
-                      fontFamily: "Poppins, Arial, sans-serif",
-                      fontWeight: 600,
-                      color: '#fff'
+                      fontWeight: 500,
+                      fontSize: 15,
+                      color: '#000'
                     }}
                   />
                 </ListItem>
               )}
-              <Box sx={{ px: 2, py: 1 }}>
-                <LanguageSwitcher size="small" />
+              <Box sx={{ px: 2, pt: 3, pb: 2, mt: 2, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                <LanguageSwitcher />
               </Box>
             </List>
           </Drawer>
-        </Toolbar>
       </AppBar>
       <Box sx={{ mt: 0 }}>
   <React.Suspense fallback={<Box sx={{ p:4, textAlign:'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
