@@ -200,6 +200,7 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
                       component="img"
                       image={slide.image}
                       alt={title}
+                      loading="lazy"
                       sx={{
                         position: "absolute",
                         top: 0,

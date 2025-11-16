@@ -25,6 +25,8 @@ import {
   Stack,
   Zoom,
 } from "@mui/material";
+import OptimizedImage from "./common/OptimizedImage";
+import DeferredSection from "./common/DeferredSection";
 import KurnjiImage from "../assests/Kurnji.avif";
 import MullaiImage from "../assests/mullai.avif";
 import MaruthamImage from "../assests/marutham.avif";
@@ -979,6 +981,7 @@ export default function Home() {
                   component="img"
                   src={meenkodiSrc}
                   alt="Meenkodi - Twin Fish Emblem of Pandiya Dynasty"
+                  loading="lazy"
                   sx={{
                     width: '100%',
                     height: '100%',
@@ -1048,6 +1051,7 @@ export default function Home() {
                       component="img"
                       src="https://m.media-amazon.com/images/I/51ox-wC5UNL.jpg"
                       alt={i18n.language === 'ta' ? 'திருக்குறள் சிறப்பு பதிப்பு' : 'Thirukkural special edition cover'}
+                      loading="lazy"
                       sx={{
                         width: '100%',
                         height: 'auto',
@@ -1179,6 +1183,7 @@ export default function Home() {
                       component="img"
                       src="https://www.tnpscthervupettagam.com/assets/home/media/general/original_image/c02.png"
                       alt="Tamil heritage researcher documenting palm leaf manuscripts"
+                      loading="lazy"
                       sx={{
                         gridColumn: '1 / 2',
                         gridRow: '1 / span 2',
@@ -1199,6 +1204,7 @@ export default function Home() {
                       component="img"
                       src="https://ancienttamilcivilization.wordpress.com/wp-content/uploads/2015/03/final-attirampakkam.jpg"
                       alt="Conservator restoring iron-age relic"
+                      loading="lazy"
                       sx={{
                         gridColumn: '2 / 3',
                         gridRow: '1 / 2',
@@ -1219,6 +1225,7 @@ export default function Home() {
                       component="img"
                       src="https://ichef.bbci.co.uk/news/480/cpsprodpb/f819/live/f053c790-e843-11ef-9e8a-870423bc5283.jpg.webp"
                       alt="Inscribed copper plate from Sangam era"
+                      loading="lazy"
                       sx={{
                         gridColumn: '2 / 3',
                         gridRow: '2 / 3',
@@ -1366,11 +1373,13 @@ export default function Home() {
             </Typography>
           </Box>
 
+          <DeferredSection fallback="none" rootMargin="200px">
           <CourseSyllabusSlider
             slides={EXPLORE_CATEGORIES}
             ctaLabel={i18n.language === 'ta' ? 'அனைத்தையும் ஆராயுங்கள்' : 'Explore All Categories'}
             ctaRoute="/explore"
           />
+          </DeferredSection>
         </Container>
       </Box>
 
@@ -1395,6 +1404,7 @@ export default function Home() {
                   component="img"
                   src="https://upload.wikimedia.org/wikipedia/ta/9/95/Mee_ye_paa.jpg"
                   alt="Museums Archaeology and Culture book cover"
+                  loading="lazy"
                   sx={{
                     width: { xs: '70%', sm: '60%', md: '40%' },
                     maxWidth: 380,
@@ -1511,6 +1521,7 @@ export default function Home() {
                   component="img"
                   src="https://www.harappa.com/sites/default/files/images/the-indus-robinson.jpg"
                   alt="The Indus civilization book cover"
+                  loading="lazy"
                   sx={{
                     width: { xs: '72%', sm: '60%', md: '38%' },
                     maxWidth: 370,
@@ -1616,6 +1627,7 @@ export default function Home() {
 
 
       {/* Five Lands Atlas */}
+      <DeferredSection fallback="skeleton" rootMargin="300px">
       <Box
         sx={{
           bgcolor: '#fff',
@@ -1714,8 +1726,7 @@ export default function Home() {
                     }}
                   >
                     {/* Full Background Image */}
-                    <Box
-                      component="img"
+                    <OptimizedImage
                       src={KurnjiImage}
                       alt="Kurinji Landscape"
                       sx={{
@@ -1726,6 +1737,7 @@ export default function Home() {
                         objectFit: 'cover',
                         zIndex: 0
                       }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
                     />
                     
                     {/* Gradient Overlays for readability */}
@@ -1877,8 +1889,7 @@ export default function Home() {
                     }}
                   >
                     {/* Full Background Image */}
-                    <Box
-                      component="img"
+                    <OptimizedImage
                       src={MullaiImage}
                       alt="Mullai Landscape"
                       sx={{
@@ -1889,6 +1900,7 @@ export default function Home() {
                         objectFit: 'cover',
                         zIndex: 0
                       }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
                     />
                     
                     {/* Gradient Overlays for readability */}
@@ -2040,8 +2052,7 @@ export default function Home() {
                     }}
                   >
                     {/* Full Background Image */}
-                    <Box
-                      component="img"
+                    <OptimizedImage
                       src={MaruthamImage}
                       alt="Marutham Landscape"
                       sx={{
@@ -2052,6 +2063,7 @@ export default function Home() {
                         objectFit: 'cover',
                         zIndex: 0
                       }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
                     />
                     
                     {/* Gradient Overlays for readability */}
@@ -2203,8 +2215,7 @@ export default function Home() {
                     }}
                   >
                     {/* Full Background Image */}
-                    <Box
-                      component="img"
+                    <OptimizedImage
                       src={NeithalImage}
                       alt="Neithal Landscape"
                       sx={{
@@ -2215,6 +2226,7 @@ export default function Home() {
                         objectFit: 'cover',
                         zIndex: 0
                       }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
                     />
                     
                     {/* Gradient Overlays for readability */}
@@ -2366,8 +2378,7 @@ export default function Home() {
                     }}
                   >
                     {/* Full Background Image */}
-                    <Box
-                      component="img"
+                    <OptimizedImage
                       src={PalaiImage}
                       alt="Palai Landscape"
                       sx={{
@@ -2378,6 +2389,7 @@ export default function Home() {
                         objectFit: 'cover',
                         zIndex: 0
                       }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
                     />
                     
                     {/* Gradient Overlays for readability */}
@@ -2504,8 +2516,10 @@ export default function Home() {
           </Box>
         </Container>
       </Box>
+      </DeferredSection>
 
       {/* MUSEUM ARCHIVES TEAM */}
+      <DeferredSection fallback="skeleton" rootMargin="300px">
       <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: "#0A0908" }}>
         <Container maxWidth="xl" sx={{ px: { xs: 3, sm: 4, md: 6, lg: 8 } }}>
           <Typography 
@@ -2599,6 +2613,7 @@ export default function Home() {
                       component="img"
                       src={member.flag}
                       alt={member.name[i18n.language] || member.name.en}
+                      loading="lazy"
                       sx={{
                         width: "85%",
                         height: "85%",
@@ -2757,8 +2772,10 @@ export default function Home() {
           </Grid>
         </Container>
       </Box>
+      </DeferredSection>
 
       {/* MAGNIFICENT TEMPLES & PALACES */}
+      <DeferredSection fallback="skeleton" rootMargin="300px">
       <Box 
         sx={{ 
           py: { xs: 10, md: 14 }, 
@@ -2876,8 +2893,9 @@ export default function Home() {
                         "&::before": {
                           opacity: 1
                         },
-                        "& .temple-image": {
-                          transform: "scale(1.1)"
+                        "& .temple-image img": {
+                          transform: "scale(1.1)",
+                          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
                         },
                         "& .temple-overlay": {
                           opacity: 0.4
@@ -2890,17 +2908,18 @@ export default function Home() {
                     }}
                   >
                     {/* Image Section */}
-                    <Box sx={{ position: "relative", height: 280, overflow: "hidden" }}>
-                      <Box
-                        component="img"
-                        className="temple-image"
+                    <Box sx={{ position: "relative", height: 280, overflow: "hidden" }} className="temple-image">
+                      <OptimizedImage
                         src={temple.image}
                         alt={getLocale(temple.name)}
                         sx={{
                           width: "100%",
                           height: "100%",
-                          objectFit: "cover",
-                          transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)"
+                          objectFit: "cover"
+                        }}
+                        skeletonSx={{ 
+                          bgcolor: 'rgba(218,165,32,0.1)',
+                          position: 'absolute'
                         }}
                       />
                       <Box
@@ -3229,6 +3248,7 @@ export default function Home() {
           </Grid>
         </Container>
       </Box>
+      </DeferredSection>
 
       {/* Footer removed as requested */}
     </Box>
