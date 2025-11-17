@@ -6,6 +6,24 @@ import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import i18n from "./i18n/i18n";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 
+// Import Tamil fonts with Tamil subset
+import "@fontsource/noto-sans-tamil/tamil-400.css";
+import "@fontsource/noto-sans-tamil/tamil-500.css";
+import "@fontsource/noto-sans-tamil/tamil-600.css";
+import "@fontsource/noto-sans-tamil/tamil-700.css";
+import "@fontsource/noto-serif-tamil/tamil-400.css";
+import "@fontsource/noto-serif-tamil/tamil-500.css";
+import "@fontsource/noto-serif-tamil/tamil-600.css";
+import "@fontsource/noto-serif-tamil/tamil-700.css";
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
+import "@fontsource/poppins/latin-400.css";
+import "@fontsource/poppins/latin-500.css";
+import "@fontsource/poppins/latin-600.css";
+import "@fontsource/poppins/latin-700.css";
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -62,6 +80,16 @@ const theme = createTheme({
         ':lang(ta)': {
           fontFamily:
             "'Hind Madurai', 'Tiro Tamil', 'Noto Serif Tamil', 'Noto Sans Tamil', system-ui, sans-serif !important",
+        },
+        // Additional rule for Tamil text
+        '[lang="ta"]': {
+          fontFamily:
+            "'Hind Madurai', 'Tiro Tamil', 'Noto Serif Tamil', 'Noto Sans Tamil', system-ui, sans-serif !important",
+        },
+        // Force Tamil fonts globally for better fallback
+        '.tamil-text, [data-language="ta"]': {
+          fontFamily:
+            "'Noto Sans Tamil', 'Noto Serif Tamil', 'Hind Madurai', 'Tiro Tamil', system-ui, sans-serif !important",
         },
         '::selection': {
           backgroundColor: '#ffe08a',

@@ -202,8 +202,8 @@ export default function Articles({ user }) {
         <Typography
           variant="h2" 
             sx={{
-            fontWeight: 900, 
-            color: "#000", 
+            fontWeight: 500, 
+            color: "#8B0000", 
             position: 'relative',
             display: 'inline-block',
             letterSpacing: -1,
@@ -216,7 +216,7 @@ export default function Articles({ user }) {
               left: '-50px',
               width: '40px',
               height: '3px',
-              backgroundColor: '#000',
+              backgroundColor: '#8B0000',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
             },
@@ -227,7 +227,7 @@ export default function Articles({ user }) {
               right: '-50px',
               width: '40px',
               height: '3px',
-              backgroundColor: '#000',
+              backgroundColor: '#8B0000',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
             },

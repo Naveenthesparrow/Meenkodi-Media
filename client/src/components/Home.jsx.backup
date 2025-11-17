@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,6 +24,8 @@ import {
   TextField,
   Stack,
   Zoom,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import OptimizedImage from "./common/OptimizedImage";
 import DeferredSection from "./common/DeferredSection";
@@ -59,8 +61,6 @@ import {
   ScheduleOutlined,
   FormatQuoteRounded,
   YouTube,
-  Email,
-  Phone,
 } from "@mui/icons-material";
 import CourseSyllabusSlider from "./CourseSyllabusSlider";
 import { useBilingualContent, createBilingualContent } from "../utils/bilingualContent";
@@ -319,8 +319,8 @@ const HERO_CONTENT = {
     "அட்டிராம்பாக்கம் கற்கால கருவிகளிலிருந்து சங்க துறைமுகங்களும் உயிர்ப் பாரம்பரியக் கலைகளும் விரியும் 5000+ ஆண்டுக் தொடர்ச்சியை உணருங்கள்."
   ),
   detail: createBilingualContent(
-    "Discover the Pandyas — the earliest kingdom of the southern land, and the roots of one of the world’s earliest civilizations. Learn who the Pandyans were, their capital Madurai, the Malla rulers, and the legends of Kumari Kandam. Explore the history, culture, and enduring legacy of Tamilakam’s people, beginning with the ancient Pandyas.",
-    "தென் நிலத்தின் முதன்மையான இராச்சியமான பாண்டியர்களை அறியுங்கள் — உலகின் தொன்மையான நாகரிகங்களுள் ஒன்றின் வேர்களாகும். பாண்டியர்கள் யார், அவர்களின் தலைநகரம் மதுரை, மள்ளர் ஆட்சி, குமரி கண்டம் பற்றிய புராணங்கள் மற்றும் தமிழ் நாடு (தமிழகம்) மக்கள் வரலாறு, பண்பாடு மற்றும் பாரம்பரியத்தை ஆராயுங்கள்."
+    "Celebrate the Pandya fish, Chola tiger, and Pallava bull emblems that still guard temples, astronomy, dance, and poetry across Tamilakam.",
+    "பாண்டிய மீன்கொடி, சோழப் புலி, பல்லவ நந்தி ஆகிய சின்னங்கள் கோவில்கள், விண்கலை, நடனங்கள், இலக்கியம் வரை தமிழகத்தை எவ்வாறு காக்கின்றன என்பதை கொண்டாடுங்கள்."
   ),
   cta: createBilingualContent(
     "Explore Tamil Heritage",
@@ -720,12 +720,6 @@ export default function Home() {
     }
   ];
   // recognitionHighlights removed along with the recognition section
-  const contactSocials = [
-    { Icon: Instagram, label: "Instagram", href: "https://www.instagram.com/the_meenkodi/" },
-    { Icon: Facebook, label: "Facebook", href: "https://www.facebook.com/meeenkodi" },
-    { Icon: YouTube, label: "YouTube", href: "https://www.youtube.com/@the_Meenkodi" },
-    { Icon: Email, label: "Email", href: "mailto:themeenkodi@gmail.com" },
-  ];
   const tinaiDisplayOrder = ['kurinji', 'mullai', 'marutham', 'neithal', 'palai'];
   const tinaiAreaMap = {
     kurinji: 'kurinji',
@@ -893,7 +887,7 @@ export default function Home() {
                       fontWeight: 800,
                       fontSize: { xs: '2rem', sm: '2.4rem', md: '2.8rem' },
                       lineHeight: 1.2,
-                      color: '#2c1810',
+                      color: '#1a0f0a',
                       letterSpacing: '-0.02em',
                       mb: 1
                     }}
@@ -905,7 +899,7 @@ export default function Home() {
                 <Typography
                   variant="body1"
                   sx={{
-                    color: '#5d4e37',
+                    color: '#4a3f35',
                     lineHeight: 1.8,
                     fontSize: { xs: '1rem', md: '1.08rem' },
                     textAlign: 'justify'
@@ -917,7 +911,7 @@ export default function Home() {
                 <Typography
                   variant="body2"
                   sx={{
-                    color: '#7a6b5a',
+                    color: '#6b5f52',
                     lineHeight: 1.75,
                     fontSize: { xs: '0.92rem', md: '0.98rem' },
                     textAlign: 'justify'
@@ -941,15 +935,13 @@ export default function Home() {
                     borderColor: '#8B0000',
                     color: '#8B0000',
                     borderWidth: 2,
-                    background: 'linear-gradient(135deg, rgba(139,0,0,0.05) 0%, rgba(218,165,32,0.05) 100%)',
                     transition: 'all 0.3s ease',
                     '&:hover': {
-                      borderColor: '#daa520',
-                      bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                      color: '#fff',
+                      borderColor: '#6b0000',
+                      bgcolor: 'rgba(139,0,0,0.06)',
                       borderWidth: 2,
                       transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                      boxShadow: '0 4px 12px rgba(139,0,0,0.15)'
                     }
                   }}
                 >
@@ -1069,7 +1061,27 @@ export default function Home() {
                       }}
                     />
                   </Box>
-                  {/* Removed Translation subtitle as requested */}
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      textTransform: 'uppercase',
+                      letterSpacing: 2.6,
+                      fontWeight: 700,
+                      color: '#b1560f'
+                    }}
+                  >
+                    {i18n.language === 'ta' ? 'ஆங்கில மொழிபெயர்ப்பு' : 'Translation'}
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      lineHeight: 1.8,
+                      color: 'rgba(45,20,8,0.85)',
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    {FEATURED_KURAL.translation}
+                  </Typography>
                 </Paper>
 
                 <Stack
@@ -1082,50 +1094,47 @@ export default function Home() {
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                    <FormatQuoteRounded sx={{ fontSize: 42, color: '#8b4513' }} />
+                    <FormatQuoteRounded sx={{ fontSize: 42, color: '#b1560f' }} />
                     <Typography
                       variant="overline"
                       sx={{
                         letterSpacing: 5,
                         fontWeight: 600,
                         textTransform: 'uppercase',
-                        color: '#8b4513'
+                        color: '#b1560f'
                       }}
                     >
                       {FEATURED_KURAL.title[i18n.language] || FEATURED_KURAL.title.en}
                     </Typography>
                   </Box>
 
-                  {/* Show only Tamil in Tamil mode, only English in English mode */}
-                  {/* Always show Tamil kural, and show meaning in Tamil or English based on language */}
-                  <>
-                    <Box>
-                      {FEATURED_KURAL.coupletTamil.map((line, index) => (
-                        <Typography
-                          key={`featured-kural-line-${index}`}
-                          variant="h5"
-                          sx={{
-                            fontFamily: "'Noto Serif Tamil', serif",
-                            fontWeight: 700,
-                            letterSpacing: '-0.5px',
-                            color: '#2c1810'
-                          }}
-                        >
-                          {line}
-                        </Typography>
-                      ))}
-                    </Box>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: '#5d4e37',
-                        lineHeight: 1.8,
-                        fontSize: { xs: '1rem', md: '1.05rem' }
-                      }}
-                    >
-                      {i18n.language === 'ta' ? FEATURED_KURAL.meaning.ta : FEATURED_KURAL.meaning.en}
-                    </Typography>
-                  </>
+                  <Box>
+                    {FEATURED_KURAL.coupletTamil.map((line, index) => (
+                      <Typography
+                        key={`featured-kural-line-${index}`}
+                        variant="h5"
+                        sx={{
+                          fontFamily: "'Noto Serif Tamil', serif",
+                          fontWeight: 700,
+                          letterSpacing: '-0.5px',
+                          color: '#2a1608'
+                        }}
+                      >
+                        {line}
+                      </Typography>
+                    ))}
+                  </Box>
+
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: 'rgba(45,20,8,0.82)',
+                      lineHeight: 1.8,
+                      fontSize: { xs: '1rem', md: '1.05rem' }
+                    }}
+                  >
+                    {i18n.language === 'ta' ? FEATURED_KURAL.meaning.ta : FEATURED_KURAL.meaning.en}
+                  </Typography>
                 </Stack>
               </Paper>
             </Container>
@@ -1270,7 +1279,7 @@ export default function Home() {
                         sx={{
                           fontWeight: 700,
                           fontSize: { xs: '2.3rem', md: '2.7rem' },
-                          color: '#2c1810',
+                          color: '#1f130c',
                           letterSpacing: '-0.01em'
                         }}
                       >
@@ -1281,7 +1290,7 @@ export default function Home() {
                     <Typography
                       variant="body1"
                       sx={{
-                        color: '#5d4e37',
+                        color: 'rgba(31,19,12,0.8)',
                         lineHeight: 1.68,
                         maxWidth: 510
                       }}
@@ -1292,7 +1301,7 @@ export default function Home() {
                     <Typography
                       variant="body2"
                       sx={{
-                        color: '#7a6b5a',
+                        color: 'rgba(31,19,12,0.7)',
                         lineHeight: 1.65,
                         maxWidth: 480
                       }}
@@ -1312,17 +1321,13 @@ export default function Home() {
                         letterSpacing: 0.6,
                         textTransform: 'none',
                         borderWidth: 2,
-                        borderColor: '#8B0000',
-                        color: '#8B0000',
-                        background: 'linear-gradient(135deg, rgba(139,0,0,0.05) 0%, rgba(218,165,32,0.05) 100%)',
+                        borderColor: '#8b0000',
+                        color: '#8b0000',
                         '&:hover': {
-                          borderColor: '#daa520',
-                          color: '#fff',
-                          bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                        },
-                        transition: 'all 0.3s ease'
+                          borderColor: '#b61c1c',
+                          color: '#b61c1c',
+                          bgcolor: 'rgba(182,28,28,0.04)'
+                        }
                       }}
                     >
                       {t('home.ironAge.button')}
@@ -1467,7 +1472,7 @@ export default function Home() {
                 <Typography
                   variant="body1"
                   sx={{
-                    color: '#5d4e37',
+                    color: 'rgba(46,27,22,0.86)',
                     lineHeight: 1.85,
                     fontSize: { xs: '1.06rem', md: '1.12rem' }
                   }}
@@ -1478,7 +1483,7 @@ export default function Home() {
                       component="span"
                       sx={{
                         fontWeight: segment.highlight ? 700 : 400,
-                        color: segment.highlight ? '#8b4513' : 'inherit'
+                        color: segment.highlight ? '#6f2f2f' : 'inherit'
                       }}
                     >
                       {getContent(segment.text)}
@@ -1497,17 +1502,13 @@ export default function Home() {
                     letterSpacing: 0.7,
                     textTransform: 'none',
                     borderWidth: 2,
-                    borderColor: '#8B0000',
-                    color: '#8B0000',
-                    background: 'linear-gradient(135deg, rgba(139,0,0,0.05) 0%, rgba(218,165,32,0.05) 100%)',
+                    borderColor: '#8b0000',
+                    color: '#8b0000',
                     '&:hover': {
-                      borderColor: '#daa520',
-                      color: '#fff',
-                      bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                    },
-                    transition: 'all 0.3s ease'
+                      borderColor: '#b61c1c',
+                      color: '#b61c1c',
+                      bgcolor: 'rgba(182,28,28,0.06)'
+                    }
                   }}
                 >
                   {getContent(LIBRARY_ARCHIVES_CTA)}
@@ -1560,8 +1561,7 @@ export default function Home() {
             </Typography>
           ))}
           <Grid container spacing={4} justifyContent="center">
-            <Grid container spacing={4} justifyContent="center" wrap="nowrap" sx={{ flexWrap: 'nowrap' }}>
-            <Grid item xs="auto" md="auto">
+            <Grid item xs={6} md={3}>
               <Box sx={{ textAlign: "center", py: 2 }}>
                 <Typography 
                   variant="h1" 
@@ -1580,7 +1580,7 @@ export default function Home() {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs="auto" md="auto">
+            <Grid item xs={6} md={3}>
               <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{ fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
                     color: "#DAA520",
                     lineHeight: 1
@@ -1593,7 +1593,7 @@ export default function Home() {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs="auto" md="auto">
+            <Grid item xs={6} md={3}>
               <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{ fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
                     color: "#DAA520",
                     lineHeight: 1
@@ -1606,7 +1606,7 @@ export default function Home() {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs="auto" md="auto">
+            <Grid item xs={6} md={3}>
               <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{ fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
                     color: "#DAA520",
                     lineHeight: 1
@@ -1619,7 +1619,6 @@ export default function Home() {
                 </Typography>
               </Box>
             </Grid>
-          </Grid>
           </Grid>
         </Container>
       </Box>
@@ -1708,136 +1707,149 @@ export default function Home() {
                     elevation={0}
                     sx={{
                       alignSelf: { xs: 'stretch', md: 'flex-start' },
-                      width: { xs: '100%', md: '85%' },
+                      width: { xs: '100%', md: '65%' },
                       ml: { md: 0 },
                       position: 'relative',
                       borderRadius: 4,
                       overflow: 'hidden',
+                      height: { xs: 420, md: 460 },
                       border: `2px solid ${land.accent}40`,
                       boxShadow: `0 16px 48px ${land.accent}25`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
                       '&:hover': {
-                        transform: 'translateY(-8px)',
+                        transform: 'translateY(-12px) scale(1.02)',
                         boxShadow: `0 24px 64px ${land.accent}35`,
                         borderColor: `${land.accent}60`
                       }
                     }}
                   >
-                    {/* Image Section - Left Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={KurnjiImage}
-                        alt="Kurinji Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
+                    {/* Full Background Image */}
+                    <OptimizedImage
+                      src={KurnjiImage}
+                      alt="Kurinji Landscape"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0
+                      }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
+                    />
+                    
+                    {/* Gradient Overlays for readability */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%)`,
+                        zIndex: 1
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `radial-gradient(circle at 30% 40%, ${land.accent}25 0%, transparent 60%)`,
+                        zIndex: 1
+                      }}
+                    />
 
-                    {/* Content Section - Right Side */}
+                    {/* Content Overlay */}
                     <Box 
                       sx={{ 
-                        width: { xs: '100%', md: '60%' },
+                        position: 'relative',
+                        zIndex: 2,
                         p: { xs: 4, md: 5 }, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
+                        height: '100%',
+                        justifyContent: 'flex-end'
                       }}
                     >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
+                      {/* Badge at top (no background) */}
+                      <Box sx={{ position: 'absolute', top: 24, right: 24 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ 
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            letterSpacing: 2.5,
+                            fontSize: '0.85rem',
+                            fontFamily: '"Inter", "Roboto", sans-serif'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+                      </Box>
 
                       {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          sx={{ 
+                            fontWeight: 900, 
+                            color: '#FFFFFF', 
+                            letterSpacing: '-0.03em',
+                            textShadow: '0 3px 16px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+                      </Box>
 
                       {/* Poetic Quote */}
                       <Typography
                         variant="body1"
                         sx={{
                           fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
+                          color: 'rgba(255,255,255,0.98)',
+                          fontSize: { xs: '1rem', md: '1.1rem' },
                           lineHeight: 1.7,
-                          fontWeight: 500
+                          textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.6)',
+                          maxWidth: '95%',
+                          fontWeight: 400,
+                          fontFamily: '"Georgia", "Noto Serif Tamil", serif'
                         }}
                       >
                         {getContent(land.poetic)}
                       </Typography>
 
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
+                      {/* Tags removed */}
 
                       {/* CTA Button */}
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         endIcon={<ArrowForward fontSize="small" />}
                         onClick={() => navigate(land.route)}
                         sx={{
                           alignSelf: 'flex-start',
-                          mt: 1,
+                          mt: 1.5,
                           borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
+                          px: 4,
+                          py: 1.4,
+                          fontWeight: 900,
+                          fontSize: '0.95rem',
+                          letterSpacing: 1.2,
+                          textTransform: 'uppercase',
+                          background: 'transparent',
+                          color: '#FFFFFF',
+                          boxShadow: '0 10px 28px rgba(0,0,0,0.4)',
+                          fontFamily: '"Inter", "Roboto", sans-serif',
+                          border: '2px solid #FFFFFF',
                           '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#FFFFFF',
+                            transform: 'translateX(8px) scale(1.05)',
+                            boxShadow: '0 14px 36px rgba(255,255,255,0.3)',
+                            border: '2px solid #FFFFFF'
+                          }
                         }}
                       >
                         {getContent(land.cta)}
@@ -1858,140 +1870,153 @@ export default function Home() {
                     elevation={0}
                     sx={{
                       alignSelf: { xs: 'stretch', md: 'flex-end' },
-                      width: { xs: '100%', md: '85%' },
+                      width: { xs: '100%', md: '65%' },
                       mr: { md: 0 },
                       position: 'relative',
                       borderRadius: 4,
                       overflow: 'hidden',
+                      height: { xs: 420, md: 460 },
                       border: `2px solid ${land.accent}40`,
                       boxShadow: `0 16px 48px ${land.accent}25`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
                       '&:hover': {
-                        transform: 'translateY(-8px)',
+                        transform: 'translateY(-12px) scale(1.02)',
                         boxShadow: `0 24px 64px ${land.accent}35`,
                         borderColor: `${land.accent}60`
                       }
                     }}
                   >
-                    {/* Content Section - Left Side */}
+                    {/* Full Background Image */}
+                    <OptimizedImage
+                      src={MullaiImage}
+                      alt="Mullai Landscape"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0
+                      }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
+                    />
+                    
+                    {/* Gradient Overlays for readability */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%)`,
+                        zIndex: 1
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `radial-gradient(circle at 30% 40%, ${land.accent}25 0%, transparent 60%)`,
+                        zIndex: 1
+                      }}
+                    />
+
+                    {/* Content Overlay */}
                     <Box 
                       sx={{ 
-                        width: { xs: '100%', md: '60%' },
+                        position: 'relative',
+                        zIndex: 2,
                         p: { xs: 4, md: 5 }, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
+                        height: '100%',
+                        justifyContent: 'flex-end'
                       }}
                     >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
+                      {/* Badge at top (no background) */}
+                      <Box sx={{ position: 'absolute', top: 24, right: 24 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ 
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            letterSpacing: 2.5,
+                            fontSize: '0.85rem',
+                            fontFamily: '"Inter", "Roboto", sans-serif'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+                      </Box>
 
                       {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          sx={{ 
+                            fontWeight: 900, 
+                            color: '#FFFFFF', 
+                            letterSpacing: '-0.03em',
+                            textShadow: '0 3px 16px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+                      </Box>
 
                       {/* Poetic Quote */}
                       <Typography
                         variant="body1"
                         sx={{
                           fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
+                          color: 'rgba(255,255,255,0.98)',
+                          fontSize: { xs: '1rem', md: '1.1rem' },
                           lineHeight: 1.7,
-                          fontWeight: 500
+                          textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.6)',
+                          maxWidth: '95%',
+                          fontWeight: 400,
+                          fontFamily: '"Georgia", "Noto Serif Tamil", serif'
                         }}
                       >
                         {getContent(land.poetic)}
                       </Typography>
 
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
+                      {/* Tags removed */}
 
                       {/* CTA Button */}
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         endIcon={<ArrowForward fontSize="small" />}
                         onClick={() => navigate(land.route)}
                         sx={{
                           alignSelf: 'flex-start',
-                          mt: 1,
+                          mt: 1.5,
                           borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
+                          px: 4,
+                          py: 1.4,
+                          fontWeight: 900,
+                          fontSize: '0.95rem',
+                          letterSpacing: 1.2,
+                          textTransform: 'uppercase',
+                          background: 'transparent',
+                          color: '#FFFFFF',
+                          boxShadow: '0 10px 28px rgba(0,0,0,0.4)',
+                          fontFamily: '"Inter", "Roboto", sans-serif',
+                          border: '2px solid #FFFFFF',
                           '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#FFFFFF',
+                            transform: 'translateX(8px) scale(1.05)',
+                            boxShadow: '0 14px 36px rgba(255,255,255,0.3)',
+                            border: '2px solid #FFFFFF'
+                          }
                         }}
                       >
                         {getContent(land.cta)}
                       </Button>
-                    </Box>
-
-                    {/* Image Section - Right Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={MullaiImage}
-                        alt="Mullai Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
                     </Box>
                   </Paper>
                 );
@@ -2008,136 +2033,149 @@ export default function Home() {
                     elevation={0}
                     sx={{
                       alignSelf: { xs: 'stretch', md: 'flex-start' },
-                      width: { xs: '100%', md: '85%' },
+                      width: { xs: '100%', md: '65%' },
                       ml: { md: 0 },
                       position: 'relative',
                       borderRadius: 4,
                       overflow: 'hidden',
+                      height: { xs: 420, md: 460 },
                       border: `2px solid ${land.accent}40`,
                       boxShadow: `0 16px 48px ${land.accent}25`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
                       '&:hover': {
-                        transform: 'translateY(-8px)',
+                        transform: 'translateY(-12px) scale(1.02)',
                         boxShadow: `0 24px 64px ${land.accent}35`,
                         borderColor: `${land.accent}60`
                       }
                     }}
                   >
-                    {/* Image Section - Left Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={MaruthamImage}
-                        alt="Marutham Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
+                    {/* Full Background Image */}
+                    <OptimizedImage
+                      src={MaruthamImage}
+                      alt="Marutham Landscape"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0
+                      }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
+                    />
+                    
+                    {/* Gradient Overlays for readability */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%)`,
+                        zIndex: 1
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `radial-gradient(circle at 30% 40%, ${land.accent}25 0%, transparent 60%)`,
+                        zIndex: 1
+                      }}
+                    />
 
-                    {/* Content Section - Right Side */}
+                    {/* Content Overlay */}
                     <Box 
                       sx={{ 
-                        width: { xs: '100%', md: '60%' },
+                        position: 'relative',
+                        zIndex: 2,
                         p: { xs: 4, md: 5 }, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
+                        height: '100%',
+                        justifyContent: 'flex-end'
                       }}
                     >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
+                      {/* Badge at top (no background) */}
+                      <Box sx={{ position: 'absolute', top: 24, right: 24 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ 
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            letterSpacing: 2.5,
+                            fontSize: '0.85rem',
+                            fontFamily: '"Inter", "Roboto", sans-serif'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+                      </Box>
 
                       {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          sx={{ 
+                            fontWeight: 900, 
+                            color: '#FFFFFF', 
+                            letterSpacing: '-0.03em',
+                            textShadow: '0 3px 16px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+                      </Box>
 
                       {/* Poetic Quote */}
                       <Typography
                         variant="body1"
                         sx={{
                           fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
+                          color: 'rgba(255,255,255,0.98)',
+                          fontSize: { xs: '1rem', md: '1.1rem' },
                           lineHeight: 1.7,
-                          fontWeight: 500
+                          textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.6)',
+                          maxWidth: '95%',
+                          fontWeight: 400,
+                          fontFamily: '"Georgia", "Noto Serif Tamil", serif'
                         }}
                       >
                         {getContent(land.poetic)}
                       </Typography>
 
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
+                      {/* Tags removed */}
 
                       {/* CTA Button */}
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         endIcon={<ArrowForward fontSize="small" />}
                         onClick={() => navigate(land.route)}
                         sx={{
                           alignSelf: 'flex-start',
-                          mt: 1,
+                          mt: 1.5,
                           borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
+                          px: 4,
+                          py: 1.4,
+                          fontWeight: 900,
+                          fontSize: '0.95rem',
+                          letterSpacing: 1.2,
+                          textTransform: 'uppercase',
+                          background: 'transparent',
+                          color: '#FFFFFF',
+                          boxShadow: '0 10px 28px rgba(0,0,0,0.4)',
+                          fontFamily: '"Inter", "Roboto", sans-serif',
+                          border: '2px solid #FFFFFF',
                           '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#FFFFFF',
+                            transform: 'translateX(8px) scale(1.05)',
+                            boxShadow: '0 14px 36px rgba(255,255,255,0.3)',
+                            border: '2px solid #FFFFFF'
+                          }
                         }}
                       >
                         {getContent(land.cta)}
@@ -2158,140 +2196,153 @@ export default function Home() {
                     elevation={0}
                     sx={{
                       alignSelf: { xs: 'stretch', md: 'flex-end' },
-                      width: { xs: '100%', md: '85%' },
+                      width: { xs: '100%', md: '65%' },
                       mr: { md: 0 },
                       position: 'relative',
                       borderRadius: 4,
                       overflow: 'hidden',
+                      height: { xs: 420, md: 460 },
                       border: `2px solid ${land.accent}40`,
                       boxShadow: `0 16px 48px ${land.accent}25`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
                       '&:hover': {
-                        transform: 'translateY(-8px)',
+                        transform: 'translateY(-12px) scale(1.02)',
                         boxShadow: `0 24px 64px ${land.accent}35`,
                         borderColor: `${land.accent}60`
                       }
                     }}
                   >
-                    {/* Content Section - Left Side */}
+                    {/* Full Background Image */}
+                    <OptimizedImage
+                      src={NeithalImage}
+                      alt="Neithal Landscape"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0
+                      }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
+                    />
+                    
+                    {/* Gradient Overlays for readability */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)`,
+                        zIndex: 1
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `radial-gradient(circle at 30% 40%, ${land.accent}30 0%, transparent 70%)`,
+                        zIndex: 1
+                      }}
+                    />
+
+                    {/* Content Overlay */}
                     <Box 
                       sx={{ 
-                        width: { xs: '100%', md: '60%' },
+                        position: 'relative',
+                        zIndex: 2,
                         p: { xs: 4, md: 5 }, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
+                        height: '100%',
+                        justifyContent: 'flex-end'
                       }}
                     >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
+                      {/* Badge at top (no background) */}
+                      <Box sx={{ position: 'absolute', top: 24, right: 24 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ 
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            letterSpacing: 2.5,
+                            fontSize: '0.85rem',
+                            fontFamily: '"Inter", "Roboto", sans-serif'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+                      </Box>
 
                       {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          sx={{ 
+                            fontWeight: 900, 
+                            color: '#FFFFFF', 
+                            letterSpacing: '-0.03em',
+                            textShadow: '0 3px 16px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+                      </Box>
 
                       {/* Poetic Quote */}
                       <Typography
                         variant="body1"
                         sx={{
                           fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
+                          color: 'rgba(255,255,255,0.98)',
+                          fontSize: { xs: '1rem', md: '1.1rem' },
                           lineHeight: 1.7,
-                          fontWeight: 500
+                          textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.6)',
+                          maxWidth: '95%',
+                          fontWeight: 400,
+                          fontFamily: '"Georgia", "Noto Serif Tamil", serif'
                         }}
                       >
                         {getContent(land.poetic)}
                       </Typography>
 
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
+                      {/* Tags removed */}
 
                       {/* CTA Button */}
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         endIcon={<ArrowForward fontSize="small" />}
                         onClick={() => navigate(land.route)}
                         sx={{
                           alignSelf: 'flex-start',
-                          mt: 1,
+                          mt: 1.5,
                           borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
+                          px: 4,
+                          py: 1.4,
+                          fontWeight: 900,
+                          fontSize: '0.95rem',
+                          letterSpacing: 1.2,
+                          textTransform: 'uppercase',
+                          background: 'transparent',
+                          color: '#FFFFFF',
+                          boxShadow: '0 10px 28px rgba(0,0,0,0.4)',
+                          fontFamily: '"Inter", "Roboto", sans-serif',
+                          border: '2px solid #FFFFFF',
                           '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#FFFFFF',
+                            transform: 'translateX(8px) scale(1.05)',
+                            boxShadow: '0 14px 36px rgba(255,255,255,0.3)',
+                            border: '2px solid #FFFFFF'
+                          }
                         }}
                       >
                         {getContent(land.cta)}
                       </Button>
-                    </Box>
-
-                    {/* Image Section - Right Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={NeithalImage}
-                        alt="Neithal Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
                     </Box>
                   </Paper>
                 );
@@ -2308,136 +2359,149 @@ export default function Home() {
                     elevation={0}
                     sx={{
                       alignSelf: { xs: 'stretch', md: 'flex-start' },
-                      width: { xs: '100%', md: '85%' },
+                      width: { xs: '100%', md: '65%' },
                       ml: { md: 0 },
                       position: 'relative',
                       borderRadius: 4,
                       overflow: 'hidden',
+                      height: { xs: 420, md: 460 },
                       border: `2px solid ${land.accent}40`,
                       boxShadow: `0 16px 48px ${land.accent}25`,
                       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
                       '&:hover': {
-                        transform: 'translateY(-8px)',
+                        transform: 'translateY(-12px) scale(1.02)',
                         boxShadow: `0 24px 64px ${land.accent}35`,
                         borderColor: `${land.accent}60`
                       }
                     }}
                   >
-                    {/* Image Section - Left Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={PalaiImage}
-                        alt="Palai Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
+                    {/* Full Background Image */}
+                    <OptimizedImage
+                      src={PalaiImage}
+                      alt="Palai Landscape"
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        zIndex: 0
+                      }}
+                      skeletonSx={{ bgcolor: `${land.accent}15` }}
+                    />
+                    
+                    {/* Gradient Overlays for readability */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%)`,
+                        zIndex: 1
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: `radial-gradient(circle at 30% 40%, ${land.accent}25 0%, transparent 60%)`,
+                        zIndex: 1
+                      }}
+                    />
 
-                    {/* Content Section - Right Side */}
+                    {/* Content Overlay */}
                     <Box 
                       sx={{ 
-                        width: { xs: '100%', md: '60%' },
+                        position: 'relative',
+                        zIndex: 2,
                         p: { xs: 4, md: 5 }, 
                         display: 'flex', 
                         flexDirection: 'column', 
                         gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
+                        height: '100%',
+                        justifyContent: 'flex-end'
                       }}
                     >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
+                      {/* Badge at top (no background) */}
+                      <Box sx={{ position: 'absolute', top: 24, right: 24 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ 
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            letterSpacing: 2.5,
+                            fontSize: '0.85rem',
+                            fontFamily: '"Inter", "Roboto", sans-serif'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+                      </Box>
 
                       {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="h4"
+                          sx={{ 
+                            fontWeight: 900, 
+                            color: '#FFFFFF', 
+                            letterSpacing: '-0.03em',
+                            textShadow: '0 3px 16px rgba(0,0,0,0.7), 0 1px 4px rgba(0,0,0,0.5)',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+                      </Box>
 
                       {/* Poetic Quote */}
                       <Typography
                         variant="body1"
                         sx={{
                           fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
+                          color: 'rgba(255,255,255,0.98)',
+                          fontSize: { xs: '1rem', md: '1.1rem' },
                           lineHeight: 1.7,
-                          fontWeight: 500
+                          textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.6)',
+                          maxWidth: '95%',
+                          fontWeight: 400,
+                          fontFamily: '"Georgia", "Noto Serif Tamil", serif'
                         }}
                       >
                         {getContent(land.poetic)}
                       </Typography>
 
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
+                      {/* Tags removed */}
 
                       {/* CTA Button */}
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         endIcon={<ArrowForward fontSize="small" />}
                         onClick={() => navigate(land.route)}
                         sx={{
                           alignSelf: 'flex-start',
-                          mt: 1,
+                          mt: 1.5,
                           borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
+                          px: 4,
+                          py: 1.4,
+                          fontWeight: 900,
+                          fontSize: '0.95rem',
+                          letterSpacing: 1.2,
+                          textTransform: 'uppercase',
+                          background: 'transparent',
+                          color: '#FFFFFF',
+                          boxShadow: '0 10px 28px rgba(0,0,0,0.4)',
+                          fontFamily: '"Inter", "Roboto", sans-serif',
+                          border: '2px solid #FFFFFF',
                           '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
+                            background: 'rgba(255,255,255,0.1)',
+                            color: '#FFFFFF',
+                            transform: 'translateX(8px) scale(1.05)',
+                            boxShadow: '0 14px 36px rgba(255,255,255,0.3)',
+                            border: '2px solid #FFFFFF'
+                          }
                         }}
                       >
                         {getContent(land.cta)}
@@ -2486,21 +2550,20 @@ export default function Home() {
           <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 5, borderRadius: 2 }} />
           
           <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} justifyContent="center">
-            {/* Top row: 4 dynasties */}
-            {[0,1,2,3].map(idx => (
-              <Grid item xs={6} sm={3} md={3} key={TEAM_MUSEUM[idx].name.en} sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Card
+            {TEAM_MUSEUM.map((member, index) => (
+              <Grid item xs={6} sm={4} md={2.4} key={index}>
+                <Card 
                   elevation={0}
-                  sx={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    mt: 6,
-                    mb: 6,
+                  sx={{ 
+                    textAlign: "center",
+                    p: 2,
+                    minHeight: "180px",
+                    borderRadius: "12px",
+                    bgcolor: "#2a2a2a",
+                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    border: "2px solid #3a3a3a",
+                    position: "relative",
                     overflow: "hidden",
-                    bgcolor: "#111",
-                    borderRadius: 3,
-                    p: 2.5,
-                    textAlign: 'center',
                     "&::before": {
                       content: '""',
                       position: "absolute",
@@ -2515,7 +2578,7 @@ export default function Home() {
                     "&:hover": {
                       transform: "translateY(-12px)",
                       boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
-                      bgcolor: "#222",
+                      bgcolor: "#333",
                       borderColor: "#8B0000",
                       "&::before": {
                         transform: "scaleX(1)"
@@ -2533,21 +2596,21 @@ export default function Home() {
                       alignItems: "center",
                       justifyContent: "center",
                       borderRadius: "50%",
-                      border: "2px solid #daa520",
+                      border: "2px solid #8B0000",
                       bgcolor: "#fff",
                       overflow: "hidden",
                       boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
                       transition: "all 0.3s ease",
                       "&:hover": {
                         transform: "scale(1.05)",
-                        boxShadow: "0 12px 32px rgba(218,165,32,0.5)"
+                        boxShadow: "0 12px 32px rgba(139,0,0,0.5)"
                       }
                     }}
                   >
                     <Box
                       component="img"
-                      src={TEAM_MUSEUM[idx].flag}
-                      alt={TEAM_MUSEUM[idx].name[i18n.language] || TEAM_MUSEUM[idx].name.en}
+                      src={member.flag}
+                      alt={member.name[i18n.language] || member.name.en}
                       loading="lazy"
                       sx={{
                         width: "85%",
@@ -2556,78 +2619,15 @@ export default function Home() {
                       }}
                     />
                   </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "#daa520", fontSize: { xs: "0.9rem", md: "0.95rem" }, lineHeight: 1.2 }}>
-                    {TEAM_MUSEUM[idx].name[i18n.language] || TEAM_MUSEUM[idx].name.en}
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "#fff", fontSize: { xs: "0.9rem", md: "0.95rem" }, lineHeight: 1.2 }}>
+                    {member.name[i18n.language] || member.name.en}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "#ccc", fontWeight: 500, fontSize: "0.8rem", lineHeight: 1.4, px: 0.5 }}>
-                    {TEAM_MUSEUM[idx].title[i18n.language] || TEAM_MUSEUM[idx].title.en}
+                  <Typography variant="body2" sx={{ color: "#aaa", fontWeight: 500, fontSize: "0.8rem", lineHeight: 1.4, px: 0.5 }}>
+                    {member.title[i18n.language] || member.title.en}
                   </Typography>
                 </Card>
               </Grid>
             ))}
-            {/* Bottom row: LTTE centered */}
-            <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 1.5, md: 2 } }}>
-              <Card
-                elevation={0}
-                sx={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  mt: 6,
-                  mb: 6,
-                  overflow: "hidden",
-                  bgcolor: "#111",
-                  borderRadius: 3,
-                  p: 2.5,
-                  textAlign: 'center',
-                  "&:hover": {
-                    transform: "translateY(-12px)",
-                    boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
-                    bgcolor: "#222",
-                    borderColor: "#8B0000"
-                  }
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    mx: "auto",
-                    mb: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "50%",
-                    border: "2px solid #daa520",
-                    bgcolor: "#fff",
-                    overflow: "hidden",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      boxShadow: "0 12px 32px rgba(218,165,32,0.5)"
-                    }
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={TEAM_MUSEUM[4].flag}
-                    alt={TEAM_MUSEUM[4].name[i18n.language] || TEAM_MUSEUM[4].name.en}
-                    loading="lazy"
-                    sx={{
-                      width: "85%",
-                      height: "85%",
-                      objectFit: "contain"
-                    }}
-                  />
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "#daa520", fontSize: { xs: "0.9rem", md: "0.95rem" }, lineHeight: 1.2 }}>
-                  {TEAM_MUSEUM[4].name[i18n.language] || TEAM_MUSEUM[4].name.en}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#ccc", fontWeight: 500, fontSize: "0.8rem", lineHeight: 1.4, px: 0.5 }}>
-                  {TEAM_MUSEUM[4].title[i18n.language] || TEAM_MUSEUM[4].title.en}
-                </Typography>
-              </Card>
-            </Grid>
           </Grid>
         </Container>
       </Box>
@@ -2774,7 +2774,322 @@ export default function Home() {
       </Box>
       </DeferredSection>
 
-      {/* CONTACT SECTION removed as requested */}
+      {/* CONTACT US SECTION */}
+      <Box
+        sx={{
+          position: "relative",
+          overflow: "hidden",
+          py: { xs: 9, md: 12 },
+          color: "#fff",
+          background: "radial-gradient(120% 120% at 50% 0%, #31160d 0%, #120705 58%, #070302 100%)",
+        }}
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: -120,
+            right: -80,
+            width: 360,
+            height: 360,
+            borderRadius: "50%",
+            background: "linear-gradient(140deg, rgba(248,198,143,0.18), rgba(143,64,29,0.08))",
+            filter: "blur(12px)",
+            opacity: 0.9,
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: -160,
+            left: -120,
+            width: 420,
+            height: 420,
+            borderRadius: "50%",
+            background: "linear-gradient(180deg, rgba(255,221,169,0.14), rgba(143,64,29,0.05))",
+            filter: "blur(18px)",
+            opacity: 0.8,
+          }}
+        />
+
+        <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1, px: { xs: 3, sm: 4, md: 6, lg: 8 } }}>
+          <Grid container spacing={{ xs: 4, md: 6 }}>
+            {/* Contact Information */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  position: "relative",
+                  height: "100%",
+                  borderRadius: "24px",
+                  p: { xs: 3.5, md: 4.5 },
+                  background: "linear-gradient(165deg, rgba(12,5,3,0.88) 0%, rgba(32,14,7,0.72) 100%)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: "0 36px 90px rgba(0,0,0,0.4)",
+                  backdropFilter: "blur(12px)",
+                  overflow: "hidden",
+                }}
+              >
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "radial-gradient(120% 140% at 0% 0%, rgba(255,184,122,0.18) 0%, transparent 45%)",
+                    opacity: 0.85,
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <Box sx={{ position: "relative", zIndex: 1 }}>
+                  <Stack spacing={3}>
+                    <Box>
+                      <Typography
+                        variant="overline"
+                        sx={{
+                          letterSpacing: 4,
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          color: "rgba(255,220,170,0.85)",
+                        }}
+                      >
+                        {t('home.contact.infoHeading')}
+                      </Typography>
+                      <Typography variant="h4" sx={{ fontWeight: 800, mt: 1 }}>
+                        {t('home.contact.title')}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: "rgba(255,255,255,0.82)",
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      {t('home.contact.subtitle')}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "rgba(255,255,255,0.7)",
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      {t('home.contact.infoDescription')}
+                    </Typography>
+                  </Stack>
+
+                  <Divider sx={{ mt: 4, mb: 3, borderColor: "rgba(255,255,255,0.08)" }} />
+
+                  <Stack direction="row" spacing={2}>
+                    {contactSocials.map(({ Icon, label, href }) => (
+                      <IconButton
+                        key={`contact-social-${label}`}
+                        component="a"
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={label}
+                        sx={{
+                          color: "#f8d8a8",
+                          borderRadius: "14px",
+                          border: "1px solid rgba(255,255,255,0.16)",
+                          backgroundColor: "rgba(255,255,255,0.04)",
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            transform: "translateY(-4px)",
+                            backgroundColor: "rgba(255,214,159,0.16)",
+                          },
+                        }}
+                      >
+                        <Icon fontSize="small" />
+                      </IconButton>
+                    ))}
+                  </Stack>
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Contact Form */}
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  position: "relative",
+                  height: "100%",
+                  borderRadius: "24px",
+                  p: { xs: 3.5, md: 4.5 },
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  boxShadow: "0 36px 90px rgba(0,0,0,0.35)",
+                  backdropFilter: "blur(14px)",
+                }}
+              >
+                <Box sx={{ position: "relative", zIndex: 1 }}>
+                  <Stack spacing={3}>
+                    <Box>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: 700,
+                          color: "#fff",
+                        }}
+                      >
+                        {t('home.contact.formHeading')}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "rgba(255,255,255,0.75)",
+                          mt: 1,
+                        }}
+                      >
+                        {t('home.contact.formSubtitle')}
+                      </Typography>
+                    </Box>
+
+                    <TextField
+                      fullWidth
+                      label={t('home.contact.formName')}
+                      variant="outlined"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "rgba(255,255,255,0.08)",
+                          borderRadius: "12px",
+                          "& fieldset": {
+                            borderColor: "rgba(255,255,255,0.2)",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "rgba(255,255,255,0.3)",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#f8d8a8",
+                          },
+                        },
+                        "& .MuiInputLabel-root": {
+                          color: "rgba(255,255,255,0.7)",
+                          "&.Mui-focused": {
+                            color: "#f8d8a8",
+                          },
+                        },
+                        "& .MuiOutlinedInput-input": {
+                          color: "#fff",
+                        },
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label={t('home.contact.formEmail')}
+                      type="email"
+                      variant="outlined"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "rgba(255,255,255,0.08)",
+                          borderRadius: "12px",
+                          "& fieldset": {
+                            borderColor: "rgba(255,255,255,0.2)",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "rgba(255,255,255,0.3)",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#f8d8a8",
+                          },
+                        },
+                        "& .MuiInputLabel-root": {
+                          color: "rgba(255,255,255,0.7)",
+                          "&.Mui-focused": {
+                            color: "#f8d8a8",
+                          },
+                        },
+                        "& .MuiOutlinedInput-input": {
+                          color: "#fff",
+                        },
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label={t('home.contact.formMessage')}
+                      multiline
+                      rows={4}
+                      variant="outlined"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "rgba(255,255,255,0.08)",
+                          borderRadius: "12px",
+                          "& fieldset": {
+                            borderColor: "rgba(255,255,255,0.2)",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "rgba(255,255,255,0.3)",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#f8d8a8",
+                          },
+                        },
+                        "& .MuiInputLabel-root": {
+                          color: "rgba(255,255,255,0.7)",
+                          "&.Mui-focused": {
+                            color: "#f8d8a8",
+                          },
+                        },
+                        "& .MuiOutlinedInput-input": {
+                          color: "#fff",
+                        },
+                      }}
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          sx={{
+                            color: "rgba(255,255,255,0.5)",
+                            "&.Mui-checked": {
+                              color: "#f8d8a8",
+                            },
+                          }}
+                        />
+                      }
+                      label={
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: "0.75rem",
+                          }}
+                        >
+                          {t('home.contact.formConsent')}
+                        </Typography>
+                      }
+                    />
+
+                    <Button
+                      variant="contained"
+                      size="large"
+                      sx={{
+                        mt: 2,
+                        borderRadius: "12px",
+                        py: 1.5,
+                        fontWeight: 700,
+                        fontSize: "1rem",
+                        background: "linear-gradient(135deg, #f8d8a8 0%, #e6b86a 100%)",
+                        color: "#2a1810",
+                        boxShadow: "0 8px 24px rgba(248,216,168,0.3)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #e6b86a 0%, #d4a55a 100%)",
+                          transform: "translateY(-2px)",
+                          boxShadow: "0 20px 50px rgba(244,207,160,0.45)",
+                        },
+                      }}
+                    >
+                      {t('home.contact.formSend')}
+                    </Button>
+                  </Stack>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
     </Box>
   )
 }

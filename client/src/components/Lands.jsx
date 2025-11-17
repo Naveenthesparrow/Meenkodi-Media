@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import Comments from "./Comments";
+import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from "../utils/api";
 import { useTranslation } from 'react-i18next';
 
@@ -93,6 +94,7 @@ export default function Lands({ user }) {
         fontFamily: "Inter, Arial, sans-serif",
       }}
     >
+      <SEO {...pageSEO.lands} />
       {/* Page Title */}
       <Typography variant="h4" sx={{ fontWeight: 800, mb: 3, textAlign: 'center' }}>
         {t('lands.title', 'Lands')}

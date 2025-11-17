@@ -21,6 +21,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
+import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from "../utils/api";
 import { useBilingualContent } from '../utils/bilingualContent';
 import { useTranslation } from 'react-i18next';
@@ -190,6 +191,7 @@ export default function Events({ user }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+      <SEO {...pageSEO.events} />
       {/* Unique Heading Section */}
       <Box 
         sx={{ 
@@ -202,8 +204,8 @@ export default function Events({ user }) {
         <Typography 
           variant="h2" 
           sx={{ 
-            fontWeight: 900, 
-            color: "#000", 
+            fontWeight: 500, 
+            color: "#8B0000", 
             position: 'relative',
             display: 'inline-block',
             letterSpacing: -1,
@@ -216,7 +218,7 @@ export default function Events({ user }) {
               left: '-50px',
               width: '40px',
               height: '3px',
-              backgroundColor: '#000',
+              backgroundColor: '#8B0000',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
             },
@@ -227,7 +229,7 @@ export default function Events({ user }) {
               right: '-50px',
               width: '40px',
               height: '3px',
-              backgroundColor: '#000',
+              backgroundColor: '#8B0000',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
             },

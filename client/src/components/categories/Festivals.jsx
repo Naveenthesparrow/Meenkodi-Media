@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
+import SEO, { pageSEO } from '../common/SEO';
 import {
   Box,
   Typography,
@@ -214,6 +215,7 @@ export default function Festivals({ user }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <SEO {...pageSEO.festivals} />
       <Box
         sx={{
           mb: 6, 

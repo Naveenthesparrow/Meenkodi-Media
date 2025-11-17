@@ -22,20 +22,24 @@ i18n
       escapeValue: false,
     },
     returnEmptyString: false,
+    react: {
+      useSuspense: false,
+    },
   });
 
-// Load initial language
-loadLanguage(i18n.language).then((translation) => {
-  i18n.addResourceBundle(i18n.language, 'translation', translation);
+// Load initial language immediately
+const initialLang = saved || 'en';
+loadLanguage(initialLang).then((translation) => {
+  i18n.addResourceBundle(initialLang, 'translation', translation, true, true);
+  // Force re-render after loading
+  i18n.changeLanguage(initialLang);
 });
 
 // Load on language change
 i18n.on('languageChanged', (lng) => {
-  if (!i18n.hasResourceBundle(lng, 'translation')) {
-    loadLanguage(lng).then((translation) => {
-      i18n.addResourceBundle(lng, 'translation', translation);
-    });
-  }
+  loadLanguage(lng).then((translation) => {
+    i18n.addResourceBundle(lng, 'translation', translation, true, true);
+  });
 });
 
 export default i18n;

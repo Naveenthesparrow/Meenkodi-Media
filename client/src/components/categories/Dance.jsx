@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
+import SEO, { pageSEO } from '../common/SEO';
 import {
   Box,
   Typography,
@@ -210,6 +211,7 @@ export default function Dance({ user }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, position: "relative" }}>
+      <SEO {...pageSEO.dance} />
       {/* Unique Heading Section */}
       <Box
         sx={{

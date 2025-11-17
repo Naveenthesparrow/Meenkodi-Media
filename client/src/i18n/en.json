@@ -255,6 +255,11 @@
 	"home.contact.mapSubtitle": "Located at Shinde Complex, Bavdhan Kh., Pune – our primary centre for museum projects, archival digitisation, and course coordination.",
 	"home.contact.hoursHighlight": "Weekdays 9 AM – 5 PM · Saturdays till 3 PM",
 	"home.contact.mapCta": "Open in Google Maps"
+	,"home.ironAge.overline": "Iron Age Chronicles"
+	,"home.ironAge.title": "Tamil Archaeology Labs & Field Conservation"
+	,"home.ironAge.description": "From furnace slag in Kodumanal to maritime beads at Poompuhar, our archaeology teams decode the Tamil Iron Age with lab-grade precision. Specialists catalogue palm-leaf inscriptions, conserve megalithic burials, and map ancient trade routes that connected the Tamil coast with Rome and Southeast Asia."
+	,"home.ironAge.callToAction": "Join digs that blend GIS scanning, metallurgical analysis, and oral histories with village elders to rebuild the continuum of Tamil civilization."
+	,"home.ironAge.button": "Join the Expedition"
 	,"home.footer.about": "About Us"
 	,"home.footer.mission": "Our Mission"
 	,"home.footer.team": "Team"
@@ -267,4 +272,25 @@
 	,"home.footer.description": "Dedicated to preserving, documenting, and celebrating the rich cultural heritage of Tamil civilization for future generations."
 	,"home.footer.copyright": "All rights reserved. Tamil Heritage Foundation"
 	,"home.footer.followUs": "Follow Us"
+	,"contact": {
+		"overline": "CONTACT US",
+		"title": "Get In Touch",
+		"subtitle": "Connect with us for heritage preservation and research collaboration",
+		"email": {
+			"title": "Email",
+			"value": "heritage@meenkodi.org"
+		},
+		"phone": {
+			"title": "Phone",
+			"value": "+91 98765 43210"
+		},
+		"address": {
+			"title": "Address",
+			"value": "Chennai, Tamil Nadu, India"
+		},
+		"social": {
+			"title": "Social Media",
+			"value": "Follow us on social platforms"
+		}
+	}
 }

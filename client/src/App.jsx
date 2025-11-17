@@ -14,6 +14,7 @@ import {
   Routes,
   Route,
   Link as RouterLink,
+  useLocation
 } from "react-router-dom";
 const AdminPortal = React.lazy(() => import("./components/AdminPortal"));
 const UserPortal = React.lazy(() => import("./components/UserPortal"));
@@ -58,6 +59,7 @@ const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
 const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
 const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
 import SiteLogo from "./components/common/SiteLogo";
+import Footer from "./components/common/Footer";
 
 // Debug function for tracking 404 errors
 function setupResourceErrorLogging() {
@@ -73,10 +75,12 @@ function setupResourceErrorLogging() {
 }
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   const fetchUser = React.useCallback(() => {
     console.log("Fetching user authentication status...");
@@ -134,6 +138,52 @@ function App() {
     setupResourceErrorLogging();
   }, []);
 
+  // Small helper component that renders Footer only on the Home route
+  function FooterSelector() {
+    try {
+      const location = useLocation();
+      return location?.pathname === '/' ? <Footer /> : null;
+    } catch (e) {
+      // If hooks are used outside Router for some reason, fall back to showing Footer
+      return <Footer />;
+    }
+  }
+
+  // Auto-hide navbar on scroll down, show on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show navbar when at top of page
+      if (currentScrollY < 10) {
+        setNavVisible(true);
+      }
+      // Hide navbar when scrolling down, show when scrolling up
+      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setNavVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        setNavVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    // Show navbar when mouse is near top of screen
+    const handleMouseMove = (e) => {
+      if (e.clientY < 50) {
+        setNavVisible(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [lastScrollY]);
+
   const login = () => {
     console.log("Redirecting to Google OAuth...");
     window.location.href = `${
@@ -187,16 +237,18 @@ function App() {
   return (
     <Router>
       <AppBar
-        position="sticky"
+        key={i18n.language}
+        position="fixed"
         elevation={0}
         sx={{ 
           bgcolor: '#ffffff',
           color: '#1f140e',
           boxShadow: '0 1px 6px rgba(15,10,8,0.08)',
-          position: 'sticky',
           top: 0,
           zIndex: 1100,
-          borderBottom: '2px solid rgba(186,29,22,0.08)'
+          borderBottom: '2px solid rgba(186,29,22,0.08)',
+          transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.3s ease-in-out',
         }}
       >
         <Container maxWidth="xl">
@@ -220,9 +272,10 @@ function App() {
                 color="#1f140e"
                 underline="none"
                 sx={{
-                  fontWeight: 600,
-                  fontFamily: "'Poppins', sans-serif",
-                      fontSize: { xs: 15, md: 18 },
+                  fontWeight: 500,
+                  fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                  fontSize: { xs: 15.5, md: 18.5 },
+                  letterSpacing: '0.5px',
                   transition: "color 0.2s ease",
                   display: { xs: 'none', sm: 'block' },
                   "&:hover": {
@@ -250,9 +303,11 @@ function App() {
                 to="/"
                 underline="none"
                 sx={{
-                  color: '#1f140e',
-                    fontSize: 15,
-                  fontWeight: 600,
+                  color: '#000',
+                  fontSize: 15.5,
+                  fontWeight: 500,
+                  fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                  letterSpacing: '0.3px',
                   transition: 'color 0.2s ease',
                   '&:hover': {
                     color: '#ba1d16'
@@ -268,9 +323,11 @@ function App() {
                   to={ni.path}
                   underline="none"
                   sx={{
-                    color: '#1f140e',
-                      fontSize: 15,
-                    fontWeight: 600,
+                    color: '#000',
+                    fontSize: 15.5,
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.3px',
                     transition: 'color 0.2s ease',
                     '&:hover': {
                       color: '#ba1d16'
@@ -286,9 +343,11 @@ function App() {
                   to="/profile"
                   underline="none"
                   sx={{
-                    color: '#1f140e',
-                      fontSize: 15,
-                    fontWeight: 600,
+                    color: '#000',
+                    fontSize: 15.5,
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.3px',
                     transition: 'color 0.2s ease',
                     '&:hover': {
                       color: '#ba1d16'
@@ -307,9 +366,11 @@ function App() {
                 <Button
                   onClick={logout}
                   sx={{
-                    color: '#1f140e',
-                      fontSize: 14,
-                    fontWeight: 600,
+                    color: '#000',
+                    fontSize: 14.5,
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.3px',
                     textTransform: 'none',
                     minWidth: 'auto',
                     px: 1.5,
@@ -325,9 +386,11 @@ function App() {
                 <Button
                   onClick={login}
                   sx={{
-                    color: '#1f140e',
-                      fontSize: 14,
-                    fontWeight: 600,
+                    color: '#000',
+                    fontSize: 14.5,
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.3px',
                     textTransform: 'none',
                     minWidth: 'auto',
                     px: 1.5,
@@ -389,7 +452,7 @@ function App() {
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <SiteLogo height={32} />
-                <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 600, fontSize: 16 }}>
+                <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 500, fontSize: 17, fontFamily: "'Poppins', 'Hind Madurai', sans-serif", letterSpacing: '0.3px' }}>
                   {t('app.title')}
                 </Typography>
               </Box>
@@ -413,8 +476,10 @@ function App() {
                 <ListItemText 
                   primary={t('nav.home')} 
                   primaryTypographyProps={{
-                    fontWeight: 500,
-                    fontSize: 15,
+                    fontWeight: 400,
+                    fontSize: 15.5,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.2px',
                     color: '#000'
                   }}
                 />
@@ -436,8 +501,10 @@ function App() {
                   <ListItemText 
                     primary={t(item.key)} 
                     primaryTypographyProps={{
-                      fontWeight: 500,
-                      fontSize: 15,
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
                       color: '#000'
                     }}
                   />
@@ -459,8 +526,10 @@ function App() {
                   <ListItemText 
                     primary={t('nav.profile')} 
                     primaryTypographyProps={{
-                      fontWeight: 500,
-                      fontSize: 15,
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
                       color: '#000'
                     }}
                   />
@@ -483,8 +552,10 @@ function App() {
                   <ListItemText 
                     primary={t('nav.logout')} 
                     primaryTypographyProps={{
-                      fontWeight: 500,
-                      fontSize: 15,
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
                       color: '#000'
                     }}
                   />
@@ -506,8 +577,10 @@ function App() {
                   <ListItemText 
                     primary={t('nav.login')} 
                     primaryTypographyProps={{
-                      fontWeight: 500,
-                      fontSize: 15,
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
                       color: '#000'
                     }}
                   />
@@ -519,7 +592,7 @@ function App() {
             </List>
           </Drawer>
       </AppBar>
-      <Box sx={{ mt: 0 }}>
+      <Box sx={{ pt: { xs: 7, md: 8 } }}>
   <React.Suspense fallback={<Box sx={{ p:4, textAlign:'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
   <Routes>
           <Route path="/" element={<Home />} />
@@ -601,6 +674,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
   </Routes>
   </React.Suspense>
+      <FooterSelector />
       </Box>
     </Router>
   );

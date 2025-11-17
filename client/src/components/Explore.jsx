@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, useLayoutEffect } from "re
 import { Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import SEO, { pageSEO } from "./common/SEO";
 import {
   Home,
   AccountBalance,
@@ -264,10 +265,11 @@ function Explore() {
         pb: { xs: 3, sm: 4 },
       }}
     >
+      <SEO {...pageSEO.explore} />
       <Typography
         variant="h3"
         component="h1"
-        sx={{ fontWeight: 900, color: "#000", textAlign: "center", fontSize: { xs: "1.8rem", sm: "3rem" } }}
+        sx={{ fontWeight: 500, color: "#8B0000", textAlign: "center", fontSize: { xs: "1.8rem", sm: "3rem" } }}
       >
         {t('explore.title')}
       </Typography>
@@ -336,7 +338,7 @@ function Explore() {
                       zIndex: 1,
                     }}
                   />
-                  <Typography sx={{ fontWeight: 900, letterSpacing: 0.4, color: "#000", fontSize: { xs: 15, sm: 18 }, textTransform: "uppercase", position: "relative", zIndex: 1 }}>
+                  <Typography sx={{ fontWeight: 900, letterSpacing: 0.4, color: "#8B0000", fontSize: { xs: 15, sm: 18 }, textTransform: "uppercase", position: "relative", zIndex: 1 }}>
                     {t(categories[itemIndex].titleKey)}
                   </Typography>
                 </GlowCard>
