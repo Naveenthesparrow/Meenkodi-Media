@@ -3055,20 +3055,27 @@ app.use(
 );
 
 // If a client build exists, serve it as static files and provide an SPA fallback.
-const clientDist = path.join(process.cwd(), "client", "dist");
-const clientIndex = path.join(clientDist, "index.html");
+// Use __dirname so this works regardless of working directory when the process starts.
+const clientDist = path.join(__dirname, '..', 'client', 'dist');
+const clientIndex = path.join(clientDist, 'index.html');
+
 if (fs.existsSync(clientIndex)) {
-  console.log("Client build detected at:", clientDist, "— serving static client from Express.");
+  console.log('Client build detected at:', clientDist, '— serving static client from Express.');
+  // Serve static assets (JS/CSS/images)
   app.use(express.static(clientDist));
 
-  // Catch-all: return client index for unknown routes (SPA fallback).
-  app.get('*', (req, res) => {
-    // Allow API and uploads routes to function normally (they are defined above),
-    // but if nothing matches, send the client index.html so the SPA router can handle it.
-    res.sendFile(clientIndex);
+  // SPA fallback: only for non-API and non-upload routes
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    res.sendFile(clientIndex, (err) => {
+      if (err) {
+        console.error('Error sending client index:', err);
+        res.status(500).send('Server error');
+      }
+    });
   });
 } else {
-  console.log("No client build found at:", clientIndex);
+  console.log('No client build found at:', clientIndex, "— the Web Service will only serve API routes until you build the client.");
 }
 
 // Start the server
