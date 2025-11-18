@@ -1,4 +1,5 @@
 import express from "express";
+import { fileURLToPath } from 'url';
 import session from "express-session";
 import passport from "passport";
 import dotenv from "dotenv";
@@ -20,6 +21,9 @@ import Food from "./models/Food.js";
 import Festival from "./models/Festival.js";
 import multer from "multer";
 import path from "path";
+// ES module __dirname workaround
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import fs from "fs";
 import AncientScience from "./models/AncientScience.js";
 import Clothing from "./models/Clothing.js";
