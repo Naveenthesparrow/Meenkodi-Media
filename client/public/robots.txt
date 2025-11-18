@@ -3,5 +3,6 @@ Allow: /
 
 # Canonical host and sitemap — make sure sitemap URLs use https://www.meenkodi.com
 Sitemap: https://www.meenkodi.com/sitemap.xml
-# Optional Host directive (not required by Google)
-Host: www.meenkodi.com
+
+# Note: the `Host` directive is non-standard and ignored by Google — removed to avoid the
+# "Rule ignored by Googlebot" warning in Search Console.
