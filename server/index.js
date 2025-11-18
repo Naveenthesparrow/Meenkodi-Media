@@ -28,7 +28,7 @@ import { localizeCollection, localizeSingle, resolveLang } from './translationMa
 dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
@@ -3024,6 +3024,23 @@ app.use(
   "/uploads/gallery",
   express.static(path.join(process.cwd(), "uploads/gallery"))
 );
+
+// If a client build exists, serve it as static files and provide an SPA fallback.
+const clientDist = path.join(process.cwd(), "client", "dist");
+const clientIndex = path.join(clientDist, "index.html");
+if (fs.existsSync(clientIndex)) {
+  console.log("Client build detected at:", clientDist, "— serving static client from Express.");
+  app.use(express.static(clientDist));
+
+  // Catch-all: return client index for unknown routes (SPA fallback).
+  app.get('*', (req, res) => {
+    // Allow API and uploads routes to function normally (they are defined above),
+    // but if nothing matches, send the client index.html so the SPA router can handle it.
+    res.sendFile(clientIndex);
+  });
+} else {
+  console.log("No client build found at:", clientIndex);
+}
 
 // Start the server
 app.listen(PORT, "0.0.0.0", () => {
