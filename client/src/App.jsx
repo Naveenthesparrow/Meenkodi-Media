@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from "./utils/api";
 import './i18n/i18n.js';
 import { useTranslation } from 'react-i18next';
 // Route-split heavier pages and details
@@ -84,7 +85,7 @@ function App() {
 
   const fetchUser = React.useCallback(() => {
     console.log("Fetching user authentication status...");
-    fetch(`${import.meta.env.VITE_APP_API_URL || "http://localhost:5000"}/auth/user`, {
+    fetch(`${API_BASE_URL}/auth/user`, {
       credentials: "include",
     })
       .then((res) => {
