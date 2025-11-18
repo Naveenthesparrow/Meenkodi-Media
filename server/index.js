@@ -3026,7 +3026,7 @@ app.use(
 );
 
 // If a client build exists, serve it as static files and provide an SPA fallback.
-const clientDist = path.join(process.cwd(), "client", "dist");
+const clientDist = path.join(process.cwd(), "..", "client", "dist");
 const clientIndex = path.join(clientDist, "index.html");
 if (fs.existsSync(clientIndex)) {
   console.log("Client build detected at:", clientDist, "— serving static client from Express.");
