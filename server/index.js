@@ -52,6 +52,16 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
+      // Allow common local dev origins (vite dev server ports) quickly
+      try {
+        const lower = origin.toLowerCase();
+        if (lower.includes('localhost') || lower.includes('127.0.0.1')) {
+          return callback(null, true);
+        }
+      } catch (e) {
+        // ignore
+      }
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
