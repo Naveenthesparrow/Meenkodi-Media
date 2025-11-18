@@ -62,12 +62,31 @@ app.use(
         // ignore
       }
 
+      // Allow configured origins explicitly
       if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log('CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
+        return callback(null, true);
       }
+
+      // Allow frontend domain and any subdomains for render hosts for convenience
+      // e.g., https://www.meenkodi.com and https://meenkodi-media.onrender.com
+      try {
+        const url = new URL(origin);
+        const hostname = url.hostname.toLowerCase();
+
+        if (hostname === 'www.meenkodi.com' || hostname === 'meenkodi.com') {
+          return callback(null, true);
+        }
+
+        // allow onrender subdomains for your Render services (narrow to your project if desired)
+        if (hostname.endsWith('.onrender.com')) {
+          return callback(null, true);
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
