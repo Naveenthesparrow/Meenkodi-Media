@@ -2664,15 +2664,15 @@ export default function Home() {
           
           <Grid container spacing={{ xs: 2.5, sm: 3, md: 3.5, lg: 4 }} sx={{ maxWidth: "1400px", mx: "auto", justifyContent: "center" }}>
             {TEAM_DIRECTORS.map((member, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={2.4} key={index} sx={{ display: "flex", minWidth: 0 }}>
+              <Grid item xs={12} sm={6} md={3} lg={3} key={index} sx={{ display: "flex", minWidth: 0 }}>
                 <Card
                   elevation={0}
                   sx={{
                     px: { xs: 2.5, md: 3 },
                     py: { xs: 3, md: 3.5 },
                     width: "100%",
-                    maxWidth: "280px",
-                    minHeight: "340px",
+                    // card will fill the grid cell width
+                    height: { xs: '360px', md: '360px' },
                     borderRadius: "18px",
                     bgcolor: "#f9fafb",
                     border: "1px solid #e4e7eb",
@@ -2681,6 +2681,7 @@ export default function Home() {
                     alignItems: "center",
                     textAlign: "center",
                     gap: 2,
+                    justifyContent: 'space-between',
                     transition: "all 0.3s ease",
                     "&:hover": {
                       transform: "translateY(-6px)",
@@ -2720,7 +2721,7 @@ export default function Home() {
                     />
                   </Box>
 
-                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, flexGrow: 1, justifyContent: "center" }}>
+                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, flexGrow: 1, justifyContent: "center", px: 1 }}>
                     <Typography
                       variant="subtitle1"
                       sx={{
@@ -2728,7 +2729,10 @@ export default function Home() {
                         color: "#1f2933",
                         fontSize: { xs: "1.05rem", md: "1.15rem" },
                         letterSpacing: "-0.01em",
-                        minHeight: "1.4em"
+                        minHeight: "1.4em",
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
                       }}
                     >
                       {member.name[i18n.language] || member.name.en}
@@ -2739,8 +2743,10 @@ export default function Home() {
                       sx={{
                         color: "#52616b",
                         fontSize: { xs: "0.92rem", md: "0.95rem" },
-                        lineHeight: 1.6,
-                        minHeight: "3em"
+                        lineHeight: 1.4,
+                        maxHeight: '3em',
+                        overflow: 'hidden',
+                        textAlign: 'center'
                       }}
                     >
                       {member.title[i18n.language] || member.title.en}
