@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Grid, 
-  Card, 
-  CardMedia, 
-  CardContent, 
-  Typography, 
-  Button, 
-  Box, 
-  IconButton, 
+import {
+  Container,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  Button,
+  Box,
+  IconButton,
   Fade,
   Dialog,
   DialogTitle,
@@ -116,8 +116,8 @@ export default function Events({ user }) {
   const handleSave = async () => {
     try {
       const method = currentEvent._id ? 'PUT' : 'POST';
-      const url = currentEvent._id 
-        ? `${API_BASE_URL}/api/events/${currentEvent._id}` 
+      const url = currentEvent._id
+        ? `${API_BASE_URL}/api/events/${currentEvent._id}`
         : `${API_BASE_URL}/api/events`;
 
       const response = await fetch(url, {
@@ -132,11 +132,11 @@ export default function Events({ user }) {
       }
 
       const savedEvent = await response.json();
-      
+
       if (method === 'POST') {
         setEvents([...events, savedEvent]);
       } else {
-        setEvents(events.map(event => 
+        setEvents(events.map(event =>
           event._id === savedEvent._id ? savedEvent : event
         ));
       }
@@ -168,12 +168,12 @@ export default function Events({ user }) {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh' 
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh'
         }}
       >
         <CircularProgress />
@@ -193,19 +193,19 @@ export default function Events({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.events} />
       {/* Unique Heading Section */}
-      <Box 
-        sx={{ 
-          mb: 6, 
-          textAlign: 'center', 
+      <Box
+        sx={{
+          mb: 6,
+          textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
-          variant="h2" 
-          sx={{ 
-            fontWeight: 500, 
-            color: "#8B0000", 
+        <Typography
+          variant="h2"
+          sx={{
+            fontWeight: 500,
+            color: "#8B0000",
             position: 'relative',
             display: 'inline-block',
             letterSpacing: -1,
@@ -251,13 +251,13 @@ export default function Events({ user }) {
         >
           {t('events.title', 'Events')}
         </Typography>
-        
+
         {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
+          <Box
+            sx={{
+              position: 'absolute',
+              right: 0,
+              top: '50%',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
@@ -277,7 +277,7 @@ export default function Events({ user }) {
                 bgcolor: "#000",
                 color: "#fff",
                 transition: 'all 0.3s ease',
-                "&:hover": { 
+                "&:hover": {
                   bgcolor: "#333",
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -292,9 +292,9 @@ export default function Events({ user }) {
         )}
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Grid
+        container
+        spacing={4}
         sx={{
           display: 'flex',
           justifyContent: 'center',
@@ -311,26 +311,28 @@ export default function Events({ user }) {
         }}
       >
         {events.map((event, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
+          <Fade
+            in={true}
+            timeout={500 + index * 200}
             key={event._id}
           >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              sx={{
+                display: 'flex',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
               }}
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },
+                  maxWidth: '100%',
+                  height: 'auto',
+                  minHeight: 450,
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -371,7 +373,7 @@ export default function Events({ user }) {
                     height="200"
                     image={event.imageUrl || event.imageLink}
                     alt={getContent(event.title)}
-                    sx={{ 
+                    sx={{
                       objectFit: "contain",
                       width: '100%',
                       maxHeight: 200,
@@ -398,8 +400,8 @@ export default function Events({ user }) {
                       boxSizing: 'border-box',
                     }}
                   >
-                    <Typography 
-                      variant="body2" 
+                    <Typography
+                      variant="body2"
                       color="textSecondary"
                       sx={{ textAlign: 'center' }}
                     >
@@ -420,13 +422,13 @@ export default function Events({ user }) {
                   }}
                 >
                   {user && user.role === "admin" && (
-                    <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
-                        display: "flex", 
-                        gap: 1 
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        display: "flex",
+                        gap: 1
                       }}
                     >
                       <IconButton
@@ -438,9 +440,9 @@ export default function Events({ user }) {
                         sx={{
                           color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
                         }}
@@ -456,9 +458,9 @@ export default function Events({ user }) {
                         sx={{
                           color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
                         }}
@@ -471,8 +473,8 @@ export default function Events({ user }) {
                     <Typography
                       variant="h5"
                       sx={{
-                        fontWeight: 700, 
-                        color: "#000", 
+                        fontWeight: 700,
+                        color: "#000",
                         mb: 1,
                         lineHeight: 1.3,
                         fontSize: '1.5rem',
@@ -498,9 +500,9 @@ export default function Events({ user }) {
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ 
-                        color: "#000", 
-                        lineHeight: 1.6, 
+                      sx={{
+                        color: "#000",
+                        lineHeight: 1.6,
                         mb: 2,
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
@@ -512,8 +514,8 @@ export default function Events({ user }) {
                     >
                       {(() => {
                         const desc = getContent(event.description);
-                        return desc && desc.length > 150 
-                          ? `${desc.substring(0, 150)}...` 
+                        return desc && desc.length > 150
+                          ? `${desc.substring(0, 150)}...`
                           : desc;
                       })()}
                     </Typography>
@@ -542,8 +544,8 @@ export default function Events({ user }) {
       </Grid>
 
       {/* Edit/Add Dialog */}
-      <Dialog 
-        open={openDialog} 
+      <Dialog
+        open={openDialog}
         onClose={() => setOpenDialog(false)}
         maxWidth="md"
         fullWidth
@@ -557,7 +559,7 @@ export default function Events({ user }) {
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.title}
-            onChange={(e) => setCurrentEvent({...currentEvent, title: e.target.value})}
+            onChange={(e) => setCurrentEvent({ ...currentEvent, title: e.target.value })}
           />
           <TextField
             label="Date"
@@ -565,7 +567,7 @@ export default function Events({ user }) {
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.date}
-            onChange={(e) => setCurrentEvent({...currentEvent, date: e.target.value})}
+            onChange={(e) => setCurrentEvent({ ...currentEvent, date: e.target.value })}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
@@ -573,7 +575,7 @@ export default function Events({ user }) {
             fullWidth
             sx={{ mb: 2 }}
             value={currentEvent.location}
-            onChange={(e) => setCurrentEvent({...currentEvent, location: e.target.value})}
+            onChange={(e) => setCurrentEvent({ ...currentEvent, location: e.target.value })}
           />
           <TextField
             label="Description"
@@ -582,13 +584,13 @@ export default function Events({ user }) {
             minRows={3}
             sx={{ mb: 2 }}
             value={currentEvent.description}
-            onChange={(e) => setCurrentEvent({...currentEvent, description: e.target.value})}
+            onChange={(e) => setCurrentEvent({ ...currentEvent, description: e.target.value })}
           />
           <MediaUpload
-            onImageLinkChange={(link) => setCurrentEvent({...currentEvent, imageLink: link})}
-            onVideoLinkChange={(link) => setCurrentEvent({...currentEvent, videoLink: link})}
-            onImageChange={(url) => setCurrentEvent({...currentEvent, imageUrl: url})}
-            onVideoChange={(url) => setCurrentEvent({...currentEvent, videoUrl: url})}
+            onImageLinkChange={(link) => setCurrentEvent({ ...currentEvent, imageLink: link })}
+            onVideoLinkChange={(link) => setCurrentEvent({ ...currentEvent, videoLink: link })}
+            onImageChange={(url) => setCurrentEvent({ ...currentEvent, imageUrl: url })}
+            onVideoChange={(url) => setCurrentEvent({ ...currentEvent, videoUrl: url })}
             currentImageLink={currentEvent.imageLink}
             currentVideoLink={currentEvent.videoLink}
             currentImage={currentEvent.imageUrl}

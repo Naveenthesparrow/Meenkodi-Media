@@ -308,7 +308,8 @@ export default function Gallery({ user }) {
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
+                  width: '100%',
+                  maxWidth: 350,
                   height: 450, // Fixed height
                   display: 'flex',
                   flexDirection: 'column',

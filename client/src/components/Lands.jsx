@@ -107,8 +107,9 @@ export default function Lands({ user }) {
             <Grid item xs={12} sm={4} key={land._id}>
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },
+                  maxWidth: '100%',
+                  // height: 450, // Removed fixed height for responsiveness
                   display: 'flex',
                   flexDirection: 'column',
                   boxShadow: 4,

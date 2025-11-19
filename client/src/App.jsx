@@ -36,6 +36,7 @@ const Festivals = React.lazy(() => import("./components/categories/Festivals"));
 const Foods = React.lazy(() => import("./components/categories/Foods"));
 const AncientScience = React.lazy(() => import("./components/categories/AncientScience"));
 const ResourceDetail = React.lazy(() => import("./components/ResourceDetail"));
+const FAQ = React.lazy(() => import("./components/FAQ"));
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
 import {
@@ -154,7 +155,7 @@ function App() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Show navbar when at top of page
       if (currentScrollY < 10) {
         setNavVisible(true);
@@ -165,7 +166,7 @@ function App() {
       } else if (currentScrollY < lastScrollY) {
         setNavVisible(true);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
@@ -178,7 +179,7 @@ function App() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('mousemove', handleMouseMove);
@@ -187,16 +188,12 @@ function App() {
 
   const login = () => {
     console.log("Redirecting to Google OAuth...");
-    window.location.href = `${
-      import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-    }/auth/google`;
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   const logout = () => {
     console.log("Logging out...");
-    window.location.href = `${
-      import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-    }/auth/logout`;
+    window.location.href = `${API_BASE_URL}/auth/logout`;
   };
 
   const handleDrawerToggle = () => {
@@ -209,16 +206,17 @@ function App() {
     { key: 'nav.gallery', path: '/gallery' },
     { key: 'nav.articles', path: '/articles' },
     { key: 'nav.resources', path: '/resources' },
+    { key: 'nav.faq', path: '/faq' },
   ];
 
-  const userNavItems = user 
+  const userNavItems = user
     ? [
-        { key: 'nav.profile', path: '/profile' },
-        { key: 'nav.logout', action: logout }
-      ]
+      { key: 'nav.profile', path: '/profile' },
+      { key: 'nav.logout', action: logout }
+    ]
     : [
-        { key: 'nav.login', action: login }
-      ];
+      { key: 'nav.login', action: login }
+    ];
 
   if (loading) {
     return (
@@ -241,21 +239,26 @@ function App() {
         key={i18n.language}
         position="fixed"
         elevation={0}
-        sx={{ 
+        sx={{
           bgcolor: '#ffffff',
           color: '#1f140e',
           boxShadow: '0 1px 6px rgba(15,10,8,0.08)',
           top: 0,
           zIndex: 1100,
           borderBottom: '2px solid rgba(186,29,22,0.08)',
-          transform: navVisible ? 'translateY(0)' : 'translateY(-100%)',
+          // Always visible on mobile (xs, sm), auto-hide on desktop (md+)
+          transform: {
+            xs: 'translateY(0)',  // Always visible on mobile
+            sm: 'translateY(0)',  // Always visible on small tablets
+            md: navVisible ? 'translateY(0)' : 'translateY(-100%)'  // Auto-hide on desktop
+          },
           transition: 'transform 0.3s ease-in-out',
         }}
       >
         <Container maxWidth="xl">
-          <Toolbar 
+          <Toolbar
             disableGutters
-            sx={{ 
+            sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -266,7 +269,7 @@ function App() {
           >
             {/* Logo Section */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <SiteLogo height={{ xs: 34, md: 42 }} />
+              <SiteLogo height={{ xs: 34, md: 42 }} />
               <Link
                 component={RouterLink}
                 to="/"
@@ -289,11 +292,11 @@ function App() {
             </Box>
 
             {/* Desktop Navigation */}
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 display: { xs: 'none', md: 'flex' },
                 alignItems: 'center',
-                  gap: 2.6,
+                gap: 2.6,
                 flex: '1 1 auto',
                 justifyContent: 'center',
                 ml: 2
@@ -412,8 +415,8 @@ function App() {
               aria-label="open drawer"
               edge="start"
               onClick={handleDrawerToggle}
-              sx={{ 
-                display: { md: 'none' }, 
+              sx={{
+                display: { md: 'none' },
                 color: '#1f140e',
                 ml: 'auto'
               }}
@@ -423,59 +426,84 @@ function App() {
           </Toolbar>
         </Container>
 
-          {/* Mobile Drawer */}
-          <Drawer
-            variant="temporary"
-            anchor="right"
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            ModalProps={{
-              keepMounted: true,
-            }}
+        {/* Mobile Drawer */}
+        <Drawer
+          variant="temporary"
+          anchor="right"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: 280,
+              bgcolor: '#ffffff',
+              color: '#1f140e'
+            },
+          }}
+        >
+          <Box
             sx={{
-              display: { xs: 'block', md: 'none' },
-              '& .MuiDrawer-paper': { 
-                boxSizing: 'border-box', 
-                width: 280,
-                bgcolor: '#ffffff',
-                color: '#1f140e'
-              },
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              p: 2,
+              borderBottom: '1px solid rgba(0,0,0,0.08)'
             }}
           >
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                p: 2,
-                borderBottom: '1px solid rgba(0,0,0,0.08)'
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <SiteLogo height={32} />
+              <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 500, fontSize: 17, fontFamily: "'Poppins', 'Hind Madurai', sans-serif", letterSpacing: '0.3px' }}>
+                {t('app.title')}
+              </Typography>
+            </Box>
+            <IconButton onClick={handleDrawerToggle}>
+              <CloseIcon sx={{ color: '#1f140e' }} />
+            </IconButton>
+          </Box>
+          <List sx={{ pt: 2 }}>
+            <ListItem
+              component={RouterLink}
+              to="/"
+              onClick={handleDrawerToggle}
+              sx={{
+                color: '#000',
+                py: 1.5,
+                '&:hover': {
+                  bgcolor: 'rgba(139,0,0,0.05)'
+                }
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <SiteLogo height={32} />
-                <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 500, fontSize: 17, fontFamily: "'Poppins', 'Hind Madurai', sans-serif", letterSpacing: '0.3px' }}>
-                  {t('app.title')}
-                </Typography>
-              </Box>
-              <IconButton onClick={handleDrawerToggle}>
-                <CloseIcon sx={{ color: '#1f140e' }} />
-              </IconButton>
-            </Box>
-            <List sx={{ pt: 2 }}>
-              <ListItem 
+              <ListItemText
+                primary={t('nav.home')}
+                primaryTypographyProps={{
+                  fontWeight: 400,
+                  fontSize: 15.5,
+                  fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                  letterSpacing: '0.2px',
+                  color: '#000'
+                }}
+              />
+            </ListItem>
+            {navItems.map((item) => (
+              <ListItem
+                key={item.key}
                 component={RouterLink}
-                to="/"
+                to={item.path}
                 onClick={handleDrawerToggle}
-                sx={{ 
+                sx={{
                   color: '#000',
                   py: 1.5,
-                  '&:hover': { 
+                  '&:hover': {
                     bgcolor: 'rgba(139,0,0,0.05)'
                   }
                 }}
               >
-                <ListItemText 
-                  primary={t('nav.home')} 
+                <ListItemText
+                  primary={t(item.key)}
                   primaryTypographyProps={{
                     fontWeight: 400,
                     fontSize: 15.5,
@@ -485,197 +513,173 @@ function App() {
                   }}
                 />
               </ListItem>
-              {navItems.map((item) => (
-                <ListItem 
-                  key={item.key}
-                  component={RouterLink}
-                  to={item.path}
-                  onClick={handleDrawerToggle}
-                  sx={{ 
-                    color: '#000',
-                    py: 1.5,
-                    '&:hover': { 
-                      bgcolor: 'rgba(139,0,0,0.05)'
-                    }
+            ))}
+            {user && (
+              <ListItem
+                component={RouterLink}
+                to="/profile"
+                onClick={handleDrawerToggle}
+                sx={{
+                  color: '#000',
+                  py: 1.5,
+                  '&:hover': {
+                    bgcolor: 'rgba(139,0,0,0.05)'
+                  }
+                }}
+              >
+                <ListItemText
+                  primary={t('nav.profile')}
+                  primaryTypographyProps={{
+                    fontWeight: 400,
+                    fontSize: 15.5,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.2px',
+                    color: '#000'
                   }}
-                >
-                  <ListItemText 
-                    primary={t(item.key)} 
-                    primaryTypographyProps={{
-                      fontWeight: 400,
-                      fontSize: 15.5,
-                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                      letterSpacing: '0.2px',
-                      color: '#000'
-                    }}
-                  />
-                </ListItem>
-              ))}
-              {user && (
-                <ListItem 
-                  component={RouterLink}
-                  to="/profile"
-                  onClick={handleDrawerToggle}
-                  sx={{ 
-                    color: '#000',
-                    py: 1.5,
-                    '&:hover': { 
-                      bgcolor: 'rgba(139,0,0,0.05)'
-                    }
+                />
+              </ListItem>
+            )}
+            {user ? (
+              <ListItem
+                onClick={() => {
+                  logout();
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  color: '#000',
+                  py: 1.5,
+                  '&:hover': {
+                    bgcolor: 'rgba(139,0,0,0.05)'
+                  }
+                }}
+              >
+                <ListItemText
+                  primary={t('nav.logout')}
+                  primaryTypographyProps={{
+                    fontWeight: 400,
+                    fontSize: 15.5,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.2px',
+                    color: '#000'
                   }}
-                >
-                  <ListItemText 
-                    primary={t('nav.profile')} 
-                    primaryTypographyProps={{
-                      fontWeight: 400,
-                      fontSize: 15.5,
-                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                      letterSpacing: '0.2px',
-                      color: '#000'
-                    }}
-                  />
-                </ListItem>
-              )}
-              {user ? (
-                <ListItem 
-                  onClick={() => {
-                    logout();
-                    handleDrawerToggle();
+                />
+              </ListItem>
+            ) : (
+              <ListItem
+                onClick={() => {
+                  login();
+                  handleDrawerToggle();
+                }}
+                sx={{
+                  color: '#000',
+                  py: 1.5,
+                  '&:hover': {
+                    bgcolor: 'rgba(139,0,0,0.05)'
+                  }
+                }}
+              >
+                <ListItemText
+                  primary={t('nav.login')}
+                  primaryTypographyProps={{
+                    fontWeight: 400,
+                    fontSize: 15.5,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.2px',
+                    color: '#000'
                   }}
-                  sx={{ 
-                    color: '#000',
-                    py: 1.5,
-                    '&:hover': { 
-                      bgcolor: 'rgba(139,0,0,0.05)'
-                    }
-                  }}
-                >
-                  <ListItemText 
-                    primary={t('nav.logout')} 
-                    primaryTypographyProps={{
-                      fontWeight: 400,
-                      fontSize: 15.5,
-                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                      letterSpacing: '0.2px',
-                      color: '#000'
-                    }}
-                  />
-                </ListItem>
-              ) : (
-                <ListItem 
-                  onClick={() => {
-                    login();
-                    handleDrawerToggle();
-                  }}
-                  sx={{ 
-                    color: '#000',
-                    py: 1.5,
-                    '&:hover': { 
-                      bgcolor: 'rgba(139,0,0,0.05)'
-                    }
-                  }}
-                >
-                  <ListItemText 
-                    primary={t('nav.login')} 
-                    primaryTypographyProps={{
-                      fontWeight: 400,
-                      fontSize: 15.5,
-                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                      letterSpacing: '0.2px',
-                      color: '#000'
-                    }}
-                  />
-                </ListItem>
-              )}
-              <Box sx={{ px: 2, pt: 3, pb: 2, mt: 2, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-                <LanguageSwitcher />
-              </Box>
-            </List>
-          </Drawer>
+                />
+              </ListItem>
+            )}
+            <Box sx={{ px: 2, pt: 3, pb: 2, mt: 2, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+              <LanguageSwitcher />
+            </Box>
+          </List>
+        </Drawer>
       </AppBar>
       <Box sx={{ pt: { xs: 7, md: 8 } }}>
-  <React.Suspense fallback={<Box sx={{ p:4, textAlign:'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
-  <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth/google/callback" element={<AuthCallback />} />
-          <Route path="/auth/failure" element={<AuthFailure />} />
-          <Route path="/articles" element={<Articles user={user} />} />
-          <Route path="/gallery" element={<Gallery user={user} />} />
-          <Route path="/events" element={<Events user={user} />} />
-          <Route path="/resources" element={<Resources user={user} />} />
-          <Route path="/explore" element={<Explore user={user} />} />
-          <Route path="/explore/lands" element={<Lands user={user} />} />
-          <Route path="/explore/kings" element={<Kings user={user} />} />
-          <Route
-            path="/explore/literature"
-            element={<Literature user={user} />}
-          />
-          <Route path="/explore/dance" element={<Dance user={user} />} />
-          <Route path="/explore/temples" element={<Temples user={user} />} />
-          <Route path="/explore/clothing" element={<Clothing user={user} />} />
-          <Route
-            path="/explore/festivals"
-            element={<Festivals user={user} />}
-          />
-          <Route path="/explore/foods" element={<Foods user={user} />} />
-          <Route
-            path="/explore/ancientscience"
-            element={<AncientScience user={user} />}
-          />
-          <Route path="/explore/temples/:id" element={<TempleDetail />} />
-          <Route path="/explore/kings/:id" element={<KingDetail />} />
-          <Route
-            path="/explore/literature/:id"
-            element={<LiteratureDetail />}
-          />
-          <Route path="/explore/dance/:id" element={<DanceDetail />} />
-          <Route path="/explore/foods/:id" element={<FoodDetail />} />
-          <Route path="/explore/festivals/:id" element={<FestivalDetail />} />
-          <Route path="/events/:id" element={<EventDetail user={user} />} />
-          <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
-          <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
-          <Route
-            path="/resources/:id"
-            element={<ResourceDetail user={user} />}
-          />
-          <Route
-            path="/profile"
-            element={
-              user ? (
-                user.role === "admin" ? (
-                  <AdminPortal user={user} logout={logout} />
+        <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/auth/google/callback" element={<AuthCallback />} />
+            <Route path="/auth/failure" element={<AuthFailure />} />
+            <Route path="/articles" element={<Articles user={user} />} />
+            <Route path="/gallery" element={<Gallery user={user} />} />
+            <Route path="/events" element={<Events user={user} />} />
+            <Route path="/resources" element={<Resources user={user} />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/explore" element={<Explore user={user} />} />
+            <Route path="/explore/lands" element={<Lands user={user} />} />
+            <Route path="/explore/kings" element={<Kings user={user} />} />
+            <Route
+              path="/explore/literature"
+              element={<Literature user={user} />}
+            />
+            <Route path="/explore/dance" element={<Dance user={user} />} />
+            <Route path="/explore/temples" element={<Temples user={user} />} />
+            <Route path="/explore/clothing" element={<Clothing user={user} />} />
+            <Route
+              path="/explore/festivals"
+              element={<Festivals user={user} />}
+            />
+            <Route path="/explore/foods" element={<Foods user={user} />} />
+            <Route
+              path="/explore/ancientscience"
+              element={<AncientScience user={user} />}
+            />
+            <Route path="/explore/temples/:id" element={<TempleDetail />} />
+            <Route path="/explore/kings/:id" element={<KingDetail />} />
+            <Route
+              path="/explore/literature/:id"
+              element={<LiteratureDetail />}
+            />
+            <Route path="/explore/dance/:id" element={<DanceDetail />} />
+            <Route path="/explore/foods/:id" element={<FoodDetail />} />
+            <Route path="/explore/festivals/:id" element={<FestivalDetail />} />
+            <Route path="/events/:id" element={<EventDetail user={user} />} />
+            <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
+            <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
+            <Route
+              path="/resources/:id"
+              element={<ResourceDetail user={user} />}
+            />
+            <Route
+              path="/profile"
+              element={
+                user ? (
+                  user.role === "admin" ? (
+                    <AdminPortal user={user} logout={logout} />
+                  ) : (
+                    <UserPortal user={user} logout={logout} />
+                  )
                 ) : (
-                  <UserPortal user={user} logout={logout} />
+                  <Box sx={{ textAlign: "center", mt: 4 }}>
+                    <Typography variant="h4" sx={{ mb: 2 }}>
+                      Please log in to view your profile
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      onClick={login}
+                      sx={{
+                        bgcolor: "#000",
+                        color: "#fff",
+                        "&:hover": { bgcolor: "#333" },
+                      }}
+                    >
+                      Login with Google
+                    </Button>
+                  </Box>
                 )
-              ) : (
-                <Box sx={{ textAlign: "center", mt: 4 }}>
-                  <Typography variant="h4" sx={{ mb: 2 }}>
-                    Please log in to view your profile
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={login}
-                    sx={{
-                      bgcolor: "#000",
-                      color: "#fff",
-                      "&:hover": { bgcolor: "#333" },
-                    }}
-                  >
-                    Login with Google
-                  </Button>
-                </Box>
-              )
-            }
-          />
-          <Route
-            path="/explore/ancientscience/:id"
-            element={<AncientScienceDetail />}
-          />
-          <Route path="/explore/clothing/:id" element={<ClothingDetail />} />
-          <Route path="*" element={<NotFound />} />
-  </Routes>
-  </React.Suspense>
-      <FooterSelector />
+              }
+            />
+            <Route
+              path="/explore/ancientscience/:id"
+              element={<AncientScienceDetail />}
+            />
+            <Route path="/explore/clothing/:id" element={<ClothingDetail />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </React.Suspense>
+        <FooterSelector />
       </Box>
     </Router>
   );

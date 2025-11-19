@@ -5,10 +5,10 @@ export default function UserPortal({ user, logout }) {
   return (
     <Box
       sx={{
-        maxWidth: 500,
+        maxWidth: { xs: '90%', sm: 500 },
         mx: "auto",
         mt: 4,
-        p: 3,
+        p: { xs: 2, md: 3 },
         bgcolor: "#fff",
         borderRadius: 3,
         boxShadow: 2,

@@ -70,27 +70,32 @@ const TEAM_DIRECTORS = [
   {
     name: { en: "Subramania Bharathi", ta: "சுப்பிரமணிய பாரதியார்" },
     title: { en: "National Poet of Tamil Nadu", ta: "தமிழ்நாட்டின் தேசிய கவிஞர்" },
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Subramanya_Bharathi.jpg/220px-Subramanya_Bharathi.jpg"
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Subramanya_Bharathi.jpg/250px-Subramanya_Bharathi.jpg",
+    imagePosition: "center 20%"
   },
   {
     name: { en: "Kambar", ta: "கம்பர்" },
     title: { en: "Epic Poet • Kambaramayanam", ta: "காவிய கவிஞர் • கம்பராமாயணம்" },
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzQqB5pZ9nI7XF6rX4vH7mYGnK3rR1kGvKRw&s"
+    image: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Kambar.jpg?20120807204334",
+    imagePosition: "center top"
   },
   {
     name: { en: "Thiruvalluvar", ta: "திருவள்ளுவர்" },
     title: { en: "Author of Thirukkural", ta: "திருக்குறள் ஆசிரியர்" },
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz7XvJ5pZ9nI7XF6rX4vH7mYGnK3rR1kGvKRw&s"
+    image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiXR0EU2W1grbcin5-yghbPrNHdMq0wFccGwR71QRc0WB6ZXEzRbsbPeMdhDWQKgsVfTiGP-9ivpM27-cBXd8_vzzmuZ4JdQbsaWkBS6Dk6swOzSAQhIJ64V_QKG5drXTMrJB1wUgwssyQ/s1600/thiruvalluvar-779961.jpg",
+    imagePosition: "50% 15%"
   },
   {
-    name: { en: "Bharathidasan", ta: "பாரதிதாசன்" },
-    title: { en: "Revolutionary Poet", ta: "புரட்சிக் கவிஞர்" },
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Bharathidasan.jpg/220px-Bharathidasan.jpg"
+    name: { en: "Devaneyapavanar", ta: "தேவநேயப் பாவாணர்" },
+    title: { en: "Tamil Scholar • Linguist", ta: "தமிழ் அறிஞர் • மொழியியலாளர்" },
+    image: "https://static.hindutamil.in/hindu/uploads/news/2023/02/07/xlarge/940197.jpg",
+    imagePosition: "center top"
   },
   {
-    name: { en: "Maraimalai Adigal", ta: "மறைமலை அடிகள்" },
-    title: { en: "Tamil Scholar • Purist Movement", ta: "தமிழ் அறிஞர் • தனித்தமிழ் இயக்கம்" },
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Maraimalai_Adigal.jpg/220px-Maraimalai_Adigal.jpg"
+    name: { en: "Avvaiyar", ta: "ஔவையார்" },
+    title: { en: "Poet • Philosopher", ta: "கவிஞர் • தத்துவஞானி" },
+    image: "https://upload.wikimedia.org/wikipedia/commons/b/b6/Statue_of_Avvaiyar_%28cropped%29.jpg",
+    imagePosition: "center top"
   }
 ];
 
@@ -298,8 +303,8 @@ const FACTS = [
   {
     title: { en: "Palm-Leaf Manuscript Network", ta: "ஓலைச்சுவடி பரிமாற்ற வலை" },
     description: {
-  en: "Jain and Saivite mutts circulated preserved palm-leaf manuscripts across Madurai, Kanchipuram, and Sri Lanka.",
-  ta: "மதுரை, காஞ்சிப்புரம் மற்றும் இலங்கையை இணைத்து ஜைனரும் சைவ மதக்களும் ஓலைச்சுவடிகளை பரிமாறின."
+      en: "Jain and Saivite mutts circulated preserved palm-leaf manuscripts across Madurai, Kanchipuram, and Sri Lanka.",
+      ta: "மதுரை, காஞ்சிப்புரம் மற்றும் இலங்கையை இணைத்து ஜைனரும் சைவ மதக்களும் ஓலைச்சுவடிகளை பரிமாறின."
     },
     source: { en: "Madurai Mutt Records", ta: "மதுரை மடப் பதிவுகள்" }
   }
@@ -631,9 +636,9 @@ const AnimatedCounter = ({ end, duration = 2000, suffix = "" }) => {
     const animate = (currentTime) => {
       if (!startTime) startTime = currentTime;
       const progress = Math.min((currentTime - startTime) / duration, 1);
-      
+
       setCount(Math.floor(progress * end));
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       }
@@ -663,7 +668,7 @@ export default function Home() {
   const [libraryBooksVisible, setLibraryBooksVisible] = useState(false);
   const [meenkodiSrc, setMeenkodiSrc] = useState(MeenkodiImage);
   const libraryRef = useRef(null);
-  
+
   const heritageSteps = [
     {
       number: '01',
@@ -837,13 +842,13 @@ export default function Home() {
   return (
     <Box sx={{ bgcolor: "#fff", color: "#111", fontFamily: "'Inter', 'Arial', sans-serif" }}>
       <SEO {...pageSEO.home} />
-      
+
       {/* HERO SECTION removed as requested */}
 
       {/* OUR HERITAGE PROCESS */}
-      <Box 
-        sx={{ 
-          py: { xs: 10, md: 14 }, 
+      <Box
+        sx={{
+          py: { xs: 10, md: 14 },
           bgcolor: "#fdfcfa",
           position: 'relative',
           overflow: 'hidden',
@@ -860,7 +865,7 @@ export default function Home() {
           }
         }}
       >
-        <Container maxWidth="xl" sx={{ px: { xs: 3, sm: 4, md: 6, lg: 8 }, position: 'relative', zIndex: 2 }}>
+        <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 4, md: 6, lg: 8 }, position: 'relative', zIndex: 2 }}>
           <Box
             sx={{
               display: 'flex',
@@ -895,7 +900,10 @@ export default function Home() {
                       lineHeight: 1.2,
                       color: '#2c1810',
                       letterSpacing: '-0.02em',
-                      mb: 1
+                      mb: 1,
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      hyphens: 'auto'
                     }}
                   >
                     {getContent(HERO_CONTENT.headline)}
@@ -1002,336 +1010,336 @@ export default function Home() {
         </Container>
       </Box>
 
-          {/* Featured Thirukkural Card */}
-          <Box
+      {/* Featured Thirukkural Card */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 2,
+          mt: { xs: 4, md: 6 },
+          mb: { xs: 4, md: 6 }
+        }}
+      >
+        <Container maxWidth="xl" sx={{ px: { xs: 3, sm: 4, md: 6, lg: 8 } }}>
+          <Paper
+            elevation={0}
             sx={{
-              position: 'relative',
-              zIndex: 2,
-              mt: { xs: 4, md: 6 },
-              mb: { xs: 4, md: 6 }
+              borderRadius: '28px',
+              p: { xs: 3.5, md: 5 },
+              background: 'linear-gradient(140deg, rgba(255,248,238,0.96), rgba(255,232,210,0.96))',
+              border: '1px solid rgba(210,140,70,0.22)',
+              boxShadow: '0 32px 80px rgba(90,40,12,0.18)',
+              display: 'grid',
+              gap: { xs: 3, md: 4 },
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 0.95fr) minmax(0, 1.05fr)' },
+              alignItems: 'stretch'
             }}
           >
-            <Container maxWidth="xl" sx={{ px: { xs: 3, sm: 4, md: 6, lg: 8 } }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  borderRadius: '28px',
-                  p: { xs: 3.5, md: 5 },
-                  background: 'linear-gradient(140deg, rgba(255,248,238,0.96), rgba(255,232,210,0.96))',
-                  border: '1px solid rgba(210,140,70,0.22)',
-                  boxShadow: '0 32px 80px rgba(90,40,12,0.18)',
-                  display: 'grid',
-                  gap: { xs: 3, md: 4 },
-                  gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 0.95fr) minmax(0, 1.05fr)' },
-                  alignItems: 'stretch'
-                }}
-              >
-                <Paper
-                  elevation={0}
-                  sx={{
-                    borderRadius: '22px',
-                    p: { xs: 2.5, md: 3 },
-                    background: 'rgba(255,255,255,0.92)',
-                    border: '1px solid rgba(210,140,70,0.2)',
-                    color: '#3b1c0a',
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.4)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    gap: 2.2
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: '100%',
-                      borderRadius: 3,
-                      background: 'linear-gradient(140deg, rgba(255,230,200,0.65), rgba(255,245,235,0.95))',
-                      p: { xs: 1.5, md: 2 },
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 18px 32px rgba(120,60,20,0.18)'
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src="https://m.media-amazon.com/images/I/51ox-wC5UNL.jpg"
-                      alt={i18n.language === 'ta' ? 'திருக்குறள் சிறப்பு பதிப்பு' : 'Thirukkural special edition cover'}
-                      loading="lazy"
-                      sx={{
-                        width: '100%',
-                        height: 'auto',
-                        maxHeight: { xs: 200, md: 240 },
-                        objectFit: 'contain',
-                        borderRadius: 2,
-                        mixBlendMode: 'multiply',
-                        filter: 'drop-shadow(0 16px 26px rgba(60,30,10,0.22))'
-                      }}
-                    />
-                  </Box>
-                  {/* Removed Translation subtitle as requested */}
-                </Paper>
-
-                <Stack
-                  spacing={3}
-                  sx={{
-                    pl: { md: 2 },
-                    justifyContent: 'center',
-                    textAlign: { xs: 'center', md: 'left' },
-                    alignItems: { xs: 'center', md: 'flex-start' }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                    <FormatQuoteRounded sx={{ fontSize: 42, color: '#8b4513' }} />
-                    <Typography
-                      variant="overline"
-                      sx={{
-                        letterSpacing: 5,
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        color: '#8b4513'
-                      }}
-                    >
-                      {FEATURED_KURAL.title[i18n.language] || FEATURED_KURAL.title.en}
-                    </Typography>
-                  </Box>
-
-                  {/* Show only Tamil in Tamil mode, only English in English mode */}
-                  {/* Always show Tamil kural, and show meaning in Tamil or English based on language */}
-                  <>
-                    <Box>
-                      {FEATURED_KURAL.coupletTamil.map((line, index) => (
-                        <Typography
-                          key={`featured-kural-line-${index}`}
-                          variant="h5"
-                          sx={{
-                            fontFamily: "'Noto Serif Tamil', serif",
-                            fontWeight: 700,
-                            letterSpacing: '-0.5px',
-                            color: '#2c1810'
-                          }}
-                        >
-                          {line}
-                        </Typography>
-                      ))}
-                    </Box>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: '#5d4e37',
-                        lineHeight: 1.8,
-                        fontSize: { xs: '1rem', md: '1.05rem' }
-                      }}
-                    >
-                      {i18n.language === 'ta' ? FEATURED_KURAL.meaning.ta : FEATURED_KURAL.meaning.en}
-                    </Typography>
-                  </>
-                </Stack>
-              </Paper>
-            </Container>
-          </Box>
-
-          {/* ARCHAEOLOGY SPOTLIGHT */}
-          <Box sx={{ bgcolor: '#fff', py: { xs: 7, md: 10 } }}>
-            <Container
-              maxWidth="xl"
+            <Paper
+              elevation={0}
               sx={{
-                px: { xs: 3.5, sm: 5, md: 9, lg: 11 },
-                py: { xs: 2, md: 3 },
-                maxWidth: { lg: '1400px', xl: '1500px' }
+                borderRadius: '22px',
+                p: { xs: 2.5, md: 3 },
+                background: 'rgba(255,255,255,0.92)',
+                border: '1px solid rgba(210,140,70,0.2)',
+                color: '#3b1c0a',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.4)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 2.2
               }}
             >
-              <Grid
-                container
-                spacing={{ xs: 5, md: 8 }}
-                alignItems="center"
-                justifyContent={{ xs: 'center', md: 'center' }}
+              <Box
+                sx={{
+                  width: '100%',
+                  borderRadius: 3,
+                  background: 'linear-gradient(140deg, rgba(255,230,200,0.65), rgba(255,245,235,0.95))',
+                  p: { xs: 1.5, md: 2 },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 18px 32px rgba(120,60,20,0.18)'
+                }}
               >
-                <Grid
-                  item
-                  xs={12}
-                  md={5.2}
-                  order={{ xs: 1, md: 2 }}
+                <Box
+                  component="img"
+                  src="https://m.media-amazon.com/images/I/51ox-wC5UNL.jpg"
+                  alt={i18n.language === 'ta' ? 'திருக்குறள் சிறப்பு பதிப்பு' : 'Thirukkural special edition cover'}
+                  loading="lazy"
                   sx={{
-                    display: 'flex',
-                    justifyContent: { md: 'center' },
-                    px: { xs: 0.5, md: 2 }
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: { xs: 200, md: 240 },
+                    objectFit: 'contain',
+                    borderRadius: 2,
+                    mixBlendMode: 'multiply',
+                    filter: 'drop-shadow(0 16px 26px rgba(60,30,10,0.22))'
+                  }}
+                />
+              </Box>
+              {/* Removed Translation subtitle as requested */}
+            </Paper>
+
+            <Stack
+              spacing={3}
+              sx={{
+                pl: { md: 2 },
+                justifyContent: 'center',
+                textAlign: { xs: 'center', md: 'left' },
+                alignItems: { xs: 'center', md: 'flex-start' }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                <FormatQuoteRounded sx={{ fontSize: 42, color: '#8b4513' }} />
+                <Typography
+                  variant="overline"
+                  sx={{
+                    letterSpacing: 5,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    color: '#8b4513'
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))' },
-                      gridTemplateRows: { xs: 'repeat(2, auto)' },
-                      gap: { xs: 2, md: 2.4 },
-                      maxWidth: 520,
-                      mx: 'auto'
-                    }}
-                  >
-                    <Box
-                      component="img"
-                      src="https://www.tnpscthervupettagam.com/assets/home/media/general/original_image/c02.png"
-                      alt="Tamil heritage researcher documenting palm leaf manuscripts"
-                      loading="lazy"
-                      sx={{
-                        gridColumn: '1 / 2',
-                        gridRow: '1 / span 2',
-                        width: '100%',
-                        height: { xs: 220, sm: 240, md: 340 },
-                        objectFit: 'cover',
-                        borderRadius: 4,
-                        boxShadow: '0 20px 42px rgba(0,0,0,0.12)',
-                        transition: 'transform 0.45s ease, box-shadow 0.45s ease',
-                        transform: 'translateY(0)',
-                        '&:hover': {
-                          transform: 'translateY(-8px)',
-                          boxShadow: '0 26px 48px rgba(0,0,0,0.18)'
-                        }
-                      }}
-                    />
-                    <Box
-                      component="img"
-                      src="https://ancienttamilcivilization.wordpress.com/wp-content/uploads/2015/03/final-attirampakkam.jpg"
-                      alt="Conservator restoring iron-age relic"
-                      loading="lazy"
-                      sx={{
-                        gridColumn: '2 / 3',
-                        gridRow: '1 / 2',
-                        width: '100%',
-                        height: { xs: 175, sm: 195, md: 205 },
-                        objectFit: 'cover',
-                        borderRadius: 4,
-                        boxShadow: '0 18px 36px rgba(0,0,0,0.12)',
-                        transition: 'transform 0.45s ease, box-shadow 0.45s ease',
-                        transform: 'translateY(0)',
-                        '&:hover': {
-                          transform: 'translateY(-8px)',
-                          boxShadow: '0 24px 44px rgba(0,0,0,0.18)'
-                        }
-                      }}
-                    />
-                    <Box
-                      component="img"
-                      src="https://ichef.bbci.co.uk/news/480/cpsprodpb/f819/live/f053c790-e843-11ef-9e8a-870423bc5283.jpg.webp"
-                      alt="Inscribed copper plate from Sangam era"
-                      loading="lazy"
-                      sx={{
-                        gridColumn: '2 / 3',
-                        gridRow: '2 / 3',
-                        width: '100%',
-                        height: { xs: 175, sm: 195, md: 205 },
-                        objectFit: 'cover',
-                        borderRadius: 4,
-                        boxShadow: '0 18px 36px rgba(0,0,0,0.12)',
-                        transition: 'transform 0.45s ease, box-shadow 0.45s ease',
-                        transform: 'translateY(0)',
-                        '&:hover': {
-                          transform: 'translateY(-8px)',
-                          boxShadow: '0 24px 44px rgba(0,0,0,0.18)'
-                        }
-                      }}
-                    />
-                  </Box>
-                </Grid>
+                  {FEATURED_KURAL.title[i18n.language] || FEATURED_KURAL.title.en}
+                </Typography>
+              </Box>
 
-                <Grid
-                  item
-                  xs={12}
-                  md={6.8}
-                  order={{ xs: 2, md: 1 }}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: { md: 'center' },
-                    px: { xs: 0.5, md: 2 }
-                  }}
-                >
-                  <Stack
-                    spacing={{ xs: 2.75, md: 3 }}
-                    sx={{
-                      maxWidth: 560,
-                      mx: { md: 'auto' }
-                    }}
-                  >
-                    <Box>
-                      <Typography
-                        variant="overline"
-                        sx={{
-                          letterSpacing: 3,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          color: '#8b0000'
-                        }}
-                      >
-                        {t('home.ironAge.overline')}
-                      </Typography>
-                      <Typography
-                        variant="h3"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: { xs: '2.3rem', md: '2.7rem' },
-                          color: '#2c1810',
-                          letterSpacing: '-0.01em'
-                        }}
-                      >
-                        {t('home.ironAge.title')}
-                      </Typography>
-                    </Box>
-
+              {/* Show only Tamil in Tamil mode, only English in English mode */}
+              {/* Always show Tamil kural, and show meaning in Tamil or English based on language */}
+              <>
+                <Box>
+                  {FEATURED_KURAL.coupletTamil.map((line, index) => (
                     <Typography
-                      variant="body1"
+                      key={`featured-kural-line-${index}`}
+                      variant="h5"
                       sx={{
-                        color: '#5d4e37',
-                        lineHeight: 1.68,
-                        maxWidth: 510
-                      }}
-                    >
-                      {t('home.ironAge.description')}
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#7a6b5a',
-                        lineHeight: 1.65,
-                        maxWidth: 480
-                      }}
-                    >
-                      {t('home.ironAge.callToAction')}
-                    </Typography>
-
-                    <Button
-                      variant="outlined"
-                      onClick={() => navigate('/explore')}
-                      sx={{
-                        alignSelf: 'flex-start',
-                        borderRadius: '999px',
-                        px: 3.8,
-                        py: 1.1,
+                        fontFamily: "'Noto Serif Tamil', serif",
                         fontWeight: 700,
-                        letterSpacing: 0.6,
-                        textTransform: 'none',
-                        borderWidth: 2,
-                        borderColor: '#8B0000',
-                        color: '#8B0000',
-                        background: 'linear-gradient(135deg, rgba(139,0,0,0.05) 0%, rgba(218,165,32,0.05) 100%)',
-                        '&:hover': {
-                          borderColor: '#daa520',
-                          color: '#fff',
-                          bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                        },
-                        transition: 'all 0.3s ease'
+                        letterSpacing: '-0.5px',
+                        color: '#2c1810'
                       }}
                     >
-                      {t('home.ironAge.button')}
-                    </Button>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Container>
-          </Box>
+                      {line}
+                    </Typography>
+                  ))}
+                </Box>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: '#5d4e37',
+                    lineHeight: 1.8,
+                    fontSize: { xs: '1rem', md: '1.05rem' }
+                  }}
+                >
+                  {i18n.language === 'ta' ? FEATURED_KURAL.meaning.ta : FEATURED_KURAL.meaning.en}
+                </Typography>
+              </>
+            </Stack>
+          </Paper>
+        </Container>
+      </Box>
+
+      {/* ARCHAEOLOGY SPOTLIGHT */}
+      <Box sx={{ bgcolor: '#fff', py: { xs: 7, md: 10 } }}>
+        <Container
+          maxWidth="xl"
+          sx={{
+            px: { xs: 3.5, sm: 5, md: 9, lg: 11 },
+            py: { xs: 2, md: 3 },
+            maxWidth: { lg: '1400px', xl: '1500px' }
+          }}
+        >
+          <Grid
+            container
+            spacing={{ xs: 5, md: 8 }}
+            alignItems="center"
+            justifyContent={{ xs: 'center', md: 'center' }}
+          >
+            <Grid
+              item
+              xs={12}
+              md={5.2}
+              order={{ xs: 1, md: 2 }}
+              sx={{
+                display: 'flex',
+                justifyContent: { md: 'center' },
+                px: { xs: 0.5, md: 2 }
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))' },
+                  gridTemplateRows: { xs: 'repeat(2, auto)' },
+                  gap: { xs: 2, md: 2.4 },
+                  maxWidth: 520,
+                  mx: 'auto'
+                }}
+              >
+                <Box
+                  component="img"
+                  src="https://www.tnpscthervupettagam.com/assets/home/media/general/original_image/c02.png"
+                  alt="Tamil heritage researcher documenting palm leaf manuscripts"
+                  loading="lazy"
+                  sx={{
+                    gridColumn: '1 / 2',
+                    gridRow: '1 / span 2',
+                    width: '100%',
+                    height: { xs: 220, sm: 240, md: 340 },
+                    objectFit: 'cover',
+                    borderRadius: 4,
+                    boxShadow: '0 20px 42px rgba(0,0,0,0.12)',
+                    transition: 'transform 0.45s ease, box-shadow 0.45s ease',
+                    transform: 'translateY(0)',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: '0 26px 48px rgba(0,0,0,0.18)'
+                    }
+                  }}
+                />
+                <Box
+                  component="img"
+                  src="https://ancienttamilcivilization.wordpress.com/wp-content/uploads/2015/03/final-attirampakkam.jpg"
+                  alt="Conservator restoring iron-age relic"
+                  loading="lazy"
+                  sx={{
+                    gridColumn: '2 / 3',
+                    gridRow: '1 / 2',
+                    width: '100%',
+                    height: { xs: 175, sm: 195, md: 205 },
+                    objectFit: 'cover',
+                    borderRadius: 4,
+                    boxShadow: '0 18px 36px rgba(0,0,0,0.12)',
+                    transition: 'transform 0.45s ease, box-shadow 0.45s ease',
+                    transform: 'translateY(0)',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: '0 24px 44px rgba(0,0,0,0.18)'
+                    }
+                  }}
+                />
+                <Box
+                  component="img"
+                  src="https://ichef.bbci.co.uk/news/480/cpsprodpb/f819/live/f053c790-e843-11ef-9e8a-870423bc5283.jpg.webp"
+                  alt="Inscribed copper plate from Sangam era"
+                  loading="lazy"
+                  sx={{
+                    gridColumn: '2 / 3',
+                    gridRow: '2 / 3',
+                    width: '100%',
+                    height: { xs: 175, sm: 195, md: 205 },
+                    objectFit: 'cover',
+                    borderRadius: 4,
+                    boxShadow: '0 18px 36px rgba(0,0,0,0.12)',
+                    transition: 'transform 0.45s ease, box-shadow 0.45s ease',
+                    transform: 'translateY(0)',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: '0 24px 44px rgba(0,0,0,0.18)'
+                    }
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid
+              item
+              xs={12}
+              md={6.8}
+              order={{ xs: 2, md: 1 }}
+              sx={{
+                display: 'flex',
+                justifyContent: { md: 'center' },
+                px: { xs: 0.5, md: 2 }
+              }}
+            >
+              <Stack
+                spacing={{ xs: 2.75, md: 3 }}
+                sx={{
+                  maxWidth: 560,
+                  mx: { md: 'auto' }
+                }}
+              >
+                <Box>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      letterSpacing: 3,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      color: '#8b0000'
+                    }}
+                  >
+                    {t('home.ironAge.overline')}
+                  </Typography>
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: { xs: '2.3rem', md: '2.7rem' },
+                      color: '#2c1810',
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
+                    {t('home.ironAge.title')}
+                  </Typography>
+                </Box>
+
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: '#5d4e37',
+                    lineHeight: 1.68,
+                    maxWidth: 510
+                  }}
+                >
+                  {t('home.ironAge.description')}
+                </Typography>
+
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#7a6b5a',
+                    lineHeight: 1.65,
+                    maxWidth: 480
+                  }}
+                >
+                  {t('home.ironAge.callToAction')}
+                </Typography>
+
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/explore')}
+                  sx={{
+                    alignSelf: 'flex-start',
+                    borderRadius: '999px',
+                    px: 3.8,
+                    py: 1.1,
+                    fontWeight: 700,
+                    letterSpacing: 0.6,
+                    textTransform: 'none',
+                    borderWidth: 2,
+                    borderColor: '#8B0000',
+                    color: '#8B0000',
+                    background: 'linear-gradient(135deg, rgba(139,0,0,0.05) 0%, rgba(218,165,32,0.05) 100%)',
+                    '&:hover': {
+                      borderColor: '#daa520',
+                      color: '#fff',
+                      bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {t('home.ironAge.button')}
+                </Button>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* EXPLORE CATEGORIES SLIDER */}
       <Box sx={{ bgcolor: "#0a0908", py: { xs: 10, md: 12 } }}>
@@ -1367,21 +1375,21 @@ export default function Home() {
           </Box>
 
           <DeferredSection fallback="none" rootMargin="200px">
-          <CourseSyllabusSlider
-            slides={EXPLORE_CATEGORIES}
-            ctaLabel={i18n.language === 'ta' ? 'அனைத்தையும் ஆராயுங்கள்' : 'Explore All Categories'}
-            ctaRoute="/explore"
-          />
+            <CourseSyllabusSlider
+              slides={EXPLORE_CATEGORIES}
+              ctaLabel={i18n.language === 'ta' ? 'அனைத்தையும் ஆராயுங்கள்' : 'Explore All Categories'}
+              ctaRoute="/explore"
+            />
           </DeferredSection>
         </Container>
       </Box>
 
       {/* LIBRARY & ARCHIVES */}
-      <Box ref={libraryRef} sx={{ bgcolor: '#fff', py: { xs: 10, md: 13 } }}>
+      <Box ref={libraryRef} sx={{ bgcolor: '#fff', py: { xs: 10, md: 13 }, overflow: 'hidden' }}>
         <Container
           maxWidth="xl"
           sx={{
-            px: { xs: 3, sm: 5, md: 8, lg: 10 },
+            px: { xs: 1.5, sm: 5, md: 8, lg: 10 },
             maxWidth: { lg: '1280px', xl: '1380px' }
           }}
         >
@@ -1433,7 +1441,10 @@ export default function Home() {
                     fontWeight: i18n.language === 'ta' ? 600 : 700,
                     color: '#3c2b2b',
                     lineHeight: i18n.language === 'ta' ? 1.1 : 1.05,
-                    letterSpacing: i18n.language === 'ta' ? 0.6 : 0.3
+                    letterSpacing: i18n.language === 'ta' ? 0.6 : 0.3,
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    hyphens: 'auto'
                   }}
                 >
                   {getContent(LIBRARY_ARCHIVES_HEADING.top)}
@@ -1538,88 +1549,92 @@ export default function Home() {
 
 
       {/* STATISTICS SECTION */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: "#000", color: "#fff" }}>
-        <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4, md: 6 } }}>
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: "#000", color: "#fff", overflow: 'hidden' }}>
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
           {STATS_QUOTES.map((quote, index) => (
-            <Typography 
+            <Typography
               key={`stats-quote-${index}`}
-              variant="h2" 
-              align="center" 
-              sx={{ 
-                fontWeight: 700, 
+              variant="h2"
+              align="center"
+              sx={{
+                fontWeight: 700,
                 mb: index === STATS_QUOTES.length - 1 ? 6 : 1.5,
                 fontSize: statsQuoteFontSize,
                 color: "#fff",
                 lineHeight: statsQuoteLineHeight,
                 letterSpacing: statsQuoteLetterSpacing,
                 fontStyle: "italic",
-                whiteSpace: 'nowrap'
+                whiteSpace: { xs: 'normal', md: 'nowrap' },
+                wordBreak: { xs: 'break-word', md: 'normal' }
               }}
             >
               {getContent(quote)}
             </Typography>
           ))}
           <Grid container spacing={4} justifyContent="center">
-            <Grid container spacing={4} justifyContent="center" wrap="nowrap" sx={{ flexWrap: 'nowrap' }}>
-            <Grid item xs="auto" md="auto">
-              <Box sx={{ textAlign: "center", py: 2 }}>
-                <Typography 
-                  variant="h1" 
-                  sx={{ 
-                    fontWeight: 900, 
-                    mb: 1,
-                    fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                    color: "#DAA520",
-                    lineHeight: 1
-                  }}
-                >
-                  <AnimatedCounter end={850} suffix="k+" />
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.9rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>
-                  {t('home.stats.artifacts')}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs="auto" md="auto">
-              <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{ fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                    color: "#DAA520",
-                    lineHeight: 1
-                  }}
+            <Grid container spacing={4} justifyContent="center" sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+              <Grid item xs={6} md={3}>
+                <Box sx={{ textAlign: "center", py: 2 }}>
+                  <Typography
+                    variant="h1"
+                    sx={{
+                      fontWeight: 900,
+                      mb: 1,
+                      fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
+                      color: "#DAA520",
+                      lineHeight: 1
+                    }}
+                  >
+                    <AnimatedCounter end={850} suffix="k+" />
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
+                    {t('home.stats.artifacts')}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
+                  fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
+                  color: "#DAA520",
+                  lineHeight: 1
+                }}
                 >
                   <AnimatedCounter end={380} suffix="+" />
                 </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.9rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>
-                  {t('home.stats.manuscripts')}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs="auto" md="auto">
-              <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{ fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                    color: "#DAA520",
-                    lineHeight: 1
-                  }}
+                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
+                    {t('home.stats.manuscripts')}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
+                  fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
+                  color: "#DAA520",
+                  lineHeight: 1
+                }}
                 >
                   <AnimatedCounter end={65} suffix="+" />
                 </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.9rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>
-                  {t('home.stats.temples')}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs="auto" md="auto">
-              <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{ fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                    color: "#DAA520",
-                    lineHeight: 1
-                  }}
+                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
+                    {t('home.stats.temples')}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
+                  fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
+                  color: "#DAA520",
+                  lineHeight: 1
+                }}
                 >
                   <AnimatedCounter end={150} suffix="+" />
                 </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.9rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>
-                  {t('home.stats.scholars')}
-                </Typography>
-              </Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
+                    {t('home.stats.scholars')}
+                  </Typography>
+                </Box>
+              </Grid>
             </Grid>
-          </Grid>
           </Grid>
         </Container>
       </Box>
@@ -1627,868 +1642,946 @@ export default function Home() {
 
       {/* Five Lands Atlas */}
       <DeferredSection fallback="skeleton" rootMargin="300px">
-      <Box
-        sx={{
-          bgcolor: '#fff',
-          py: { xs: 7, md: 10 }
-        }}
-      >
-
-        <Container
-          maxWidth="xl"
+        <Box
           sx={{
-            px: { xs: 3.5, sm: 5, md: 9, lg: 11 },
-            py: { xs: 2, md: 3 },
-            maxWidth: { lg: '1400px', xl: '1500px' }
+            bgcolor: '#fff',
+            py: { xs: 7, md: 10 }
           }}
         >
-          <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
-            <Typography
-              variant="overline"
-              sx={{
-                letterSpacing: 3,
-                fontSize: 12,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                color: '#8b0000'
-              }}
-            >
-              {i18n.language === 'ta' ? 'தமிழின் திணைகள் வரைபடம்' : 'Tamil Tinai Atlas'}
-            </Typography>
-            
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                fontSize: { xs: '2.3rem', md: '2.7rem' },
-                color: '#1f130c',
-                letterSpacing: '-0.01em',
-                mt: 1
-              }}
-            >
-              {i18n.language === 'ta'
-                ? 'தமிழரின் ஐந்து திணைகள்'
-                : 'Five Lands of Tamil Heritage'}
-            </Typography>
 
-            <Typography
-              variant="body1"
-              sx={{
-                maxWidth: 560,
-                mx: 'auto',
-                mt: 2,
-                color: 'rgba(31,19,12,0.8)',
-                lineHeight: 1.68
-              }}
-            >
-              {i18n.language === 'ta'
-                ? 'தமிழரின் அடையாளத்தை வடிவமைக்கும் பண்டைய ஐந்து திணைகளைச் சுற்றி இயங்கும் உயிர்த்துடிப்பு கொண்ட சுற்றுச்சுழல் காட்சி.'
-                : 'An immersive atlas of the classical eco-cultural tinai regions. Explore how landscape, deity, mood, and livelihoods cycle to keep Tamil heritage living and interlinked.'}
-            </Typography>
-          </Box>
+          <Container
+            maxWidth="xl"
+            sx={{
+              px: { xs: 3.5, sm: 5, md: 9, lg: 11 },
+              py: { xs: 2, md: 3 },
+              maxWidth: { lg: '1400px', xl: '1500px' }
+            }}
+          >
+            <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
+              <Typography
+                variant="overline"
+                sx={{
+                  letterSpacing: 3,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  color: '#8b0000'
+                }}
+              >
+                {i18n.language === 'ta' ? 'தமிழின் திணைகள் வரைபடம்' : 'Tamil Tinai Atlas'}
+              </Typography>
 
-          <Box>
-            {/* Remove SVG paths */}
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'stretch',
-                gap: { xs: 5, md: 6 }
-              }}
-            >
-              {/* Kurinji - TOP LEFT */}
-              {(() => {
-                const land = FIVE_LANDS.find((item) => item.key === 'kurinji');
-                if (!land) return null;
-                const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'kurinji');
-                return (
-                  <Paper
-                    key="five-lands-card-kurinji"
-                    elevation={0}
-                    sx={{
-                      alignSelf: { xs: 'stretch', md: 'flex-start' },
-                      width: { xs: '100%', md: '85%' },
-                      ml: { md: 0 },
-                      position: 'relative',
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                      border: `2px solid ${land.accent}40`,
-                      boxShadow: `0 16px 48px ${land.accent}25`,
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 24px 64px ${land.accent}35`,
-                        borderColor: `${land.accent}60`
-                      }
-                    }}
-                  >
-                    {/* Image Section - Left Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={KurnjiImage}
-                        alt="Kurinji Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: '2.3rem', md: '2.7rem' },
+                  color: '#1f130c',
+                  letterSpacing: '-0.01em',
+                  mt: 1
+                }}
+              >
+                {i18n.language === 'ta'
+                  ? 'தமிழரின் ஐந்து திணைகள்'
+                  : 'Five Lands of Tamil Heritage'}
+              </Typography>
 
-                    {/* Content Section - Right Side */}
-                    <Box 
-                      sx={{ 
-                        width: { xs: '100%', md: '60%' },
-                        p: { xs: 4, md: 5 }, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
-
-                      {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
-
-                      {/* Poetic Quote */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
-                          lineHeight: 1.7,
-                          fontWeight: 500
-                        }}
-                      >
-                        {getContent(land.poetic)}
-                      </Typography>
-
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant="outlined"
-                        endIcon={<ArrowForward fontSize="small" />}
-                        onClick={() => navigate(land.route)}
-                        sx={{
-                          alignSelf: 'flex-start',
-                          mt: 1,
-                          borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
-                          '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {getContent(land.cta)}
-                      </Button>
-                    </Box>
-                  </Paper>
-                );
-              })()}
-
-              {/* Mullai - RIGHT */}
-              {(() => {
-                const land = FIVE_LANDS.find((item) => item.key === 'mullai');
-                if (!land) return null;
-                const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'mullai');
-                return (
-                  <Paper
-                    key="five-lands-card-mullai"
-                    elevation={0}
-                    sx={{
-                      alignSelf: { xs: 'stretch', md: 'flex-end' },
-                      width: { xs: '100%', md: '85%' },
-                      mr: { md: 0 },
-                      position: 'relative',
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                      border: `2px solid ${land.accent}40`,
-                      boxShadow: `0 16px 48px ${land.accent}25`,
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 24px 64px ${land.accent}35`,
-                        borderColor: `${land.accent}60`
-                      }
-                    }}
-                  >
-                    {/* Content Section - Left Side */}
-                    <Box 
-                      sx={{ 
-                        width: { xs: '100%', md: '60%' },
-                        p: { xs: 4, md: 5 }, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
-
-                      {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
-
-                      {/* Poetic Quote */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
-                          lineHeight: 1.7,
-                          fontWeight: 500
-                        }}
-                      >
-                        {getContent(land.poetic)}
-                      </Typography>
-
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant="outlined"
-                        endIcon={<ArrowForward fontSize="small" />}
-                        onClick={() => navigate(land.route)}
-                        sx={{
-                          alignSelf: 'flex-start',
-                          mt: 1,
-                          borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
-                          '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {getContent(land.cta)}
-                      </Button>
-                    </Box>
-
-                    {/* Image Section - Right Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={MullaiImage}
-                        alt="Mullai Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
-                  </Paper>
-                );
-              })()}
-
-              {/* Marutham - LEFT */}
-              {(() => {
-                const land = FIVE_LANDS.find((item) => item.key === 'marutham');
-                if (!land) return null;
-                const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'marutham');
-                return (
-                  <Paper
-                    key="five-lands-card-marutham"
-                    elevation={0}
-                    sx={{
-                      alignSelf: { xs: 'stretch', md: 'flex-start' },
-                      width: { xs: '100%', md: '85%' },
-                      ml: { md: 0 },
-                      position: 'relative',
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                      border: `2px solid ${land.accent}40`,
-                      boxShadow: `0 16px 48px ${land.accent}25`,
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 24px 64px ${land.accent}35`,
-                        borderColor: `${land.accent}60`
-                      }
-                    }}
-                  >
-                    {/* Image Section - Left Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={MaruthamImage}
-                        alt="Marutham Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
-
-                    {/* Content Section - Right Side */}
-                    <Box 
-                      sx={{ 
-                        width: { xs: '100%', md: '60%' },
-                        p: { xs: 4, md: 5 }, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
-
-                      {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
-
-                      {/* Poetic Quote */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
-                          lineHeight: 1.7,
-                          fontWeight: 500
-                        }}
-                      >
-                        {getContent(land.poetic)}
-                      </Typography>
-
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant="outlined"
-                        endIcon={<ArrowForward fontSize="small" />}
-                        onClick={() => navigate(land.route)}
-                        sx={{
-                          alignSelf: 'flex-start',
-                          mt: 1,
-                          borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
-                          '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {getContent(land.cta)}
-                      </Button>
-                    </Box>
-                  </Paper>
-                );
-              })()}
-
-              {/* Neithal - RIGHT */}
-              {(() => {
-                const land = FIVE_LANDS.find((item) => item.key === 'neithal');
-                if (!land) return null;
-                const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'neithal');
-                return (
-                  <Paper
-                    key="five-lands-card-neithal"
-                    elevation={0}
-                    sx={{
-                      alignSelf: { xs: 'stretch', md: 'flex-end' },
-                      width: { xs: '100%', md: '85%' },
-                      mr: { md: 0 },
-                      position: 'relative',
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                      border: `2px solid ${land.accent}40`,
-                      boxShadow: `0 16px 48px ${land.accent}25`,
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 24px 64px ${land.accent}35`,
-                        borderColor: `${land.accent}60`
-                      }
-                    }}
-                  >
-                    {/* Content Section - Left Side */}
-                    <Box 
-                      sx={{ 
-                        width: { xs: '100%', md: '60%' },
-                        p: { xs: 4, md: 5 }, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
-
-                      {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
-
-                      {/* Poetic Quote */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
-                          lineHeight: 1.7,
-                          fontWeight: 500
-                        }}
-                      >
-                        {getContent(land.poetic)}
-                      </Typography>
-
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant="outlined"
-                        endIcon={<ArrowForward fontSize="small" />}
-                        onClick={() => navigate(land.route)}
-                        sx={{
-                          alignSelf: 'flex-start',
-                          mt: 1,
-                          borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
-                          '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {getContent(land.cta)}
-                      </Button>
-                    </Box>
-
-                    {/* Image Section - Right Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={NeithalImage}
-                        alt="Neithal Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
-                  </Paper>
-                );
-              })()}
-
-              {/* Palai - LEFT */}
-              {(() => {
-                const land = FIVE_LANDS.find((item) => item.key === 'palai');
-                if (!land) return null;
-                const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'palai');
-                return (
-                  <Paper
-                    key="five-lands-card-palai"
-                    elevation={0}
-                    sx={{
-                      alignSelf: { xs: 'stretch', md: 'flex-start' },
-                      width: { xs: '100%', md: '85%' },
-                      ml: { md: 0 },
-                      position: 'relative',
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                      border: `2px solid ${land.accent}40`,
-                      boxShadow: `0 16px 48px ${land.accent}25`,
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: { xs: 'column', md: 'row' },
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: `0 24px 64px ${land.accent}35`,
-                        borderColor: `${land.accent}60`
-                      }
-                    }}
-                  >
-                    {/* Image Section - Left Side */}
-                    <Box sx={{ 
-                      width: { xs: '100%', md: '40%' }, 
-                      height: { xs: 280, md: 420 },
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <OptimizedImage
-                        src={PalaiImage}
-                        alt="Palai Landscape"
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        skeletonSx={{ bgcolor: `${land.accent}15` }}
-                      />
-                    </Box>
-
-                    {/* Content Section - Right Side */}
-                    <Box 
-                      sx={{ 
-                        width: { xs: '100%', md: '60%' },
-                        p: { xs: 4, md: 5 }, 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: 2.5,
-                        bgcolor: '#fff',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {/* Badge */}
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ 
-                          fontWeight: 700,
-                          color: '#8b4513',
-                          letterSpacing: 2.5,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}
-                      >
-                        {i18n.language === 'ta'
-                          ? `திணை ${originalIndex + 1}`
-                          : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
-                      </Typography>
-
-                      {/* Title */}
-                      <Typography
-                        variant="h4"
-                        sx={{ 
-                          fontWeight: 800, 
-                          color: '#2c1810', 
-                          letterSpacing: '-0.02em',
-                          fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
-                          fontSize: { xs: '1.75rem', md: '2rem' }
-                        }}
-                      >
-                        {getContent(land.name)}
-                      </Typography>
-
-                      {/* Poetic Quote */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontStyle: 'italic',
-                          color: '#8b4513',
-                          fontSize: { xs: '1rem', md: '1.05rem' },
-                          lineHeight: 1.7,
-                          fontWeight: 500
-                        }}
-                      >
-                        {getContent(land.poetic)}
-                      </Typography>
-
-                      {/* Description */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#5d4e37',
-                          lineHeight: 1.75,
-                          fontSize: { xs: '0.95rem', md: '1rem' }
-                        }}
-                      >
-                        {getContent(land.description)}
-                      </Typography>
-
-                      {/* CTA Button */}
-                      <Button
-                        variant="outlined"
-                        endIcon={<ArrowForward fontSize="small" />}
-                        onClick={() => navigate(land.route)}
-                        sx={{
-                          alignSelf: 'flex-start',
-                          mt: 1,
-                          borderRadius: '999px',
-                          px: 3.5,
-                          py: 1.2,
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          letterSpacing: 0.5,
-                          textTransform: 'none',
-                          borderColor: '#8B0000',
-                          color: '#8B0000',
-                          borderWidth: 2,
-                          '&:hover': {
-                            borderColor: '#daa520',
-                            bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
-                            color: '#fff',
-                            transform: 'translateX(5px)',
-                            boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
-                          },
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {getContent(land.cta)}
-                      </Button>
-                    </Box>
-                  </Paper>
-                );
-              })()}
+              <Typography
+                variant="body1"
+                sx={{
+                  maxWidth: 560,
+                  mx: 'auto',
+                  mt: 2,
+                  color: 'rgba(31,19,12,0.8)',
+                  lineHeight: 1.68
+                }}
+              >
+                {i18n.language === 'ta'
+                  ? 'தமிழரின் அடையாளத்தை வடிவமைக்கும் பண்டைய ஐந்து திணைகளைச் சுற்றி இயங்கும் உயிர்த்துடிப்பு கொண்ட சுற்றுச்சுழல் காட்சி.'
+                  : 'An immersive atlas of the classical eco-cultural tinai regions. Explore how landscape, deity, mood, and livelihoods cycle to keep Tamil heritage living and interlinked.'}
+              </Typography>
             </Box>
-          </Box>
-        </Container>
-      </Box>
+
+            <Box>
+              {/* Remove SVG paths */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'stretch',
+                  gap: { xs: 5, md: 6 }
+                }}
+              >
+                {/* Kurinji - TOP LEFT */}
+                {(() => {
+                  const land = FIVE_LANDS.find((item) => item.key === 'kurinji');
+                  if (!land) return null;
+                  const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'kurinji');
+                  return (
+                    <Paper
+                      key="five-lands-card-kurinji"
+                      elevation={0}
+                      sx={{
+                        alignSelf: { xs: 'stretch', md: 'flex-start' },
+                        width: { xs: '100%', md: '85%' },
+                        ml: { md: 0 },
+                        position: 'relative',
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        border: `2px solid ${land.accent}40`,
+                        boxShadow: `0 16px 48px ${land.accent}25`,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: `0 24px 64px ${land.accent}35`,
+                          borderColor: `${land.accent}60`
+                        }
+                      }}
+                    >
+                      {/* Image Section - Left Side */}
+                      <Box sx={{
+                        width: { xs: '100%', md: '40%' },
+                        height: { xs: 280, md: 420 },
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        <OptimizedImage
+                          src={KurnjiImage}
+                          alt="Kurinji Landscape"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          skeletonSx={{ bgcolor: `${land.accent}15` }}
+                        />
+                      </Box>
+
+                      {/* Content Section - Right Side */}
+                      <Box
+                        sx={{
+                          width: { xs: '100%', md: '60%' },
+                          p: { xs: 4, md: 5 },
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2.5,
+                          bgcolor: '#fff',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {/* Badge */}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#8b4513',
+                            letterSpacing: 2.5,
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+
+                        {/* Title */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 800,
+                            color: '#2c1810',
+                            letterSpacing: '-0.02em',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+
+                        {/* Poetic Quote */}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontStyle: 'italic',
+                            color: '#8b4513',
+                            fontSize: { xs: '1rem', md: '1.05rem' },
+                            lineHeight: 1.7,
+                            fontWeight: 500
+                          }}
+                        >
+                          {getContent(land.poetic)}
+                        </Typography>
+
+                        {/* Description */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#5d4e37',
+                            lineHeight: 1.75,
+                            fontSize: { xs: '0.95rem', md: '1rem' }
+                          }}
+                        >
+                          {getContent(land.description)}
+                        </Typography>
+
+                        {/* CTA Button */}
+                        <Button
+                          variant="outlined"
+                          endIcon={<ArrowForward fontSize="small" />}
+                          onClick={() => navigate(land.route)}
+                          sx={{
+                            alignSelf: 'flex-start',
+                            mt: 1,
+                            borderRadius: '999px',
+                            px: 3.5,
+                            py: 1.2,
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            letterSpacing: 0.5,
+                            textTransform: 'none',
+                            borderColor: '#8B0000',
+                            color: '#8B0000',
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderColor: '#daa520',
+                              bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
+                              color: '#fff',
+                              transform: 'translateX(5px)',
+                              boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                            },
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {getContent(land.cta)}
+                        </Button>
+                      </Box>
+                    </Paper>
+                  );
+                })()}
+
+                {/* Mullai - RIGHT */}
+                {(() => {
+                  const land = FIVE_LANDS.find((item) => item.key === 'mullai');
+                  if (!land) return null;
+                  const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'mullai');
+                  return (
+                    <Paper
+                      key="five-lands-card-mullai"
+                      elevation={0}
+                      sx={{
+                        alignSelf: { xs: 'stretch', md: 'flex-end' },
+                        width: { xs: '100%', md: '85%' },
+                        mr: { md: 0 },
+                        position: 'relative',
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        border: `2px solid ${land.accent}40`,
+                        boxShadow: `0 16px 48px ${land.accent}25`,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: `0 24px 64px ${land.accent}35`,
+                          borderColor: `${land.accent}60`
+                        }
+                      }}
+                    >
+                      {/* Content Section - Left Side */}
+                      <Box
+                        sx={{
+                          width: { xs: '100%', md: '60%' },
+                          p: { xs: 4, md: 5 },
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2.5,
+                          bgcolor: '#fff',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {/* Badge */}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#8b4513',
+                            letterSpacing: 2.5,
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+
+                        {/* Title */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 800,
+                            color: '#2c1810',
+                            letterSpacing: '-0.02em',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+
+                        {/* Poetic Quote */}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontStyle: 'italic',
+                            color: '#8b4513',
+                            fontSize: { xs: '1rem', md: '1.05rem' },
+                            lineHeight: 1.7,
+                            fontWeight: 500
+                          }}
+                        >
+                          {getContent(land.poetic)}
+                        </Typography>
+
+                        {/* Description */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#5d4e37',
+                            lineHeight: 1.75,
+                            fontSize: { xs: '0.95rem', md: '1rem' }
+                          }}
+                        >
+                          {getContent(land.description)}
+                        </Typography>
+
+                        {/* CTA Button */}
+                        <Button
+                          variant="outlined"
+                          endIcon={<ArrowForward fontSize="small" />}
+                          onClick={() => navigate(land.route)}
+                          sx={{
+                            alignSelf: 'flex-start',
+                            mt: 1,
+                            borderRadius: '999px',
+                            px: 3.5,
+                            py: 1.2,
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            letterSpacing: 0.5,
+                            textTransform: 'none',
+                            borderColor: '#8B0000',
+                            color: '#8B0000',
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderColor: '#daa520',
+                              bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
+                              color: '#fff',
+                              transform: 'translateX(5px)',
+                              boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                            },
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {getContent(land.cta)}
+                        </Button>
+                      </Box>
+
+                      {/* Image Section - Right Side */}
+                      <Box sx={{
+                        width: { xs: '100%', md: '40%' },
+                        height: { xs: 280, md: 420 },
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        <OptimizedImage
+                          src={MullaiImage}
+                          alt="Mullai Landscape"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          skeletonSx={{ bgcolor: `${land.accent}15` }}
+                        />
+                      </Box>
+                    </Paper>
+                  );
+                })()}
+
+                {/* Marutham - LEFT */}
+                {(() => {
+                  const land = FIVE_LANDS.find((item) => item.key === 'marutham');
+                  if (!land) return null;
+                  const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'marutham');
+                  return (
+                    <Paper
+                      key="five-lands-card-marutham"
+                      elevation={0}
+                      sx={{
+                        alignSelf: { xs: 'stretch', md: 'flex-start' },
+                        width: { xs: '100%', md: '85%' },
+                        ml: { md: 0 },
+                        position: 'relative',
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        border: `2px solid ${land.accent}40`,
+                        boxShadow: `0 16px 48px ${land.accent}25`,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: `0 24px 64px ${land.accent}35`,
+                          borderColor: `${land.accent}60`
+                        }
+                      }}
+                    >
+                      {/* Image Section - Left Side */}
+                      <Box sx={{
+                        width: { xs: '100%', md: '40%' },
+                        height: { xs: 280, md: 420 },
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        <OptimizedImage
+                          src={MaruthamImage}
+                          alt="Marutham Landscape"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          skeletonSx={{ bgcolor: `${land.accent}15` }}
+                        />
+                      </Box>
+
+                      {/* Content Section - Right Side */}
+                      <Box
+                        sx={{
+                          width: { xs: '100%', md: '60%' },
+                          p: { xs: 4, md: 5 },
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2.5,
+                          bgcolor: '#fff',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {/* Badge */}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#8b4513',
+                            letterSpacing: 2.5,
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+
+                        {/* Title */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 800,
+                            color: '#2c1810',
+                            letterSpacing: '-0.02em',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+
+                        {/* Poetic Quote */}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontStyle: 'italic',
+                            color: '#8b4513',
+                            fontSize: { xs: '1rem', md: '1.05rem' },
+                            lineHeight: 1.7,
+                            fontWeight: 500
+                          }}
+                        >
+                          {getContent(land.poetic)}
+                        </Typography>
+
+                        {/* Description */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#5d4e37',
+                            lineHeight: 1.75,
+                            fontSize: { xs: '0.95rem', md: '1rem' }
+                          }}
+                        >
+                          {getContent(land.description)}
+                        </Typography>
+
+                        {/* CTA Button */}
+                        <Button
+                          variant="outlined"
+                          endIcon={<ArrowForward fontSize="small" />}
+                          onClick={() => navigate(land.route)}
+                          sx={{
+                            alignSelf: 'flex-start',
+                            mt: 1,
+                            borderRadius: '999px',
+                            px: 3.5,
+                            py: 1.2,
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            letterSpacing: 0.5,
+                            textTransform: 'none',
+                            borderColor: '#8B0000',
+                            color: '#8B0000',
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderColor: '#daa520',
+                              bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
+                              color: '#fff',
+                              transform: 'translateX(5px)',
+                              boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                            },
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {getContent(land.cta)}
+                        </Button>
+                      </Box>
+                    </Paper>
+                  );
+                })()}
+
+                {/* Neithal - RIGHT */}
+                {(() => {
+                  const land = FIVE_LANDS.find((item) => item.key === 'neithal');
+                  if (!land) return null;
+                  const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'neithal');
+                  return (
+                    <Paper
+                      key="five-lands-card-neithal"
+                      elevation={0}
+                      sx={{
+                        alignSelf: { xs: 'stretch', md: 'flex-end' },
+                        width: { xs: '100%', md: '85%' },
+                        mr: { md: 0 },
+                        position: 'relative',
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        border: `2px solid ${land.accent}40`,
+                        boxShadow: `0 16px 48px ${land.accent}25`,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: `0 24px 64px ${land.accent}35`,
+                          borderColor: `${land.accent}60`
+                        }
+                      }}
+                    >
+                      {/* Content Section - Left Side */}
+                      <Box
+                        sx={{
+                          width: { xs: '100%', md: '60%' },
+                          p: { xs: 4, md: 5 },
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2.5,
+                          bgcolor: '#fff',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {/* Badge */}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#8b4513',
+                            letterSpacing: 2.5,
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+
+                        {/* Title */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 800,
+                            color: '#2c1810',
+                            letterSpacing: '-0.02em',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+
+                        {/* Poetic Quote */}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontStyle: 'italic',
+                            color: '#8b4513',
+                            fontSize: { xs: '1rem', md: '1.05rem' },
+                            lineHeight: 1.7,
+                            fontWeight: 500
+                          }}
+                        >
+                          {getContent(land.poetic)}
+                        </Typography>
+
+                        {/* Description */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#5d4e37',
+                            lineHeight: 1.75,
+                            fontSize: { xs: '0.95rem', md: '1rem' }
+                          }}
+                        >
+                          {getContent(land.description)}
+                        </Typography>
+
+                        {/* CTA Button */}
+                        <Button
+                          variant="outlined"
+                          endIcon={<ArrowForward fontSize="small" />}
+                          onClick={() => navigate(land.route)}
+                          sx={{
+                            alignSelf: 'flex-start',
+                            mt: 1,
+                            borderRadius: '999px',
+                            px: 3.5,
+                            py: 1.2,
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            letterSpacing: 0.5,
+                            textTransform: 'none',
+                            borderColor: '#8B0000',
+                            color: '#8B0000',
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderColor: '#daa520',
+                              bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
+                              color: '#fff',
+                              transform: 'translateX(5px)',
+                              boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                            },
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {getContent(land.cta)}
+                        </Button>
+                      </Box>
+
+                      {/* Image Section - Right Side */}
+                      <Box sx={{
+                        width: { xs: '100%', md: '40%' },
+                        height: { xs: 280, md: 420 },
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        <OptimizedImage
+                          src={NeithalImage}
+                          alt="Neithal Landscape"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          skeletonSx={{ bgcolor: `${land.accent}15` }}
+                        />
+                      </Box>
+                    </Paper>
+                  );
+                })()}
+
+                {/* Palai - LEFT */}
+                {(() => {
+                  const land = FIVE_LANDS.find((item) => item.key === 'palai');
+                  if (!land) return null;
+                  const originalIndex = FIVE_LANDS.findIndex((item) => item.key === 'palai');
+                  return (
+                    <Paper
+                      key="five-lands-card-palai"
+                      elevation={0}
+                      sx={{
+                        alignSelf: { xs: 'stretch', md: 'flex-start' },
+                        width: { xs: '100%', md: '85%' },
+                        ml: { md: 0 },
+                        position: 'relative',
+                        borderRadius: 4,
+                        overflow: 'hidden',
+                        border: `2px solid ${land.accent}40`,
+                        boxShadow: `0 16px 48px ${land.accent}25`,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          boxShadow: `0 24px 64px ${land.accent}35`,
+                          borderColor: `${land.accent}60`
+                        }
+                      }}
+                    >
+                      {/* Image Section - Left Side */}
+                      <Box sx={{
+                        width: { xs: '100%', md: '40%' },
+                        height: { xs: 280, md: 420 },
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        <OptimizedImage
+                          src={PalaiImage}
+                          alt="Palai Landscape"
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          skeletonSx={{ bgcolor: `${land.accent}15` }}
+                        />
+                      </Box>
+
+                      {/* Content Section - Right Side */}
+                      <Box
+                        sx={{
+                          width: { xs: '100%', md: '60%' },
+                          p: { xs: 4, md: 5 },
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2.5,
+                          bgcolor: '#fff',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {/* Badge */}
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#8b4513',
+                            letterSpacing: 2.5,
+                            fontSize: '0.75rem',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {i18n.language === 'ta'
+                            ? `திணை ${originalIndex + 1}`
+                            : `TINAI ${String(originalIndex + 1).padStart(2, '0')}`}
+                        </Typography>
+
+                        {/* Title */}
+                        <Typography
+                          variant="h4"
+                          sx={{
+                            fontWeight: 800,
+                            color: '#2c1810',
+                            letterSpacing: '-0.02em',
+                            fontFamily: i18n.language === 'ta' ? '"Noto Serif Tamil", serif' : '"Playfair Display", serif',
+                            fontSize: { xs: '1.75rem', md: '2rem' }
+                          }}
+                        >
+                          {getContent(land.name)}
+                        </Typography>
+
+                        {/* Poetic Quote */}
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontStyle: 'italic',
+                            color: '#8b4513',
+                            fontSize: { xs: '1rem', md: '1.05rem' },
+                            lineHeight: 1.7,
+                            fontWeight: 500
+                          }}
+                        >
+                          {getContent(land.poetic)}
+                        </Typography>
+
+                        {/* Description */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: '#5d4e37',
+                            lineHeight: 1.75,
+                            fontSize: { xs: '0.95rem', md: '1rem' }
+                          }}
+                        >
+                          {getContent(land.description)}
+                        </Typography>
+
+                        {/* CTA Button */}
+                        <Button
+                          variant="outlined"
+                          endIcon={<ArrowForward fontSize="small" />}
+                          onClick={() => navigate(land.route)}
+                          sx={{
+                            alignSelf: 'flex-start',
+                            mt: 1,
+                            borderRadius: '999px',
+                            px: 3.5,
+                            py: 1.2,
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            letterSpacing: 0.5,
+                            textTransform: 'none',
+                            borderColor: '#8B0000',
+                            color: '#8B0000',
+                            borderWidth: 2,
+                            '&:hover': {
+                              borderColor: '#daa520',
+                              bgcolor: 'linear-gradient(135deg, #8b0000 0%, #daa520 100%)',
+                              color: '#fff',
+                              transform: 'translateX(5px)',
+                              boxShadow: '0 6px 20px rgba(139,0,0,0.3)'
+                            },
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {getContent(land.cta)}
+                        </Button>
+                      </Box>
+                    </Paper>
+                  );
+                })()}
+              </Box>
+            </Box>
+          </Container>
+        </Box>
       </DeferredSection>
 
       {/* MUSEUM ARCHIVES TEAM */}
       <DeferredSection fallback="skeleton" rootMargin="300px">
-      <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: "#0A0908" }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 3, sm: 4, md: 6, lg: 8 } }}>
-          <Typography 
-            variant="h3" 
-            align="center" 
-            sx={{ 
-              fontWeight: 700, 
-              mb: 1,
-              fontSize: { xs: "1.6rem", md: "2rem" },
-              color: "#DAA520",
-              letterSpacing: "-0.01em"
-            }}
-          >
-            {t('home.team.museum.title')}
-          </Typography>
-          <Typography 
-            variant="body1" 
-            align="center" 
-            sx={{ 
-              mb: 1.5, 
-              color: "#ccc",
-              maxWidth: 700,
-              mx: "auto",
-              fontSize: { xs: "0.9rem", md: "0.95rem" },
-              lineHeight: 1.5
-            }}
-          >
-            {t('home.team.museum.subtitle')}
-          </Typography>
-          <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 5, borderRadius: 2 }} />
-          
-          <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} justifyContent="center">
-            {/* Top row: 4 dynasties */}
-            {[0,1,2,3].map(idx => (
-              <Grid item xs={6} sm={3} md={3} key={TEAM_MUSEUM[idx].name.en} sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: "#0A0908", overflow: 'hidden' }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 4, md: 6, lg: 8 } }}>
+            <Typography
+              variant="h3"
+              align="center"
+              sx={{
+                fontWeight: 700,
+                mb: 1,
+                fontSize: { xs: "1.6rem", md: "2rem" },
+                color: "#DAA520",
+                letterSpacing: "-0.01em"
+              }}
+            >
+              {t('home.team.museum.title')}
+            </Typography>
+            <Typography
+              variant="body1"
+              align="center"
+              sx={{
+                mb: 1.5,
+                color: "#ccc",
+                maxWidth: 700,
+                mx: "auto",
+                fontSize: { xs: "0.9rem", md: "0.95rem" },
+                lineHeight: 1.5
+              }}
+            >
+              {t('home.team.museum.subtitle')}
+            </Typography>
+            <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 5, borderRadius: 2 }} />
+
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} justifyContent="center">
+              {/* Top row: 4 dynasties */}
+              {[0, 1, 2, 3].map(idx => (
+                <Grid item xs={12} sm={6} md={3} key={TEAM_MUSEUM[idx].name.en} sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <Card
+                    elevation={0}
+                    sx={{
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      mt: 6,
+                      mb: 6,
+                      overflow: "hidden",
+                      bgcolor: "#111",
+                      borderRadius: 3,
+                      p: 2.5,
+                      textAlign: 'center',
+                      "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: "4px",
+                        bgcolor: "#8B0000",
+                        transform: "scaleX(0)",
+                        transition: "transform 0.4s ease"
+                      },
+                      "&:hover": {
+                        transform: "translateY(-12px)",
+                        boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
+                        bgcolor: "#222",
+                        borderColor: "#8B0000",
+                        "&::before": {
+                          transform: "scaleX(1)"
+                        }
+                      }
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        mx: "auto",
+                        mb: 1.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "50%",
+                        border: "2px solid #daa520",
+                        bgcolor: "#fff",
+                        overflow: "hidden",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          transform: "scale(1.05)",
+                          boxShadow: "0 12px 32px rgba(218,165,32,0.5)"
+                        }
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={TEAM_MUSEUM[idx].flag}
+                        alt={TEAM_MUSEUM[idx].name[i18n.language] || TEAM_MUSEUM[idx].name.en}
+                        loading="lazy"
+                        sx={{
+                          width: "85%",
+                          height: "85%",
+                          objectFit: "contain"
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "#daa520", fontSize: { xs: "0.9rem", md: "0.95rem" }, lineHeight: 1.2 }}>
+                      {TEAM_MUSEUM[idx].name[i18n.language] || TEAM_MUSEUM[idx].name.en}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#ccc", fontWeight: 500, fontSize: "0.8rem", lineHeight: 1.4, px: 0.5 }}>
+                      {TEAM_MUSEUM[idx].title[i18n.language] || TEAM_MUSEUM[idx].title.en}
+                    </Typography>
+                  </Card>
+                </Grid>
+              ))}
+              {/* Bottom row: LTTE centered */}
+              <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 1.5, md: 2 } }}>
                 <Card
                   elevation={0}
                   sx={{
@@ -2501,25 +2594,11 @@ export default function Home() {
                     borderRadius: 3,
                     p: 2.5,
                     textAlign: 'center',
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: "4px",
-                      bgcolor: "#8B0000",
-                      transform: "scaleX(0)",
-                      transition: "transform 0.4s ease"
-                    },
                     "&:hover": {
                       transform: "translateY(-12px)",
                       boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
                       bgcolor: "#222",
-                      borderColor: "#8B0000",
-                      "&::before": {
-                        transform: "scaleX(1)"
-                      }
+                      borderColor: "#8B0000"
                     }
                   }}
                 >
@@ -2546,8 +2625,8 @@ export default function Home() {
                   >
                     <Box
                       component="img"
-                      src={TEAM_MUSEUM[idx].flag}
-                      alt={TEAM_MUSEUM[idx].name[i18n.language] || TEAM_MUSEUM[idx].name.en}
+                      src={TEAM_MUSEUM[4].flag}
+                      alt={TEAM_MUSEUM[4].name[i18n.language] || TEAM_MUSEUM[4].name.en}
                       loading="lazy"
                       sx={{
                         width: "85%",
@@ -2557,227 +2636,180 @@ export default function Home() {
                     />
                   </Box>
                   <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "#daa520", fontSize: { xs: "0.9rem", md: "0.95rem" }, lineHeight: 1.2 }}>
-                    {TEAM_MUSEUM[idx].name[i18n.language] || TEAM_MUSEUM[idx].name.en}
+                    {TEAM_MUSEUM[4].name[i18n.language] || TEAM_MUSEUM[4].name.en}
                   </Typography>
                   <Typography variant="body2" sx={{ color: "#ccc", fontWeight: 500, fontSize: "0.8rem", lineHeight: 1.4, px: 0.5 }}>
-                    {TEAM_MUSEUM[idx].title[i18n.language] || TEAM_MUSEUM[idx].title.en}
+                    {TEAM_MUSEUM[4].title[i18n.language] || TEAM_MUSEUM[4].title.en}
                   </Typography>
                 </Card>
               </Grid>
-            ))}
-            {/* Bottom row: LTTE centered */}
-            <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 1.5, md: 2 } }}>
-              <Card
-                elevation={0}
-                sx={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  mt: 6,
-                  mb: 6,
-                  overflow: "hidden",
-                  bgcolor: "#111",
-                  borderRadius: 3,
-                  p: 2.5,
-                  textAlign: 'center',
-                  "&:hover": {
-                    transform: "translateY(-12px)",
-                    boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
-                    bgcolor: "#222",
-                    borderColor: "#8B0000"
-                  }
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    mx: "auto",
-                    mb: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "50%",
-                    border: "2px solid #daa520",
-                    bgcolor: "#fff",
-                    overflow: "hidden",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      boxShadow: "0 12px 32px rgba(218,165,32,0.5)"
-                    }
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={TEAM_MUSEUM[4].flag}
-                    alt={TEAM_MUSEUM[4].name[i18n.language] || TEAM_MUSEUM[4].name.en}
-                    loading="lazy"
-                    sx={{
-                      width: "85%",
-                      height: "85%",
-                      objectFit: "contain"
-                    }}
-                  />
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, color: "#daa520", fontSize: { xs: "0.9rem", md: "0.95rem" }, lineHeight: 1.2 }}>
-                  {TEAM_MUSEUM[4].name[i18n.language] || TEAM_MUSEUM[4].name.en}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#ccc", fontWeight: 500, fontSize: "0.8rem", lineHeight: 1.4, px: 0.5 }}>
-                  {TEAM_MUSEUM[4].title[i18n.language] || TEAM_MUSEUM[4].title.en}
-                </Typography>
-              </Card>
             </Grid>
-          </Grid>
-        </Container>
-      </Box>
+          </Container>
+        </Box>
       </DeferredSection>
 
 
-          {/* COLLABORATIONS SECTION removed as requested */}
+      {/* COLLABORATIONS SECTION removed as requested */}
 
 
-          {/* RECOGNITION SECTION removed as requested */}
+      {/* RECOGNITION SECTION removed as requested */}
 
 
-          {/* WHAT WE DO SECTION removed as requested */}
+      {/* WHAT WE DO SECTION removed as requested */}
 
-      
+
       {/* DIRECTORS & HERITAGE SPECIALISTS */}
       <DeferredSection fallback="skeleton" rootMargin="300px">
-      <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#fff" }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 5, lg: 6, xl: 8 } }}>
-          <Typography 
-            variant="h2" 
-            align="center" 
-            sx={{ 
-              fontWeight: 800, 
-              mb: 1.5,
-              fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.5rem", lg: "2.8rem" },
-              color: "#000",
-              letterSpacing: "-0.02em"
-            }}
-          >
-            {t('home.team.directors.title')}
-          </Typography>
-          <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 6, borderRadius: 2 }} />
-          
-          <Grid container spacing={{ xs: 2.5, sm: 3, md: 3.5, lg: 4 }} sx={{ maxWidth: "1400px", mx: "auto", justifyContent: "center" }}>
-            {TEAM_DIRECTORS.map((member, index) => (
-              <Grid item xs={12} sm={6} md={3} lg={3} key={index} sx={{ display: "flex", minWidth: 0 }}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    px: { xs: 2.5, md: 3 },
-                    py: { xs: 3, md: 3.5 },
-                    width: "100%",
-                    // card will fill the grid cell width
-                    height: { xs: '360px', md: '360px' },
-                    borderRadius: "18px",
-                    bgcolor: "#f9fafb",
-                    border: "1px solid #e4e7eb",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    textAlign: "center",
-                    gap: 2,
-                    justifyContent: 'space-between',
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-6px)",
-                      boxShadow: "0 18px 40px rgba(16,24,40,0.12)",
-                    },
-                  }}
-                >
-                  <Box
+        <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#fff" }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 5, lg: 6, xl: 8 } }}>
+            <Typography
+              variant="h2"
+              align="center"
+              sx={{
+                fontWeight: 800,
+                mb: 1.5,
+                fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.5rem", lg: "2.8rem" },
+                color: "#000",
+                letterSpacing: "-0.02em"
+              }}
+            >
+              {t('home.team.directors.title')}
+            </Typography>
+            <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 6, borderRadius: 2 }} />
+
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: { xs: 2.5, sm: 3, md: 3.5, lg: 4 },
+                maxWidth: "1400px",
+                mx: "auto",
+                justifyContent: "center"
+              }}
+            >
+              {TEAM_DIRECTORS.map((member, index) => (
+                <Box key={index} sx={{ flex: { xs: '1 1 100%', sm: '0 1 calc(50% - 12px)', md: '0 1 calc(33.333% - 18px)', lg: '0 1 240px' }, minWidth: 0, display: 'flex' }}>
+                  <Card
+                    elevation={0}
                     sx={{
-                      position: "relative",
-                      width: { xs: 92, md: 104 },
-                      height: { xs: 92, md: 104 },
+                      px: { xs: 2.5, md: 3 },
+                      py: { xs: 3, md: 3.5 },
+                      width: "100%",
+                      height: { xs: '380px', md: '400px' },
+                      borderRadius: "18px",
+                      bgcolor: "#f9fafb",
+                      border: "1px solid #e4e7eb",
                       display: "flex",
+                      flexDirection: "column",
                       alignItems: "center",
-                      justifyContent: "center",
+                      textAlign: "center",
+                      gap: 2,
+                      justifyContent: 'space-between',
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-6px)",
+                        boxShadow: "0 18px 40px rgba(16,24,40,0.12)",
+                      },
                     }}
                   >
                     <Box
                       sx={{
-                        position: "absolute",
-                        inset: 0,
-                        borderRadius: "50%",
-                        background: "linear-gradient(145deg, rgba(139,0,0,0.18), rgba(139,0,0,0.06))",
+                        position: "relative",
+                        width: { xs: 92, md: 104 },
+                        height: { xs: 92, md: 104 },
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
-                    />
-                    <Avatar
-                      src={member.image}
-                      sx={{
-                        width: { xs: 80, md: 90 },
-                        height: { xs: 80, md: 90 },
-                        border: "4px solid #fff",
-                        boxShadow: "0 6px 16px rgba(15,23,42,0.15)",
-                        '& img': {
-                          objectFit: 'cover'
-                        }
-                      }}
-                    />
-                  </Box>
+                    >
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: "50%",
+                          background: "linear-gradient(145deg, rgba(139,0,0,0.18), rgba(139,0,0,0.06))",
+                        }}
+                      />
+                      <Avatar
+                        src={member.image}
+                        sx={{
+                          width: { xs: 80, md: 90 },
+                          height: { xs: 80, md: 90 },
+                          border: "4px solid #fff",
+                          boxShadow: "0 6px 16px rgba(15,23,42,0.15)",
+                          '& img': {
+                            objectFit: 'cover',
+                            objectPosition: member.imagePosition || 'center top'
+                          }
+                        }}
+                      />
+                    </Box>
 
-                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, flexGrow: 1, justifyContent: "center", px: 1 }}>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        fontWeight: 700,
-                        color: "#1f2933",
-                        fontSize: { xs: "1.05rem", md: "1.15rem" },
-                        letterSpacing: "-0.01em",
-                        minHeight: "1.4em",
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}
-                    >
-                      {member.name[i18n.language] || member.name.en}
-                    </Typography>
-                    <Divider sx={{ width: 56, height: 3, bgcolor: "#8B0000", borderRadius: 2 }} />
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#52616b",
-                        fontSize: { xs: "0.92rem", md: "0.95rem" },
-                        lineHeight: 1.4,
-                        maxHeight: '3em',
-                        overflow: 'hidden',
-                        textAlign: 'center'
-                      }}
-                    >
-                      {member.title[i18n.language] || member.title.en}
-                    </Typography>
-                  </Box>
+                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, flexGrow: 1, justifyContent: "center", px: 1 }}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 700,
+                          color: "#1f2933",
+                          fontSize: { xs: "1.05rem", md: "1.1rem" },
+                          letterSpacing: "-0.01em",
+                          minHeight: "2.8em",
+                          maxHeight: "2.8em",
+                          lineHeight: 1.4,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical'
+                        }}
+                      >
+                        {member.name[i18n.language] || member.name.en}
+                      </Typography>
+                      <Divider sx={{ width: 56, height: 3, bgcolor: "#8B0000", borderRadius: 2 }} />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#52616b",
+                          fontSize: { xs: "0.88rem", md: "0.92rem" },
+                          lineHeight: 1.5,
+                          minHeight: '4.5em',
+                          maxHeight: '4.5em',
+                          overflow: 'hidden',
+                          textAlign: 'center',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical'
+                        }}
+                      >
+                        {member.title[i18n.language] || member.title.en}
+                      </Typography>
+                    </Box>
 
-                  <Box sx={{ pt: 1 }}>
-                    <IconButton
-                      size="small"
-                      sx={{
-                        color: "#8B0000",
-                        border: "2px solid rgba(139,0,0,0.4)",
-                        width: 40,
-                        height: 40,
-                        transition: "all 0.25s ease",
-                        "&:hover": {
-                          bgcolor: "#8B0000",
-                          color: "#fff",
-                          borderColor: "#8B0000",
-                        },
-                      }}
-                    >
-                      <Twitter sx={{ fontSize: 18 }} />
-                    </IconButton>
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
+                    <Box sx={{ pt: 1 }}>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          color: "#8B0000",
+                          border: "2px solid rgba(139,0,0,0.4)",
+                          width: 40,
+                          height: 40,
+                          transition: "all 0.25s ease",
+                          "&:hover": {
+                            bgcolor: "#8B0000",
+                            color: "#fff",
+                            borderColor: "#8B0000",
+                          },
+                        }}
+                      >
+                        <Twitter sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Box>
+                  </Card>
+                </Box>
+              ))}
+            </Box>
+          </Container>
+        </Box>
       </DeferredSection>
 
       {/* CONTACT SECTION removed as requested */}

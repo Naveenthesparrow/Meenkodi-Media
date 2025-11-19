@@ -10,6 +10,7 @@
 	"nav.login": "Login",
 	"nav.logout": "Logout",
 	"nav.menu": "Menu",
+	"nav.faq": "FAQ",
 	"loading": "Loading...",
 	"actions.readMore": "Read more",
 	"actions.viewAll": "View all",
@@ -27,211 +28,211 @@
 	"explore.foods": "Foods",
 	"explore.festivals": "Festivals",
 	"explore.clothing": "Clothing",
-	"explore.ancientscience": "Ancient Science"
-	,"lands.title": "Lands"
-	,"lands.gods": "Gods"
-	,"lands.people": "People"
-	,"lands.type": "Landscape Type"
-	,"lands.poetry": "Poetry"
-	,"events.title": "Events"
-	,"events.add": "Add Event"
-	,"events.edit": "Edit Event"
-	,"events.addNew": "Add New Event"
-	,"gallery.title": "Gallery"
-	,"gallery.add": "Add Gallery Item"
-	,"gallery.edit": "Edit Gallery Item"
-	,"gallery.addNew": "Add New Gallery Item"
-	,"articles.title": "Articles"
-	,"articles.add": "Add Article"
-	,"articles.edit": "Edit Article"
-	,"articles.addNew": "Add New Article"
-	,"resources.title": "Resources"
-	,"resources.add": "Add Resource"
-	,"resources.edit": "Edit Resource"
-	,"resources.addNew": "Add New Resource"
-	,"actions.download": "Download"
-	,"home.landsTitle": "Landscapes of Tamil Heritage"
-	,"actions.explore": "Explore"
-	,"actions.close": "Close"
-	,"clothing.title": "Clothing"
-	,"clothing.add": "Add Clothing"
-	,"clothing.edit": "Edit Clothing Item"
-	,"clothing.addNew": "Add New Clothing Item"
-	,"form.name": "Name"
-	,"form.type": "Type"
-	,"form.description": "Description"
-	,"form.imageUrl": "Image URL"
-	,"actions.update": "Update"
-	,"actions.add": "Add"
-	,"common.noImage": "No Image Available"
-	,"dance.title": "Dance"
-	,"dance.add": "Add Dance Form"
-	,"foods.title": "Foods"
-	,"foods.add": "Add Recipe"
-	,"kings.title": "Kings"
-	,"kings.add": "Add King"
-	,"literature.title": "Literature"
-	,"literature.add": "Add Literature"
-	,"temples.title": "Temples"
-	,"temples.add": "Add Temple"
-	,"ancientScience.title": "Ancient Science"
-	,"ancientScience.add": "Add Scientific Knowledge"
-	,"ancientScience.edit": "Edit Scientific Knowledge"
-	,"ancientScience.addNew": "Add New Scientific Knowledge"
-	,"ancientScience.mediaLabel": "Science Image/Video"
-	,"dance.edit": "Edit Dance Form"
-	,"dance.addNew": "Add New Dance Form"
-	,"foods.edit": "Edit Recipe"
-	,"foods.addNew": "Add New Recipe"
-	,"kings.edit": "Edit King Profile"
-	,"kings.addNew": "Add New King Profile"
-	,"literature.edit": "Edit Literature Work"
-	,"literature.addNew": "Add New Literature Work"
-	,"temples.edit": "Edit Temple"
-	,"temples.addNew": "Add New Temple"
-	,"festivals.edit": "Edit Festival"
-	,"festivals.addNew": "Add New Festival"
-	,"festivals.title": "Festivals"
-	,"festivals.add": "Add Festival"
-	,"form.period": "Period"
-	,"form.author": "Author"
-	,"form.location": "Location"
-	,"form.category": "Category"
-	,"form.title": "Title"
-	,"form.email": "Email"
-	,"adminPortal.title": "Admin Portal"
-	,"adminPortal.welcome": "Welcome, {{name}} ({{role}})"
-	,"adminPortal.logout": "Logout"
-	,"adminPortal.allUsers": "All Users"
-	,"adminPortal.editUser": "Edit User"
-	,"adminPortal.deleteConfirm": "Are you sure you want to delete this user?"
-	,"roles.user": "User"
-	,"roles.admin": "Admin"
-	,"home.didYouKnow": "Did You Know?"
-	,"home.thirukkuralOfDay": "THIRUKKURAL OF THE DAY"
-	,"home.hero.title": "Preserving Tamil Heritage"
-	,"home.hero.subtitle": "A Journey Through 2000+ Years of Rich Cultural Legacy"
-	,"home.hero.description": "Explore the timeless traditions, magnificent temples, classical arts, and vibrant heritage of Tamil civilization"
-	,"home.hero.cta": "Explore Heritage"
-	,"home.hero.counterHeritage": "Heritage projects digitized"
-	,"home.hero.counterArtifacts": "Artifacts restored"
-	,"home.hero.counterEvents": "Cultural events annually"
-	,"home.hero.counterCommunities": "Communities engaged"
-	,"home.syllabus.label": "Programmes"
-	,"home.syllabus.title": "Syllabus list"
-	,"home.syllabus.cta": "Know More"
-	,"home.timeline.title": "How We Bring Heritage to Life"
-	,"home.timeline.subtitle": "From field discovery to global celebration"
-	,"home.timeline.cards.discovery.title": "Discover & Document"
-	,"home.timeline.cards.discovery.description": "Field historians and volunteers chronicle oral histories, temple lore, and community traditions on-site."
-	,"home.timeline.cards.discovery.cta": "Explore Lands"
-	,"home.timeline.cards.preservation.title": "Digitize & Preserve"
-	,"home.timeline.cards.preservation.description": "Our archivists restore manuscripts and artifacts using high-resolution imaging and 3D mapping."
-	,"home.timeline.cards.preservation.cta": "View Resources"
-	,"home.timeline.cards.outreach.title": "Share & Celebrate"
-	,"home.timeline.cards.outreach.description": "Festivals, workshops, and digital showcases connect diasporas with authentic Tamil heritage."
-	,"home.timeline.cards.outreach.cta": "Attend Events"
-	,"home.mission.title": "What Tamil Heritage Foundation Does"
-	,"home.mission.preserve.title": "Preserve & Document"
-	,"home.mission.preserve.desc": "Safeguarding ancient manuscripts, artifacts, and cultural practices for future generations through digital archiving and restoration."
-	,"home.mission.educate.title": "Educate & Research"
-	,"home.mission.educate.desc": "Conducting scholarly research and educational programs to deepen understanding of Tamil history, literature, and traditions."
-	,"home.mission.celebrate.title": "Celebrate & Promote"
-	,"home.mission.celebrate.desc": "Organizing exhibitions, festivals, and cultural events to celebrate and promote Tamil arts, music, dance, and heritage worldwide."
-	,"home.mission.museum.title": "Museum & Archives"
-	,"home.mission.museum.desc": "Curating world-class museum collections and maintaining comprehensive archives of Tamil cultural artifacts and historical documents."
-	,"home.mission.research.title": "Research & Innovation"
-	,"home.mission.research.desc": "Advancing scholarly research in Tamil studies, archaeology, and heritage conservation using innovative technologies and methodologies."
-	,"home.mission.overline": "Impact Pillars"
-	,"home.mission.overview": "Five interconnected pillars guide our preservation, education, celebration, museum practice, and research so Tamil heritage stays living and accessible."
-	,"home.mission.cta": "Explore Our Work"
-	,"home.team.directors.title": "Our Directors & Heritage Specialists"
-	,"home.team.directors.subtitle": "Meet the dedicated experts preserving and promoting Tamil cultural heritage"
-	,"home.team.museum.title": "Ancient Tamil Dynasties"
-	,"home.team.museum.subtitle": "The great kingdoms that shaped Tamil civilization and heritage"
-	,"home.stats.artifacts": "Pandiya Artifacts Preserved"
-	,"home.stats.manuscripts": "Pandiya Era Manuscripts"
-	,"home.stats.temples": "Pandiya Dynasty Temples"
-	,"home.stats.scholars": "Pandiya Heritage Scholars"
-	,"home.process.title": "Our Heritage Process"
-	,"home.process.subtitle": "From Discovery to Digital Preservation"
-	,"home.process.description": "We employ cutting-edge technology combined with traditional expertise to document, preserve, and share Tamil heritage. Our process includes field research, expert authentication, digital archiving using 3D scanning and high-resolution photography, and making resources accessible to scholars and enthusiasts worldwide."
-	,"home.library.title": "Digital Library & Archives"
-	,"home.library.subtitle": "Access Millennia of Knowledge"
-	,"home.library.description": "Our digital library houses over 10,000 digitized manuscripts, rare palm leaf texts, ancient inscriptions, and historical documents. Explore Tamil literature from the Sangam period, medieval devotional poetry, scientific treatises, and more. All materials are catalogued, searchable, and available for research."
-	,"home.library.cta": "Browse Library"
-	,"home.palaces.title": "Magnificent Tamil Temples & Palaces"
-	,"home.palaces.subtitle": "Architectural Marvels of the Chola, Pandya, and Pallava Dynasties"
-	,"home.palaces.cta": "Explore Temple Stories"
-	,"home.registration.title": "Our Registration Block"
-	,"home.registration.subtitle": "Join Our Heritage Preservation Initiative"
-	,"home.registration.description": "Become part of our mission to preserve Tamil cultural heritage. Register for workshops, seminars, and collaborative research projects. Connect with scholars, artists, and heritage enthusiasts."
-	,"home.registration.cta": "Register Now"
-	,"home.exhibitions.title": "Setup and Exhibitions"
-	,"home.exhibitions.subtitle": "Curated Collections & Traveling Exhibitions"
-	,"home.exhibitions.description": "Experience Tamil heritage through our carefully curated exhibitions featuring ancient artifacts, temple sculptures, traditional textiles, and musical instruments. Our traveling exhibitions bring Tamil culture to museums and universities worldwide."
-	,"home.chronicles.title": "Heritage Chronicles"
-	,"home.chronicles.subtitle": "Stories from Ancient Tamil Lands"
-	,"home.chronicles.regionLabel": "Region: {{region}}"
-	,"home.chronicles.cta": "Read the Chronicle"
-	,"home.museum.title": "Visit our Museum"
-	,"home.museum.subtitle": "Experience History Come Alive"
-	,"home.museum.description": "Step into our world-class museum featuring rare artifacts, temple treasures, ancient sculptures, and interactive exhibits. Guided tours available in Tamil, English, and other languages. Open Tuesday-Sunday, 10 AM - 6 PM."
-	,"home.museum.cta": "Plan Your Visit"
-	,"home.research.title": "Research & Innovation"
-	,"home.research.subtitle": "Advancing Heritage Science"
-	,"home.research.description": "Our research wing collaborates with leading universities and institutions worldwide to apply innovative technologies in heritage preservation, including AI-powered manuscript restoration, 3D reconstruction of ancient sites, and climate-controlled preservation techniques."
-	,"home.research.cta": "View Research"
-	,"home.collaborations.title": "Our Collaborations"
-	,"home.collaborations.subtitle": "Partnering with institutions worldwide to preserve and promote Tamil heritage"
-	,"home.collaborations.cta": "Partner with Meenkodi"
-	,"home.collaborations.partnerRegions.global": "Global Heritage Network"
-	,"home.collaborations.partnerRegions.india": "Chennai & Madurai, India"
-	,"home.collaborations.partnerRegions.singapore": "Singapore & Southeast Asia"
-	,"home.collaborations.partnerRegions.diaspora": "Worldwide Tamil Diaspora"
-	,"home.collaborations.partnerRegions.europe": "Europe Research Hubs"
-	,"home.collaborations.partnerRegions.africa": "East Africa Cultural Alliance"
-	,"home.collaborations.partnerFocus.heritage": "Working with UNESCO experts to safeguard intangible heritage listings and temple conservation blueprints."
-	,"home.collaborations.partnerFocus.research": "Joint archival projects digitizing palm-leaf manuscripts and Sangam literature collections."
-	,"home.collaborations.partnerFocus.conservation": "Field labs restoring sculpture, mural pigments, and ritual artifacts using climate-smart methods."
-	,"home.collaborations.partnerFocus.programs": "Community-led festivals, language workshops, and diaspora youth engagement programs."
-	,"home.collaborations.partnerFocus.digital": "Open-access digital repositories and immersive 3D heritage storytelling platforms."
-	,"home.collaborations.partnerFocus.community": "Preserving oral traditions and folk songs with knowledge keepers across the Indian Ocean."
-	,"home.recognition.title": "Global Recognition & Heritage Impact"
-	,"home.recognition.subtitle": "Our research and preservation efforts resonate worldwide"
-	,"home.recognition.description": "International cultural councils and diaspora organizations acknowledge Meenkodi’s evidence-driven preservation model, ensuring Tamil heritage narratives remain accessible, inclusive, and future-ready."
-	,"home.recognition.cards.unesco.title": "UNESCO Living Heritage Honours"
-	,"home.recognition.cards.unesco.description": "Recognized for documenting endangered temple rituals and classical artforms under the 2024 Living Heritage initiative."
-	,"home.recognition.cards.icomos.badge": "ICOMOS"
-	,"home.recognition.cards.icomos.title": "World Heritage Research Fellowship"
-	,"home.recognition.cards.icomos.description": "Awarded annual fellowships for conservation studies on Chola architecture and maritime trade routes."
-	,"home.recognition.cards.diaspora.badge": "Global Tamil Forum"
-	,"home.recognition.cards.diaspora.title": "Diaspora Cultural Impact Awards"
-	,"home.recognition.cards.diaspora.description": "Celebrated for bridging transnational Tamil communities through digital exhibitions and youth residencies."
-	,"home.initiatives.title": "Signature Heritage Initiatives"
-	,"home.initiatives.subtitle": "Experiences that reconnect communities with Tamil civilization"
-	,"home.initiatives.library.title": "Digital Palm Leaf Library"
-	,"home.initiatives.library.description": "Browse authenticated manuscripts, inscriptions, and curated learning paths designed for researchers and students alike."
-	,"home.initiatives.library.cta": "Access the Library"
-	,"home.initiatives.museum.title": "Immersive Heritage Museum"
-	,"home.initiatives.museum.description": "Explore 3D temple walkthroughs, curated exhibits, and conservation in action at our Chennai museum campus."
-	,"home.initiatives.museum.cta": "Tour the Museum"
-	,"home.initiatives.education.title": "Tamil Knowledge Studios"
-	,"home.initiatives.education.description": "Join masterclasses, language labs, and fellowship studios linking scholars with community storytellers."
-	,"home.initiatives.education.cta": "View Learning Tracks"
-	,"home.initiatives.field.title": "Living Heritage Residencies"
-	,"home.initiatives.field.description": "Spend immersive weeks in temple towns and craft clusters, documenting rituals with our mentors and co-creating conservation toolkits with local communities."
-	,"home.initiatives.field.cta": "View Residency Calendar"
-	,"home.community.title": "Community"
-	,"home.community.heading": "Join the Global Tamil Heritage Movement"
-	,"home.community.description": "Volunteer, donate, or collaborate with us to keep living traditions vibrant for future generations across Tamil Nadu and the diaspora."
-	,"home.community.engage.volunteer.title": "Volunteer Heritage Fellows"
-	,"home.community.engage.volunteer.description": "Lead on-ground documentation drives, oral history recordings, and youth heritage walks in your city."
-	,"home.community.engage.volunteer.cta": "See Volunteer Calendar"
-	,"home.community.engage.donate.title": "Support Conservation"
-	,"home.community.engage.donate.description": "Help fund manuscript restoration labs, climate-controlled storage, and scholar residencies."
-	,"home.community.engage.donate.cta": "Make a Contribution"
-	,"home.contact.title": "Get in Touch",
+	"explore.ancientscience": "Ancient Science",
+	"lands.title": "Lands",
+	"lands.gods": "Gods",
+	"lands.people": "People",
+	"lands.type": "Landscape Type",
+	"lands.poetry": "Poetry",
+	"events.title": "Events",
+	"events.add": "Add Event",
+	"events.edit": "Edit Event",
+	"events.addNew": "Add New Event",
+	"gallery.title": "Gallery",
+	"gallery.add": "Add Gallery Item",
+	"gallery.edit": "Edit Gallery Item",
+	"gallery.addNew": "Add New Gallery Item",
+	"articles.title": "Articles",
+	"articles.add": "Add Article",
+	"articles.edit": "Edit Article",
+	"articles.addNew": "Add New Article",
+	"resources.title": "Resources",
+	"resources.add": "Add Resource",
+	"resources.edit": "Edit Resource",
+	"resources.addNew": "Add New Resource",
+	"actions.download": "Download",
+	"home.landsTitle": "Landscapes of Tamil Heritage",
+	"actions.explore": "Explore",
+	"actions.close": "Close",
+	"clothing.title": "Clothing",
+	"clothing.add": "Add Clothing",
+	"clothing.edit": "Edit Clothing Item",
+	"clothing.addNew": "Add New Clothing Item",
+	"form.name": "Name",
+	"form.type": "Type",
+	"form.description": "Description",
+	"form.imageUrl": "Image URL",
+	"actions.update": "Update",
+	"actions.add": "Add",
+	"common.noImage": "No Image Available",
+	"dance.title": "Dance",
+	"dance.add": "Add Dance Form",
+	"foods.title": "Foods",
+	"foods.add": "Add Recipe",
+	"kings.title": "Kings",
+	"kings.add": "Add King",
+	"literature.title": "Literature",
+	"literature.add": "Add Literature",
+	"temples.title": "Temples",
+	"temples.add": "Add Temple",
+	"ancientScience.title": "Ancient Science",
+	"ancientScience.add": "Add Scientific Knowledge",
+	"ancientScience.edit": "Edit Scientific Knowledge",
+	"ancientScience.addNew": "Add New Scientific Knowledge",
+	"ancientScience.mediaLabel": "Science Image/Video",
+	"dance.edit": "Edit Dance Form",
+	"dance.addNew": "Add New Dance Form",
+	"foods.edit": "Edit Recipe",
+	"foods.addNew": "Add New Recipe",
+	"kings.edit": "Edit King Profile",
+	"kings.addNew": "Add New King Profile",
+	"literature.edit": "Edit Literature Work",
+	"literature.addNew": "Add New Literature Work",
+	"temples.edit": "Edit Temple",
+	"temples.addNew": "Add New Temple",
+	"festivals.edit": "Edit Festival",
+	"festivals.addNew": "Add New Festival",
+	"festivals.title": "Festivals",
+	"festivals.add": "Add Festival",
+	"form.period": "Period",
+	"form.author": "Author",
+	"form.location": "Location",
+	"form.category": "Category",
+	"form.title": "Title",
+	"form.email": "Email",
+	"adminPortal.title": "Admin Portal",
+	"adminPortal.welcome": "Welcome, {{name}} ({{role}})",
+	"adminPortal.logout": "Logout",
+	"adminPortal.allUsers": "All Users",
+	"adminPortal.editUser": "Edit User",
+	"adminPortal.deleteConfirm": "Are you sure you want to delete this user?",
+	"roles.user": "User",
+	"roles.admin": "Admin",
+	"home.didYouKnow": "Did You Know?",
+	"home.thirukkuralOfDay": "THIRUKKURAL OF THE DAY",
+	"home.hero.title": "Preserving Tamil Heritage",
+	"home.hero.subtitle": "A Journey Through 2000+ Years of Rich Cultural Legacy",
+	"home.hero.description": "Explore the timeless traditions, magnificent temples, classical arts, and vibrant heritage of Tamil civilization",
+	"home.hero.cta": "Explore Heritage",
+	"home.hero.counterHeritage": "Heritage projects digitized",
+	"home.hero.counterArtifacts": "Artifacts restored",
+	"home.hero.counterEvents": "Cultural events annually",
+	"home.hero.counterCommunities": "Communities engaged",
+	"home.syllabus.label": "Programmes",
+	"home.syllabus.title": "Syllabus list",
+	"home.syllabus.cta": "Know More",
+	"home.timeline.title": "How We Bring Heritage to Life",
+	"home.timeline.subtitle": "From field discovery to global celebration",
+	"home.timeline.cards.discovery.title": "Discover & Document",
+	"home.timeline.cards.discovery.description": "Field historians and volunteers chronicle oral histories, temple lore, and community traditions on-site.",
+	"home.timeline.cards.discovery.cta": "Explore Lands",
+	"home.timeline.cards.preservation.title": "Digitize & Preserve",
+	"home.timeline.cards.preservation.description": "Our archivists restore manuscripts and artifacts using high-resolution imaging and 3D mapping.",
+	"home.timeline.cards.preservation.cta": "View Resources",
+	"home.timeline.cards.outreach.title": "Share & Celebrate",
+	"home.timeline.cards.outreach.description": "Festivals, workshops, and digital showcases connect diasporas with authentic Tamil heritage.",
+	"home.timeline.cards.outreach.cta": "Attend Events",
+	"home.mission.title": "What Tamil Heritage Foundation Does",
+	"home.mission.preserve.title": "Preserve & Document",
+	"home.mission.preserve.desc": "Safeguarding ancient manuscripts, artifacts, and cultural practices for future generations through digital archiving and restoration.",
+	"home.mission.educate.title": "Educate & Research",
+	"home.mission.educate.desc": "Conducting scholarly research and educational programs to deepen understanding of Tamil history, literature, and traditions.",
+	"home.mission.celebrate.title": "Celebrate & Promote",
+	"home.mission.celebrate.desc": "Organizing exhibitions, festivals, and cultural events to celebrate and promote Tamil arts, music, dance, and heritage worldwide.",
+	"home.mission.museum.title": "Museum & Archives",
+	"home.mission.museum.desc": "Curating world-class museum collections and maintaining comprehensive archives of Tamil cultural artifacts and historical documents.",
+	"home.mission.research.title": "Research & Innovation",
+	"home.mission.research.desc": "Advancing scholarly research in Tamil studies, archaeology, and heritage conservation using innovative technologies and methodologies.",
+	"home.mission.overline": "Impact Pillars",
+	"home.mission.overview": "Five interconnected pillars guide our preservation, education, celebration, museum practice, and research so Tamil heritage stays living and accessible.",
+	"home.mission.cta": "Explore Our Work",
+	"home.team.directors.title": "Our Directors & Heritage Specialists",
+	"home.team.directors.subtitle": "Meet the dedicated experts preserving and promoting Tamil cultural heritage",
+	"home.team.museum.title": "Ancient Tamil Dynasties",
+	"home.team.museum.subtitle": "The great kingdoms that shaped Tamil civilization and heritage",
+	"home.stats.artifacts": "Pandiya Artifacts Preserved",
+	"home.stats.manuscripts": "Pandiya Era Manuscripts",
+	"home.stats.temples": "Pandiya Dynasty Temples",
+	"home.stats.scholars": "Pandiya Heritage Scholars",
+	"home.process.title": "Our Heritage Process",
+	"home.process.subtitle": "From Discovery to Digital Preservation",
+	"home.process.description": "We employ cutting-edge technology combined with traditional expertise to document, preserve, and share Tamil heritage. Our process includes field research, expert authentication, digital archiving using 3D scanning and high-resolution photography, and making resources accessible to scholars and enthusiasts worldwide.",
+	"home.library.title": "Digital Library & Archives",
+	"home.library.subtitle": "Access Millennia of Knowledge",
+	"home.library.description": "Our digital library houses over 10,000 digitized manuscripts, rare palm leaf texts, ancient inscriptions, and historical documents. Explore Tamil literature from the Sangam period, medieval devotional poetry, scientific treatises, and more. All materials are catalogued, searchable, and available for research.",
+	"home.library.cta": "Browse Library",
+	"home.palaces.title": "Magnificent Tamil Temples & Palaces",
+	"home.palaces.subtitle": "Architectural Marvels of the Chola, Pandya, and Pallava Dynasties",
+	"home.palaces.cta": "Explore Temple Stories",
+	"home.registration.title": "Our Registration Block",
+	"home.registration.subtitle": "Join Our Heritage Preservation Initiative",
+	"home.registration.description": "Become part of our mission to preserve Tamil cultural heritage. Register for workshops, seminars, and collaborative research projects. Connect with scholars, artists, and heritage enthusiasts.",
+	"home.registration.cta": "Register Now",
+	"home.exhibitions.title": "Setup and Exhibitions",
+	"home.exhibitions.subtitle": "Curated Collections & Traveling Exhibitions",
+	"home.exhibitions.description": "Experience Tamil heritage through our carefully curated exhibitions featuring ancient artifacts, temple sculptures, traditional textiles, and musical instruments. Our traveling exhibitions bring Tamil culture to museums and universities worldwide.",
+	"home.chronicles.title": "Heritage Chronicles",
+	"home.chronicles.subtitle": "Stories from Ancient Tamil Lands",
+	"home.chronicles.regionLabel": "Region: {{region}}",
+	"home.chronicles.cta": "Read the Chronicle",
+	"home.museum.title": "Visit our Museum",
+	"home.museum.subtitle": "Experience History Come Alive",
+	"home.museum.description": "Step into our world-class museum featuring rare artifacts, temple treasures, ancient sculptures, and interactive exhibits. Guided tours available in Tamil, English, and other languages. Open Tuesday-Sunday, 10 AM - 6 PM.",
+	"home.museum.cta": "Plan Your Visit",
+	"home.research.title": "Research & Innovation",
+	"home.research.subtitle": "Advancing Heritage Science",
+	"home.research.description": "Our research wing collaborates with leading universities and institutions worldwide to apply innovative technologies in heritage preservation, including AI-powered manuscript restoration, 3D reconstruction of ancient sites, and climate-controlled preservation techniques.",
+	"home.research.cta": "View Research",
+	"home.collaborations.title": "Our Collaborations",
+	"home.collaborations.subtitle": "Partnering with institutions worldwide to preserve and promote Tamil heritage",
+	"home.collaborations.cta": "Partner with Meenkodi",
+	"home.collaborations.partnerRegions.global": "Global Heritage Network",
+	"home.collaborations.partnerRegions.india": "Chennai & Madurai, India",
+	"home.collaborations.partnerRegions.singapore": "Singapore & Southeast Asia",
+	"home.collaborations.partnerRegions.diaspora": "Worldwide Tamil Diaspora",
+	"home.collaborations.partnerRegions.europe": "Europe Research Hubs",
+	"home.collaborations.partnerRegions.africa": "East Africa Cultural Alliance",
+	"home.collaborations.partnerFocus.heritage": "Working with UNESCO experts to safeguard intangible heritage listings and temple conservation blueprints.",
+	"home.collaborations.partnerFocus.research": "Joint archival projects digitizing palm-leaf manuscripts and Sangam literature collections.",
+	"home.collaborations.partnerFocus.conservation": "Field labs restoring sculpture, mural pigments, and ritual artifacts using climate-smart methods.",
+	"home.collaborations.partnerFocus.programs": "Community-led festivals, language workshops, and diaspora youth engagement programs.",
+	"home.collaborations.partnerFocus.digital": "Open-access digital repositories and immersive 3D heritage storytelling platforms.",
+	"home.collaborations.partnerFocus.community": "Preserving oral traditions and folk songs with knowledge keepers across the Indian Ocean.",
+	"home.recognition.title": "Global Recognition & Heritage Impact",
+	"home.recognition.subtitle": "Our research and preservation efforts resonate worldwide",
+	"home.recognition.description": "International cultural councils and diaspora organizations acknowledge Meenkodi's evidence-driven preservation model, ensuring Tamil heritage narratives remain accessible, inclusive, and future-ready.",
+	"home.recognition.cards.unesco.title": "UNESCO Living Heritage Honours",
+	"home.recognition.cards.unesco.description": "Recognized for documenting endangered temple rituals and classical artforms under the 2024 Living Heritage initiative.",
+	"home.recognition.cards.icomos.badge": "ICOMOS",
+	"home.recognition.cards.icomos.title": "World Heritage Research Fellowship",
+	"home.recognition.cards.icomos.description": "Awarded annual fellowships for conservation studies on Chola architecture and maritime trade routes.",
+	"home.recognition.cards.diaspora.badge": "Global Tamil Forum",
+	"home.recognition.cards.diaspora.title": "Diaspora Cultural Impact Awards",
+	"home.recognition.cards.diaspora.description": "Celebrated for bridging transnational Tamil communities through digital exhibitions and youth residencies.",
+	"home.initiatives.title": "Signature Heritage Initiatives",
+	"home.initiatives.subtitle": "Experiences that reconnect communities with Tamil civilization",
+	"home.initiatives.library.title": "Digital Palm Leaf Library",
+	"home.initiatives.library.description": "Browse authenticated manuscripts, inscriptions, and curated learning paths designed for researchers and students alike.",
+	"home.initiatives.library.cta": "Access the Library",
+	"home.initiatives.museum.title": "Immersive Heritage Museum",
+	"home.initiatives.museum.description": "Explore 3D temple walkthroughs, curated exhibits, and conservation in action at our Chennai museum campus.",
+	"home.initiatives.museum.cta": "Tour the Museum",
+	"home.initiatives.education.title": "Tamil Knowledge Studios",
+	"home.initiatives.education.description": "Join masterclasses, language labs, and fellowship studios linking scholars with community storytellers.",
+	"home.initiatives.education.cta": "View Learning Tracks",
+	"home.initiatives.field.title": "Living Heritage Residencies",
+	"home.initiatives.field.description": "Spend immersive weeks in temple towns and craft clusters, documenting rituals with our mentors and co-creating conservation toolkits with local communities.",
+	"home.initiatives.field.cta": "View Residency Calendar",
+	"home.community.title": "Community",
+	"home.community.heading": "Join the Global Tamil Heritage Movement",
+	"home.community.description": "Volunteer, donate, or collaborate with us to keep living traditions vibrant for future generations across Tamil Nadu and the diaspora.",
+	"home.community.engage.volunteer.title": "Volunteer Heritage Fellows",
+	"home.community.engage.volunteer.description": "Lead on-ground documentation drives, oral history recordings, and youth heritage walks in your city.",
+	"home.community.engage.volunteer.cta": "See Volunteer Calendar",
+	"home.community.engage.donate.title": "Support Conservation",
+	"home.community.engage.donate.description": "Help fund manuscript restoration labs, climate-controlled storage, and scholar residencies.",
+	"home.community.engage.donate.cta": "Make a Contribution",
+	"home.contact.title": "Get in Touch",
 	"home.contact.subtitle": "We'd love to hear from you! Whether you have a question, a collaboration proposal, or just want to say hello, our team is ready to assist.",
 	"home.contact.infoHeading": "Contact Information",
 	"home.contact.infoDescription": "Visit any of our collaboration centres or reach us through the direct channels below. We actively support museums, archives, researchers, and community trusts across India.",
@@ -254,25 +255,25 @@
 	"home.contact.mapTitle": "Heritage Foundation Head Office",
 	"home.contact.mapSubtitle": "Located at Shinde Complex, Bavdhan Kh., Pune – our primary centre for museum projects, archival digitisation, and course coordination.",
 	"home.contact.hoursHighlight": "Weekdays 9 AM – 5 PM · Saturdays till 3 PM",
-	"home.contact.mapCta": "Open in Google Maps"
-	,"home.ironAge.overline": "Iron Age Chronicles"
-	,"home.ironAge.title": "Tamil Archaeology Labs & Field Conservation"
-	,"home.ironAge.description": "From furnace slag in Kodumanal to maritime beads at Poompuhar, our archaeology teams decode the Tamil Iron Age with lab-grade precision. Specialists catalogue palm-leaf inscriptions, conserve megalithic burials, and map ancient trade routes that connected the Tamil coast with Rome and Southeast Asia."
-	,"home.ironAge.callToAction": "Join digs that blend GIS scanning, metallurgical analysis, and oral histories with village elders to rebuild the continuum of Tamil civilization."
-	,"home.ironAge.button": "Join the Expedition"
-	,"home.footer.about": "About Us"
-	,"home.footer.mission": "Our Mission"
-	,"home.footer.team": "Team"
-	,"home.footer.contact": "Contact"
-	,"home.footer.explore": "Explore"
-	,"home.footer.support": "Support Us"
-	,"home.footer.donate": "Donate"
-	,"home.footer.volunteer": "Volunteer"
-	,"home.footer.partnership": "Partnership"
-	,"home.footer.description": "Dedicated to preserving, documenting, and celebrating the rich cultural heritage of Tamil civilization for future generations."
-	,"home.footer.copyright": "All rights reserved. Tamil Heritage Foundation"
-	,"home.footer.followUs": "Follow Us"
-	,"contact": {
+	"home.contact.mapCta": "Open in Google Maps",
+	"home.ironAge.overline": "Iron Age Chronicles",
+	"home.ironAge.title": "Tamil Archaeology Labs & Field Conservation",
+	"home.ironAge.description": "From furnace slag in Kodumanal to maritime beads at Poompuhar, our archaeology teams decode the Tamil Iron Age with lab-grade precision. Specialists catalogue palm-leaf inscriptions, conserve megalithic burials, and map ancient trade routes that connected the Tamil coast with Rome and Southeast Asia.",
+	"home.ironAge.callToAction": "Join digs that blend GIS scanning, metallurgical analysis, and oral histories with village elders to rebuild the continuum of Tamil civilization.",
+	"home.ironAge.button": "Join the Expedition",
+	"home.footer.about": "About Us",
+	"home.footer.mission": "Our Mission",
+	"home.footer.team": "Team",
+	"home.footer.contact": "Contact",
+	"home.footer.explore": "Explore",
+	"home.footer.support": "Support Us",
+	"home.footer.donate": "Donate",
+	"home.footer.volunteer": "Volunteer",
+	"home.footer.partnership": "Partnership",
+	"home.footer.description": "Dedicated to preserving, documenting, and celebrating the rich cultural heritage of Tamil civilization for future generations.",
+	"home.footer.copyright": "All rights reserved. Tamil Heritage Foundation",
+	"home.footer.followUs": "Follow Us",
+	"contact": {
 		"overline": "CONTACT US",
 		"title": "Get In Touch",
 		"subtitle": "Connect with us for heritage preservation and research collaboration",
@@ -292,5 +293,39 @@
 			"title": "Social Media",
 			"value": "Follow us on social platforms"
 		}
+	},
+	"faq": {
+		"title": "Frequently Asked Questions",
+		"subtitle": "Find answers to common questions about Meenkodi, our mission, and how you can get involved in preserving Tamil heritage.",
+		"items": [
+			{
+				"question": "What is Meenkodi?",
+				"answer": "Meenkodi is a digital platform dedicated to preserving, documenting, and celebrating the rich cultural heritage of Tamil civilization. We aim to connect the global Tamil community with their roots through technology and storytelling."
+			},
+			{
+				"question": "Is Tamil one of the world's oldest civilizations?",
+				"answer": "Yes, Tamil civilization is one of the world's oldest continuous civilizations, with documented history spanning over 2,000 years. Archaeological evidence from sites like Keeladi, Adichanallur, and Poompuhar suggests Tamil culture may extend back 3,000-4,000 years or more. The Tamil Brahmi script and Sangam literature provide concrete evidence of a sophisticated society dating to at least 300 BCE."
+			},
+			{
+				"question": "How old is the Tamil language?",
+				"answer": "Tamil is one of the world's oldest living classical languages. It has a documented literary tradition of over 2,000 years, with the earliest Tamil-Brahmi inscriptions dating to around 500 BCE. Tamil is the only classical language that has maintained continuous literary production from ancient times to the present, making it unique among world languages."
+			},
+			{
+				"question": "What is Sangam literature?",
+				"answer": "Sangam literature is a collection of ancient Tamil poems and texts composed between 300 BCE and 300 CE. It includes over 2,000 poems by more than 470 poets, covering themes of love, war, ethics, and daily life. Major works include Tolkappiyam (grammar), Ettuthokai (Eight Anthologies), and Pattupattu (Ten Idylls). This literature provides invaluable insights into ancient Tamil society, culture, and values."
+			},
+			{
+				"question": "What makes Tamil culture unique?",
+				"answer": "Tamil culture is distinguished by its ancient literary tradition, classical language status, unique architectural achievements (like Dravidian temple architecture), rich performing arts (Bharatanatyam, Carnatic music), sophisticated philosophical systems, and the concept of 'Thinai' (landscape-based poetry). The culture has maintained remarkable continuity while adapting to modern times, preserving traditions in language, arts, festivals, and social customs."
+			},
+			{
+				"question": "What are Tamil contributions to world civilization?",
+				"answer": "Tamil civilization has made significant contributions including: advanced maritime trade networks connecting Rome, Southeast Asia, and China; pioneering work in mathematics, astronomy, and medicine (Siddha system); architectural innovations in temple construction; classical dance and music traditions; philosophical texts like Thirukkural (translated into over 40 languages); and the development of one of the world's oldest grammatical treatises, Tolkappiyam."
+			},
+			{
+				"question": "What archaeological evidence exists for ancient Tamil civilization?",
+				"answer": "Major archaeological sites include Keeladi (urban settlement from 600 BCE), Adichanallur (Iron Age burial site with 4,000-year-old artifacts), Poompuhar (ancient port city mentioned in Sangam literature), Arikamedu (Roman trade settlement), and numerous megalithic sites. Excavations have revealed Tamil-Brahmi inscriptions, pottery, jewelry, tools, and urban planning evidence that confirm the antiquity and sophistication of Tamil civilization."
+			}
+		]
 	}
 }

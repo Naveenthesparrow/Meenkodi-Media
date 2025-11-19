@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Grid, 
-  Card, 
-  CardMedia, 
-  CardContent, 
-  Typography, 
-  Button, 
-  Box, 
-  IconButton, 
+import {
+  Container,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  Button,
+  Box,
+  IconButton,
   Fade,
   Dialog,
   DialogTitle,
@@ -109,10 +109,10 @@ export default function Resources({ user }) {
     };
     setCurrentResource({
       _id: resource._id,
-      title_en: part(resource.title,'en'), title_ta: part(resource.title,'ta'),
-      description_en: part(resource.description,'en'), description_ta: part(resource.description,'ta'),
-      category_en: part(resource.category,'en'), category_ta: part(resource.category,'ta'),
-      author_en: part(resource.author,'en'), author_ta: part(resource.author,'ta'),
+      title_en: part(resource.title, 'en'), title_ta: part(resource.title, 'ta'),
+      description_en: part(resource.description, 'en'), description_ta: part(resource.description, 'ta'),
+      category_en: part(resource.category, 'en'), category_ta: part(resource.category, 'ta'),
+      author_en: part(resource.author, 'en'), author_ta: part(resource.author, 'ta'),
       image: resource.image || '',
       downloadLink: resource.downloadLink || '',
     });
@@ -122,8 +122,8 @@ export default function Resources({ user }) {
   const handleSave = async () => {
     try {
       const method = currentResource._id ? 'PUT' : 'POST';
-      const url = currentResource._id 
-        ? `${API_BASE_URL}/api/resources/${currentResource._id}` 
+      const url = currentResource._id
+        ? `${API_BASE_URL}/api/resources/${currentResource._id}`
         : `${API_BASE_URL}/api/resources`;
 
       const response = await fetch(url, {
@@ -145,11 +145,11 @@ export default function Resources({ user }) {
       }
 
       const savedResource = await response.json();
-      
+
       if (method === 'POST') {
         setResources([...resources, savedResource]);
       } else {
-        setResources(resources.map(resource => 
+        setResources(resources.map(resource =>
           resource._id === savedResource._id ? savedResource : resource
         ));
       }
@@ -181,12 +181,12 @@ export default function Resources({ user }) {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh' 
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh'
         }}
       >
         <CircularProgress />
@@ -206,19 +206,19 @@ export default function Resources({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.resources} />
       {/* Unique Heading Section */}
-      <Box 
-        sx={{ 
-          mb: 6, 
-          textAlign: 'center', 
+      <Box
+        sx={{
+          mb: 6,
+          textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        <Typography 
-          variant="h2" 
-          sx={{ 
-            fontWeight: 500, 
-            color: "#8B0000", 
+        <Typography
+          variant="h2"
+          sx={{
+            fontWeight: 500,
+            color: "#8B0000",
             position: 'relative',
             display: 'inline-block',
             letterSpacing: -1,
@@ -264,13 +264,13 @@ export default function Resources({ user }) {
         >
           {t('resources.title', 'Resources')}
         </Typography>
-        
+
         {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
+          <Box
+            sx={{
+              position: 'absolute',
+              right: 0,
+              top: '50%',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
@@ -290,7 +290,7 @@ export default function Resources({ user }) {
                 bgcolor: "#000",
                 color: "#fff",
                 transition: 'all 0.3s ease',
-                "&:hover": { 
+                "&:hover": {
                   bgcolor: "#333",
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -305,9 +305,9 @@ export default function Resources({ user }) {
         )}
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Grid
+        container
+        spacing={4}
         sx={{
           display: 'flex',
           justifyContent: 'center',
@@ -324,26 +324,27 @@ export default function Resources({ user }) {
         }}
       >
         {resources.map((resource, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
+          <Fade
+            in={true}
+            timeout={500 + index * 200}
             key={resource._id}
           >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              sx={{
+                display: 'flex',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
               }}
             >
               <Card
                 sx={{
-                  width: 350,  // Fixed width
-                  height: 450, // Fixed height
+                  width: { xs: '100%', sm: 350 },
+                  maxWidth: '100%',
+                  // height: 450, // Removed fixed height for responsiveness
                   display: 'flex',
                   flexDirection: 'column',
                   border: "3px solid #000",
@@ -384,7 +385,7 @@ export default function Resources({ user }) {
                     height="200"
                     image={resource.image}
                     alt={getContent(resource.title)}
-                    sx={{ 
+                    sx={{
                       objectFit: "contain",
                       width: '100%',
                       maxHeight: 200,
@@ -412,8 +413,8 @@ export default function Resources({ user }) {
                       boxSizing: 'border-box',
                     }}
                   >
-                    <Typography 
-                      variant="body2" 
+                    <Typography
+                      variant="body2"
                       color="textSecondary"
                       sx={{ textAlign: 'center' }}
                     >
@@ -434,13 +435,13 @@ export default function Resources({ user }) {
                   }}
                 >
                   {user && user.role === "admin" && (
-                    <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
-                        display: "flex", 
-                        gap: 1 
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        display: "flex",
+                        gap: 1
                       }}
                     >
                       <IconButton
@@ -452,9 +453,9 @@ export default function Resources({ user }) {
                         sx={{
                           color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
                         }}
@@ -470,9 +471,9 @@ export default function Resources({ user }) {
                         sx={{
                           color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
                         }}
@@ -485,8 +486,8 @@ export default function Resources({ user }) {
                     <Typography
                       variant="h5"
                       sx={{
-                        fontWeight: 700, 
-                        color: "#000", 
+                        fontWeight: 700,
+                        color: "#000",
                         mb: 1,
                         lineHeight: 1.3,
                         fontSize: '1.5rem',
@@ -512,9 +513,9 @@ export default function Resources({ user }) {
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ 
-                        color: "#000", 
-                        lineHeight: 1.6, 
+                      sx={{
+                        color: "#000",
+                        lineHeight: 1.6,
                         mb: 2,
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
@@ -524,17 +525,17 @@ export default function Resources({ user }) {
                         minHeight: '4.8rem', // Ensures consistent height for 3 lines
                       }}
                     >
-                      {getContent(resource.description).length > 150 
-                        ? `${getContent(resource.description).substring(0, 150)}...` 
+                      {getContent(resource.description).length > 150
+                        ? `${getContent(resource.description).substring(0, 150)}...`
                         : getContent(resource.description)}
                     </Typography>
                   </Box>
 
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center' 
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
                     }}
                   >
                     <Button
@@ -560,7 +561,7 @@ export default function Resources({ user }) {
                           bgcolor: "#000",
                           color: "#fff",
                           borderRadius: 0,
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: "#333",
                           },
                         }}
@@ -577,8 +578,8 @@ export default function Resources({ user }) {
       </Grid>
 
       {/* Edit/Add Dialog */}
-      <Dialog 
-        open={openDialog} 
+      <Dialog
+        open={openDialog}
         onClose={() => setOpenDialog(false)}
         maxWidth="md"
         fullWidth
@@ -587,33 +588,33 @@ export default function Resources({ user }) {
           {currentResource._id ? t('resources.edit', 'Edit Resource') : t('resources.addNew', 'Add New Resource')}
         </DialogTitle>
         <DialogContent>
-          <TextField label="Title (EN)" fullWidth sx={{ mb:2 }} value={currentResource.title_en} onChange={(e)=>setCurrentResource({...currentResource,title_en:e.target.value})} />
-          <TextField label="Title (TA)" fullWidth sx={{ mb:2 }} value={currentResource.title_ta} onChange={(e)=>setCurrentResource({...currentResource,title_ta:e.target.value})} />
-          <TextField label="Author (EN)" fullWidth sx={{ mb:2 }} value={currentResource.author_en} onChange={(e)=>setCurrentResource({...currentResource,author_en:e.target.value})} />
-          <TextField label="Author (TA)" fullWidth sx={{ mb:2 }} value={currentResource.author_ta} onChange={(e)=>setCurrentResource({...currentResource,author_ta:e.target.value})} />
-          <TextField label="Category (EN)" fullWidth sx={{ mb:2 }} value={currentResource.category_en} onChange={(e)=>setCurrentResource({...currentResource,category_en:e.target.value})} />
-          <TextField label="Category (TA)" fullWidth sx={{ mb:2 }} value={currentResource.category_ta} onChange={(e)=>setCurrentResource({...currentResource,category_ta:e.target.value})} />
-          <TextField label="Description (EN)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentResource.description_en} onChange={(e)=>setCurrentResource({...currentResource,description_en:e.target.value})} />
-          <TextField label="Description (TA)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentResource.description_ta} onChange={(e)=>setCurrentResource({...currentResource,description_ta:e.target.value})} />
+          <TextField label="Title (EN)" fullWidth sx={{ mb: 2 }} value={currentResource.title_en} onChange={(e) => setCurrentResource({ ...currentResource, title_en: e.target.value })} />
+          <TextField label="Title (TA)" fullWidth sx={{ mb: 2 }} value={currentResource.title_ta} onChange={(e) => setCurrentResource({ ...currentResource, title_ta: e.target.value })} />
+          <TextField label="Author (EN)" fullWidth sx={{ mb: 2 }} value={currentResource.author_en} onChange={(e) => setCurrentResource({ ...currentResource, author_en: e.target.value })} />
+          <TextField label="Author (TA)" fullWidth sx={{ mb: 2 }} value={currentResource.author_ta} onChange={(e) => setCurrentResource({ ...currentResource, author_ta: e.target.value })} />
+          <TextField label="Category (EN)" fullWidth sx={{ mb: 2 }} value={currentResource.category_en} onChange={(e) => setCurrentResource({ ...currentResource, category_en: e.target.value })} />
+          <TextField label="Category (TA)" fullWidth sx={{ mb: 2 }} value={currentResource.category_ta} onChange={(e) => setCurrentResource({ ...currentResource, category_ta: e.target.value })} />
+          <TextField label="Description (EN)" fullWidth multiline minRows={5} sx={{ mb: 2 }} value={currentResource.description_en} onChange={(e) => setCurrentResource({ ...currentResource, description_en: e.target.value })} />
+          <TextField label="Description (TA)" fullWidth multiline minRows={5} sx={{ mb: 2 }} value={currentResource.description_ta} onChange={(e) => setCurrentResource({ ...currentResource, description_ta: e.target.value })} />
           <TextField
             label="Download Link"
             fullWidth
             sx={{ mb: 2 }}
             value={currentResource.downloadLink}
-            onChange={(e) => setCurrentResource({...currentResource, downloadLink: e.target.value})}
+            onChange={(e) => setCurrentResource({ ...currentResource, downloadLink: e.target.value })}
             placeholder="Optional: Add a download link for the resource"
           />
           <MediaUpload
             onImageLinkChange={(link) => {
               console.log('Image link changed:', link);
-              setCurrentResource({...currentResource, image: link});
+              setCurrentResource({ ...currentResource, image: link });
             }}
-            onVideoLinkChange={(link) => {}} // No video link field in this dialog
+            onVideoLinkChange={(link) => { }} // No video link field in this dialog
             onImageChange={(url) => {
               console.log('Image URL changed:', url);
-              setCurrentResource({...currentResource, image: url});
+              setCurrentResource({ ...currentResource, image: url });
             }}
-            onVideoChange={(url) => {}} // No video URL field in this dialog
+            onVideoChange={(url) => { }} // No video URL field in this dialog
             currentImageLink={currentResource.image}
             currentVideoLink={''} // No video link in this dialog
             currentImage={currentResource.image}
