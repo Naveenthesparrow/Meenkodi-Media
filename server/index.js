@@ -36,6 +36,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
+// Serve static files from the client build directory
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -55,7 +58,7 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       // Allow common local dev origins (vite dev server ports) quickly
       try {
         const lower = origin.toLowerCase();
@@ -173,16 +176,14 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: `${
-      process.env.CLIENT_URL || "http://localhost:5173"
-    }/auth/failure`,
+    failureRedirect: `${process.env.CLIENT_URL || "http://localhost:5173"
+      }/auth/failure`,
     session: true,
   }),
   (req, res) => {
     console.log("OAuth callback success, redirecting to client...");
     res.redirect(
-      `${
-        process.env.CLIENT_URL || "http://localhost:5173"
+      `${process.env.CLIENT_URL || "http://localhost:5173"
       }/auth/google/callback`
     );
   }
@@ -263,7 +264,7 @@ app.get("/api/articles", async (req, res) => {
 app.get("/api/articles/:id", async (req, res) => {
   const lang = resolveLang(req);
   const article = await Article.findById(req.params.id);
-  if (!article) return res.status(404).json({ error: 'Not found'});
+  if (!article) return res.status(404).json({ error: 'Not found' });
   res.json(localizeSingle(article, 'articles', lang));
 });
 app.post("/api/articles", ensureAdmin, async (req, res) => {
@@ -516,7 +517,7 @@ app.get("/api/lands", async (req, res) => {
 app.get("/api/lands/:id", async (req, res) => {
   const lang = resolveLang(req);
   const land = await Land.findById(req.params.id);
-  if (!land) return res.status(404).json({ error: 'Land not found'});
+  if (!land) return res.status(404).json({ error: 'Land not found' });
   res.json(localizeSingle(land, 'lands', lang));
 });
 app.post("/api/lands", ensureAdmin, async (req, res) => {
@@ -634,10 +635,10 @@ app.post(
       isAuthenticated: req.isAuthenticated(),
       user: req.user
         ? {
-            id: req.user._id,
-            email: req.user.email,
-            role: req.user.role,
-          }
+          id: req.user._id,
+          email: req.user.email,
+          role: req.user.role,
+        }
         : "No user",
     });
 
@@ -657,20 +658,20 @@ app.post(
       console.log("Image Upload Request FULL Details:", {
         file: req.file
           ? {
-              originalname: req.file.originalname,
-              filename: req.file.filename,
-              path: req.file.path,
-              destination: req.file.destination,
-              size: req.file.size,
-              mimetype: req.file.mimetype,
-            }
+            originalname: req.file.originalname,
+            filename: req.file.filename,
+            path: req.file.path,
+            destination: req.file.destination,
+            size: req.file.size,
+            mimetype: req.file.mimetype,
+          }
           : "No file",
         user: req.user
           ? {
-              email: req.user.email,
-              role: req.user.role,
-              id: req.user._id,
-            }
+            email: req.user.email,
+            role: req.user.role,
+            id: req.user._id,
+          }
           : "No user",
         body: req.body,
       });
@@ -839,10 +840,10 @@ app.post(
       isAuthenticated: req.isAuthenticated(),
       user: req.user
         ? {
-            id: req.user._id,
-            email: req.user.email,
-            role: req.user.role,
-          }
+          id: req.user._id,
+          email: req.user.email,
+          role: req.user.role,
+        }
         : "No user",
     });
 
@@ -862,20 +863,20 @@ app.post(
       console.log("Video Upload Request FULL Details:", {
         file: req.file
           ? {
-              originalname: req.file.originalname,
-              filename: req.file.filename,
-              path: req.file.path,
-              destination: req.file.destination,
-              size: req.file.size,
-              mimetype: req.file.mimetype,
-            }
+            originalname: req.file.originalname,
+            filename: req.file.filename,
+            path: req.file.path,
+            destination: req.file.destination,
+            size: req.file.size,
+            mimetype: req.file.mimetype,
+          }
           : "No file",
         user: req.user
           ? {
-              email: req.user.email,
-              role: req.user.role,
-              id: req.user._id,
-            }
+            email: req.user.email,
+            role: req.user.role,
+            id: req.user._id,
+          }
           : "No user",
         body: req.body,
       });

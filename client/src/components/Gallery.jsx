@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Container, 
-  Grid, 
+  Container,
+  Grid,
   Card,
-  CardMedia, 
+  CardMedia,
   CardContent,
   Typography,
   Button,
-  Box, 
-  IconButton, 
+  Box,
+  IconButton,
   Fade,
   Dialog,
   DialogTitle,
@@ -25,6 +25,18 @@ import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from "../utils/api";
 import { useTranslation } from 'react-i18next'
 export default function Gallery({ user }) {
+  const dummyGalleryItems = [
+    {
+      _id: '1',
+      title: 'Sample Gallery Item',
+      description: 'This is a sample gallery item to show when the API is not available.',
+      category: 'Sample',
+      imageUrl: '',
+      imageLink: '',
+      videoUrl: '',
+      videoLink: ''
+    }
+  ];
   const { t } = useTranslation();
   const [galleryItems, setGalleryItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,12 +65,12 @@ export default function Gallery({ user }) {
       }
       const data = await response.json();
       setGalleryItems(data);
-        setLoading(false);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching gallery items:", err);
       setError(err.message);
-        setLoading(false);
-        setGalleryItems(dummyGalleryItems); // Fallback to dummy data
+      setLoading(false);
+      setGalleryItems(dummyGalleryItems); // Fallback to dummy data
     }
   };
 
@@ -83,8 +95,8 @@ export default function Gallery({ user }) {
   const handleSave = async () => {
     try {
       const method = currentGalleryItem._id ? 'PUT' : 'POST';
-      const url = currentGalleryItem._id 
-        ? `${API_BASE_URL}/api/gallery/${currentGalleryItem._id}` 
+      const url = currentGalleryItem._id
+        ? `${API_BASE_URL}/api/gallery/${currentGalleryItem._id}`
         : `${API_BASE_URL}/api/gallery`;
 
       const response = await fetch(url, {
@@ -99,11 +111,11 @@ export default function Gallery({ user }) {
       }
 
       const savedGalleryItem = await response.json();
-      
+
       if (method === 'POST') {
         setGalleryItems([...galleryItems, savedGalleryItem]);
       } else {
-        setGalleryItems(galleryItems.map(item => 
+        setGalleryItems(galleryItems.map(item =>
           item._id === savedGalleryItem._id ? savedGalleryItem : item
         ));
       }
@@ -135,12 +147,12 @@ export default function Gallery({ user }) {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh' 
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh'
         }}
       >
         <CircularProgress />
@@ -160,19 +172,19 @@ export default function Gallery({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.gallery} />
       {/* Unique Heading Section */}
-      <Box 
-          sx={{
-          mb: 6, 
-          textAlign: 'center', 
+      <Box
+        sx={{
+          mb: 6,
+          textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
-          }}
-        >
-          <Typography
-          variant="h2" 
-            sx={{
-            fontWeight: 500, 
-            color: "#8B0000", 
+        }}
+      >
+        <Typography
+          variant="h2"
+          sx={{
+            fontWeight: 500,
+            color: "#8B0000",
             position: 'relative',
             display: 'inline-block',
             letterSpacing: -1,
@@ -218,13 +230,13 @@ export default function Gallery({ user }) {
         >
           {t('gallery.title', 'Gallery')}
         </Typography>
-        
+
         {user && user.role === "admin" && (
-          <Box 
+          <Box
             sx={{
-              position: 'absolute', 
-              right: 0, 
-              top: '50%', 
+              position: 'absolute',
+              right: 0,
+              top: '50%',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
               '&:hover': {
@@ -236,15 +248,15 @@ export default function Gallery({ user }) {
               }
             }}
           >
-          <Button
+            <Button
               onClick={handleAdd}
-            variant="contained"
+              variant="contained"
               startIcon={<Add />}
-            sx={{
+              sx={{
                 bgcolor: "#000",
-              color: "#fff",
+                color: "#fff",
                 transition: 'all 0.3s ease',
-                "&:hover": { 
+                "&:hover": {
                   bgcolor: "#333",
                   boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
                   transform: 'translateY(-3px)',
@@ -254,14 +266,14 @@ export default function Gallery({ user }) {
               }}
             >
               {t('gallery.add', 'Add Gallery Item')}
-          </Button>
-        </Box>
-      )}
+            </Button>
+          </Box>
+        )}
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Grid
+        container
+        spacing={4}
         sx={{
           display: 'flex',
           justifyContent: 'center',
@@ -278,18 +290,18 @@ export default function Gallery({ user }) {
         }}
       >
         {galleryItems.map((item, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
+          <Fade
+            in={true}
+            timeout={500 + index * 200}
             key={item._id}
           >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
+            <Grid
+              item
+              xs={12}
+              sm={6}
+              md={4}
+              sx={{
+                display: 'flex',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
               }}
@@ -338,7 +350,7 @@ export default function Gallery({ user }) {
                     height="200"
                     image={item.imageUrl || item.imageLink}
                     alt={item.title}
-                    sx={{ 
+                    sx={{
                       objectFit: "contain",
                       width: '100%',
                       maxHeight: 200,
@@ -353,8 +365,8 @@ export default function Gallery({ user }) {
                     }}
                   />
                 ) : (
-      <Box
-        sx={{
+                  <Box
+                    sx={{
                       height: 200,
                       width: '100%',
                       backgroundColor: '#f0f0f0',
@@ -365,8 +377,8 @@ export default function Gallery({ user }) {
                       boxSizing: 'border-box',
                     }}
                   >
-                    <Typography 
-                      variant="body2" 
+                    <Typography
+                      variant="body2"
                       color="textSecondary"
                       sx={{ textAlign: 'center' }}
                     >
@@ -379,21 +391,21 @@ export default function Gallery({ user }) {
                   sx={{
                     p: 3,
                     flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
+                    display: "flex",
+                    flexDirection: "column",
                     justifyContent: "space-between",
                     position: 'relative', // For absolute positioning of admin buttons
                     transition: 'all 0.3s ease',
                   }}
                 >
                   {user && user.role === "admin" && (
-                    <Box 
-            sx={{
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
-              display: "flex",
-                        gap: 1 
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        display: "flex",
+                        gap: 1
                       }}
                     >
                       <IconButton
@@ -405,9 +417,9 @@ export default function Gallery({ user }) {
                         sx={{
                           color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
                         }}
@@ -423,24 +435,24 @@ export default function Gallery({ user }) {
                         sx={{
                           color: "#000",
                           bgcolor: 'rgba(255,255,255,0.7)',
-              "&:hover": {
+                          "&:hover": {
                             bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                            transform: 'scale(1.1)'
                           },
                           transition: 'all 0.2s ease',
                         }}
                       >
                         <Delete />
                       </IconButton>
-            </Box>
+                    </Box>
                   )}
                   <Box>
-              <Typography
+                    <Typography
                       variant="h5"
-                sx={{
-                  fontWeight: 700,
-                  color: "#000",
-                  mb: 1,
+                      sx={{
+                        fontWeight: 700,
+                        color: "#000",
+                        mb: 1,
                         lineHeight: 1.3,
                         fontSize: '1.5rem',
                         textTransform: 'capitalize',
@@ -450,37 +462,37 @@ export default function Gallery({ user }) {
                       }}
                     >
                       {item.title}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
                         color: "#666",
                         fontStyle: "italic",
-                  fontSize: "0.9rem",
+                        fontSize: "0.9rem",
                         mb: 2,
                         textTransform: 'capitalize',
                       }}
                     >
                       {item.category}
-              </Typography>
-              <Typography
+                    </Typography>
+                    <Typography
                       variant="body2"
-                sx={{
-                        color: "#000", 
-                  lineHeight: 1.6,
+                      sx={{
+                        color: "#000",
+                        lineHeight: 1.6,
                         mb: 2,
                         display: '-webkit-box',
-                  WebkitLineClamp: 3,
+                        WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         minHeight: '4.8rem', // Ensures consistent height for 3 lines
                       }}
                     >
-                      {item.description.length > 150 
-                        ? `${item.description.substring(0, 150)}...` 
+                      {item.description.length > 150
+                        ? `${item.description.substring(0, 150)}...`
                         : item.description}
-              </Typography>
+                    </Typography>
                   </Box>
 
                   <Button
@@ -488,7 +500,7 @@ export default function Gallery({ user }) {
                     to={`/gallery/${item._id}`}
                     variant="outlined"
                     fullWidth
-                  sx={{
+                    sx={{
                       color: "#000",
                       borderColor: "#000",
                       borderRadius: 0,
@@ -498,8 +510,8 @@ export default function Gallery({ user }) {
                   >
                     {t('actions.readMore', 'Read more')}
                   </Button>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
             </Grid>
           </Fade>
         ))}
@@ -507,7 +519,7 @@ export default function Gallery({ user }) {
 
       {/* Edit/Add Dialog */}
       <Dialog
-        open={openDialog} 
+        open={openDialog}
         onClose={() => setOpenDialog(false)}
         maxWidth="md"
         fullWidth
@@ -521,14 +533,14 @@ export default function Gallery({ user }) {
             fullWidth
             sx={{ mb: 2 }}
             value={currentGalleryItem.title}
-            onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, title: e.target.value})}
+            onChange={(e) => setCurrentGalleryItem({ ...currentGalleryItem, title: e.target.value })}
           />
           <TextField
             label="Category"
             fullWidth
             sx={{ mb: 2 }}
             value={currentGalleryItem.category}
-            onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, category: e.target.value})}
+            onChange={(e) => setCurrentGalleryItem({ ...currentGalleryItem, category: e.target.value })}
           />
           <TextField
             label="Description"
@@ -537,13 +549,13 @@ export default function Gallery({ user }) {
             minRows={3}
             sx={{ mb: 2 }}
             value={currentGalleryItem.description}
-            onChange={(e) => setCurrentGalleryItem({...currentGalleryItem, description: e.target.value})}
+            onChange={(e) => setCurrentGalleryItem({ ...currentGalleryItem, description: e.target.value })}
           />
           <MediaUpload
-            onImageLinkChange={(link) => setCurrentGalleryItem({...currentGalleryItem, imageLink: link})}
-            onVideoLinkChange={(link) => setCurrentGalleryItem({...currentGalleryItem, videoLink: link})}
-            onImageChange={(url) => setCurrentGalleryItem({...currentGalleryItem, imageUrl: url})}
-            onVideoChange={(url) => setCurrentGalleryItem({...currentGalleryItem, videoUrl: url})}
+            onImageLinkChange={(link) => setCurrentGalleryItem({ ...currentGalleryItem, imageLink: link })}
+            onVideoLinkChange={(link) => setCurrentGalleryItem({ ...currentGalleryItem, videoLink: link })}
+            onImageChange={(url) => setCurrentGalleryItem({ ...currentGalleryItem, imageUrl: url })}
+            onVideoChange={(url) => setCurrentGalleryItem({ ...currentGalleryItem, videoUrl: url })}
             currentImageLink={currentGalleryItem.imageLink}
             currentVideoLink={currentGalleryItem.videoLink}
             currentImage={currentGalleryItem.imageUrl}
