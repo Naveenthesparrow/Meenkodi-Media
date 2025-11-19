@@ -1,3 +1,4 @@
+import API_BASE_URL from "../../utils/api";
 import React, { useState, useEffect } from "react";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
@@ -162,9 +163,7 @@ function FoodDetail() {
     try {
       console.log("Fetching user in FoodDetail...");
       const res = await fetch(
-        `${
-          import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-        }/auth/user`,
+        `${API_BASE_URL}/auth/user`,
         {
           method: "GET",
           credentials: "include",

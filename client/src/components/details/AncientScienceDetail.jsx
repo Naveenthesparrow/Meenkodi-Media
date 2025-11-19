@@ -38,6 +38,7 @@ import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
+import API_BASE_URL from "../../utils/api";
 function AncientScienceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -180,7 +181,7 @@ function AncientScienceDetail() {
   const fetchUser = async () => {
     try {
       console.log("Fetching user in AncientScienceDetail...");
-      const res = await fetch(`${import.meta.env.VITE_APP_API_URL || "http://localhost:5000"}/auth/user`, { 
+      const res = await fetch(`${API_BASE_URL}/auth/user`, { 
         method: "GET",
         credentials: "include",
         headers: {

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import API_BASE_URL from "../utils/api";
 import { useNavigate } from "react-router-dom";
 import { Box, Typography, Button, Alert } from "@mui/material";
 
@@ -15,9 +16,7 @@ export default function AuthFailure() {
   }, [navigate]);
 
   const handleRetry = () => {
-    window.location.href = `${
-      process.env.REACT_APP_API_URL || "http://localhost:5000"
-    }/auth/google`;
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (
