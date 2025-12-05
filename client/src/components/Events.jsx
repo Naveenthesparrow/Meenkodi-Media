@@ -26,6 +26,8 @@ import API_BASE_URL from "../utils/api";
 import { useBilingualContent } from '../utils/bilingualContent';
 import { useTranslation } from 'react-i18next';
 
+import styled from 'styled-components';
+
 export default function Events({ user }) {
   const getContent = useBilingualContent();
   const { t } = useTranslation();
@@ -204,8 +206,8 @@ export default function Events({ user }) {
         <Typography
           variant="h2"
           sx={{
-            fontWeight: 500,
-            color: "#8B0000",
+            fontWeight: 700,
+            color: '#8B0000',
             position: 'relative',
             display: 'inline-block',
             letterSpacing: -1,
@@ -218,7 +220,7 @@ export default function Events({ user }) {
               left: '-50px',
               width: '40px',
               height: '3px',
-              backgroundColor: '#8B0000',
+              backgroundColor: '#DAA520',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
             },
@@ -229,22 +231,19 @@ export default function Events({ user }) {
               right: '-50px',
               width: '40px',
               height: '3px',
-              backgroundColor: '#8B0000',
+              backgroundColor: '#DAA520',
               transform: 'translateY(-50%)',
               transition: 'all 0.3s ease',
             },
             '&:hover': {
-              color: '#333',
-              transform: 'scale(1.02)',
+              transform: 'scale(1.05)',
               '&::before': {
                 width: '60px',
                 left: '-70px',
-                backgroundColor: '#666',
               },
               '&::after': {
                 width: '60px',
                 right: '-70px',
-                backgroundColor: '#666',
               },
             },
           }}
@@ -299,15 +298,6 @@ export default function Events({ user }) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
-          transition: 'all 0.3s ease',
-          '& > .MuiGrid-item': {
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.02)',
-              zIndex: 10,
-            }
-          }
         }}
       >
         {events.map((event, index) => (
@@ -327,217 +317,41 @@ export default function Events({ user }) {
                 transition: 'all 0.3s ease',
               }}
             >
-              <Card
-                sx={{
-                  width: { xs: '100%', sm: 350 },
-                  maxWidth: '100%',
-                  height: 'auto',
-                  minHeight: 450,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  border: "3px solid #000",
-                  borderRadius: 0,
-                  bgcolor: "#fff",
-                  transition: "all 0.3s ease",
-                  cursor: "pointer",
-                  position: 'relative',
-                  overflow: 'hidden',
-                  "&::before": {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
-                    transform: 'translateX(-100%)',
-                    transition: 'transform 0.6s ease',
-                  },
-                  "&:hover": {
-                    transform: "translateY(-15px) rotate(1deg)",
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    "&::before": {
-                      transform: 'translateX(100%)',
-                    },
-                    "& .card-content": {
-                      transform: "scale(1.02)",
-                      opacity: 0.95,
-                    }
-                  },
-                }}
-                onClick={() => navigate(`/events/${event._id}`)}
-              >
-                {(event.imageUrl || event.imageLink) ? (
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={event.imageUrl || event.imageLink}
+              <StyledWrapper>
+                <div className="card" onClick={() => navigate(`/events/${event._id}`)}>
+                  <b />
+                  <img
+                    src={event.imageUrl || event.imageLink || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3ENo Image%3C/text%3E%3C/svg%3E"}
                     alt={getContent(event.title)}
-                    sx={{
-                      objectFit: "contain",
-                      width: '100%',
-                      maxHeight: 200,
-                      backgroundColor: '#f0f0f0',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                    onError={(e) => {
-                      console.error('Image failed to load:', event.imageUrl || event.imageLink);
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
-                      e.target.style.display = 'block';
-                    }}
                   />
-                ) : (
-                  <Box
-                    sx={{
-                      height: 200,
-                      width: '100%',
-                      backgroundColor: '#f0f0f0',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      sx={{ textAlign: 'center' }}
-                    >
-                      No Image Available
-                    </Typography>
-                  </Box>
-                )}
-                <CardContent
-                  className="card-content"
-                  sx={{
-                    p: 3,
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {user && user.role === "admin" && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 10,
-                        right: 10,
-                        display: "flex",
-                        gap: 1
-                      }}
-                    >
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(event);
-                        }}
-                        size="small"
-                        sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": {
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)'
-                          },
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(event._id);
-                        }}
-                        size="small"
-                        sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": {
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)'
-                          },
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Box>
-                  )}
-                  <Box>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 700,
-                        color: "#000",
-                        mb: 1,
-                        lineHeight: 1.3,
-                        fontSize: '1.5rem',
-                        textTransform: 'capitalize',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                  <div className="content">
+                    <p className="title">
                       {getContent(event.title)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        fontStyle: "italic",
-                        fontSize: "0.9rem",
-                        mb: 2,
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {event.date}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#000",
-                        lineHeight: 1.6,
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
-                      }}
-                    >
-                      {(() => {
-                        const desc = getContent(event.description);
-                        return desc && desc.length > 150
-                          ? `${desc.substring(0, 150)}...`
-                          : desc;
-                      })()}
-                    </Typography>
-                  </Box>
-
-                  <Button
-                    component={Link}
-                    to={`/events/${event._id}`}
-                    variant="outlined"
-                    fullWidth
-                    sx={{
-                      color: "#000",
-                      borderColor: "#000",
-                      borderRadius: 0,
-                      mt: 'auto',
-                      "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
-                    }}
-                  >
-                    {t('actions.readMore', 'Read more')}
-                  </Button>
-                </CardContent>
-              </Card>
+                      <br />
+                      <span>{event.date}</span>
+                    </p>
+                    {/* Admin Controls */}
+                    {user && user.role === "admin" && (
+                      <div className="sci" onClick={(e) => e.stopPropagation()}>
+                        <IconButton
+                          onClick={() => handleEdit(event)}
+                          size="small"
+                          sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.5)', mr: 1, '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleDelete(event._id)}
+                          size="small"
+                          sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.5)', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </StyledWrapper>
             </Grid>
           </Fade>
         ))}
@@ -607,3 +421,109 @@ export default function Events({ user }) {
     </Container>
   );
 }
+
+const StyledWrapper = styled.div`
+  .card {
+    position: relative;
+    width: 300px;
+    height: 400px;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(315deg, #DAA520, #8B0000); /* Gold to Dark Red */
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(315deg, #DAA520, #8B0000);
+    filter: blur(30px);
+  }
+
+  .card b {
+    position: absolute;
+    inset: 6px;
+    background: #fff;
+    z-index: 2;
+  }
+
+  .card img {
+    position: absolute;
+    z-index: 3;
+    scale: 0.8;
+    opacity: 0.25;
+    transition: 0.5s;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card:hover img {
+    scale: 0.5;
+    opacity: 0.9;
+    transform: translateY(-70px);
+  }
+
+  .card .content {
+    position: absolute;
+    z-index: 3;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: scale(0);
+    transition: 0.5s;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .card:hover .content {
+    transform: scale(1);
+    bottom: 25px;
+  }
+
+  .content .title {
+    position: relative;
+    color: #333;
+    font-weight: 500;
+    line-height: 1.2em;
+    font-size: 1.2em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .content .title span {
+    font-weight: 300;
+    font-size: 0.70em;
+    display: block;
+    margin-top: 5px;
+    color: #8B0000;
+  }
+
+  .content .sci {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+  }
+`;

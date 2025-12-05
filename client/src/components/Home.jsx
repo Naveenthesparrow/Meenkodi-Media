@@ -63,6 +63,7 @@ import {
   Phone,
 } from "@mui/icons-material";
 import CourseSyllabusSlider from "./CourseSyllabusSlider";
+import DirectorsSlider from "./DirectorsSlider";
 import { useBilingualContent, createBilingualContent } from "../utils/bilingualContent";
 import MeenkodiImage from "../assests/meenkodi.png";
 
@@ -880,6 +881,8 @@ export default function Home() {
                 <Box>
                   <Typography
                     variant="overline"
+                    className="text-scan-animation"
+                    data-text={getContent(HERO_CONTENT.tagline)}
                     sx={{
                       letterSpacing: 3,
                       fontSize: { xs: 10.5, md: 11.5 },
@@ -2677,142 +2680,12 @@ export default function Home() {
             </Typography>
             <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 6, borderRadius: 2 }} />
 
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: { xs: 2.5, sm: 3, md: 3.5, lg: 4 },
-                maxWidth: "1400px",
-                mx: "auto",
-                justifyContent: "center"
-              }}
-            >
-              {TEAM_DIRECTORS.map((member, index) => (
-                <Box key={index} sx={{ flex: { xs: '1 1 100%', sm: '0 1 calc(50% - 12px)', md: '0 1 calc(33.333% - 18px)', lg: '0 1 240px' }, minWidth: 0, display: 'flex' }}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      px: { xs: 2.5, md: 3 },
-                      py: { xs: 3, md: 3.5 },
-                      width: "100%",
-                      height: { xs: '380px', md: '400px' },
-                      borderRadius: "18px",
-                      bgcolor: "#f9fafb",
-                      border: "1px solid #e4e7eb",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      textAlign: "center",
-                      gap: 2,
-                      justifyContent: 'space-between',
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-6px)",
-                        boxShadow: "0 18px 40px rgba(16,24,40,0.12)",
-                      },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        position: "relative",
-                        width: { xs: 92, md: 104 },
-                        height: { xs: 92, md: 104 },
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          inset: 0,
-                          borderRadius: "50%",
-                          background: "linear-gradient(145deg, rgba(139,0,0,0.18), rgba(139,0,0,0.06))",
-                        }}
-                      />
-                      <Avatar
-                        src={member.image}
-                        sx={{
-                          width: { xs: 80, md: 90 },
-                          height: { xs: 80, md: 90 },
-                          border: "4px solid #fff",
-                          boxShadow: "0 6px 16px rgba(15,23,42,0.15)",
-                          '& img': {
-                            objectFit: 'cover',
-                            objectPosition: member.imagePosition || 'center top'
-                          }
-                        }}
-                      />
-                    </Box>
-
-                    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, flexGrow: 1, justifyContent: "center", px: 1 }}>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 700,
-                          color: "#1f2933",
-                          fontSize: { xs: "1.05rem", md: "1.1rem" },
-                          letterSpacing: "-0.01em",
-                          minHeight: "2.8em",
-                          maxHeight: "2.8em",
-                          lineHeight: 1.4,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical'
-                        }}
-                      >
-                        {member.name[i18n.language] || member.name.en}
-                      </Typography>
-                      <Divider sx={{ width: 56, height: 3, bgcolor: "#8B0000", borderRadius: 2 }} />
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#52616b",
-                          fontSize: { xs: "0.88rem", md: "0.92rem" },
-                          lineHeight: 1.5,
-                          minHeight: '4.5em',
-                          maxHeight: '4.5em',
-                          overflow: 'hidden',
-                          textAlign: 'center',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 3,
-                          WebkitBoxOrient: 'vertical'
-                        }}
-                      >
-                        {member.title[i18n.language] || member.title.en}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ pt: 1 }}>
-                      <IconButton
-                        size="small"
-                        sx={{
-                          color: "#8B0000",
-                          border: "2px solid rgba(139,0,0,0.4)",
-                          width: 40,
-                          height: 40,
-                          transition: "all 0.25s ease",
-                          "&:hover": {
-                            bgcolor: "#8B0000",
-                            color: "#fff",
-                            borderColor: "#8B0000",
-                          },
-                        }}
-                      >
-                        <Twitter sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Box>
-                  </Card>
-                </Box>
-              ))}
-            </Box>
+            <DirectorsSlider directors={TEAM_DIRECTORS} />
           </Container>
         </Box>
       </DeferredSection>
 
       {/* CONTACT SECTION removed as requested */}
-    </Box>
+    </Box >
   )
 }
