@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Card, CardMedia, Typography } from "@mui/material";
+import API_BASE_URL from "../../utils/api";
 
 const MediaDisplay = ({
   imageUrl,
@@ -8,6 +9,13 @@ const MediaDisplay = ({
   title,
   height = 300,
 }) => {
+  const toAbsoluteMediaUrl = (url) => {
+    if (!url) return url;
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('data:')) return url;
+    const withLeading = url.startsWith("/") ? url : `/${url}`;
+    return `${API_BASE_URL}${withLeading}`;
+  };
   const getYouTubeVideoId = (url) => {
     const regExp =
       /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
@@ -83,7 +91,7 @@ const MediaDisplay = ({
             objectFit: "cover",
             backgroundColor: "#000",
           }}
-          src={videoUrl}
+          src={toAbsoluteMediaUrl(videoUrl)}
           title={title || "Video"}
         />
       );
@@ -91,7 +99,7 @@ const MediaDisplay = ({
       return (
         <CardMedia
           component="img"
-          image={imageUrl}
+          image={toAbsoluteMediaUrl(imageUrl)}
           alt={title || "Image"}
           sx={{
             width: "100%",

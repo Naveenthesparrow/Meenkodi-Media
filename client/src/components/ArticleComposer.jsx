@@ -1,0 +1,279 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Card,
+  TextField,
+  Button,
+  Avatar,
+  Typography,
+  IconButton,
+  Alert,
+  CircularProgress,
+} from '@mui/material';
+import { Image as ImageIcon, VideoLibrary as VideoIcon, Close as CloseIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import API_BASE_URL from '../utils/api';
+
+export default function ArticleComposer({ user, onPostCreated }) {
+  const { t, i18n } = useTranslation();
+  const [titleEn, setTitleEn] = useState('');
+  const [titleTa, setTitleTa] = useState('');
+  const [contentEn, setContentEn] = useState('');
+  const [contentTa, setContentTa] = useState('');
+  const [image, setImage] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target.result);
+    reader.readAsDataURL(file);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Upload failed');
+
+      const imageUrl = data.imageUrl || data.fullPath;
+      const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
+      setImage(`${API_BASE_URL}${normalizedUrl}`);
+    } catch (err) {
+      setError(err.message);
+      setImagePreview('');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!titleEn.trim() && !titleTa.trim()) {
+      setError(t('articles.error.titleRequired', 'Title is required'));
+      return;
+    }
+
+    if (!contentEn.trim() && !contentTa.trim()) {
+      setError(t('articles.error.contentRequired', 'Content is required'));
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: { en: titleEn, ta: titleTa },
+          content: { en: contentEn, ta: contentTa },
+          image,
+          videoUrl,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to create article');
+
+      setSuccess(true);
+      setTitleEn('');
+      setTitleTa('');
+      setContentEn('');
+      setContentTa('');
+      setImage('');
+      setVideoUrl('');
+      setImagePreview('');
+
+      setTimeout(() => setSuccess(false), 3000);
+
+      if (onPostCreated) onPostCreated(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <Card sx={{ p: 3, mb: 4, border: '2px solid #000', borderRadius: 0 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Avatar sx={{ bgcolor: '#8B0000' }}>
+          {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
+        </Avatar>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            {user.name || user.email}
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#666' }}>
+            {user.role === 'admin' 
+              ? t('articles.composer.publishImmediately', 'Post will be published immediately') 
+              : t('articles.composer.pendingReview', 'Post will be pending admin approval')}
+          </Typography>
+        </Box>
+      </Box>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {user.role === 'admin' 
+            ? t('articles.composer.published', 'Article published successfully!') 
+            : t('articles.composer.submitted', 'Article submitted for review!')}
+        </Alert>
+      )}
+
+      <TextField
+        fullWidth
+        placeholder={t('articles.composer.titlePlaceholder', 'Add a title (English)...')}
+        value={titleEn}
+        onChange={(e) => setTitleEn(e.target.value)}
+        variant="outlined"
+        sx={{ mb: 2 }}
+      />
+
+      <TextField
+        fullWidth
+        placeholder={t('articles.composer.titlePlaceholderTa', 'தலைப்பு (தமிழ்)...')}
+        value={titleTa}
+        onChange={(e) => setTitleTa(e.target.value)}
+        variant="outlined"
+        sx={{ mb: 2 }}
+      />
+
+      <TextField
+        fullWidth
+        multiline
+        minRows={4}
+        placeholder={t('articles.composer.contentPlaceholder', 'What do you want to share? (English)')}
+        value={contentEn}
+        onChange={(e) => setContentEn(e.target.value)}
+        variant="outlined"
+        sx={{ mb: 2 }}
+      />
+
+      <TextField
+        fullWidth
+        multiline
+        minRows={4}
+        placeholder={t('articles.composer.contentPlaceholderTa', 'உங்கள் கருத்துக்களை பகிருங்கள் (தமிழ்)')}
+        value={contentTa}
+        onChange={(e) => setContentTa(e.target.value)}
+        variant="outlined"
+        sx={{ mb: 2 }}
+      />
+
+      {imagePreview && (
+        <Box sx={{ position: 'relative', mb: 2 }}>
+          <img
+            src={imagePreview}
+            alt="Preview"
+            style={{ width: '100%', maxHeight: 400, objectFit: 'cover', borderRadius: 4 }}
+          />
+          <IconButton
+            onClick={() => {
+              setImage('');
+              setImagePreview('');
+            }}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              bgcolor: 'rgba(0,0,0,0.6)',
+              color: '#fff',
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      )}
+
+      {videoUrl && (
+        <Box sx={{ position: 'relative', mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="body2" sx={{ wordBreak: 'break-all', mb: 1 }}>
+            {videoUrl}
+          </Typography>
+          <IconButton
+            onClick={() => setVideoUrl('')}
+            size="small"
+            sx={{ position: 'absolute', top: 4, right: 4 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+      )}
+
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          accept="image/*"
+          style={{ display: 'none' }}
+          id="article-image-upload"
+          type="file"
+          onChange={handleImageUpload}
+          disabled={uploading || !!image}
+        />
+        <label htmlFor="article-image-upload">
+          <Button
+            variant="outlined"
+            component="span"
+            startIcon={uploading ? <CircularProgress size={20} /> : <ImageIcon />}
+            disabled={uploading || !!image}
+            sx={{ borderColor: '#000', color: '#000', borderRadius: 0 }}
+          >
+            {t('articles.composer.addPhoto', 'Add Photo')}
+          </Button>
+        </label>
+
+        <TextField
+          placeholder={t('articles.composer.videoUrl', 'Paste video URL...')}
+          value={videoUrl}
+          onChange={(e) => setVideoUrl(e.target.value)}
+          size="small"
+          sx={{ flex: 1, minWidth: 200 }}
+          InputProps={{
+            startAdornment: <VideoIcon sx={{ mr: 1, color: '#666' }} />,
+          }}
+        />
+
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={submitting}
+          sx={{
+            bgcolor: '#8B0000',
+            color: '#fff',
+            borderRadius: 0,
+            px: 4,
+            '&:hover': { bgcolor: '#6B0000' },
+            ml: 'auto',
+          }}
+        >
+          {submitting ? t('actions.posting', 'Posting...') : t('actions.post', 'Post')}
+        </Button>
+      </Box>
+    </Card>
+  );
+}

@@ -46,6 +46,7 @@ import {
   EmojiEmotions,
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
+import { API_BASE_URL } from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
 
@@ -230,9 +231,7 @@ function DanceDetail() {
     try {
       console.log("Fetching user in DanceDetail...");
       const res = await fetch(
-        `${
-          import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-        }/auth/user`,
+        `${API_BASE_URL}/auth/user`,
         {
           method: "GET",
           credentials: "include",
@@ -492,9 +491,7 @@ function DanceDetail() {
       let res;
       if (deleteType === "comment") {
         res = await fetch(
-          `${
-            import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-          }/api/dance/${id}/comments/${itemToDelete}`,
+          `${API_BASE_URL}/api/dance/${id}/comments/${itemToDelete}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -503,9 +500,7 @@ function DanceDetail() {
       } else if (deleteType === "reply") {
         const [commentId, replyId] = itemToDelete.split("-");
         res = await fetch(
-          `${
-            import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-          }/api/dance/${id}/comments/${commentId}/replies/${replyId}`,
+          `${API_BASE_URL}/api/dance/${id}/comments/${commentId}/replies/${replyId}`,
           {
             method: "DELETE",
             credentials: "include",

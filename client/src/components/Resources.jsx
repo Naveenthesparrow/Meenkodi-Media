@@ -203,7 +203,25 @@ export default function Resources({ user }) {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+    <Box sx={{
+      width: '100%',
+      backgroundColor: '#fff',
+      backgroundImage: {
+        xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+        md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+      },
+      backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+      backgroundRepeat: 'repeat',
+      backgroundPosition: 'center top',
+      '@media (min-resolution: 1.5dppx)': {
+        backgroundImage: {
+          xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+          md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+        },
+        backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+      }
+    }}>
+      <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.resources} />
       {/* Unique Heading Section */}
       <Box
@@ -268,16 +286,24 @@ export default function Resources({ user }) {
         {user && user.role === "admin" && (
           <Box
             sx={{
-              position: 'absolute',
-              right: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
+              position: { xs: 'static', md: 'absolute' },
+              right: { md: 0 },
+              top: { md: '50%' },
+              transform: { xs: 'none', md: 'translateY(-50%)' },
               transition: 'all 0.3s ease',
+              mt: { xs: 2, md: 0 },
+              display: 'flex',
+              justifyContent: { xs: 'flex-start', md: 'flex-end' },
+              width: { xs: '100%', md: 'auto' },
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                '@media (min-width:900px)': {
+                  transform: 'translateY(-50%) scale(1.05)',
+                },
                 '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
+                  '@media (min-width:900px)': {
+                    boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
+                    transform: 'translateY(-3px)',
+                  }
                 }
               }
             }}
@@ -628,6 +654,7 @@ export default function Resources({ user }) {
           <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
-    </Container>
+      </Container>
+    </Box>
   );
 }

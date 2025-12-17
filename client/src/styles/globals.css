@@ -475,7 +475,8 @@
 
 .text-scan-animation::before {
   content: attr(data-text);
-  line-height: 1em;
+  /* inherit parent line-height so wrapping spacing follows MUI sx settings */
+  line-height: inherit;
   color: transparent;
   /* Use a larger fixed-size circle for the spotlight */
   /* Gold (#DAA520) spotlight on Dark Red (#8B0000) text */
@@ -489,4 +490,11 @@
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+/* In case some browsers don't inherit correctly, ensure mobile spacing is comfortable */
+@media (max-width: 600px) {
+  .text-scan-animation::before {
+    line-height: 1.6; /* comfortable spacing for wrapped lines on small screens */
+  }
 }

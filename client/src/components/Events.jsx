@@ -192,12 +192,32 @@ export default function Events({ user }) {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+    <Box sx={{
+      width: '100%',
+      backgroundColor: '#fff',
+      backgroundImage: {
+        xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+        md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+      },
+      backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+      backgroundRepeat: 'repeat',
+      backgroundPosition: 'center top',
+      '@media (min-resolution: 1.5dppx)': {
+        backgroundImage: {
+          xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+          md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+        },
+        backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+      }
+    }}>
+      <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+
       <SEO {...pageSEO.events} />
       {/* Unique Heading Section */}
       <Box
         sx={{
-          mb: 6,
+          mb: { xs: 6, md: 5 },
+          mt: { xs: 2, md: 2 }, // nudge heading slightly down on all screens
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
@@ -254,16 +274,26 @@ export default function Events({ user }) {
         {user && user.role === "admin" && (
           <Box
             sx={{
-              position: 'absolute',
-              right: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
+              // On mobile stack under the title (static flow). On md+ keep absolute at right center
+              position: { xs: 'static', md: 'absolute' },
+              right: { md: 0 },
+              top: { md: '50%' },
+              transform: { xs: 'none', md: 'translateY(-50%)' },
               transition: 'all 0.3s ease',
+              mt: { xs: 2, md: 0 },
+              display: 'flex',
+              justifyContent: { xs: 'flex-start', md: 'flex-end' },
+              width: { xs: '100%', md: 'auto' },
+              // Keep hover effect only on larger screens
               '&:hover': {
-                transform: 'translateY(-50%) scale(1.05)',
+                '@media (min-width:900px)': {
+                  transform: 'translateY(-50%) scale(1.05)',
+                },
                 '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
+                  '@media (min-width:900px)': {
+                    boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
+                    transform: 'translateY(-3px)',
+                  }
                 }
               }
             }}
@@ -328,7 +358,7 @@ export default function Events({ user }) {
                     <p className="title">
                       {getContent(event.title)}
                       <br />
-                      <span>{event.date}</span>
+                      <span>{event.date ? new Date(event.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : ''}</span>
                     </p>
                     {/* Admin Controls */}
                     {user && user.role === "admin" && (
@@ -418,7 +448,8 @@ export default function Events({ user }) {
           <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
-    </Container>
+      </Container>
+    </Box>
   );
 }
 
@@ -442,18 +473,7 @@ const StyledWrapper = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(315deg, #DAA520, #8B0000); /* Gold to Dark Red */
-  }
-
-  .card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
     background: linear-gradient(315deg, #DAA520, #8B0000);
-    filter: blur(30px);
   }
 
   .card b {
@@ -467,7 +487,7 @@ const StyledWrapper = styled.div`
     position: absolute;
     z-index: 3;
     scale: 0.8;
-    opacity: 0.25;
+    opacity: 1;
     transition: 0.5s;
     width: 100%;
     height: 100%;
@@ -484,46 +504,58 @@ const StyledWrapper = styled.div`
     position: absolute;
     z-index: 3;
     bottom: 0;
+    left: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     transform: scale(0);
-    transition: 0.5s;
+    transition: 0.45s ease;
     width: 100%;
-    padding: 20px;
+    padding: 22px;
+    min-height: 110px;
+    box-sizing: border-box;
   }
 
   .card:hover .content {
     transform: scale(1);
-    bottom: 25px;
+    bottom: 18px;
   }
 
   .content .title {
     position: relative;
     color: #333;
-    font-weight: 500;
-    line-height: 1.2em;
-    font-size: 1.2em;
-    letter-spacing: 0.1em;
+    font-weight: 600;
+    line-height: 1.25em;
+    font-size: 1.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    text-align: center;
-    margin-bottom: 10px;
+    text-align: left;
+    margin-bottom: 12px;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .content .title span {
     font-weight: 300;
-    font-size: 0.70em;
+    font-size: 0.85em;
     display: block;
-    margin-top: 5px;
+    margin-top: 6px;
     color: #8B0000;
   }
 
   .content .sci {
-    position: relative;
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
     display: flex;
-    justify-content: center;
-    align-items: center;
     gap: 8px;
-    margin-top: 5px;
+  }
+
+  .content .sci button {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
   }
 `;

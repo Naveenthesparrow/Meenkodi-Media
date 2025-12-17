@@ -39,7 +39,7 @@ import {
   EditNote,
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
-
+import { API_BASE_URL } from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 function KingDetail() {
   const { id } = useParams();
@@ -252,7 +252,7 @@ function KingDetail() {
   const fetchUser = async () => {
     try {
       console.log("Fetching user in KingDetail...");
-      const res = await fetch(`${import.meta.env.VITE_APP_API_URL || "http://localhost:5000"}/auth/user`, { 
+      const res = await fetch(`${API_BASE_URL}/auth/user`, { 
         method: "GET",
         credentials: "include",
         headers: {

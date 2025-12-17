@@ -49,6 +49,7 @@ mongoose
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5000",
   "https://meenkodi-media-fd.onrender.com",
   process.env.CLIENT_URL
 ].filter(Boolean);
@@ -59,14 +60,16 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      // Allow common local dev origins (vite dev server ports) quickly
-      try {
-        const lower = origin.toLowerCase();
-        if (lower.includes('localhost') || lower.includes('127.0.0.1')) {
-          return callback(null, true);
+      // In development, allow all localhost origins
+      if (!isProduction) {
+        try {
+          const url = new URL(origin);
+          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+            return callback(null, true);
+          }
+        } catch (e) {
+          // ignore
         }
-      } catch (e) {
-        // ignore
       }
 
       // Allow configured origins explicitly
@@ -74,22 +77,22 @@ app.use(
         return callback(null, true);
       }
 
-      // Allow frontend domain and any subdomains for render hosts for convenience
-      // e.g., https://www.meenkodi.com and https://meenkodi-media.onrender.com
-      try {
-        const url = new URL(origin);
-        const hostname = url.hostname.toLowerCase();
+      // In production, allow your domains
+      if (isProduction) {
+        try {
+          const url = new URL(origin);
+          const hostname = url.hostname.toLowerCase();
 
-        if (hostname === 'www.meenkodi.com' || hostname === 'meenkodi.com') {
-          return callback(null, true);
-        }
+          if (hostname === 'www.meenkodi.com' || hostname === 'meenkodi.com') {
+            return callback(null, true);
+          }
 
-        // allow onrender subdomains for your Render services (narrow to your project if desired)
-        if (hostname.endsWith('.onrender.com')) {
-          return callback(null, true);
+          if (hostname.endsWith('.onrender.com')) {
+            return callback(null, true);
+          }
+        } catch (e) {
+          // ignore parse errors
         }
-      } catch (e) {
-        // ignore parse errors
       }
 
       console.log('CORS blocked origin:', origin);
@@ -98,23 +101,30 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["set-cookie"],
   })
 );
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "fallback-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // Set to true if using HTTPS
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: "lax",
-    },
-    name: "sessionId", // Explicit session name
-  })
-);
+// Session configuration
+const isProduction = process.env.NODE_ENV === 'production';
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || "fallback-secret-key",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: isProduction, // HTTPS only in production
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/', // Important: cookie available for all paths
+  },
+  name: "connect.sid", // Standard express-session cookie name
+  proxy: isProduction,
+  rolling: false, // Don't reset expiration on every request
+  unset: 'keep', // Keep session even if user is removed
+};
+
+app.use(session(sessionConfig));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -134,9 +144,14 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
+      // Explicitly set the scope here as well
+      scope: ["profile", "email"],
+      // Pass through the scope to the authorization URL
+      passReqToCallback: false,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log("Google Strategy callback - Profile:", profile.id);
         let user = await User.findOne({ googleId: profile.id });
         if (!user) {
           user = await User.create({
@@ -146,9 +161,13 @@ passport.use(
             photo: profile.photos[0].value,
             role: "user",
           });
+          console.log("Created new user:", user._id);
+        } else {
+          console.log("Found existing user:", user._id);
         }
         return done(null, user);
       } catch (err) {
+        console.error("Google Strategy error:", err);
         return done(err, null);
       }
     }
@@ -170,45 +189,101 @@ passport.deserializeUser(async (id, done) => {
 // Auth routes
 app.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  (req, res, next) => {
+    console.log("Initiating Google OAuth flow...");
+    console.log("Callback URL will be:", `${process.env.BACKEND_URL}/auth/google/callback`);
+    next();
+  },
+  passport.authenticate("google", { 
+    scope: ["profile", "email"],
+    accessType: 'offline',
+    prompt: 'consent'
+  })
 );
 
 app.get(
   "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.CLIENT_URL || "http://localhost:5173"
-      }/auth/failure`,
-    session: true,
-  }),
+  (req, res, next) => {
+    console.log("=== OAuth Callback Received ===");
+    console.log("Query params:", req.query);
+    
+    // Check if there's an error from Google
+    if (req.query.error) {
+      console.error("OAuth Error from Google:", req.query.error);
+      return res.redirect(
+        `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=failed`
+      );
+    }
+    
+    passport.authenticate("google", (err, user, info) => {
+      if (err) {
+        console.error("=== OAuth Authentication Error ===");
+        console.error("Error:", err.message || err);
+        return res.redirect(
+          `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=error`
+        );
+      }
+      if (!user) {
+        console.error("=== OAuth Failed: No User ===");
+        console.error("Info:", info);
+        return res.redirect(
+          `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=nouser`
+        );
+      }
+      
+      console.log("=== OAuth Success, logging in user ===");
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("=== Session Login Error ===");
+          console.error("Error:", err);
+          return res.redirect(
+            `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=session-error`
+          );
+        }
+        console.log("=== User logged in successfully ===");
+        next();
+      });
+    })(req, res, next);
+  },
   (req, res) => {
-    console.log("OAuth callback success, redirecting to client...");
-    res.redirect(
-      `${process.env.CLIENT_URL || "http://localhost:5173"
-      }/auth/google/callback`
-    );
+    console.log("=== OAuth callback success ===");
+    console.log("User:", req.user);
+    console.log("Session ID:", req.sessionID);
+    console.log("Is Authenticated:", req.isAuthenticated());
+    
+    // Ensure session is saved before redirect
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.redirect(
+          `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=session-error`
+        );
+      }
+      
+      console.log("Session saved, redirecting to client home...");
+      // Redirect to HOME, not back to auth callback!
+      res.redirect(
+        `${process.env.CLIENT_URL || "http://localhost:5173"}/`
+      );
+    });
   }
 );
 
 app.get("/auth/user", (req, res) => {
-  console.log("=== AUTH USER DEBUG ===");
+  console.log("=== AUTH USER REQUEST ===");
   console.log("Session ID:", req.sessionID);
-  console.log("Session:", req.session);
-  console.log("User:", req.user);
+  console.log("Cookie header:", req.headers.cookie);
+  console.log("Session data:", req.session);
+  console.log("Passport user ID:", req.session?.passport?.user);
+  console.log("User object:", req.user);
   console.log("Is Authenticated:", req.isAuthenticated());
 
   if (req.user) {
     const { _id, googleId, displayName, email, role, photo } = req.user;
-    console.log("Sending user data:", {
-      _id,
-      googleId,
-      displayName,
-      email,
-      role,
-      photo,
-    });
+    console.log("✓ Sending user data:", displayName, role);
     res.json({ _id, googleId, displayName, email, role, photo });
   } else {
-    console.log("No user found, sending 401");
+    console.log("✗ No user found, sending 401");
     res.status(401).json(null);
   }
 });
@@ -216,6 +291,18 @@ app.get("/auth/user", (req, res) => {
 app.get("/auth/logout", (req, res) => {
   req.logout(() => {
     res.redirect(process.env.CLIENT_URL || "http://localhost:5173");
+  });
+});
+
+// Debug endpoint to check OAuth configuration
+app.get("/auth/config-check", (req, res) => {
+  res.json({
+    hasClientID: !!process.env.GOOGLE_CLIENT_ID,
+    hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+    backendURL: process.env.BACKEND_URL,
+    clientURL: process.env.CLIENT_URL,
+    callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
@@ -258,18 +345,65 @@ app.get("/api/user/profile", ensureAuthenticated, (req, res) => {
 // Article routes
 app.get("/api/articles", async (req, res) => {
   const lang = resolveLang(req);
-  const articles = await Article.find();
+  const { status } = req.query;
+  
+  let query = {};
+  
+  // Admins can see all articles, regular users only see published
+  if (req.user && req.user.role === 'admin') {
+    if (status) query.status = status;
+  } else {
+    query.status = 'published';
+  }
+  
+  const articles = await Article.find(query).sort({ createdAt: -1 });
   res.json(localizeCollection(articles, 'articles', lang));
 });
+
+app.get("/api/articles/pending/count", ensureAdmin, async (req, res) => {
+  const count = await Article.countDocuments({ status: 'pending' });
+  res.json({ count });
+});
+
 app.get("/api/articles/:id", async (req, res) => {
   const lang = resolveLang(req);
   const article = await Article.findById(req.params.id);
   if (!article) return res.status(404).json({ error: 'Not found' });
+  
+  // Check permissions
+  if (article.status !== 'published') {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  }
+  
+  // Increment view count for published articles
+  if (article.status === 'published') {
+    article.viewCount = (article.viewCount || 0) + 1;
+    await article.save();
+  }
+  
   res.json(localizeSingle(article, 'articles', lang));
 });
-app.post("/api/articles", ensureAdmin, async (req, res) => {
+
+app.post("/api/articles", ensureAuthenticated, async (req, res) => {
   try {
-    const article = await Article.create(req.body);
+    const articleData = {
+      ...req.body,
+      authorId: req.user._id,
+      authorName: req.user.name || req.user.email,
+      authorEmail: req.user.email,
+      status: req.user.role === 'admin' ? 'published' : 'pending',
+      submittedAt: new Date(),
+    };
+    
+    if (req.user.role === 'admin') {
+      articleData.publishedAt = new Date();
+      articleData.approvedBy = req.user._id;
+    }
+    
+    const article = await Article.create(articleData);
     res.status(201).json(article);
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -278,15 +412,24 @@ app.post("/api/articles", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-app.put("/api/articles/:id", ensureAdmin, async (req, res) => {
+
+app.put("/api/articles/:id", ensureAuthenticated, async (req, res) => {
   try {
-    console.log("PUT /api/articles/:id", req.params.id, req.body);
-    const article = await Article.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const article = await Article.findById(req.params.id);
     if (!article) return res.status(404).json({ error: "Article not found" });
-    res.json(article);
+    
+    // Check permissions: admin or article author
+    if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    
+    const updatedArticle = await Article.findByIdAndUpdate(
+      req.params.id, 
+      { ...req.body, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+    
+    res.json(updatedArticle);
   } catch (err) {
     if (err.name === "ValidationError") {
       return res.status(400).json({ error: err.message });
@@ -294,10 +437,57 @@ app.put("/api/articles/:id", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-app.delete("/api/articles/:id", ensureAdmin, async (req, res) => {
-  console.log("DELETE /api/articles/:id", req.params.id);
-  const result = await Article.findByIdAndDelete(req.params.id);
-  if (!result) return res.status(404).json({ error: "Article not found" });
+
+app.post("/api/articles/:id/approve", ensureAdmin, async (req, res) => {
+  try {
+    const article = await Article.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: 'published',
+        publishedAt: new Date(),
+        approvedBy: req.user._id,
+        updatedAt: new Date(),
+      },
+      { new: true }
+    );
+    
+    if (!article) return res.status(404).json({ error: "Article not found" });
+    res.json(article);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post("/api/articles/:id/reject", ensureAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const article = await Article.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: 'rejected',
+        rejectionReason: reason,
+        updatedAt: new Date(),
+      },
+      { new: true }
+    );
+    
+    if (!article) return res.status(404).json({ error: "Article not found" });
+    res.json(article);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.delete("/api/articles/:id", ensureAuthenticated, async (req, res) => {
+  const article = await Article.findById(req.params.id);
+  if (!article) return res.status(404).json({ error: "Article not found" });
+  
+  // Check permissions
+  if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  
+  await Article.findByIdAndDelete(req.params.id);
   res.status(204).end();
 });
 

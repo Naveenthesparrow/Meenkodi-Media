@@ -890,7 +890,9 @@ export default function Home() {
                       textTransform: 'uppercase',
                       color: '#8B0000',
                       display: 'block',
-                      mb: 2
+                      mb: { xs: 3, md: 2 },
+                      lineHeight: { xs: 2.8, sm: 2.2, md: 1.6 },
+                      wordSpacing: { xs: '0.14em', md: '0.1em' }
                     }}
                   >
                     {getContent(HERO_CONTENT.tagline)}

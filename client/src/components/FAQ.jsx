@@ -23,7 +23,26 @@ const FAQ = () => {
     const faqItems = t('faq.items', { returnObjects: true });
 
     return (
-        <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pt: { xs: 10, md: 12 }, pb: 8 }}>
+        <Box sx={{
+            bgcolor: '#f8f9fa',
+            minHeight: '100vh',
+            pt: { xs: 10, md: 12 },
+            pb: 8,
+            backgroundImage: {
+              xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+              md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+            },
+            backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+            backgroundRepeat: 'repeat',
+            backgroundPosition: 'center top',
+            '@media (min-resolution: 1.5dppx)': {
+              backgroundImage: {
+                xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+                md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+              },
+              backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+            }
+          }}>
             {/* Hero Section */}
             <Container maxWidth="lg" sx={{ mb: 6, textAlign: 'center' }}>
                 <Typography

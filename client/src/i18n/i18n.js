@@ -6,7 +6,7 @@ const fallbackLng = 'en';
 
 // Lazy load translations to reduce initial bundle
 const loadLanguage = async (lang) => {
-  const translation = lang === 'ta' 
+  const translation = lang === 'ta'
     ? await import('./ta.json')
     : await import('./en.json');
   return translation.default;

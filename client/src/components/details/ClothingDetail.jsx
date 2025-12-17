@@ -158,9 +158,7 @@ function ClothingDetail() {
     try {
       console.log("Fetching user in ClothingDetail...");
       const res = await fetch(
-        `${
-          import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-        }/auth/user`,
+        `${API_BASE}/auth/user`,
         {
           method: "GET",
           credentials: "include",

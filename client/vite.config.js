@@ -39,7 +39,17 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: process.env.VITE_BACKEND_URL || "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/auth": {
+        target: process.env.VITE_BACKEND_URL || "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/uploads": {
+        target: process.env.VITE_BACKEND_URL || "http://localhost:5000",
         changeOrigin: true,
         secure: false,
       },

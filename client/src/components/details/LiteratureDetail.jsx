@@ -45,6 +45,7 @@ import {
 } from "@mui/icons-material";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
+import API_BASE_URL from "../../utils/api";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 function LiteratureDetail() {
@@ -179,9 +180,7 @@ function LiteratureDetail() {
     try {
       console.log("Fetching user in LiteratureDetail...");
       const res = await fetch(
-        `${
-          import.meta.env.VITE_APP_API_URL || "http://localhost:5000"
-        }/auth/user`,
+        `${API_BASE_URL}/auth/user`,
         {
           method: "GET",
           credentials: "include",

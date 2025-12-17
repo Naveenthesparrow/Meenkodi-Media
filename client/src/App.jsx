@@ -83,6 +83,7 @@ function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const fetchUser = React.useCallback(() => {
     console.log("Fetching user authentication status...");
@@ -118,6 +119,43 @@ function App() {
   }, []);
 
   React.useEffect(() => {
+    // Check if we were authenticating and clear the flag
+    const wasAuthenticating = sessionStorage.getItem('isAuthenticating');
+    if (wasAuthenticating) {
+      console.log("Was authenticating, clearing flag and fetching user");
+      sessionStorage.removeItem('isAuthenticating');
+      setIsAuthenticating(false);
+      
+      // If just came from auth, fetch user and redirect to profile
+      setTimeout(() => {
+        fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" })
+          .then(res => res.json())
+          .then(userData => {
+            if (userData && userData._id) {
+              console.log("User authenticated, redirecting to profile");
+              setUser(userData);
+              setLoading(false);
+              window.location.href = "/profile";
+            }
+          })
+          .catch(err => console.error("Auth check failed:", err));
+      }, 500);
+    }
+
+    // Check for auth errors in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const authStatus = urlParams.get('auth');
+    if (authStatus) {
+      console.log("Auth status from URL:", authStatus);
+      if (authStatus === 'failed' || authStatus === 'error' || authStatus === 'nouser' || authStatus === 'session-error') {
+        console.error("Authentication failed:", authStatus);
+        setIsAuthenticating(false);
+        sessionStorage.removeItem('isAuthenticating');
+        // Clear the URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
     // Log current URL for debugging
     console.log("Current URL:", window.location.href);
     console.log("Pathname:", window.location.pathname);
@@ -131,8 +169,26 @@ function App() {
       fetchUser();
     };
 
+    // Listen for auth success event from AuthCallback
+    const handleAuthSuccess = (event) => {
+      console.log("Auth success event received, setting user immediately");
+      setIsAuthenticating(false);
+      sessionStorage.removeItem('isAuthenticating');
+      // Set user immediately from event data
+      if (event.detail) {
+        setUser(event.detail);
+        setLoading(false);
+      }
+      // Also fetch to ensure we have latest data
+      fetchUser();
+    };
+
     window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
+    window.addEventListener("auth-success", handleAuthSuccess);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("auth-success", handleAuthSuccess);
+    };
   }, [fetchUser]);
 
   // Call resource error logging on component mount
@@ -187,7 +243,13 @@ function App() {
   }, [lastScrollY]);
 
   const login = () => {
+    if (isAuthenticating) {
+      console.log("Authentication already in progress, ignoring...");
+      return;
+    }
     console.log("Redirecting to Google OAuth...");
+    setIsAuthenticating(true);
+    sessionStorage.setItem('isAuthenticating', 'true');
     window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
@@ -645,30 +707,49 @@ function App() {
             <Route
               path="/profile"
               element={
-                user ? (
-                  user.role === "admin" ? (
-                    <AdminPortal user={user} logout={logout} />
+                <Box sx={{
+                  width: '100%',
+                  backgroundColor: '#fff',
+                  backgroundImage: {
+                    xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+                    md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+                  },
+                  backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+                  backgroundRepeat: 'repeat',
+                  backgroundPosition: 'center top',
+                  '@media (min-resolution: 1.5dppx)': {
+                    backgroundImage: {
+                      xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+                      md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+                    },
+                    backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+                  }
+                }}>
+                  {user ? (
+                    user.role === "admin" ? (
+                      <AdminPortal user={user} logout={logout} />
+                    ) : (
+                      <UserPortal user={user} logout={logout} />
+                    )
                   ) : (
-                    <UserPortal user={user} logout={logout} />
-                  )
-                ) : (
-                  <Box sx={{ textAlign: "center", mt: 4 }}>
-                    <Typography variant="h4" sx={{ mb: 2 }}>
-                      Please log in to view your profile
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      onClick={login}
-                      sx={{
-                        bgcolor: "#000",
-                        color: "#fff",
-                        "&:hover": { bgcolor: "#333" },
-                      }}
-                    >
-                      Login with Google
-                    </Button>
-                  </Box>
-                )
+                    <Box sx={{ textAlign: "center", mt: 4 }}>
+                      <Typography variant="h4" sx={{ mb: 2 }}>
+                        Please log in to view your profile
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        onClick={login}
+                        sx={{
+                          bgcolor: "#000",
+                          color: "#fff",
+                          "&:hover": { bgcolor: "#333" },
+                        }}
+                      >
+                        Login with Google
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
               }
             />
             <Route

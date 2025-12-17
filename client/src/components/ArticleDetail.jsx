@@ -7,6 +7,7 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { useTranslation } from 'react-i18next';
 import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
@@ -14,6 +15,7 @@ import { useParams, useNavigate } from "react-router-dom";
 
 export default function ArticleDetail({ user }) {
   const getContent = useBilingualContent();
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
@@ -128,16 +130,16 @@ export default function ArticleDetail({ user }) {
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", p: 2 }}>
       <Typography variant="h4" gutterBottom>
-        {editMode ? "Edit Article" : getContent(article.title)}
+        {editMode ? t('articles.edit','Edit Article') : getContent(article.title)}
       </Typography>
       {editMode ? (
         <Box>
-          <TextField label="Title (EN)" value={title_en} onChange={(e)=>setTitleEn(e.target.value)} fullWidth sx={{ mb: 2 }} />
-          <TextField label="Title (TA)" value={title_ta} onChange={(e)=>setTitleTa(e.target.value)} fullWidth sx={{ mb: 2 }} />
-          <TextField label="Content (EN)" value={content_en} onChange={(e)=>setContentEn(e.target.value)} fullWidth multiline minRows={4} sx={{ mb: 2 }} />
-          <TextField label="Content (TA)" value={content_ta} onChange={(e)=>setContentTa(e.target.value)} fullWidth multiline minRows={4} sx={{ mb: 2 }} />
-          <TextField label="Author (EN)" value={author_en} onChange={(e)=>setAuthorEn(e.target.value)} fullWidth sx={{ mb: 2 }} />
-          <TextField label="Author (TA)" value={author_ta} onChange={(e)=>setAuthorTa(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label={t('articles.form.titleEn','Title (EN)')} value={title_en} onChange={(e)=>setTitleEn(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label={t('articles.form.titleTa','Title (TA)')} value={title_ta} onChange={(e)=>setTitleTa(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label={t('articles.form.contentEn','Content (EN)')} value={content_en} onChange={(e)=>setContentEn(e.target.value)} fullWidth multiline minRows={4} sx={{ mb: 2 }} />
+          <TextField label={t('articles.form.contentTa','Content (TA)')} value={content_ta} onChange={(e)=>setContentTa(e.target.value)} fullWidth multiline minRows={4} sx={{ mb: 2 }} />
+          <TextField label={t('articles.form.authorEn','Author (EN)')} value={author_en} onChange={(e)=>setAuthorEn(e.target.value)} fullWidth sx={{ mb: 2 }} />
+          <TextField label={t('articles.form.authorTa','Author (TA)')} value={author_ta} onChange={(e)=>setAuthorTa(e.target.value)} fullWidth sx={{ mb: 2 }} />
           <MediaUpload
             onImageLinkChange={setImageLink}
             onVideoLinkChange={setVideoLink}
@@ -156,7 +158,7 @@ export default function ArticleDetail({ user }) {
             disabled={submitting}
             sx={{ mt: 2 }}
           >
-            {submitting ? "Saving..." : "Save"}
+            {submitting ? t('actions.saving','Saving...') : t('actions.save','Save')}
           </Button>
         </Box>
       ) : (
@@ -183,7 +185,7 @@ export default function ArticleDetail({ user }) {
                 Edit
               </Button>
               <Button onClick={handleDelete} variant="contained" color="error">
-                Delete
+                {t('actions.delete','Delete')}
               </Button>
             </Box>
           )}

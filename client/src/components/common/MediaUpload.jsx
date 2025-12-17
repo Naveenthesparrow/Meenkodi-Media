@@ -20,8 +20,12 @@ import API_BASE_URL from "../../utils/api";
 const MediaUpload = ({
   onImageChange,
   onImageLinkChange,
+  onVideoChange,
+  onVideoLinkChange,
   currentImage,
   currentImageLink,
+  currentVideo,
+  currentVideoLink,
   label = "Media Upload",
   showInputsOnly = false,
 }) => {
@@ -31,6 +35,9 @@ const MediaUpload = ({
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(currentImage || "");
   const [imageLink, setImageLink] = useState(currentImageLink || "");
+  const [videoLink, setVideoLink] = useState(currentVideoLink || "");
+  const [videoUrlState, setVideoUrlState] = useState(currentVideo || "");
+  const [lastServerUrl, setLastServerUrl] = useState(null); // last returned server URL for retry attempts
 
   useEffect(() => {
     setPreviewImage(currentImage || "");
@@ -39,6 +46,14 @@ const MediaUpload = ({
   useEffect(() => {
     setImageLink(currentImageLink || "");
   }, [currentImageLink]);
+
+  useEffect(() => {
+    setVideoLink(currentVideoLink || "");
+  }, [currentVideoLink]);
+
+  useEffect(() => {
+    setVideoUrlState(currentVideo || "");
+  }, [currentVideo]);
 
   const toAbsoluteMediaUrl = (url) => {
     if (!url) return url;
@@ -78,23 +93,20 @@ const MediaUpload = ({
   formData.append("image", file);
 
     try {
+      // Read file as data URL for immediate preview
       const reader = new FileReader();
-      const readerPromise = new Promise((resolve, reject) => {
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (error) => {
-          console.error('FileReader error:', error);
-          reject(new Error('Failed to read file'));
-        };
-        reader.readAsDataURL(file);
-      });
+      reader.onload = (e) => {
+        setPreviewImage(e.target.result); // Show local preview immediately
+      };
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+      };
+      reader.readAsDataURL(file);
 
-      const [uploadResponse, previewUrl] = await Promise.all([
-        fetch("/api/upload/image", {
-          method: "POST",
-          body: formData,
-        }).catch(err => { throw err; }),
-        readerPromise,
-      ]);
+      const uploadResponse = await fetch("/api/upload/image", {
+        method: "POST",
+        body: formData,
+      });
 
       console.log("Upload Response Status:", uploadResponse.status);
       const responseText = await uploadResponse.text();
@@ -122,29 +134,14 @@ const MediaUpload = ({
       const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
       const absoluteUrl = toAbsoluteMediaUrl(normalizedUrl);
 
-      setPreviewImage(previewUrl);
-
-      const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = (error) => {
-          console.error('Server-uploaded image failed to load:', error);
-          reject(new Error('Server-uploaded image failed to load'));
-        };
-        img.src = absoluteUrl;
-      });
-
+      // Pass server URL to parent for saving
       onImageChange(absoluteUrl);
       setError(null);
+      setLastServerUrl(null);
     } catch (err) {
       console.error("Complete Image Upload Error:", { message: err.message, name: err.name, stack: err.stack });
-      const errorMessage = err.message.includes('Invalid image URL') || err.message.includes('load timeout') || err.message.includes('corrupted') || err.message.includes('failed to load')
-        ? "The uploaded image could not be loaded. Please try a different image." 
-        : `Failed to upload image: ${err.message}. Please try again.`;
+      const errorMessage = `Upload failed: ${err.message}`;
       setError(errorMessage);
-      const placeholderUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Crect fill='%23cccccc' width='200' height='120'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
-      setPreviewImage(placeholderUrl);
-      onImageChange(placeholderUrl);
     } finally {
       setUploading(false);
     }
@@ -153,21 +150,36 @@ const MediaUpload = ({
   const handleImageLinkChange = (event) => {
     const link = event.target.value;
     setImageLink(link);
-    onImageLinkChange(link);
+    if (onImageLinkChange) onImageLinkChange(link);
     if (link && previewImage) {
       setPreviewImage("");
-      onImageChange("");
+      if (onImageChange) onImageChange("");
+    }
+  };
+
+  const handleVideoLinkChange = (event) => {
+    const link = event.target.value;
+    setVideoLink(link);
+    if (onVideoLinkChange) onVideoLinkChange(link);
+    if (link && videoUrlState) {
+      setVideoUrlState("");
+      if (onVideoChange) onVideoChange("");
     }
   };
 
   const clearImage = () => {
     setPreviewImage("");
-    onImageChange("");
+    if (onImageChange) onImageChange("");
   };
 
   const clearImageLink = () => {
     setImageLink("");
-    onImageLinkChange("");
+    if (onImageLinkChange) onImageLinkChange("");
+  };
+
+  const clearVideoLink = () => {
+    setVideoLink("");
+    if (onVideoLinkChange) onVideoLinkChange("");
   };
 
   if (showInputsOnly) {
@@ -209,8 +221,37 @@ const MediaUpload = ({
           </Card>
         )}
 
+        {/* Video Link input (videos are link-only) */}
+        <TextField
+          fullWidth
+          label="Video Link (URL)"
+          value={videoLink}
+          onChange={handleVideoLinkChange}
+          placeholder="https://youtu.be/abc123 or https://vimeo.com/123456"
+          helperText="Add a video URL (YouTube/Vimeo). File uploads for videos are not supported."
+          sx={{
+            mb: 2,
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": { borderColor: "#ddd" },
+              "&:hover fieldset": { borderColor: "#000" },
+              "&.Mui-focused fieldset": { borderColor: "#000" },
+            },
+          }}
+        />
+
+        {videoLink && (
+          <Card sx={{ p: 1, mb: 2 }}>
+            <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+              <a href={videoLink} target="_blank" rel="noopener noreferrer">Open video link</a>
+            </Typography>
+          </Card>
+        )}
+
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+          >
             {error}
           </Alert>
         )}
@@ -227,7 +268,10 @@ const MediaUpload = ({
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+        >
           {error}
         </Alert>
       )}
@@ -254,9 +298,52 @@ const MediaUpload = ({
         </Box>
         {(previewImage || imageLink) && (
           <Card sx={{ maxWidth: 200, mb: 2 }}>
-            <CardMedia component="img" height="120" image={previewImage || imageLink} alt="Preview" sx={{ objectFit: "cover", backgroundColor: '#f0f0f0' }} onError={(e) => { console.error('Image preview failed to load:', previewImage || imageLink); e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Crect fill='%23cccccc' width='200' height='120'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E"; e.target.style.display = 'block'; }} />
+            <CardMedia 
+              component="img" 
+              height="120" 
+              image={toAbsoluteMediaUrl(previewImage || imageLink)} 
+              alt="Preview" 
+              sx={{ objectFit: "cover", backgroundColor: '#f0f0f0' }} 
+              onError={(e) => { 
+                console.error('Image preview failed to load:', previewImage || imageLink); 
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Crect fill='%23cccccc' width='200' height='120'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E"; 
+                e.target.style.display = 'block'; 
+              }} 
+            />
           </Card>
         )}
+
+        {/* Video link area (videos are links only) */}
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+            Add Video Link
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#666', display: 'block', mb: 1 }}>
+            Add a YouTube or Vimeo link. File uploads for videos are not supported.
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Video Link (URL)"
+              value={videoLink}
+              onChange={handleVideoLinkChange}
+              placeholder="https://youtu.be/abc123"
+              helperText="YouTube/Vimeo links only"
+            />
+            {videoLink && (
+              <IconButton onClick={() => clearVideoLink()} size="small">
+                <DeleteIcon />
+              </IconButton>
+            )}
+          </Box>
+          {videoLink && (
+            <Card sx={{ p: 1, mt: 2, maxWidth: 400 }}>
+              <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                <a href={videoLink} target="_blank" rel="noopener noreferrer">Open video link</a>
+              </Typography>
+            </Card>
+          )}
+        </Box>
       </Box>
     </Box>
   );

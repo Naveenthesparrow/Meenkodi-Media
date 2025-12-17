@@ -226,24 +226,40 @@ function Explore() {
   };
 
   // Positioning logic for 3D look
+  // Use responsive gap so cards center nicely on small viewports
+  const computeGap = (w) => (w < 420 ? 110 : w < 600 ? 130 : w < 900 ? 170 : 220);
+  const [gapX, setGapX] = useState(() => (typeof window !== 'undefined' ? computeGap(window.innerWidth) : 170));
+  const [isLarge, setIsLarge] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 900 : false));
+  useEffect(() => {
+    const onResize = () => {
+      setGapX(computeGap(window.innerWidth));
+      setIsLarge(window.innerWidth >= 900);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const visibleCount = 7; // center + 3 per side
   const half = Math.floor(visibleCount / 2);
-  const radius = 500; // Z distance component for side cards perspective
-  const gap = 170; // keep a little space between smaller cards
+  const radius = isLarge ? 380 : 500; // Z distance component for side cards perspective (flatter on large screens)
 
   const getCardStyle = (pos) => {
     // pos: 0 is center, +/-1, +/-2 are sides
-  const baseOffsetX = -14; // slight nudge to the left as requested
-  const scale = pos === 0 ? 1.05 : 0.98 - Math.abs(pos) * 0.035;
-  // add a subtle dynamic tilt based on drag direction for more lively feel
-  const tiltExtra = isDragging ? clamp(-dragDelta.current * 0.04, -6, 6) : 0; // deg
-  const rotateY = pos * -16 + tiltExtra; // slightly softer tilt
-    const translateX = pos * gap;
-  const translateZ = pos === 0 ? 0 : -Math.abs(pos) * radius * 0.22;
-  const opacity = clamp(1 - Math.abs(pos) * 0.12, 0.78, 1);
+    const baseOffsetX = 0; // no extra lateral nudge — center should be exact
+    // Tuned center card scale for different screen sizes
+    const centerScale = isLarge ? 1.1 : (gapX < 130 ? 1.08 : 1.05);
+    const scale = pos === 0 ? centerScale : 0.98 - Math.abs(pos) * 0.035;
+    // add a subtle dynamic tilt based on drag direction for more lively feel
+    const tiltExtra = isDragging ? clamp(-dragDelta.current * 0.04, -6, 6) : 0; // deg
+    const rotateY = pos * -16 + tiltExtra; // slightly softer tilt
+    const translateX = pos * gapX;
+    const translateZ = pos === 0 ? 0 : -Math.abs(pos) * radius * 0.22;
+    // Move center card upward on large screens, slightly upward on small screens
+    const translateY = pos === 0 ? (isLarge ? -14 : (gapX < 130 ? -6 : 0)) : 0;
+    const opacity = clamp(1 - Math.abs(pos) * 0.12, 0.78, 1);
     const dragOffset = isDragging ? dragDelta.current * 0.5 : 0; // follow finger softly
     return {
-      transform: `translate(-50%, -50%) translateX(${baseOffsetX + translateX + dragOffset}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+      transform: `translate(-50%, -50%) translateY(${translateY}px) translateX(${baseOffsetX + translateX + dragOffset}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
       zIndex: 1000 + (pos === 0 ? 100 : -Math.abs(pos)),
       opacity,
     };
@@ -254,6 +270,24 @@ function Explore() {
       ref={rootRef}
       sx={{
         backgroundColor: "#fff",
+        /* Repeating fish pattern (SVG data URI) in black;
+           - Extremely subtle by default (tiny size + very low opacity)
+           - Becomes visible on high-resolution / when users zoom (min-resolution:1.5dppx)
+        */
+        backgroundImage: {
+          xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+          md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+        },
+        backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+        backgroundRepeat: 'repeat',
+        backgroundPosition: 'center top',
+        '@media (min-resolution: 1.5dppx)': {
+          backgroundImage: {
+            xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+            md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+          },
+          backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+        },
         minHeight: "100vh",
         display: "grid",
         gridAutoRows: "max-content",
@@ -261,7 +295,8 @@ function Explore() {
         alignContent: "start",
         rowGap: { xs: 1.5, sm: 2 },
         px: 0,
-        pt: { xs: 2, sm: 3 },
+        // Slightly reduced top padding to move section up a bit
+        pt: { xs: 5, sm: 7 },
         pb: { xs: 3, sm: 4 },
       }}
     >
@@ -269,7 +304,16 @@ function Explore() {
       <Typography
         variant="h3"
         component="h1"
-        sx={{ fontWeight: 500, color: "#8B0000", textAlign: "center", fontSize: { xs: "1.8rem", sm: "3rem" } }}
+        sx={{
+          fontWeight: 500,
+          color: "#8B0000",
+          textAlign: "center",
+          fontSize: { xs: "1.8rem", sm: "3rem" },
+            // slightly less push so heading sits a bit higher
+          // move heading further up on md+ screens
+          mt: { xs: 2, sm: 3, md: -3 },
+          mb: { xs: 1, sm: 1.5, md: 1 }
+        }}
       >
         {t('explore.title')}
       </Typography>
@@ -286,7 +330,7 @@ function Explore() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          mt: { xs: 1, sm: 1.5 },
+          mt: { xs: 2, sm: 3, md: 0 }, // move cards up on md+ screens
           overflow: "hidden",
           touchAction: "pan-y",
           overscrollBehaviorX: "none",

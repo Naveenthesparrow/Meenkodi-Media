@@ -10,17 +10,17 @@ import {
   Box, 
   IconButton, 
   Fade,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
   CircularProgress,
-  Alert
+  Alert,
+  Tabs,
+  Tab,
+  Badge,
+  Chip,
+  Avatar,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Add, Edit, Delete } from '@mui/icons-material';
-import MediaUpload from './common/MediaUpload';
+import { CheckCircle, Cancel, Visibility } from '@mui/icons-material';
+import ArticleComposer from './ArticleComposer';
 import API_BASE_URL from "../utils/api";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
@@ -31,132 +31,83 @@ export default function Articles({ user }) {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  // Separate bilingual edit fields
-  const [currentArticle, setCurrentArticle] = useState({
-    title_en: '',
-    title_ta: '',
-    author_en: '',
-    author_ta: '',
-    content_en: '',
-    content_ta: '',
-    category_en: '',
-    category_ta: '',
-    image: '',
-  });
+  const [currentTab, setCurrentTab] = useState('published');
+  const [pendingCount, setPendingCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchArticles();
-  }, []);
+    if (user && user.role === 'admin') {
+      fetchPendingCount();
+    }
+  }, [currentTab, user]);
 
   const fetchArticles = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/articles`);
+      const statusParam = currentTab === 'published' ? '' : `?status=${currentTab}`;
+      const response = await fetch(`${API_BASE_URL}/api/articles${statusParam}`, {
+        credentials: 'include',
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch articles');
       }
       const data = await response.json();
-      console.log('Fetched articles:', data);
       setArticles(data);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching articles:', err);
       setError(err.message);
       setLoading(false);
-      setArticles([]); // Fallback to an empty array instead of dummy data
+      setArticles([]);
     }
   };
 
-  const handleAdd = () => {
-    setCurrentArticle({
-      title_en: '', title_ta: '',
-      author_en: '', author_ta: '',
-      content_en: '', content_ta: '',
-      category_en: '', category_ta: '',
-      image: '',
-    });
-    setOpenDialog(true);
-  };
-
-  const handleEdit = (article) => {
-    // Map incoming bilingual fields (may be localized with .translated)
-    const toPart = (val, part) => {
-      if (!val) return '';
-      if (typeof val === 'string') return part === 'en' ? val : '';
-      return val[part] || '';
-    };
-    setCurrentArticle({
-      _id: article._id,
-      title_en: toPart(article.title, 'en'),
-      title_ta: toPart(article.title, 'ta'),
-      author_en: toPart(article.author, 'en'),
-      author_ta: toPart(article.author, 'ta'),
-      content_en: toPart(article.content, 'en'),
-      content_ta: toPart(article.content, 'ta'),
-      category_en: toPart(article.category, 'en'),
-      category_ta: toPart(article.category, 'ta'),
-      image: article.image || '',
-    });
-    setOpenDialog(true);
-  };
-
-  const handleSave = async () => {
+  const fetchPendingCount = async () => {
     try {
-      const method = currentArticle._id ? 'PUT' : 'POST';
-      const url = currentArticle._id 
-        ? `${API_BASE_URL}/api/articles/${currentArticle._id}` 
-        : `${API_BASE_URL}/api/articles`;
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_BASE_URL}/api/articles/pending/count`, {
         credentials: 'include',
-        body: JSON.stringify({
-          title: { en: currentArticle.title_en, ta: currentArticle.title_ta },
-          author: { en: currentArticle.author_en, ta: currentArticle.author_ta },
-          content: { en: currentArticle.content_en, ta: currentArticle.content_ta },
-          category: { en: currentArticle.category_en, ta: currentArticle.category_ta },
-          image: currentArticle.image,
-        }),
       });
+      const data = await response.json();
+      setPendingCount(data.count || 0);
+    } catch (err) {
+      console.error('Failed to fetch pending count:', err);
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error('Failed to save article');
-      }
-
-      const savedArticle = await response.json();
-      
-      if (method === 'POST') {
-        setArticles([...articles, savedArticle]);
-      } else {
-        setArticles(articles.map(article => 
-          article._id === savedArticle._id ? savedArticle : article
-        ));
-      }
-
-      setOpenDialog(false);
+  const handleApprove = async (id) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}/approve`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to approve article');
+      fetchArticles();
+      fetchPendingCount();
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this article?')) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+  const handleReject = async (id) => {
+    const reason = prompt(t('articles.rejectReason', 'Reason for rejection (optional):'));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) throw new Error('Failed to reject article');
+      fetchArticles();
+      fetchPendingCount();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
-        if (!response.ok) {
-          throw new Error('Failed to delete article');
-        }
-
-        setArticles(articles.filter(article => article._id !== id));
-      } catch (err) {
-        setError(err.message);
-      }
+  const handlePostCreated = () => {
+    fetchArticles();
+    if (user && user.role === 'admin') {
+      fetchPendingCount();
     }
   };
 
@@ -184,19 +135,36 @@ export default function Articles({ user }) {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
-      {/* Unique Heading Section */}
+    <Box sx={{
+      width: '100%',
+      backgroundColor: '#fff',
+      backgroundImage: {
+        xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+        md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+      },
+      backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+      backgroundRepeat: 'repeat',
+      backgroundPosition: 'center top',
+      '@media (min-resolution: 1.5dppx)': {
+        backgroundImage: {
+          xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+          md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+        },
+        backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+      }
+    }}>
+      <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+      {/* Heading */}
       <Box 
         sx={{ 
-          mb: 6, 
-          // textAlign: 'center', // Removed as flexbox will handle alignment
+          mb: 4, 
           position: 'relative',
           overflow: 'hidden',
-          display: 'flex', // Added for flexbox layout
-          alignItems: 'center', // Center items vertically
-          justifyContent: user && user.role === "admin" ? 'space-between' : 'center', // Space between heading and button
-          flexDirection: { xs: 'column', md: 'row' }, // Stack on small screens
-          gap: { xs: 2, md: 0 }, // Gap when stacked
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 2, md: 0 },
         }}
       >
         <Typography
@@ -249,49 +217,36 @@ export default function Articles({ user }) {
         >
           {t('articles.title', 'Articles')}
         </Typography>
-        
-        {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
-              // Removed absolute positioning for responsiveness
-              // position: 'absolute', 
-              // right: 0, 
-              // top: '50%', 
-              // transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                // transform: 'translateY(-50%) scale(1.05)', 
-                transform: 'scale(1.05)', // Adjusted for non-absolute positioning
-                '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                }
-              }
-            }}
-          >
-            <Button
-              onClick={handleAdd}
-              variant="contained"
-              startIcon={<Add />}
-              sx={{
-                bgcolor: "#000",
-                color: "#fff",
-                transition: 'all 0.3s ease',
-                "&:hover": { 
-                  bgcolor: "#333",
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                },
-                borderRadius: 0,
-                px: 3,
-              }}
-            >
-              {t('articles.add', 'Add Article')}
-            </Button>
-          </Box>
-        )}
       </Box>
 
+      {/* Admin Tabs */}
+      {user && user.role === 'admin' && (
+        <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)}>
+            <Tab label={t('articles.tabs.published', 'Published')} value="published" />
+            <Tab 
+              label={
+                <Badge badgeContent={pendingCount} color="error">
+                  {t('articles.tabs.pending', 'Pending')}
+                </Badge>
+              }
+              value="pending"
+            />
+            <Tab label={t('articles.tabs.rejected', 'Rejected')} value="rejected" />
+          </Tabs>
+        </Box>
+      )}
+
+      {/* Post Composer */}
+      {user && <ArticleComposer user={user} onPostCreated={handlePostCreated} />}
+
+      {!user && (
+        <Alert severity="info" sx={{ mb: 4 }}>
+          {t('articles.loginToPost', 'Please login to share your articles')}
+        </Alert>
+      )}
+
+      {/* Articles Grid */}
       <Grid 
         container 
         spacing={4} 
@@ -405,7 +360,7 @@ export default function Articles({ user }) {
                       color="textSecondary"
                       sx={{ textAlign: 'center' }}
                     >
-                      No Image Available (Debug: {JSON.stringify(article)})
+                      {t('common.noImage')}
                     </Typography>
                   </Box>
                 )}
@@ -417,61 +372,32 @@ export default function Articles({ user }) {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    // position: 'relative', // Removed as admin buttons are no longer absolute within CardContent
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  {user && user.role === "admin" && (
-                    <Box 
-                      sx={{ 
-                        // Removed absolute positioning for responsiveness
-                        // position: 'absolute', 
-                        // top: 10, 
-                        // right: 10, 
-                        display: "flex", 
-                        justifyContent: 'flex-end', // Align buttons to the right
-                        gap: 1, 
-                        mb: 2, // Margin bottom to separate from title
-                      }}
-                    >
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(article);
-                        }}
-                        size="small"
-                        sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
-                          },
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(article._id);
-                        }}
-                        size="small"
-                        sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
-                          },
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <Delete />
-                      </IconButton>
+                  {/* Author info */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#8B0000', fontSize: '0.875rem' }}>
+                      {article.authorName ? article.authorName[0].toUpperCase() : 'A'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+                        {article.authorName || getContent(article.author) || 'Anonymous'}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#666', fontSize: '0.75rem' }}>
+                        {new Date(article.createdAt).toLocaleDateString()}
+                      </Typography>
                     </Box>
-                  )}
+                    {article.status && article.status !== 'published' && (
+                      <Chip 
+                        label={article.status.toUpperCase()} 
+                        size="small" 
+                        color={article.status === 'pending' ? 'warning' : 'error'}
+                        sx={{ ml: 'auto', fontSize: '0.7rem', height: 20 }}
+                      />
+                    )}
+                  </Box>
+
                   <Box>
                     <Typography
                       variant="h5"
@@ -480,7 +406,7 @@ export default function Articles({ user }) {
                         color: "#000", 
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
+                        fontSize: { xs: '1.25rem', md: '1.5rem' },
                         textTransform: 'capitalize',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -488,18 +414,6 @@ export default function Articles({ user }) {
                       }}
                     >
                       {getContent(article.title)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        fontStyle: "italic",
-                        fontSize: { xs: '0.8rem', md: '0.9rem' }, // Responsive font size
-                        mb: 2,
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {getContent(article.author)}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -512,7 +426,7 @@ export default function Articles({ user }) {
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
+                        minHeight: { xs: '4.2rem', md: '4.8rem' },
                       }}
                     >
                       {getContent(article.content).length > 150 
@@ -521,11 +435,51 @@ export default function Articles({ user }) {
                     </Typography>
                   </Box>
 
+                  {/* Admin Actions for pending articles */}
+                  {user && user.role === 'admin' && article.status === 'pending' && (
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApprove(article._id);
+                        }}
+                        variant="contained"
+                        size="small"
+                        startIcon={<CheckCircle />}
+                        sx={{ 
+                          bgcolor: '#4CAF50', 
+                          '&:hover': { bgcolor: '#45a049' },
+                          flex: 1,
+                          borderRadius: 0,
+                        }}
+                      >
+                        {t('actions.approve', 'Approve')}
+                      </Button>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReject(article._id);
+                        }}
+                        variant="contained"
+                        size="small"
+                        startIcon={<Cancel />}
+                        color="error"
+                        sx={{ 
+                          flex: 1,
+                          borderRadius: 0,
+                        }}
+                      >
+                        {t('actions.reject', 'Reject')}
+                      </Button>
+                    </Box>
+                  )}
+
                   <Button
                     component={Link}
                     to={`/articles/${article._id}`}
                     variant="outlined"
                     fullWidth
+                    startIcon={<Visibility />}
                     sx={{
                       color: "#000",
                       borderColor: "#000",
@@ -542,44 +496,7 @@ export default function Articles({ user }) {
           </Fade>
         ))}
       </Grid>
-
-      {/* Edit/Add Dialog */}
-      <Dialog 
-        open={openDialog} 
-        onClose={() => setOpenDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {currentArticle._id ? t('articles.edit', 'Edit Article') : t('articles.addNew', 'Add New Article')}
-        </DialogTitle>
-        <DialogContent>
-          <TextField label="Title (EN)" fullWidth sx={{ mb:2 }} value={currentArticle.title_en} onChange={(e)=>setCurrentArticle({...currentArticle,title_en:e.target.value})} />
-          <TextField label="Title (TA)" fullWidth sx={{ mb:2 }} value={currentArticle.title_ta} onChange={(e)=>setCurrentArticle({...currentArticle,title_ta:e.target.value})} />
-          <TextField label="Author (EN)" fullWidth sx={{ mb:2 }} value={currentArticle.author_en} onChange={(e)=>setCurrentArticle({...currentArticle,author_en:e.target.value})} />
-          <TextField label="Author (TA)" fullWidth sx={{ mb:2 }} value={currentArticle.author_ta} onChange={(e)=>setCurrentArticle({...currentArticle,author_ta:e.target.value})} />
-          <TextField label="Category (EN)" fullWidth sx={{ mb:2 }} value={currentArticle.category_en} onChange={(e)=>setCurrentArticle({...currentArticle,category_en:e.target.value})} />
-          <TextField label="Category (TA)" fullWidth sx={{ mb:2 }} value={currentArticle.category_ta} onChange={(e)=>setCurrentArticle({...currentArticle,category_ta:e.target.value})} />
-          <TextField label="Content (EN)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentArticle.content_en} onChange={(e)=>setCurrentArticle({...currentArticle,content_en:e.target.value})} />
-          <TextField label="Content (TA)" fullWidth multiline minRows={5} sx={{ mb:2 }} value={currentArticle.content_ta} onChange={(e)=>setCurrentArticle({...currentArticle,content_ta:e.target.value})} />
-          <MediaUpload
-            onImageLinkChange={(link) => setCurrentArticle({...currentArticle, image: link})}
-            onVideoLinkChange={(link) => setCurrentArticle({...currentArticle, videoLink: link})}
-            onImageChange={(url) => setCurrentArticle({...currentArticle, image: url})}
-            onVideoChange={(url) => setCurrentArticle({...currentArticle, videoUrl: url})}
-            currentImageLink={currentArticle.image}
-            currentVideoLink={currentArticle.videoLink}
-            currentImage={currentArticle.image}
-            currentVideo={currentArticle.videoUrl}
-            label="Media Links"
-            showInputsOnly={true}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+      </Container>
+    </Box>
   );
 }
