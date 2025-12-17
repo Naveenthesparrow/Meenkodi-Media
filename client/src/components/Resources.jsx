@@ -22,7 +22,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import SEO, { pageSEO } from './common/SEO';
-import API_BASE_URL from "../utils/api";
+
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 
@@ -49,7 +49,7 @@ export default function Resources({ user }) {
 
   const fetchResources = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/resources`);
+      const response = await fetch(`/api/resources`);
       if (!response.ok) {
         throw new Error('Failed to fetch resources');
       }
@@ -123,8 +123,8 @@ export default function Resources({ user }) {
     try {
       const method = currentResource._id ? 'PUT' : 'POST';
       const url = currentResource._id
-        ? `${API_BASE_URL}/api/resources/${currentResource._id}`
-        : `${API_BASE_URL}/api/resources`;
+        ? `/api/resources/${currentResource._id}`
+        : `/api/resources`;
 
       const response = await fetch(url, {
         method,
@@ -163,7 +163,7 @@ export default function Resources({ user }) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this resource?')) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
+        const response = await fetch(`/api/resources/${id}`, {
           method: 'DELETE',
           credentials: 'include',
         });

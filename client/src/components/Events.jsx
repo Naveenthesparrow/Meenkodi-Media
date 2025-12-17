@@ -22,7 +22,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import SEO, { pageSEO } from './common/SEO';
-import API_BASE_URL from "../utils/api";
 import { useBilingualContent } from '../utils/bilingualContent';
 import { useTranslation } from 'react-i18next';
 
@@ -53,7 +52,7 @@ export default function Events({ user }) {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/events`);
+      const response = await fetch(`/api/events`);
       if (!response.ok) {
         throw new Error('Failed to fetch events');
       }
@@ -119,8 +118,8 @@ export default function Events({ user }) {
     try {
       const method = currentEvent._id ? 'PUT' : 'POST';
       const url = currentEvent._id
-        ? `${API_BASE_URL}/api/events/${currentEvent._id}`
-        : `${API_BASE_URL}/api/events`;
+        ? `/api/events/${currentEvent._id}`
+        : `/api/events`;
 
       const response = await fetch(url, {
         method,
@@ -152,7 +151,7 @@ export default function Events({ user }) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+        const response = await fetch(`/api/events/${id}`, {
           method: 'DELETE',
           credentials: 'include',
         });

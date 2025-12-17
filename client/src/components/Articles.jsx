@@ -21,7 +21,6 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Cancel, Visibility } from '@mui/icons-material';
 import ArticleComposer from './ArticleComposer';
-import API_BASE_URL from "../utils/api";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 
@@ -45,7 +44,7 @@ export default function Articles({ user }) {
   const fetchArticles = async () => {
     try {
       const statusParam = currentTab === 'published' ? '' : `?status=${currentTab}`;
-      const response = await fetch(`${API_BASE_URL}/api/articles${statusParam}`, {
+      const response = await fetch(`/api/articles${statusParam}`, {
         credentials: 'include',
       });
       if (!response.ok) {
@@ -63,7 +62,7 @@ export default function Articles({ user }) {
 
   const fetchPendingCount = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/articles/pending/count`, {
+      const response = await fetch(`/api/articles/pending/count`, {
         credentials: 'include',
       });
       const data = await response.json();
@@ -75,7 +74,7 @@ export default function Articles({ user }) {
 
   const handleApprove = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/articles/${id}/approve`, {
+      const response = await fetch(`/api/articles/${id}/approve`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -90,7 +89,7 @@ export default function Articles({ user }) {
   const handleReject = async (id) => {
     const reason = prompt(t('articles.rejectReason', 'Reason for rejection (optional):'));
     try {
-      const response = await fetch(`${API_BASE_URL}/api/articles/${id}/reject`, {
+      const response = await fetch(`/api/articles/${id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

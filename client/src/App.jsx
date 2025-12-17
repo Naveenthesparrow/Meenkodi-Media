@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import API_BASE_URL from "./utils/api";
 import './i18n/i18n.js';
 import { useTranslation } from 'react-i18next';
 // Route-split heavier pages and details
@@ -87,7 +86,7 @@ function App() {
 
   const fetchUser = React.useCallback(() => {
     console.log("Fetching user authentication status...");
-    fetch(`${API_BASE_URL}/auth/user`, {
+    fetch(`/auth/user`, {
       credentials: "include",
     })
       .then((res) => {
@@ -128,7 +127,7 @@ function App() {
       
       // If just came from auth, fetch user and redirect to profile
       setTimeout(() => {
-        fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" })
+        fetch(`/auth/user`, { credentials: "include" })
           .then(res => res.json())
           .then(userData => {
             if (userData && userData._id) {
@@ -250,12 +249,12 @@ function App() {
     console.log("Redirecting to Google OAuth...");
     setIsAuthenticating(true);
     sessionStorage.setItem('isAuthenticating', 'true');
-    window.location.href = `${API_BASE_URL}/auth/google`;
+    window.location.href = `/auth/google`;
   };
 
   const logout = () => {
     console.log("Logging out...");
-    window.location.href = `${API_BASE_URL}/auth/logout`;
+    window.location.href = `/auth/logout`;
   };
 
   const handleDrawerToggle = () => {
