@@ -117,11 +117,13 @@ const sessionConfig = {
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: isProduction ? 'none' : 'lax',
     path: '/', // Important: cookie available for all paths
+    // Don't set domain - let browser handle it
   },
   name: "connect.sid", // Standard express-session cookie name
   proxy: isProduction,
   rolling: false, // Don't reset expiration on every request
   unset: 'keep', // Keep session even if user is removed
+  store: undefined, // Add session store for production if needed
 };
 
 app.use(session(sessionConfig));
