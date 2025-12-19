@@ -107,6 +107,8 @@ app.use(
   })
 );
 
+import MongoStore from "connect-mongo";
+
 // Session configuration
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionConfig = {
@@ -117,15 +119,18 @@ const sessionConfig = {
     secure: isProduction, // HTTPS only in production
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: isProduction ? 'none' : 'lax',
-    path: '/', // Important: cookie available for all paths
-    // Don't set domain - let browser handle it
+    sameSite: 'lax', // 'lax' is safer and sufficient for same-origin (frontend served by backend)
+    path: '/',
   },
-  name: "connect.sid", // Standard express-session cookie name
+  name: "connect.sid",
   proxy: isProduction,
-  rolling: false, // Don't reset expiration on every request
-  unset: 'keep', // Keep session even if user is removed
-  store: undefined, // Add session store for production if needed
+  rolling: false,
+  unset: 'keep',
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60, // 1 day
+  }),
 };
 
 app.use(session(sessionConfig));
@@ -135,10 +140,8 @@ app.use(passport.session());
 
 // Session debugging middleware
 app.use((req, res, next) => {
-  console.log("=== SESSION MIDDLEWARE DEBUG ===");
-  console.log("Session ID:", req.sessionID);
-  console.log("Session exists:", !!req.session);
-  console.log("User in session:", req.session?.passport?.user);
+  // console.log("=== SESSION MIDDLEWARE DEBUG ==="); // Reduce log noise in prod
+  // console.log("Session ID:", req.sessionID);
   next();
 });
 
