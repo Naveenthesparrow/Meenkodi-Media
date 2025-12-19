@@ -58,6 +58,7 @@ const MediaUpload = ({
   const toAbsoluteMediaUrl = (url) => {
     if (!url) return url;
     if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('data:')) return url;
     const withLeading = url.startsWith("/") ? url : `/${url}`;
     return `${API_BASE_URL}${withLeading}`;
   };
@@ -89,8 +90,8 @@ const MediaUpload = ({
       onImageLinkChange("");
     }
 
-  const formData = new FormData();
-  formData.append("image", file);
+    const formData = new FormData();
+    formData.append("image", file);
 
     try {
       // Read file as data URL for immediate preview
@@ -131,7 +132,13 @@ const MediaUpload = ({
         throw new Error("No image URL returned from server");
       }
 
-      const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
+      let normalizedUrl;
+      if (imageUrl.startsWith('http') || imageUrl.startsWith('//') || imageUrl.startsWith('data:')) {
+        normalizedUrl = imageUrl;
+      } else {
+        normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
+      }
+
       const absoluteUrl = toAbsoluteMediaUrl(normalizedUrl);
 
       // Pass server URL to parent for saving
@@ -298,17 +305,17 @@ const MediaUpload = ({
         </Box>
         {(previewImage || imageLink) && (
           <Card sx={{ maxWidth: 200, mb: 2 }}>
-            <CardMedia 
-              component="img" 
-              height="120" 
-              image={toAbsoluteMediaUrl(previewImage || imageLink)} 
-              alt="Preview" 
-              sx={{ objectFit: "cover", backgroundColor: '#f0f0f0' }} 
-              onError={(e) => { 
-                console.error('Image preview failed to load:', previewImage || imageLink); 
-                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Crect fill='%23cccccc' width='200' height='120'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E"; 
-                e.target.style.display = 'block'; 
-              }} 
+            <CardMedia
+              component="img"
+              height="120"
+              image={toAbsoluteMediaUrl(previewImage || imageLink)}
+              alt="Preview"
+              sx={{ objectFit: "cover", backgroundColor: '#f0f0f0' }}
+              onError={(e) => {
+                console.error('Image preview failed to load:', previewImage || imageLink);
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'%3E%3Crect fill='%23cccccc' width='200' height='120'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='20px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                e.target.style.display = 'block';
+              }}
             />
           </Card>
         )}

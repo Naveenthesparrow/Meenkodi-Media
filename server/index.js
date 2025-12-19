@@ -523,6 +523,7 @@ app.post("/api/gallery", ensureAdmin, async (req, res) => {
     const item = await Gallery.create(req.body);
     res.status(201).json(item);
   } catch (err) {
+    console.error("Gallery creation error:", err); // Log the full error
     if (err.name === "ValidationError") {
       return res.status(400).json({ error: err.message });
     }
@@ -881,6 +882,7 @@ app.post(
       console.log("Image successfully uploaded to Cloudinary:", req.file.path);
 
       res.json({
+        imageUrl: req.file.path,
         url: req.file.path,
         id: req.file.filename,
       });
