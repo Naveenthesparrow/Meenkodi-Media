@@ -278,11 +278,11 @@ app.get(
 
 app.get("/auth/user", (req, res) => {
   console.log("=== AUTH USER REQUEST ===");
-  console.log("Session ID:", req.sessionID);
-  console.log("Cookie header:", req.headers.cookie);
-  console.log("Session data:", req.session);
-  console.log("Passport user ID:", req.session?.passport?.user);
-  console.log("User object:", req.user);
+  console.log("Headers Cookie:", req.headers.cookie);
+  console.log("Session ID (req.sessionID):", req.sessionID);
+  console.log("Session Object (req.session):", req.session);
+  console.log("User in session (req.session.passport):", req.session?.passport);
+  console.log("Req.user:", req.user);
   console.log("Is Authenticated:", req.isAuthenticated());
 
   if (req.user) {
@@ -290,7 +290,11 @@ app.get("/auth/user", (req, res) => {
     console.log("✓ Sending user data:", displayName, role);
     res.json({ _id, googleId, displayName, email, role, photo });
   } else {
-    console.log("✗ No user found, sending 401");
+    console.log("✗ No user found in request, sending 401");
+    // Check if session exists but user is missing
+    if (req.session && !req.user) {
+      console.log("Session exists but passport user is missing. Session data:", req.session);
+    }
     res.status(401).json(null);
   }
 });
