@@ -34,6 +34,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.set('trust proxy', 1);
+
 app.use(express.json());
 
 // Serve static files from the client build directory
@@ -196,7 +198,7 @@ app.get(
     console.log("Callback URL will be:", `${process.env.BACKEND_URL}/auth/google/callback`);
     next();
   },
-  passport.authenticate("google", { 
+  passport.authenticate("google", {
     scope: ["profile", "email"],
     accessType: 'offline',
     prompt: 'consent'
@@ -208,7 +210,7 @@ app.get(
   (req, res, next) => {
     console.log("=== OAuth Callback Received ===");
     console.log("Query params:", req.query);
-    
+
     // Check if there's an error from Google
     if (req.query.error) {
       console.error("OAuth Error from Google:", req.query.error);
@@ -216,7 +218,7 @@ app.get(
         `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=failed`
       );
     }
-    
+
     passport.authenticate("google", (err, user, info) => {
       if (err) {
         console.error("=== OAuth Authentication Error ===");
@@ -232,7 +234,7 @@ app.get(
           `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=nouser`
         );
       }
-      
+
       console.log("=== OAuth Success, logging in user ===");
       req.logIn(user, (err) => {
         if (err) {
@@ -252,7 +254,7 @@ app.get(
     console.log("User:", req.user);
     console.log("Session ID:", req.sessionID);
     console.log("Is Authenticated:", req.isAuthenticated());
-    
+
     // Ensure session is saved before redirect
     req.session.save((err) => {
       if (err) {
@@ -261,7 +263,7 @@ app.get(
           `${process.env.CLIENT_URL || "http://localhost:5173"}/?auth=session-error`
         );
       }
-      
+
       console.log("Session saved, redirecting to client home...");
       // Redirect to HOME, not back to auth callback!
       res.redirect(
@@ -348,16 +350,16 @@ app.get("/api/user/profile", ensureAuthenticated, (req, res) => {
 app.get("/api/articles", async (req, res) => {
   const lang = resolveLang(req);
   const { status } = req.query;
-  
+
   let query = {};
-  
+
   // Admins can see all articles, regular users only see published
   if (req.user && req.user.role === 'admin') {
     if (status) query.status = status;
   } else {
     query.status = 'published';
   }
-  
+
   const articles = await Article.find(query).sort({ createdAt: -1 });
   res.json(localizeCollection(articles, 'articles', lang));
 });
@@ -371,7 +373,7 @@ app.get("/api/articles/:id", async (req, res) => {
   const lang = resolveLang(req);
   const article = await Article.findById(req.params.id);
   if (!article) return res.status(404).json({ error: 'Not found' });
-  
+
   // Check permissions
   if (article.status !== 'published') {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
@@ -379,13 +381,13 @@ app.get("/api/articles/:id", async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
   }
-  
+
   // Increment view count for published articles
   if (article.status === 'published') {
     article.viewCount = (article.viewCount || 0) + 1;
     await article.save();
   }
-  
+
   res.json(localizeSingle(article, 'articles', lang));
 });
 
@@ -399,12 +401,12 @@ app.post("/api/articles", ensureAuthenticated, async (req, res) => {
       status: req.user.role === 'admin' ? 'published' : 'pending',
       submittedAt: new Date(),
     };
-    
+
     if (req.user.role === 'admin') {
       articleData.publishedAt = new Date();
       articleData.approvedBy = req.user._id;
     }
-    
+
     const article = await Article.create(articleData);
     res.status(201).json(article);
   } catch (err) {
@@ -419,18 +421,18 @@ app.put("/api/articles/:id", ensureAuthenticated, async (req, res) => {
   try {
     const article = await Article.findById(req.params.id);
     if (!article) return res.status(404).json({ error: "Article not found" });
-    
+
     // Check permissions: admin or article author
     if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    
+
     const updatedArticle = await Article.findByIdAndUpdate(
-      req.params.id, 
+      req.params.id,
       { ...req.body, updatedAt: new Date() },
       { new: true, runValidators: true }
     );
-    
+
     res.json(updatedArticle);
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -452,7 +454,7 @@ app.post("/api/articles/:id/approve", ensureAdmin, async (req, res) => {
       },
       { new: true }
     );
-    
+
     if (!article) return res.status(404).json({ error: "Article not found" });
     res.json(article);
   } catch (err) {
@@ -472,7 +474,7 @@ app.post("/api/articles/:id/reject", ensureAdmin, async (req, res) => {
       },
       { new: true }
     );
-    
+
     if (!article) return res.status(404).json({ error: "Article not found" });
     res.json(article);
   } catch (err) {
@@ -483,12 +485,12 @@ app.post("/api/articles/:id/reject", ensureAdmin, async (req, res) => {
 app.delete("/api/articles/:id", ensureAuthenticated, async (req, res) => {
   const article = await Article.findById(req.params.id);
   if (!article) return res.status(404).json({ error: "Article not found" });
-  
+
   // Check permissions
   if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  
+
   await Article.findByIdAndDelete(req.params.id);
   res.status(204).end();
 });
