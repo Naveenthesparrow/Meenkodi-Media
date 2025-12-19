@@ -764,34 +764,28 @@ const createDirectories = () => {
 
 createDirectories();
 
-// Multer storage configuration for image uploads
-const imageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadsDir = path.join(process.cwd(), "uploads/gallery");
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-    // Ensure uploads directory exists with full permissions
-    try {
-      fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
-    } catch (err) {
-      console.error("Failed to create uploads directory:", err);
-    }
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate a unique filename with original extension
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    const sanitizedOriginalName = file.originalname
-      .replace(/[^a-zA-Z0-9.]/g, "_") // Replace special characters
-      .toLowerCase();
-
-    cb(null, `image-${uniqueSuffix}-${sanitizedOriginalName}`);
+// Configure Cloudinary Storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "meenkodi_gallery", // Folder in Cloudinary
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp"],
+    transformation: [{ width: 1200, height: 1200, crop: "limit" }], // Optimize images
   },
 });
 
 const imageUpload = multer({
-  storage: imageStorage,
+  storage: storage,
   fileFilter: (req, file, cb) => {
     // Detailed image type validation
     const allowedMimeTypes = [
@@ -814,8 +808,7 @@ const imageUpload = multer({
     }
   },
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit for images
-    files: 1, // Limit to single file upload
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   },
 });
 
@@ -878,93 +871,15 @@ app.post(
         });
       }
 
-      // Ensure uploads directory exists with full permissions
-      const uploadsDir = path.join(process.cwd(), "uploads/gallery");
-      try {
-        fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
-      } catch (mkdirError) {
-        console.error("Failed to create uploads directory:", mkdirError);
-        return res.status(500).json({
-          error: "Failed to create uploads directory",
-          details: mkdirError.message,
-        });
-      }
-
-      // Verify file was actually saved
-      const fullFilePath = path.join(uploadsDir, req.file.filename);
-
-      // Check file existence and permissions
-      try {
-        fs.accessSync(fullFilePath, fs.constants.R_OK | fs.constants.W_OK);
-      } catch (accessError) {
-        console.error("File access error:", accessError);
-        return res.status(500).json({
-          error: "Cannot access uploaded file",
-          details: accessError.message,
-          filePath: fullFilePath,
-        });
-      }
-
-      // Verify file stats
-      try {
-        const fileStats = fs.statSync(fullFilePath);
-        console.log("Uploaded file stats:", {
-          path: fullFilePath,
-          size: fileStats.size,
-          created: fileStats.birthtime,
-          isFile: fileStats.isFile(),
-        });
-
-        // Additional size check
-        if (fileStats.size === 0) {
-          console.error("Uploaded file is empty");
-          return res.status(400).json({
-            error: "Uploaded file is empty",
-            filePath: fullFilePath,
-          });
-        }
-      } catch (statError) {
-        console.error("File stat error:", statError);
-        return res.status(500).json({
-          error: "Failed to get file stats",
-          details: statError.message,
-          filePath: fullFilePath,
-        });
-      }
-
-      // Generate public URL
-      const publicUrl = `/uploads/gallery/${req.file.filename}`;
-
-      // Attempt to read file to verify it's a valid image
-      try {
-        const imageBuffer = fs.readFileSync(fullFilePath);
-        // You could add more sophisticated image validation here if needed
-      } catch (readError) {
-        console.error("Failed to read uploaded image:", readError);
-        return res.status(500).json({
-          error: "Failed to read uploaded image",
-          details: readError.message,
-        });
-      }
+      console.log("Image successfully uploaded to Cloudinary:", req.file.path);
 
       res.json({
-        imageUrl: publicUrl,
-        fullPath: fullFilePath,
-        filename: req.file.filename,
-        originalName: req.file.originalname,
+        url: req.file.path,
+        id: req.file.filename,
       });
     } catch (error) {
-      console.error("Comprehensive Image Upload Error:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
-
-      res.status(500).json({
-        error: "Failed to upload image",
-        details: error.message,
-        stack: error.stack,
-      });
+      console.error("Image upload error:", error);
+      res.status(500).json({ error: "Image upload failed", details: error.message });
     }
   }
 );
@@ -1138,11 +1053,11 @@ app.post(
       }
 
       // Generate public URL
-      const publicUrl = `/uploads/gallery/${req.file.filename}`;
+      // const publicUrl = `/uploads/gallery/${req.file.filename}`; // This is no longer needed if req.file.path is the Cloudinary URL
 
       res.json({
-        videoUrl: publicUrl,
-        fullPath: fullFilePath,
+        videoUrl: req.file.path, // Assuming req.file.path now contains the Cloudinary URL
+        // fullPath: fullFilePath, // This is a local path, not needed if using Cloudinary
         filename: req.file.filename,
         originalName: req.file.originalname,
       });
