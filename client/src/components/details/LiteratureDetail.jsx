@@ -118,7 +118,7 @@ function LiteratureDetail() {
     imageUrl: "",
     contentSections: [], // bilingual sections
   });
-  
+
   // Function to add a new content section
   const addContentSection = () => {
     setEditableData(prev => ({
@@ -127,9 +127,9 @@ function LiteratureDetail() {
         ...prev.contentSections,
         {
           subtitle_en: "",
-            subtitle_ta: "",
+          subtitle_ta: "",
           content_en: "",
-            content_ta: "",
+          content_ta: "",
           imageUrl: "",
           imageLink: "",
           videoUrl: "",
@@ -147,7 +147,7 @@ function LiteratureDetail() {
   const removeContentSection = (idToRemove) => {
     setEditableData(prev => ({
       ...prev,
-      contentSections: prev.contentSections && prev.contentSections.length > 0 
+      contentSections: prev.contentSections && prev.contentSections.length > 0
         ? prev.contentSections.filter(section => section.id !== idToRemove)
         : []
     }));
@@ -651,9 +651,24 @@ function LiteratureDetail() {
           alignItems: "center",
           mb: 4,
           justifyContent: "space-between",
+          width: '100%',
+          maxWidth: 800,
         }}
       >
-        <IconButton onClick={() => navigate("/explore/literature")}>
+        <IconButton
+          onClick={() => navigate("/explore/literature")}
+          sx={{
+            bgcolor: '#fff',
+            color: '#000',
+            border: '1px solid #000',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              bgcolor: '#000',
+              color: '#fff',
+              transform: 'scale(1.05)',
+            }
+          }}
+        >
           <ArrowBack />
         </IconButton>
 
@@ -665,6 +680,7 @@ function LiteratureDetail() {
             textAlign: "center",
             flex: 1,
             mx: 2,
+            fontFamily: 'Georgia, serif',
           }}
         >
           {getContent(literature.title)}
@@ -724,13 +740,15 @@ function LiteratureDetail() {
                 setIsEditing(!isEditing);
               }}
               sx={{
-                color: "#000",
-                border: "1px solid #000",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  bgcolor: "rgba(0,0,0,0.1)",
-                  transform: "scale(1.1)",
-                },
+                bgcolor: '#fff',
+                color: '#000',
+                border: '1px solid #000',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: '#000',
+                  color: '#fff',
+                  transform: 'scale(1.05)',
+                }
               }}
             >
               {isEditing ? <Close /> : <EditIcon />}
@@ -738,13 +756,14 @@ function LiteratureDetail() {
             <IconButton
               onClick={handleDelete}
               sx={{
-                color: "#000",
-                border: "1px solid #000",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  bgcolor: "rgba(255,0,0,0.1)",
-                  transform: "scale(1.1)",
-                },
+                bgcolor: '#fff',
+                color: '#000',
+                border: '1px solid #000',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: 'rgba(0,0,0,0.08)',
+                  transform: 'scale(1.05)',
+                }
               }}
             >
               <DeleteIcon />
@@ -762,50 +781,25 @@ function LiteratureDetail() {
           gap: 4,
         }}
       >
-        {/* Image Section - Top */}
+        {/* Media Section */}
         <Box
           sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            border: "2px solid #000",
-            position: "relative",
+            width: '100%',
             maxWidth: 800,
-            mx: "auto",
-            width: "100%",
+            mx: 'auto',
+            border: '1px solid #000',
+            overflow: 'hidden',
+            position: 'relative',
           }}
         >
-          {(isEditing ? editableData.imageUrl : literature.image) ? (
-            <img
-              src={isEditing ? editableData.imageUrl : literature.image}
-              alt={getContent(literature.title)}
-              style={{
-                maxWidth: "100%",
-                maxHeight: 400,
-                objectFit: "contain",
-                padding: 16,
-              }}
-              onError={(e) => {
-                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
-              }}
-            />
-          ) : (
-            <Box
-              sx={{
-                width: "100%",
-                height: 400,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                bgcolor: "#f0f0f0",
-                color: "#666",
-                fontSize: "1.2rem",
-                fontWeight: 500,
-              }}
-            >
-              No image available
-            </Box>
-          )}
+          <MediaDisplay
+            imageUrl={isEditing ? editableData.imageUrl : literature.image}
+            imageLink={literature.imageLink}
+            videoUrl={literature.videoUrl}
+            videoLink={literature.videoLink}
+            title={getContent(literature.title)}
+            height={420}
+          />
         </Box>
 
         {/* Details Section - Bottom */}
@@ -857,13 +851,13 @@ function LiteratureDetail() {
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Author (EN)" value={editableData.author_en} onChange={(e)=>setEditableData({ ...editableData, author_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Author (TA)" value={editableData.author_ta} onChange={(e)=>setEditableData({ ...editableData, author_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                  <TextField label="Author (EN)" value={editableData.author_en} onChange={(e) => setEditableData({ ...editableData, author_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Author (TA)" value={editableData.author_ta} onChange={(e) => setEditableData({ ...editableData, author_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
               </Box>
             )}
@@ -907,13 +901,13 @@ function LiteratureDetail() {
               </>
             ) : (
               <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Genre (EN)" value={editableData.genre_en} onChange={(e)=>setEditableData({ ...editableData, genre_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Genre (TA)" value={editableData.genre_ta} onChange={(e)=>setEditableData({ ...editableData, genre_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                  <TextField label="Genre (EN)" value={editableData.genre_en} onChange={(e) => setEditableData({ ...editableData, genre_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Genre (TA)" value={editableData.genre_ta} onChange={(e) => setEditableData({ ...editableData, genre_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Language (EN)" value={editableData.language_en} onChange={(e)=>setEditableData({ ...editableData, language_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Language (TA)" value={editableData.language_ta} onChange={(e)=>setEditableData({ ...editableData, language_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                  <TextField label="Language (EN)" value={editableData.language_en} onChange={(e) => setEditableData({ ...editableData, language_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Language (TA)" value={editableData.language_ta} onChange={(e) => setEditableData({ ...editableData, language_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
               </Box>
             )}
@@ -956,8 +950,8 @@ function LiteratureDetail() {
               >
                 Description
               </Typography>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb: 1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           )}
 
@@ -1061,8 +1055,8 @@ function LiteratureDetail() {
                 >
                   Summary
                 </Typography>
-                <TextField label="Summary (EN)" value={editableData.summary_en} onChange={(e)=>setEditableData({ ...editableData, summary_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
-                <TextField label="Summary (TA)" value={editableData.summary_ta} onChange={(e)=>setEditableData({ ...editableData, summary_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+                <TextField label="Summary (EN)" value={editableData.summary_en} onChange={(e) => setEditableData({ ...editableData, summary_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb: 1 }} />
+                <TextField label="Summary (TA)" value={editableData.summary_ta} onChange={(e) => setEditableData({ ...editableData, summary_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
               </Box>
             ))}
 
@@ -1104,20 +1098,20 @@ function LiteratureDetail() {
                 >
                   Content
                 </Typography>
-                <TextField label="Content (EN)" value={editableData.content_en} onChange={(e)=>setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
-                <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e)=>setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+                <TextField label="Content (EN)" value={editableData.content_en} onChange={(e) => setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb: 1 }} />
+                <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e) => setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
               </Box>
             ))}
-            
+
           {/* Content Sections */}
-          {!isEditing && literature.contentSections && literature.contentSections.length > 0 && 
+          {!isEditing && literature.contentSections && literature.contentSections.length > 0 &&
             literature.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
                 {getContent(section.subtitle) && (
-                  <Typography 
-                    variant="h6" 
+                  <Typography
+                    variant="h6"
                     sx={{
-                      mb: 2, 
+                      mb: 2,
                       fontWeight: 700,
                       borderBottom: '2px solid #000',
                       pb: 1,
@@ -1126,7 +1120,7 @@ function LiteratureDetail() {
                     {getContent(section.subtitle)}
                   </Typography>
                 )}
-                
+
                 {getContent(section.content) && (
                   <Typography
                     variant="body1"
@@ -1141,12 +1135,12 @@ function LiteratureDetail() {
 
                 {/* Section Image */}
                 {section.imageUrl && (
-                  <img 
-                    src={section.imageUrl} 
-                    alt={section.subtitle || `Section ${index + 1} Image`} 
-                    style={{ 
-                      maxWidth: '100%', 
-                      height: 'auto', 
+                  <img
+                    src={section.imageUrl}
+                    alt={section.subtitle || `Section ${index + 1} Image`}
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
                       marginTop: 16,
                       border: '1px solid #ddd',
                       padding: 8
@@ -1159,29 +1153,29 @@ function LiteratureDetail() {
 
                 {/* Section Video */}
                 {section.videoUrl && (
-                  <iframe 
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                  <iframe
+                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
                     title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
                     style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                     allowFullScreen
                   />
                 )}
-                
+
                 {/* Section Video Details */}
                 {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
                   <Box sx={{ mt: 2 }}>
                     {getContent(section.videoTitle) && (
-                      <Typography 
-                        variant="subtitle1" 
+                      <Typography
+                        variant="subtitle1"
                         sx={{ fontWeight: 600 }}
                       >
                         {getContent(section.videoTitle)}
                       </Typography>
                     )}
-                    
+
                     {getContent(section.videoDescription) && (
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         sx={{ color: '#555', fontStyle: 'italic' }}
                       >
                         {getContent(section.videoDescription)}
@@ -1196,10 +1190,10 @@ function LiteratureDetail() {
           {/* Editable Content Sections */}
           {isEditing && user && user.role === "admin" && (
             <Box sx={{ mt: 4 }}>
-              <Typography 
-                variant="h6" 
+              <Typography
+                variant="h6"
                 sx={{
-                  mb: 2, 
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -1207,49 +1201,49 @@ function LiteratureDetail() {
               >
                 Additional Content Sections
               </Typography>
-              
+
               {editableData.contentSections && editableData.contentSections.map((section, index) => (
-                <Box 
-                  key={section.id || `editable-section-${index}`} 
-                  sx={{ 
-                    mb: 3, 
-                    p: 2, 
+                <Box
+                  key={section.id || `editable-section-${index}`}
+                  sx={{
+                    mb: 3,
+                    p: 2,
                     border: '1px solid #000',
-                    position: 'relative' 
+                    position: 'relative'
                   }}
                 >
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e)=>{
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].subtitle_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].subtitle_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
                   </Box>
-                  
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e)=>{
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].content_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].content_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
                   </Box>
 
                   {/* Image URL for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mt: 2,
+                      mb: 1,
                       fontWeight: 700,
                       borderBottom: '1px solid #000',
                       pb: 1,
@@ -1257,7 +1251,7 @@ function LiteratureDetail() {
                   >
                     Section Image
                   </Typography>
-                  
+
                   <TextField
                     label="Image URL"
                     value={section.imageUrl}
@@ -1306,23 +1300,23 @@ function LiteratureDetail() {
 
                   {/* Preview of uploaded/entered image */}
                   {section.imageUrl && (
-                    <Box 
-                      sx={{ 
-                        mt: 2, 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        border: '1px solid #ddd', 
+                    <Box
+                      sx={{
+                        mt: 2,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        border: '1px solid #ddd',
                         borderRadius: 1,
-                        p: 2 
+                        p: 2
                       }}
                     >
-                      <img 
-                        src={section.imageUrl} 
-                        alt="Preview" 
-                        style={{ 
-                          maxWidth: '100%', 
-                          maxHeight: 200, 
-                          objectFit: 'contain' 
+                      <img
+                        src={section.imageUrl}
+                        alt="Preview"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: 200,
+                          objectFit: 'contain'
                         }}
                         onError={(e) => {
                           e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
@@ -1332,11 +1326,11 @@ function LiteratureDetail() {
                   )}
 
                   {/* Video Details for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mt: 2,
+                      mb: 1,
                       fontWeight: 700,
                       borderBottom: '1px solid #000',
                       pb: 1,
@@ -1344,7 +1338,7 @@ function LiteratureDetail() {
                   >
                     Section Video Details
                   </Typography>
-                  
+
                   <TextField
                     label="Video URL"
                     value={section.videoUrl}
@@ -1361,32 +1355,32 @@ function LiteratureDetail() {
                     variant="standard"
                     placeholder="Enter full YouTube video URL"
                   />
-                  
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e)=>{
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoTitle_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoTitle_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
                   </Box>
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e)=>{
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoDescription_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoDescription_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
                   </Box>
-                  
+
                   <IconButton
                     onClick={() => removeContentSection(section.id)}
                     sx={{
@@ -1405,10 +1399,10 @@ function LiteratureDetail() {
 
           {/* Separate Update Button for Content Sections */}
           {isEditing && user && user.role === "admin" && (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 mt: 4,
                 pt: 2,
                 borderTop: '1px solid #000',
@@ -1419,10 +1413,10 @@ function LiteratureDetail() {
             >
               <Button
                 onClick={() => setIsEditing(false)}
-                sx={{ 
+                sx={{
                   color: '#000',
-                  '&:hover': { 
-                    bgcolor: 'rgba(0,0,0,0.05)' 
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.05)'
                   }
                 }}
               >
@@ -1449,8 +1443,8 @@ function LiteratureDetail() {
                   sx={{
                     bgcolor: '#000',
                     color: '#fff',
-                    '&:hover': { 
-                      bgcolor: '#333' 
+                    '&:hover': {
+                      bgcolor: '#333'
                     }
                   }}
                 >
@@ -1471,14 +1465,14 @@ function LiteratureDetail() {
       ></Box>
 
       {/* Comments Section */}
-      <Box 
-        sx={{ 
-          mt: 4, 
-          width: '100%', 
-          maxWidth: 800,  
-          mx: 'auto',    
-          display: 'flex', 
-          flexDirection: 'column', 
+      <Box
+        sx={{
+          mt: 4,
+          width: '100%',
+          maxWidth: 800,
+          mx: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
           alignItems: 'stretch',
           border: '1px solid #000',
           p: 2,
@@ -1487,10 +1481,10 @@ function LiteratureDetail() {
         }}
       >
         {/* Likes and Share Row */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             mb: 2,
             pb: 1,
@@ -1524,7 +1518,7 @@ function LiteratureDetail() {
 
           {/* Share */}
           <Tooltip title="Share this article">
-            <IconButton 
+            <IconButton
               onClick={handleShare}
               sx={{
                 color: '#000',
@@ -1540,10 +1534,10 @@ function LiteratureDetail() {
             </IconButton>
           </Tooltip>
         </Box>
-        
-        <Typography 
-          variant="h6" 
-          sx={{ 
+
+        <Typography
+          variant="h6"
+          sx={{
             fontWeight: 700,
             textTransform: 'uppercase',
             textAlign: 'center',
@@ -1558,10 +1552,10 @@ function LiteratureDetail() {
         </Typography>
 
         {/* Comment Input */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             mb: 3,
             position: 'relative'
           }}
@@ -1572,7 +1566,7 @@ function LiteratureDetail() {
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            sx={{ 
+            sx={{
               flex: 1,
               fontFamily: "'Open Sans', sans-serif",
               '& .MuiInput-underline:before': {
@@ -1583,7 +1577,7 @@ function LiteratureDetail() {
               },
             }}
           />
-          <IconButton 
+          <IconButton
             onClick={handleAddComment}
             disabled={!newComment.trim() || !user}
             sx={{
@@ -1636,7 +1630,7 @@ function LiteratureDetail() {
                     <Person sx={{ fontSize: 18 }} />
                     {comment.user?.username || 'Anonymous'}
                   </Typography>
-                  
+
                   <Typography
                     variant="caption"
                     sx={{
@@ -1652,10 +1646,10 @@ function LiteratureDetail() {
                     })}
                   </Typography>
                 </Box>
-                
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
+
+                <Typography
+                  variant="body2"
+                  sx={{
                     pl: 1,
                     fontFamily: "'Open Sans', sans-serif",
                     fontSize: '0.85rem',
@@ -1764,9 +1758,9 @@ function LiteratureDetail() {
 
                 {/* Replies */}
                 {comment.replies && comment.replies.length > 0 && (
-                  <Box 
-                    sx={{ 
-                      mt: 2, 
+                  <Box
+                    sx={{
+                      mt: 2,
                       ml: 3,
                       pl: 2,
                       borderLeft: '2px solid #e0e0e0',
@@ -1799,7 +1793,7 @@ function LiteratureDetail() {
                             <Person sx={{ fontSize: 14 }} />
                             {reply.user?.username || 'Anonymous'}
                           </Typography>
-                          
+
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography
                               variant="caption"
@@ -1815,31 +1809,31 @@ function LiteratureDetail() {
                                 day: 'numeric'
                               })}
                             </Typography>
-                            
+
                             {/* Reply Delete Button */}
-                            {user && 
+                            {user &&
                               (user.role === "admin" || user._id === reply.user?._id) && (
-                              <IconButton
-                                size="small"
-                                onClick={() => {
-                                  setItemToDelete(`${comment._id}-${reply._id}`);
-                                  setDeleteType("reply");
-                                  setDeleteDialogOpen(true);
-                                }}
-                                sx={{ 
-                                  color: '#999', 
-                                  p: 0.5,
-                                  '&:hover': {
-                                    color: '#d32f2f',
-                                  }
-                                }}
-                              >
-                                <Delete sx={{ fontSize: 12 }} />
-                              </IconButton>
-                            )}
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    setItemToDelete(`${comment._id}-${reply._id}`);
+                                    setDeleteType("reply");
+                                    setDeleteDialogOpen(true);
+                                  }}
+                                  sx={{
+                                    color: '#999',
+                                    p: 0.5,
+                                    '&:hover': {
+                                      color: '#d32f2f',
+                                    }
+                                  }}
+                                >
+                                  <Delete sx={{ fontSize: 12 }} />
+                                </IconButton>
+                              )}
                           </Box>
                         </Box>
-                        
+
                         <Typography
                           variant="body2"
                           sx={{
@@ -1858,11 +1852,11 @@ function LiteratureDetail() {
               </Box>
             ))
           ) : (
-            <Box 
-              sx={{ 
-                py: 4, 
-                display: 'flex', 
-                flexDirection: 'column', 
+            <Box
+              sx={{
+                py: 4,
+                display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 opacity: 0.7
               }}
@@ -1870,11 +1864,11 @@ function LiteratureDetail() {
               <CommentOutlined sx={{ fontSize: 40, mb: 1, opacity: 0.5 }} />
               <Typography
                 variant="body2"
-                sx={{ 
-                  fontStyle: 'italic', 
-                  color: '#666', 
+                sx={{
+                  fontStyle: 'italic',
+                  color: '#666',
                   textAlign: 'center',
-                  fontFamily: "'Open Sans', sans-serif" 
+                  fontFamily: "'Open Sans', sans-serif"
                 }}
               >
                 No comments yet. Be the first to share your thoughts!
@@ -2005,6 +1999,32 @@ function LiteratureDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Standardized Back Button */}
+      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/explore/literature')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← Back to Literature
+        </Button>
+      </Box>
     </Container>
   );
 }

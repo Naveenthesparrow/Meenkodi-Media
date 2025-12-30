@@ -170,11 +170,11 @@ export default function AncientScience({ user }) {
         }
 
         const savedItem = await res.json();
-        
+
         // Update local state
-    if (editItem) {
+        if (editItem) {
           // Replace the edited item in the list
-          setSciences(sciences.map(item => 
+          setSciences(sciences.map(item =>
             item._id === savedItem._id ? savedItem : item
           ));
         } else {
@@ -183,12 +183,12 @@ export default function AncientScience({ user }) {
         }
 
         // Close the dialog
-      setEditOpen(false);
-      setAddOpen(false);
+        setEditOpen(false);
+        setAddOpen(false);
       } catch (err) {
         console.error("Error saving scientific knowledge:", err);
         alert(`Failed to save scientific knowledge: ${err.message}`);
-    }
+      }
     })();
   };
 
@@ -200,14 +200,14 @@ export default function AncientScience({ user }) {
             method: "DELETE",
             credentials: "include",
           });
-          
+
           if (!res.ok) throw new Error("Delete failed");
-          
+
           // Optimistic update
-          setSciences(prevSciences => 
+          setSciences(prevSciences =>
             prevSciences.filter((science) => science._id !== id)
           );
-          
+
           // Optional: Refresh to ensure consistency
           await fetchScience();
         } catch (err) {
@@ -233,76 +233,67 @@ export default function AncientScience({ user }) {
       {/* Unique Heading Section */}
       <Box
         sx={{
-          mb: 6, 
+          mb: 6,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          justifyContent: user && user.role === "admin" ? 'space-between' : 'flex-start',
           flexDirection: { xs: 'column', md: 'row' },
           gap: { xs: 2, md: 0 },
           position: 'relative',
-          overflow: 'hidden',
         }}
       >
-       <Typography
-          variant="h2" 
+        <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between', gap: 2, flexDirection: { xs: 'column', md: 'row' }, mb: 1, width: user && user.role === "admin" ? 'auto' : '100%' }}>
+          <Typography
+            variant="h2"
             sx={{
-            fontWeight: 900, 
-            color: "#000", 
-            position: 'relative',
-            display: 'inline-block',
-            letterSpacing: -1,
-            padding: '0 10px',
-            transition: 'all 0.3s ease',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              right: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&:hover': {
-              color: '#333',
-              transform: 'scale(1.02)',
-              '&::before': {
-                width: '60px',
-                left: '-70px',
-                backgroundColor: '#666',
-              },
+              fontWeight: 700,
+              color: "#8B0000",
+              fontFamily: 'Georgia, serif',
+              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              letterSpacing: 2,
+              mb: { xs: 0.5, md: 1 },
+              position: 'relative',
+              display: 'inline-block',
+              textTransform: 'uppercase',
               '&::after': {
-                width: '60px',
-                right: '-70px',
-                backgroundColor: '#666',
+                content: '""',
+                position: 'absolute',
+                bottom: -8,
+                left: 0,
+                transform: 'none',
+                width: '120px',
+                height: '4px',
+                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
               },
-            },
-          }}
-        >
-          {t('ancientScience.title','Ancient Science')}
-        </Typography>
-        
+            }}
+          >
+            {t('ancientScience.title', 'Ancient Science')}
+          </Typography>
+
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: '#666',
+              fontStyle: 'italic',
+              fontSize: { xs: '0.95rem', md: '1.05rem' },
+              mt: { xs: 1, md: '-0.15rem' },
+              pr: { md: 12 },
+              textAlign: 'right',
+              fontFamily: 'Georgia, serif',
+            }}
+          >
+            {t('ancientScience.subtitle')}
+          </Typography>
+        </Box>
+
         {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
+          <Box
+            sx={{
               transition: 'all 0.3s ease',
               '&:hover': {
                 transform: 'scale(1.05)',
                 '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
+                  boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
                 }
               }
             }}
@@ -312,94 +303,103 @@ export default function AncientScience({ user }) {
               variant="contained"
               startIcon={<Add />}
               sx={{
-                bgcolor: "#000",
+                bgcolor: "#8B0000",
                 color: "#fff",
                 transition: 'all 0.3s ease',
-                "&:hover": { 
-                  bgcolor: "#333",
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
+                "&:hover": {
+                  bgcolor: "#6B0000",
+                  boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
                 },
                 borderRadius: 0,
                 px: 3,
-                width: '100%', // Ensure button takes full width on small screens
+                py: 1,
+                fontWeight: 700,
+                letterSpacing: 0.5,
+                fontFamily: 'Georgia, serif',
+                whiteSpace: 'nowrap',
               }}
-      >
-        {t('ancientScience.add','Add Scientific Knowledge')}
+            >
+              {t('ancientScience.add', 'Add Science')}
             </Button>
           </Box>
         )}
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
-          transition: 'all 0.3s ease',
-          '& > .MuiGrid-item': {
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.02)',
-              zIndex: 10,
-            }
-          }
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)'
+          },
+          gap: { xs: 3, md: 4 },
         }}
       >
         {sciences.map((science, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
+          <Fade
+            in={true}
+            timeout={500 + index * 150}
             key={science._id}
           >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'center',
+            <Box
+              sx={{
+                width: '100%',
                 transition: 'all 0.3s ease',
               }}
             >
               <Card
                 sx={{
-                  width: { xs: '100%', sm: 350 },  // Responsive width: full on xs, fixed on sm+
-                  maxWidth: '100%', // Ensure it doesn't exceed parent on smaller screens
-                  // height: 450, // Removed fixed height
+                  width: '100%',
+                  height: { xs: 460, md: 500 },
                   display: 'flex',
                   flexDirection: 'column',
-                  border: "3px solid #000",
+                  border: 'none',
                   borderRadius: 0,
                   bgcolor: "#fff",
-                  transition: "all 0.3s ease",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                   cursor: "pointer",
                   position: 'relative',
-                  overflow: 'hidden',
-                  "&::before": {
+                  overflow: 'visible',
+                  boxShadow: '0 8px 25px rgba(139,0,0,0.12)',
+                  '&::after': {
                     content: '""',
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
-                    transform: 'translateX(-100%)',
-                    transition: 'transform 0.6s ease',
+                    top: -8,
+                    left: -8,
+                    right: -8,
+                    bottom: -8,
+                    border: '2px solid #8B0000',
+                    opacity: 0,
+                    transition: 'opacity 0.4s ease',
+                    zIndex: -1,
                   },
                   "&:hover": {
-                    transform: "translateY(-15px) rotate(1deg)",
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    "&::before": {
-                      transform: 'translateX(100%)',
+                    transform: "translateY(-16px)",
+                    boxShadow: '0 25px 50px rgba(139,0,0,0.25)',
+                    '&::after': {
+                      opacity: 1,
                     },
-                    "& .card-content": {
-                      transform: "scale(1.02)",
-                      opacity: 0.95,
+                    "& .temple-image": {
+                      transform: 'scale(1.1) rotate(2deg)',
+                    },
+                    "& .temple-overlay": {
+                      opacity: 1,
+                    },
+                    "& .card-title": {
+                      color: '#8B0000',
+                    },
+                    "& .view-button": {
+                      bgcolor: '#8B0000',
+                      color: '#fff',
+                      transform: 'translateY(-4px)',
+                    },
+                    "& .admin-controls": {
+                      opacity: 1,
+                      transform: 'translateY(0)',
+                    },
+                    "& .like-badge": {
+                      transform: 'scale(1.1) rotate(-5deg)',
                     }
                   },
                 }}
@@ -407,65 +407,117 @@ export default function AncientScience({ user }) {
                   navigate(`/explore/ancientscience/${science._id}`)
                 }
               >
-                {(science.image || science.imageLink) ? (
-                  <CardMedia
-                    component="img"
-                    height={200}
-                    image={science.image || science.imageLink}
-                    alt={getContent(science.name)}
-                    sx={{ 
-                      objectFit: "contain",
-                      width: '100%',
-                      maxHeight: 200,
-                      backgroundColor: '#f0f0f0',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                    onError={(e) => {
-                      console.error('Image failed to load:', science.image || science.imageLink);
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
-                      e.target.style.display = 'block';
-                    }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      height: 200,
-                      width: '100%',
-                      backgroundColor: '#f0f0f0',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    <img 
-                      src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E" 
-                      alt="No Image Available" 
-                      style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }}
+                {/* Image Section with Overlay */}
+                <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+                  {(science.image || science.imageLink) ? (
+                    <CardMedia
+                      component="img"
+                      image={science.image || science.imageLink}
+                      alt={getContent(science.name)}
+                      className="temple-image"
+                      sx={{
+                        objectFit: "cover",
+                        width: '100%',
+                        height: '100%',
+                        transition: 'all 0.6s ease',
+                      }}
+                      onError={(e) => {
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23e0e0e0' width='400' height='240'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18px' fill='%23999'%3E⚗️ Science%3C/text%3E%3C/svg%3E";
+                      }}
                     />
-                  </Box>
-                )}
-                <CardContent
-                  className="card-content"
-                  sx={{
-                    p: 3,
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    // position: 'relative', // Removed absolute positioning from parent
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {user && user.role === "admin" && (
+                  ) : (
                     <Box
                       sx={{
+                        height: '100%',
+                        width: '100%',
+                        backgroundColor: '#e0e0e0',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{ fontFamily: 'Georgia, serif', fontSize: '3rem' }}
+                      >
+                        ⚗️
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Gradient Overlay */}
+                  <Box
+                    className="temple-overlay"
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '60%',
+                      background: 'linear-gradient(to top, rgba(139,0,0,0.85) 0%, rgba(139,0,0,0.3) 50%, transparent 100%)',
+                      opacity: 0.7,
+                      transition: 'opacity 0.4s ease',
+                    }}
+                  />
+
+                  {/* Like Badge - Top Right */}
+                  <Box
+                    className="like-badge"
+                    sx={{
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      px: 1.5,
+                      py: 0.8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                      transition: 'transform 0.3s ease',
+                    }}
+                  >
+                    <Favorite sx={{ color: '#8B0000', fontSize: '1rem' }} />
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#000' }}>
+                      {science.likes ? science.likes.length : 0}
+                    </Typography>
+                  </Box>
+
+                  {/* Period Badge - Top Left */}
+                  {getContent(science.period) && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 16,
+                        left: 0,
+                        bgcolor: '#DAA520',
+                        color: '#fff',
+                        px: 2,
+                        py: 0.8,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      {getContent(science.period).substring(0, 30)}
+                    </Box>
+                  )}
+                  {/* Admin Controls - Absolute positioned on image */}
+                  {user && user.role === "admin" && (
+                    <Box
+                      className="admin-controls"
+                      sx={{
+                        position: 'absolute',
+                        bottom: 16,
+                        right: 16,
                         display: "flex",
-                        justifyContent: "flex-end", // Align to the right
                         gap: 1,
-                        mb: 1, // Add margin-bottom to separate from title
+                        zIndex: 5,
+                        opacity: 0,
+                        transform: 'translateY(10px)',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       <IconButton
@@ -475,16 +527,19 @@ export default function AncientScience({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": {
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)'
+                          bgcolor: 'rgba(255,255,255,0.95)',
+                          color: '#000',
+                          width: 36,
+                          height: 36,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
+                            color: '#fff',
                           },
-                          transition: 'all 0.2s ease',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          transition: 'all 0.3s ease',
                         }}
                       >
-                        <Edit />
+                        <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
@@ -493,109 +548,118 @@ export default function AncientScience({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": {
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)'
+                          bgcolor: 'rgba(255,255,255,0.95)',
+                          color: '#000',
+                          width: 36,
+                          height: 36,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
+                            color: '#fff',
                           },
-                          transition: 'all 0.2s ease',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          transition: 'all 0.3s ease',
                         }}
                       >
-                        <Delete />
+                        <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   )}
+                </Box>
+
+                {/* Content Section */}
+                <CardContent
+                  sx={{
+                    p: 3,
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    bgcolor: '#fff',
+                  }}
+                >
+                  {/* Title */}
                   <Box>
                     <Typography
-                      variant="h5"
+                      className="card-title"
+                      variant="h6"
                       sx={{
-                        fontWeight: 700, 
+                        fontWeight: 700,
                         color: "#000",
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
-                        textTransform: 'capitalize',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        fontSize: { xs: '1.15rem', md: '1.25rem' },
+                        fontFamily: 'Georgia, serif',
+                        transition: 'all 0.3s ease',
+                        position: 'relative',
+                        display: 'inline-block',
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: -6,
+                          left: 0,
+                          width: '48px',
+                          height: '3px',
+                          bgcolor: '#DAA520',
+                          borderRadius: 1,
+                        },
                       }}
                     >
                       {getContent(science.name)}
                     </Typography>
-                    {getContent(science.period) && (
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#666",
-                          fontStyle: "italic",
-                          fontSize: { xs: '0.8rem', md: '0.9rem' },
-                          mb: 2,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {getContent(science.period)}
-                      </Typography>
-                    )}
+
+                    {/* Description */}
                     {getContent(science.description) && (
                       <Typography
                         variant="body2"
                         sx={{
-                          color: "#000",
-                          lineHeight: 1.6, 
-                          mb: 2,
+                          color: '#555',
+                          lineHeight: 1.7,
+                          fontSize: { xs: '0.875rem', md: '0.95rem' },
                           display: '-webkit-box',
-                          WebkitLineClamp: 3,
+                          WebkitLineClamp: 4,
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          minHeight: { xs: '4.2rem', md: '4.8rem' },
+                          minHeight: { xs: '5rem', md: '5.6rem' },
+                          mb: 2,
                         }}
                       >
-                        {(() => {
-                          const desc = getContent(science.description) || "";
-                          return desc.length > 150 ? `${desc.substring(0,150)}...` : desc;
-                        })()}
+                        {getContent(science.description)}
                       </Typography>
                     )}
-                    
-                    {/* Like Count Display */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: '#000', 
-                          fontSize: '0.875rem',
-                          fontWeight: 500 
-                        }}
-                      >
-                        {science.likes ? science.likes.length : 0} Likes
-                      </Typography>
-                    </Box>
                   </Box>
 
+                  {/* Read More Button */}
                   <Button
                     component={Link}
                     to={`/explore/ancientscience/${science._id}`}
                     variant="outlined"
                     fullWidth
+                    className="view-button"
                     sx={{
-                      color: "#000",
-                      borderColor: "#000",
+                      color: '#000',
+                      borderColor: '#000',
+                      borderWidth: 2,
                       borderRadius: 0,
-                      mt: 'auto',
-                      "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
+                      mt: 2,
+                      py: 1,
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      letterSpacing: 0.5,
+                      transition: 'all 0.3s ease',
+                      "&:hover": {
+                        borderColor: "#8B0000",
+                      },
                     }}
                   >
-                    {t('actions.readMore', 'Read more')}
+                    {t('actions.explore', 'Explore Science').toUpperCase()}
                   </Button>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
           </Fade>
         ))}
-      </Grid>
+      </Box>
 
       {/* Edit/Add Dialog */}
       <Dialog
@@ -615,50 +679,50 @@ export default function AncientScience({ user }) {
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
+            bgcolor: '#000',
+            color: '#fff',
             textAlign: 'center',
-            fontWeight: 700 
+            fontWeight: 700
           }}
         >
-          {editItem ? t('ancientScience.edit','Edit Scientific Knowledge') : t('ancientScience.addNew','Add New Scientific Knowledge')}
+          {editItem ? t('ancientScience.edit', 'Edit Scientific Knowledge') : t('ancientScience.addNew', 'Add New Scientific Knowledge')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <TextField
               fullWidth
-              label={t('form.name')+" (EN)"}
+              label={t('form.name') + " (EN)"}
               value={formData.name_en}
               onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-              sx={{ mb: 2, flex:1 }}
+              sx={{ mb: 2, flex: 1 }}
             />
             <TextField
               fullWidth
-              label={t('form.name')+" (TA)"}
+              label={t('form.name') + " (TA)"}
               value={formData.name_ta}
               onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
-              sx={{ mb: 2, flex:1 }}
+              sx={{ mb: 2, flex: 1 }}
             />
           </Box>
-          <Box sx={{ display:'flex', gap:2, flexWrap:'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <TextField
               fullWidth
-              label={t('form.period', 'Period')+" (EN)"}
+              label={t('form.period', 'Period') + " (EN)"}
               value={formData.period_en}
               onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
-              sx={{ mb: 2, flex:1 }}
+              sx={{ mb: 2, flex: 1 }}
             />
             <TextField
               fullWidth
-              label={t('form.period', 'Period')+" (TA)"}
+              label={t('form.period', 'Period') + " (TA)"}
               value={formData.period_ta}
               onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
-              sx={{ mb: 2, flex:1 }}
+              sx={{ mb: 2, flex: 1 }}
             />
           </Box>
           <TextField
             fullWidth
-            label={t('form.description')+" (EN)"}
+            label={t('form.description') + " (EN)"}
             value={formData.description_en}
             onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
             multiline
@@ -667,7 +731,7 @@ export default function AncientScience({ user }) {
           />
           <TextField
             fullWidth
-            label={t('form.description')+" (TA)"}
+            label={t('form.description') + " (TA)"}
             value={formData.description_ta}
             onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })}
             multiline
@@ -681,28 +745,28 @@ export default function AncientScience({ user }) {
             currentImage={formData.image}
             currentImageLink={formData.imageLink}
             currentVideoLink={formData.videoLink}
-            label={t('ancientScience.mediaLabel','Science Image/Video')}
+            label={t('ancientScience.mediaLabel', 'Science Image/Video')}
           />
-          
+
           {/* Image Preview */}
           {(formData.image || formData.imageLink) && (
-            <Box 
-              sx={{ 
-                mt: 2, 
-                display: 'flex', 
-                justifyContent: 'center', 
-                border: '1px solid #ddd', 
+            <Box
+              sx={{
+                mt: 2,
+                display: 'flex',
+                justifyContent: 'center',
+                border: '1px solid #ddd',
                 borderRadius: 1,
-                p: 2 
+                p: 2
               }}
             >
-              <img 
-                src={formData.image || formData.imageLink} 
-                alt="Preview" 
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: 200, 
-                  objectFit: 'contain' 
+              <img
+                src={formData.image || formData.imageLink}
+                alt="Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: 200,
+                  objectFit: 'contain'
                 }}
                 onError={(e) => {
                   console.error('Preview image failed to load:', formData.image || formData.imageLink);
@@ -714,10 +778,10 @@ export default function AncientScience({ user }) {
           )}
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
+          sx={{
+            p: 2,
             justifyContent: 'space-between',
-            bgcolor: '#f0f0f0' 
+            bgcolor: '#f0f0f0'
           }}
         >
           <Button
@@ -727,7 +791,7 @@ export default function AncientScience({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            {t('actions.cancel','Cancel')}
+            {t('actions.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -739,10 +803,10 @@ export default function AncientScience({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
+            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </Container >
   );
 }

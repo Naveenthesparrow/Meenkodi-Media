@@ -1411,12 +1411,14 @@ export default function Home() {
                   src="https://upload.wikimedia.org/wikipedia/ta/9/95/Mee_ye_paa.jpg"
                   alt="Museums Archaeology and Culture book cover"
                   loading="lazy"
+                  onClick={(e) => { e.stopPropagation(); navigate('/resources'); }}
                   sx={{
                     width: { xs: '70%', sm: '60%', md: '40%' },
                     maxWidth: 380,
                     boxShadow: '0 28px 56px rgba(0,0,0,0.24)',
                     transition: 'transform 0.5s ease',
                     transform: 'translateY(0)',
+                    cursor: 'pointer',
                     '&:hover': {
                       transform: 'translateY(-8px)'
                     }
@@ -1452,9 +1454,79 @@ export default function Home() {
                     hyphens: 'auto'
                   }}
                 >
-                  {getContent(LIBRARY_ARCHIVES_HEADING.top)}
-                  <br />
-                  {getContent(LIBRARY_ARCHIVES_HEADING.bottom)}
+                  {(() => {
+                  const topTxt = getContent(LIBRARY_ARCHIVES_HEADING.top) || '';
+                  const left = topTxt.replace('&', '').trim();
+                  return (
+                    <Box
+                      component="span"
+                      sx={{
+                        display: 'inline-grid',
+                        gridTemplateColumns: { xs: 'auto auto', md: 'auto min-content auto' },
+                        gridTemplateRows: 'auto auto',
+                        columnGap: { xs: 0.6, md: 2.2 },
+                        alignItems: 'center',
+                        transition: 'all 0.24s ease',
+                        '&:hover .lib-amp': {
+                          transform: 'translateY(-2px) scale(1.02)',
+                          color: '#b61c1c'
+                        },
+                        '&:hover .lib-archives': {
+                          transform: 'translateY(-1px)'
+                        }
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          gridColumn: '1 / 2',
+                          gridRow: '1 / 2',
+                          fontSize: { xs: '2.6rem', md: i18n.language === 'ta' ? '3.6rem' : '4.2rem' },
+                          fontWeight: i18n.language === 'ta' ? 600 : 700,
+                          lineHeight: 0.95
+                        }}
+                      >
+                        {left}
+                      </Box>
+
+                      <Box
+                        component="span"
+                        className="lib-amp"
+                        sx={{
+                          gridColumn: { xs: '2 / 3', md: '2 / 3' },
+                          gridRow: { xs: '1 / 3', md: '1 / 3' },
+                          color: '#8B0000',
+                          fontSize: { xs: '2.6rem', md: '3.6rem' },
+                          fontWeight: 800,
+                          alignSelf: 'center',
+                          transform: 'none',
+                          ml: { xs: 0, md: 0 },
+                          transition: 'all 0.28s ease'
+                        }}
+                        aria-hidden
+                      >
+                        &
+                      </Box>
+
+                      <Box
+                        component="span"
+                        className="lib-archives"
+                        sx={{
+                          gridColumn: { xs: '2 / 3', md: '3 / 4' },
+                          gridRow: '2 / 3',
+                          justifySelf: 'start',
+                          mt: { xs: 0.2, md: 0.6 },
+                          ml: { xs: 0.6, md: 0.8 },
+                          fontSize: { xs: '2.4rem', md: i18n.language === 'ta' ? '3.6rem' : '4rem' },
+                          lineHeight: 0.95,
+                          transition: 'all 0.28s ease'
+                        }}
+                      >
+                        {getContent(LIBRARY_ARCHIVES_HEADING.bottom)}
+                      </Box>
+                    </Box>
+                  );
+                })()}
                 </Typography>
                 <Box
                   sx={{
@@ -1471,6 +1543,11 @@ export default function Home() {
               spacing={{ xs: 6, md: 7 }}
               justifyContent="space-between"
               alignItems={{ xs: 'center', md: 'flex-start' }}
+              onClick={() => navigate('/resources')}
+              role="link"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate('/resources'); }}
+              sx={{ cursor: 'pointer' }}
             >
               <Stack
                 spacing={3}
@@ -1503,7 +1580,7 @@ export default function Home() {
                 </Typography>
                 <Button
                   variant="outlined"
-                  onClick={() => navigate('/resources')}
+                  onClick={(e) => { e.stopPropagation(); navigate('/resources'); }}
                   sx={{
                     alignSelf: { xs: 'center', md: 'flex-start' },
                     borderRadius: '999px',
@@ -1535,12 +1612,14 @@ export default function Home() {
                   src="https://www.harappa.com/sites/default/files/images/the-indus-robinson.jpg"
                   alt="The Indus civilization book cover"
                   loading="lazy"
+                  onClick={(e) => { e.stopPropagation(); navigate('/resources'); }}
                   sx={{
                     width: { xs: '72%', sm: '60%', md: '38%' },
                     maxWidth: 370,
                     boxShadow: '0 28px 56px rgba(0,0,0,0.24)',
                     transition: 'transform 0.5s ease',
                     transform: 'translateY(0)',
+                    cursor: 'pointer',
                     '&:hover': {
                       transform: 'translateY(-8px)'
                     }
@@ -2474,7 +2553,7 @@ export default function Home() {
 
       {/* MUSEUM ARCHIVES TEAM */}
       <DeferredSection fallback="skeleton" rootMargin="300px">
-        <Box sx={{ py: { xs: 5, md: 7 }, bgcolor: "#0A0908", overflow: 'hidden' }}>
+        <Box sx={{ py: { xs: 4, md: 5 }, bgcolor: "#0A0908", overflow: 'hidden' }}>
           <Container maxWidth="xl" sx={{ px: { xs: 1.5, sm: 4, md: 6, lg: 8 } }}>
             <Typography
               variant="h3"
@@ -2503,7 +2582,7 @@ export default function Home() {
             >
               {t('home.team.museum.subtitle')}
             </Typography>
-            <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 5, borderRadius: 2 }} />
+            <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 4, borderRadius: 2 }} />
 
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} justifyContent="center">
               {/* Top row: 4 dynasties */}
@@ -2586,14 +2665,14 @@ export default function Home() {
                 </Grid>
               ))}
               {/* Bottom row: LTTE centered */}
-              <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 1.5, md: 2 } }}>
+              <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 0.5, md: -1 } }}>
                 <Card
                   elevation={0}
                   sx={{
                     justifyContent: 'center',
                     alignItems: 'center',
-                    mt: 6,
-                    mb: 6,
+                    mt: { xs: 1, md: -2 },
+                    mb: 3,
                     overflow: "hidden",
                     bgcolor: "#111",
                     borderRadius: 3,

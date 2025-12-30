@@ -55,12 +55,12 @@ function ClothingDetail() {
   const [newReply, setNewReply] = useState("");
   const [likes, setLikes] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
-  
+
   // Delete confirmation states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState(''); // 'comment' or 'reply'
-  
+
   // Comment reactions states
   const [commentReactions, setCommentReactions] = useState({});
   const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
@@ -134,7 +134,7 @@ function ClothingDetail() {
       contentSections: prev.contentSections.filter(section => section.id !== idToRemove)
     }));
   };
-  
+
   // Emoji options
   const emojiOptions = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -208,7 +208,7 @@ function ClothingDetail() {
       const likesArray = Array.isArray(data.likes) ? data.likes : [];
       setLikes(likesArray.length);
       setUserLiked(likesArray.some(likeId => likeId.toString() === user?._id?.toString()) || false);
-      
+
       // Set editable data with all fields including contentSections
       const toStr = (val) => {
         if (!val) return "";
@@ -265,7 +265,7 @@ function ClothingDetail() {
     }
 
     try {
-    const res = await fetch(`${API_BASE}/api/clothing/${id}/like`, {
+      const res = await fetch(`${API_BASE}/api/clothing/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -299,7 +299,7 @@ function ClothingDetail() {
     }
 
     try {
-  const res = await fetch(`${API_BASE}/api/clothing/${id}/comments`, {
+      const res = await fetch(`${API_BASE}/api/clothing/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -334,7 +334,7 @@ function ClothingDetail() {
     }
 
     try {
-  const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/replies`, {
+      const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -364,7 +364,7 @@ function ClothingDetail() {
     }
 
     try {
-  const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/reactions`, {
+      const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/reactions`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -379,8 +379,8 @@ function ClothingDetail() {
 
       const data = await res.json();
       // Update the specific comment in the comments array
-      const updatedComments = comments.map(comment => 
-        comment._id === commentId 
+      const updatedComments = comments.map(comment =>
+        comment._id === commentId
           ? { ...comment, reactions: data.reactions }
           : comment
       );
@@ -393,7 +393,7 @@ function ClothingDetail() {
 
   const handleDelete = async () => {
     const confirmDelete = window.confirm("Are you sure you want to delete this clothing? This action cannot be undone.");
-    
+
     if (!confirmDelete) return;
 
     try {
@@ -491,7 +491,7 @@ function ClothingDetail() {
         image: editableData.imageUrl || clothing.image || "",
         contentSections: formattedContentSections
       };
-  const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
+      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -618,10 +618,10 @@ function ClothingDetail() {
   }
 
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{ 
-        py: 4, 
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: 4,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -629,22 +629,22 @@ function ClothingDetail() {
       }}
     >
       {/* Header */}
-      <Box 
-        sx={{ 
-          display: "flex", 
-          alignItems: "center", 
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
           mb: 4,
-          justifyContent: 'space-between' 
+          justifyContent: 'space-between'
         }}
       >
         <IconButton onClick={() => navigate("/explore/clothing")}>
           <ArrowBack />
         </IconButton>
-        
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            fontWeight: 700, 
+
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
             textTransform: 'uppercase',
             textAlign: 'center',
             flex: 1,
@@ -657,7 +657,7 @@ function ClothingDetail() {
         {/* Admin Actions */}
         {user && user.role === "admin" && (
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton 
+            <IconButton
               onClick={() => {
                 const toStr = (val) => {
                   if (!val) return "";
@@ -713,7 +713,7 @@ function ClothingDetail() {
             >
               {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
-            <IconButton 
+            <IconButton
               onClick={handleDelete}
               sx={{
                 color: '#000',
@@ -732,19 +732,19 @@ function ClothingDetail() {
       </Box>
 
       {/* Main Content */}
-      <Box 
-        sx={{ 
-          width: '100%', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 4 
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4
         }}
       >
         {/* Image Section - Top */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center',
             border: '2px solid #000',
             position: 'relative',
@@ -787,10 +787,10 @@ function ClothingDetail() {
         </Box>
 
         {/* Details Section - Bottom */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
             gap: 3,
             maxWidth: 800,
             mx: 'auto',
@@ -798,9 +798,9 @@ function ClothingDetail() {
           }}
         >
           {/* Type and Region */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
+          <Box
+            sx={{
+              display: 'flex',
               justifyContent: 'space-between',
               borderBottom: '1px solid #000',
               pb: 2,
@@ -809,10 +809,10 @@ function ClothingDetail() {
             {!isEditing ? (
               <>
                 {getContent(clothing.type) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: 1,
                     }}
@@ -821,10 +821,10 @@ function ClothingDetail() {
                   </Typography>
                 )}
                 {getContent(clothing.region) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: 1,
                     }}
@@ -835,13 +835,13 @@ function ClothingDetail() {
               </>
             ) : (
               <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Type (EN)" value={editableData.type_en} onChange={(e)=>setEditableData({ ...editableData, type_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e)=>setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                  <TextField label="Type (EN)" value={editableData.type_en} onChange={(e) => setEditableData({ ...editableData, type_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e) => setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Region (EN)" value={editableData.region_en} onChange={(e)=>setEditableData({ ...editableData, region_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e)=>setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                  <TextField label="Region (EN)" value={editableData.region_en} onChange={(e) => setEditableData({ ...editableData, region_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e) => setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
               </Box>
             )}
@@ -849,17 +849,17 @@ function ClothingDetail() {
 
           {/* Materials */}
           {(getContent(clothing.materials) || isEditing) && (
-            <Box 
-              sx={{ 
+            <Box
+              sx={{
                 borderBottom: '1px solid #000',
                 pb: 2,
               }}
             >
               {!isEditing ? (
-                <Typography 
-                  variant="subtitle1" 
-                  sx={{ 
-                    fontWeight: 700, 
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: 1,
                   }}
@@ -867,9 +867,9 @@ function ClothingDetail() {
                   Materials: {getContent(clothing.materials)}
                 </Typography>
               ) : (
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1 }}>
-                  <TextField label="Materials (EN)" value={editableData.materials_en} onChange={(e)=>setEditableData({ ...editableData, materials_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Materials (TA)" value={editableData.materials_ta} onChange={(e)=>setEditableData({ ...editableData, materials_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <TextField label="Materials (EN)" value={editableData.materials_en} onChange={(e) => setEditableData({ ...editableData, materials_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Materials (TA)" value={editableData.materials_ta} onChange={(e) => setEditableData({ ...editableData, materials_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
               )}
             </Box>
@@ -878,10 +878,10 @@ function ClothingDetail() {
           {/* Description */}
           {!isEditing ? (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -901,10 +901,10 @@ function ClothingDetail() {
             </Box>
           ) : (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -912,8 +912,8 @@ function ClothingDetail() {
               >
                 Description
               </Typography>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb: 1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           )}
 
@@ -921,10 +921,10 @@ function ClothingDetail() {
           {(getContent(clothing.history) || isEditing) && (
             !isEditing ? (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -944,10 +944,10 @@ function ClothingDetail() {
               </Box>
             ) : (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -955,12 +955,12 @@ function ClothingDetail() {
                 >
                   History
                 </Typography>
-                <TextField label="History (EN)" value={editableData.history_en} onChange={(e)=>setEditableData({ ...editableData, history_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
-                <TextField label="History (TA)" value={editableData.history_ta} onChange={(e)=>setEditableData({ ...editableData, history_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+                <TextField label="History (EN)" value={editableData.history_en} onChange={(e) => setEditableData({ ...editableData, history_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb: 1 }} />
+                <TextField label="History (TA)" value={editableData.history_ta} onChange={(e) => setEditableData({ ...editableData, history_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
               </Box>
             )
           )}
-          
+
           {/* Main Image (inline edit) */}
           {isEditing && (
             <Box>
@@ -1011,11 +1011,11 @@ function ClothingDetail() {
             clothing.contentSections.map((section, index) => (
               <Box key={section._id || `content-section-${index}`} sx={{ mt: 4 }}>
                 {getContent(section.subtitle) && (
-                  <Typography 
+                  <Typography
                     variant="h6"
                     key={`subtitle-${section._id || index}`}
                     sx={{
-                      mb: 2, 
+                      mb: 2,
                       fontWeight: 700,
                       borderBottom: '2px solid #000',
                       pb: 1,
@@ -1024,7 +1024,7 @@ function ClothingDetail() {
                     {getContent(section.subtitle)}
                   </Typography>
                 )}
-                
+
                 {getContent(section.content) && (
                   <Typography
                     variant="body1"
@@ -1040,13 +1040,13 @@ function ClothingDetail() {
 
                 {/* Section Image */}
                 {section.imageUrl && (
-                  <img 
+                  <img
                     key={`image-${section._id || index}`}
-                    src={section.imageUrl} 
-                    alt={section.subtitle || `Section ${index + 1} Image`} 
-                    style={{ 
-                      maxWidth: '100%', 
-                      height: 'auto', 
+                    src={section.imageUrl}
+                    alt={section.subtitle || `Section ${index + 1} Image`}
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
                       marginTop: 16,
                       border: '1px solid #ddd',
                       padding: 8
@@ -1059,29 +1059,29 @@ function ClothingDetail() {
 
                 {/* Section Video */}
                 {section.videoUrl && (
-                  <iframe 
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                  <iframe
+                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
                     title={section.videoTitle || `Section ${index + 1} Video`}
                     style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                     allowFullScreen
                   />
                 )}
-                
+
                 {/* Section Video Details */}
                 {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
                   <Box sx={{ mt: 2 }}>
                     {getContent(section.videoTitle) && (
-                      <Typography 
-                        variant="subtitle1" 
+                      <Typography
+                        variant="subtitle1"
                         sx={{ fontWeight: 600 }}
                       >
                         {getContent(section.videoTitle)}
                       </Typography>
                     )}
-                    
+
                     {getContent(section.videoDescription) && (
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         sx={{ color: '#555', fontStyle: 'italic' }}
                       >
                         {getContent(section.videoDescription)}
@@ -1092,15 +1092,15 @@ function ClothingDetail() {
               </Box>
             ))
           )}
-          
+
           {/* Editable Content Sections */}
           {isEditing && user && user.role === "admin" && (
             <>
-              <Typography 
-                variant="h6" 
+              <Typography
+                variant="h6"
                 sx={{
                   mt: 4,
-                  mb: 2, 
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '1px solid #000',
                   pb: 1,
@@ -1108,53 +1108,53 @@ function ClothingDetail() {
               >
                 Additional Content Sections
               </Typography>
-              
+
               {editableData.contentSections.map((section, index) => (
-                <Box 
-                  key={section.id || `editable-section-${index}`} 
-                  sx={{ 
-                    mb: 3, 
-                    p: 2, 
+                <Box
+                  key={section.id || `editable-section-${index}`}
+                  sx={{
+                    mb: 3,
+                    p: 2,
                     border: '1px solid #000',
-                    position: 'relative' 
+                    position: 'relative'
                   }}
                 >
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e)=>{
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].subtitle_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].subtitle_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
-                  </Box>
-                  
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e)=>{
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e)=>{
-                      const updatedSections = [...editableData.contentSections];
-                      updatedSections[index].content_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
                   </Box>
 
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].content_en = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e) => {
+                      const updatedSections = [...editableData.contentSections];
+                      updatedSections[index].content_ta = e.target.value;
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
+                  </Box>
+
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
                       fontWeight: 700,
                       mt: 2
                     }}
                   >
                     Section Image
                   </Typography>
-                  
+
                   <TextField
                     label="Image URL"
                     value={section.imageUrl || ""}
@@ -1194,16 +1194,16 @@ function ClothingDetail() {
                     label="Section Image"
                   />
 
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
                       fontWeight: 700,
                       mt: 3
                     }}
                   >
                     Section Video Details
                   </Typography>
-                  
+
                   <TextField
                     label="Video URL"
                     value={section.videoUrl || ""}
@@ -1219,33 +1219,33 @@ function ClothingDetail() {
                     sx={{ mb: 2 }}
                     variant="standard"
                   />
-                  
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e)=>{
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoTitle_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoTitle_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth variant="standard" sx={{ mb: 2 }} />
                   </Box>
-                  
-                  <Box sx={{ display:'flex', gap:2 }}>
-                    <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e)=>{
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoDescription_en = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
-                    <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e)=>{
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
+                    <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e) => {
                       const updatedSections = [...editableData.contentSections];
                       updatedSections[index].videoDescription_ta = e.target.value;
-                      setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                      setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                    }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
                   </Box>
-                  
+
                   <IconButton
                     onClick={() => removeContentSection(section.id)}
                     sx={{
@@ -1747,6 +1747,32 @@ function ClothingDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Standardized Back Button */}
+      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/explore/clothing')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← Back to Clothing
+        </Button>
+      </Box>
     </Container>
   );
 }

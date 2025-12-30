@@ -39,6 +39,7 @@ import {
   EditNote,
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
+import MediaDisplay from "../common/MediaDisplay";
 import { API_BASE_URL } from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 function KingDetail() {
@@ -57,12 +58,12 @@ function KingDetail() {
   const [newReply, setNewReply] = useState("");
   const [likes, setLikes] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
-  
+
   // Delete confirmation states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState(''); // 'comment' or 'reply'
-  
+
   // Comment reactions states
   const [commentReactions, setCommentReactions] = useState({});
   const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
@@ -121,9 +122,9 @@ function KingDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...prev.contentSections, 
-        { 
-          subtitle_en: "", 
+        ...prev.contentSections,
+        {
+          subtitle_en: "",
           subtitle_ta: "",
           content_en: "",
           content_ta: "",
@@ -161,7 +162,7 @@ function KingDetail() {
       if (typeof val === 'object') return val.ta || "";
       return "";
     };
-    
+
     setEditableData({
       name_en: toStr(king.name),
       name_ta: toTa(king.name),
@@ -252,20 +253,20 @@ function KingDetail() {
   const fetchUser = async () => {
     try {
       console.log("Fetching user in KingDetail...");
-      const res = await fetch(`${API_BASE_URL}/auth/user`, { 
+      const res = await fetch(`${API_BASE_URL}/auth/user`, {
         method: "GET",
         credentials: "include",
         headers: {
           "Accept": "application/json"
         }
       });
-      
+
       console.log("User fetch response status:", res.status);
-      
+
       // Check if the response is JSON
       const contentType = res.headers.get("content-type");
       console.log("Content-Type:", contentType);
-      
+
       if (!contentType || !contentType.includes("application/json")) {
         console.error("Received non-JSON response:", await res.text());
         setUser(null);
@@ -284,9 +285,9 @@ function KingDetail() {
         return;
       }
 
-        const userData = await res.json();
+      const userData = await res.json();
       console.log("Fetched User Data:", userData);
-        setUser(userData);
+      setUser(userData);
     } catch (err) {
       console.error("Error fetching user:", err);
       setUser(null);
@@ -405,12 +406,12 @@ function KingDetail() {
       }
 
       const data = await res.json();
-      
+
       // Update the specific comment in the comments array
-      const updatedComments = comments.map(comment => 
+      const updatedComments = comments.map(comment =>
         comment._id === commentId ? data.comment : comment
       );
-      
+
       setComments(updatedComments);
       setNewReply("");
       setReplyingTo(null);
@@ -451,7 +452,7 @@ function KingDetail() {
       // Remove the deleted comment from the local state
       const updatedComments = comments.filter(comment => comment._id !== itemToDelete);
       setComments(updatedComments);
-      
+
       setDeleteDialogOpen(false);
       setItemToDelete(null);
       setDeleteType('');
@@ -500,7 +501,7 @@ function KingDetail() {
         }
         return comment;
       });
-      
+
       setComments(updatedComments);
       setDeleteDialogOpen(false);
       setItemToDelete(null);
@@ -521,7 +522,7 @@ function KingDetail() {
     setCommentReactions(prev => {
       const current = prev[commentId] || {};
       const userReaction = current[user._id];
-      
+
       if (userReaction === reactionType) {
         // Remove reaction if same type clicked
         const newReactions = { ...current };
@@ -594,7 +595,7 @@ function KingDetail() {
         if (!en && !ta) return undefined;
         return { en: en || "", ta: ta || "" };
       };
-      
+
       // Process content sections to bilingual format
       const formattedContentSections = editableData.contentSections.map(section => {
         const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
@@ -606,7 +607,7 @@ function KingDetail() {
           videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
         };
       });
-      
+
       const res = await fetch(`/api/kings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -623,15 +624,15 @@ function KingDetail() {
           contentSections: formattedContentSections,
         }),
       });
-      
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to update king");
       }
-      
+
       // Refresh the king data
       await fetchKing();
-      
+
       // Exit editing mode
       setIsEditing(false);
     } catch (err) {
@@ -662,12 +663,12 @@ function KingDetail() {
           videoDescription: toBilingual(formData.videoDescription_en, formData.videoDescription_ta),
         }),
       });
-      
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to update king");
       }
-      
+
       setEditOpen(false);
       fetchKing();
     } catch (err) {
@@ -679,19 +680,19 @@ function KingDetail() {
   const handleDelete = async () => {
     // Custom confirmation dialog with black and white styling
     const confirmDelete = window.confirm("Are you sure you want to delete this king? This action cannot be undone.");
-    
+
     if (confirmDelete) {
       try {
         const res = await fetch(`/api/kings/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
-        
+
         if (!res.ok) {
           const errorData = await res.json();
           throw new Error(errorData.message || "Failed to delete king");
         }
-        
+
         // Navigate back to kings list after successful deletion
         navigate("/explore/kings");
       } catch (err) {
@@ -707,7 +708,7 @@ function KingDetail() {
     if (videoRef.current) {
       const iframe = videoRef.current;
       const player = new window.YT.Player(iframe);
-      
+
       if (isPlaying) {
         player.pauseVideo();
       } else {
@@ -721,7 +722,7 @@ function KingDetail() {
     if (videoRef.current) {
       const iframe = videoRef.current;
       const player = new window.YT.Player(iframe);
-      
+
       if (isMuted) {
         player.unMute();
       } else {
@@ -743,13 +744,13 @@ function KingDetail() {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="error">{error}</Alert>
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate("/explore/kings")}
-            sx={{ mt: 2 }}
-          >
-            மன்னர்கள் பட்டியலுக்கு திரும்பு | Back to Kings
-          </Button>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/explore/kings")}
+          sx={{ mt: 2 }}
+        >
+          மன்னர்கள் பட்டியலுக்கு திரும்பு | Back to Kings
+        </Button>
       </Container>
     );
   }
@@ -758,58 +759,76 @@ function KingDetail() {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="info">King not found</Alert>
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate("/explore/kings")}
-            sx={{ mt: 2 }}
-          >
-            மன்னர்கள் பட்டியலுக்கு திரும்பு | Back to Kings
-          </Button>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/explore/kings")}
+          sx={{ mt: 2 }}
+        >
+          மன்னர்கள் பட்டியலுக்கு திரும்பு | Back to Kings
+        </Button>
       </Container>
     );
   }
 
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{ 
-        py: 4, 
+    <Container
+      maxWidth="xl"
+      sx={{
+        py: 6,
         position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
       }}
     >
-      {/* Header */}
-      <Box 
-        sx={{ 
-          display: "flex", 
-          alignItems: "center", 
+      {/* Back Button */}
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={() => navigate("/explore/kings")}
+        sx={{
           mb: 4,
-          justifyContent: 'space-between' 
+          color: '#000',
+          fontWeight: 700,
+          fontFamily: 'Georgia, serif',
+          fontSize: '1rem',
+          '&:hover': {
+            bgcolor: 'rgba(0,0,0,0.04)',
+            transform: 'translateX(-5px)',
+          },
+          transition: 'all 0.3s ease',
         }}
       >
-        <IconButton onClick={() => navigate("/explore/kings")}>
-          <ArrowBack />
-        </IconButton>
-        
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            fontWeight: 700, 
-            textTransform: 'uppercase',
-            textAlign: 'center',
-            flex: 1,
-            mx: 2 
-          }}
-        >
-          {getContent(king.name)}
-        </Typography>
+        Back to Kings
+      </Button>
+
+      {/* Media Display (Temple-style) */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', border: '2px solid #000', position: 'relative', maxWidth: 900, mx: 'auto', width: '100%', mb: 4 }}>
+        {(isEditing ? editableData.image || editableData.videoUrl || editableData.videoLink : king.image || king.videoUrl || king.videoLink) ? (
+          <MediaDisplay
+            imageUrl={isEditing ? editableData.image : king.image}
+            videoUrl={isEditing ? editableData.videoUrl : king.videoUrl}
+            videoLink={isEditing ? editableData.videoLink : king.videoLink}
+            title={getContent(king.name)}
+            height={420}
+            style={{ maxWidth: '100%', maxHeight: 420, objectFit: 'contain', padding: 16 }}
+          />
+        ) : (
+          <Box sx={{ width: '100%', height: 420, display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#f0f0f0', color: '#666', fontSize: '1.1rem', fontWeight: 600 }}>
+            No image available
+          </Box>
+        )}
+
+
 
         {/* Admin Actions */}
         {user && user.role === "admin" && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton 
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 20,
+              right: 20,
+              display: 'flex',
+              gap: 1,
+            }}
+          >
+            <IconButton
               onClick={() => {
                 // Prepare editable data when edit is clicked (bilingual)
                 const toStr = (val) => {
@@ -858,12 +877,14 @@ function KingDetail() {
                 setIsEditing(!isEditing);
               }}
               sx={{
+                bgcolor: '#fff',
                 color: '#000',
                 border: '1px solid #000',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  bgcolor: 'rgba(0,0,0,0.1)',
-                  transform: 'scale(1.1)'
+                  bgcolor: '#000',
+                  color: '#fff',
+                  transform: 'scale(1.03)',
                 }
               }}
             >
@@ -873,27 +894,31 @@ function KingDetail() {
               <IconButton
                 onClick={openDialogEdit}
                 sx={{
+                  bgcolor: '#fff',
                   color: '#000',
                   border: '1px solid #000',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    bgcolor: 'rgba(0,0,0,0.1)',
-                    transform: 'scale(1.1)'
+                    bgcolor: '#000',
+                    color: '#fff',
+                    transform: 'scale(1.05)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
                   }
                 }}
               >
                 <EditNote />
               </IconButton>
             </Tooltip>
-            <IconButton 
+            <IconButton
               onClick={handleDelete}
               sx={{
+                bgcolor: '#fff',
                 color: '#000',
                 border: '1px solid #000',
                 transition: 'all 0.3s ease',
                 '&:hover': {
-                  bgcolor: 'rgba(255,0,0,0.1)',
-                  transform: 'scale(1.1)'
+                  bgcolor: 'rgba(0,0,0,0.08)',
+                  transform: 'scale(1.05)',
                 }
               }}
             >
@@ -903,295 +928,273 @@ function KingDetail() {
         )}
       </Box>
 
-      {/* Main Content */}
-      <Box 
-        sx={{ 
-          width: '100%', 
-          display: 'flex', 
-          flexDirection: 'column',
-          gap: 4,
-        }}
-      >
-        {/* Image Section - Top */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'center',
-            alignItems: 'center',
-            border: '2px solid #000',
-            position: 'relative',
-            maxWidth: 800,
-            mx: 'auto',
-            width: '100%'
-          }}
-        >
-          {/* Dynasty and Period */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              borderBottom: '1px solid #000',
-              pb: 2,
-            }}
-          >
-            {!isEditing ? (
-              <>
-            {getContent(king.dynasty) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}
-                  >
-                    குல வரிசை | Dynasty: {getContent(king.dynasty)}
-                  </Typography>
-            )}
-            {getContent(king.period) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                    }}
-                  >
-                    காலம் | Period: {getContent(king.period)}
-                  </Typography>
-                )}
-              </>
-            ) : (
-              <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Dynasty (EN)" value={editableData.dynasty_en} onChange={(e)=>setEditableData({ ...editableData, dynasty_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Dynasty (TA)" value={editableData.dynasty_ta} onChange={(e)=>setEditableData({ ...editableData, dynasty_ta: e.target.value })} fullWidth variant="standard" />
-                </Box>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
-                </Box>
-              </Box>
-            )}
-          </Box>
+      {/* Main Content Area (Temple-style) */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: 800, mx: 'auto', width: '100%' }}>
+        <Box sx={{ border: '1px solid #000', p: 2, bgcolor: '#fff', boxShadow: '0 2px 6px rgba(0,0,0,0.06)' }}>
 
-          {/* Achievements - Only show if there's content or in edit mode */}
-          {(!isEditing && king.achievements && getContent(king.achievements).trim() !== '') || isEditing ? (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                borderBottom: '1px solid #000',
-                pb: 2,
-              }}
-            >
-            {!isEditing ? (
-              king.achievements && (
-                <Typography 
-                  variant="subtitle1" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}
-                >
-                  சிறப்புகள் | Achievements: {getContent(king.achievements)}
-                </Typography>
-              )
-            ) : (
-              <Box sx={{ display:'flex', flexDirection:'column', width:'100%', gap:1 }}>
-                <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e)=>setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth variant="standard" />
-                <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e)=>setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth variant="standard" />
-              </Box>
-            )}
-            </Box>
-          ) : null}
-
-          {/* Capital - Only show if there's content or in edit mode */}
-          {(!isEditing && king.capital && getContent(king.capital).trim() !== '') || isEditing ? (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                borderBottom: '1px solid #000',
-                pb: 2,
-              }}
-            >
-            {!isEditing ? (
-              king.capital && (
-                <Typography 
-                  variant="subtitle1" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                  }}
-                >
-                  அரச மையம் | Capital: {getContent(king.capital)}
-                </Typography>
-              )
-            ) : (
-              <Box sx={{ display:'flex', flexDirection:'column', width:'100%', gap:1 }}>
-                <TextField label="Capital (EN)" value={editableData.capital_en} onChange={(e)=>setEditableData({ ...editableData, capital_en: e.target.value })} fullWidth variant="standard" />
-                <TextField label="Capital (TA)" value={editableData.capital_ta} onChange={(e)=>setEditableData({ ...editableData, capital_ta: e.target.value })} fullWidth variant="standard" />
-              </Box>
-            )}
-            </Box>
-          ) : null}
-
-          {/* Description */}
-          {!isEditing ? (
-            <Box>
-              <Typography 
-                variant="h6" 
+          {/* Achievements */}
+          {getContent(king.achievements) && (
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h5"
                 sx={{
-                  mb: 2, 
-                  fontWeight: 700,
-                  borderBottom: '2px solid #000',
+                  fontFamily: 'Georgia, serif',
+                  fontWeight: 800,
+                  color: '#000',
+                  mb: 2,
                   pb: 1,
+                  borderBottom: '1px solid #000',
+                  letterSpacing: '0.02em',
                 }}
               >
-                விளக்கம் | Description
+                Achievements
               </Typography>
               <Typography
                 variant="body1"
                 sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontSize: '1.1rem',
+                  lineHeight: 1.9,
+                  color: '#2c2c2c',
                   whiteSpace: 'pre-wrap',
-                  lineHeight: 1.6,
+                }}
+              >
+                {getContent(king.achievements)}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Capital */}
+          {getContent(king.capital) && (
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontWeight: 800,
+                  color: '#000',
+                  mb: 2,
+                  pb: 1,
+                  borderBottom: '1px solid #000',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                Capital
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontSize: '1.1rem',
+                  lineHeight: 1.9,
+                  color: '#2c2c2c',
+                }}
+              >
+                {getContent(king.capital)}
+              </Typography>
+            </Box>
+          )}
+
+          {/* Description */}
+          {getContent(king.description) && (
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontWeight: 800,
+                  color: '#000',
+                  mb: 2,
+                  pb: 1,
+                  borderBottom: '1px solid #000',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                Description
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontSize: '1.1rem',
+                  lineHeight: 1.9,
+                  color: '#2c2c2c',
+                  whiteSpace: 'pre-wrap',
+                  textAlign: 'justify',
                 }}
               >
                 {getContent(king.description)}
               </Typography>
             </Box>
-          ) : (
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{
-                  mb: 2, 
-                  fontWeight: 700,
-                  borderBottom: '2px solid #000',
-                  pb: 1,
-                }}
-              >
-                விளக்கம் | Description
-              </Typography>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
-            </Box>
           )}
 
-          {/* Content - Additional field */}
-          {(!isEditing && king.content && getContent(king.content).trim() !== '') || isEditing ? (
-            !isEditing ? (
-              <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{
-                    mb: 2, 
-                    fontWeight: 700,
-                    borderBottom: '2px solid #000',
-                    pb: 1,
-                  }}
-                >
-                  கூடுதல் தகவல் | Additional Information
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    whiteSpace: 'pre-wrap',
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {getContent(king.content)}
-                </Typography>
-              </Box>
-            ) : (
-              <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{
-                    mb: 2, 
-                    fontWeight: 700,
-                    borderBottom: '2px solid #000',
-                    pb: 1,
-                  }}
-                >
-                  கூடுதல் தகவல் | Additional Information
-                </Typography>
-                <TextField label="Content (EN)" value={editableData.content_en} onChange={(e)=>setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
-                <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e)=>setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
-              </Box>
-            )
-          ) : null}
-
-          {/* Main Image (URL + Upload) - Edit mode only */}
-          {isEditing && (
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
-                  fontWeight: 700,
-                  borderBottom: '2px solid #000',
+          {/* Additional Content */}
+          {getContent(king.content) && (
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontWeight: 800,
+                  color: '#000',
+                  mb: 2,
                   pb: 1,
+                  borderBottom: '1px solid #000',
+                  letterSpacing: '0.02em',
                 }}
               >
-                படம் | Image
+                Additional Information
               </Typography>
-              <TextField
-                label="Image URL"
-                value={editableData.image}
-                onChange={(e) => setEditableData(prev => ({ ...prev, image: e.target.value }))}
-                fullWidth
-                variant="standard"
-                sx={{ mb: 2 }}
-              />
-              <MediaUpload
-                label="Upload Main Image"
-                currentImage={editableData.image}
-                onImageChange={(imageUrl) => setEditableData(prev => ({ ...prev, image: imageUrl }))}
-              />
-              </Box>
-            )}
-          {/* Content Sections (Bilingual View) */}
+              <Typography
+                variant="body1"
+                sx={{
+                  fontFamily: 'Georgia, serif',
+                  fontSize: '1.1rem',
+                  lineHeight: 1.9,
+                  color: '#2c2c2c',
+                  whiteSpace: 'pre-wrap',
+                  textAlign: 'justify',
+                }}
+              >
+                {getContent(king.content)}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {/* Likes & Comments Section */}
+        <Box
+          sx={{
+            bgcolor: '#fff',
+            p: { xs: 3, md: 4 },
+            border: '1px solid #000',
+          }}
+        >
+          {/* Like Button */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <IconButton
+              onClick={handleLike}
+              disabled={!user}
+              sx={{
+                bgcolor: userLiked ? '#000' : 'transparent',
+                color: userLiked ? '#fff' : '#000',
+                border: '1px solid #000',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: '#000',
+                  color: '#fff',
+                  transform: 'scale(1.05)',
+                },
+                '&:disabled': {
+                  opacity: 0.5,
+                }
+              }}
+            >
+              {userLiked ? <Favorite /> : <FavoriteBorder />}
+            </IconButton>
+            <Typography
+              sx={{
+                fontFamily: 'Georgia, serif',
+                fontWeight: 700,
+                fontSize: '1.2rem',
+                color: '#000',
+              }}
+            >
+              {likes} {likes === 1 ? 'Like' : 'Likes'}
+            </Typography>
+          </Box>
+
+          {/* Content Sections Display */}
           {!isEditing && king.contentSections && king.contentSections.length > 0 && (
             king.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
                 {getContent(section.subtitle) && (
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontFamily: 'Georgia, serif',
+                      fontWeight: 800,
+                      color: '#000',
+                      borderBottom: '1px solid #000',
+                      pb: 1,
+                      mb: 2,
+                      letterSpacing: '0.02em'
+                    }}
+                  >
                     {getContent(section.subtitle)}
                   </Typography>
                 )}
                 {getContent(section.content) && (
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: 1.9,
+                      fontFamily: 'Georgia, serif',
+                      fontSize: '1.1rem',
+                      color: '#2c2c2c',
+                      textAlign: 'justify',
+                      mb: 3
+                    }}
+                  >
                     {getContent(section.content)}
                   </Typography>
                 )}
                 {section.imageUrl && (
-                  <img
-                    src={section.imageUrl}
-                    alt={getContent(section.subtitle) || `Section ${index + 1} Image`}
-                    style={{ maxWidth: '100%', height: 'auto', marginTop: 16 }}
-                  />
+                  <Box sx={{ textAlign: 'center', my: 3 }}>
+                    <img
+                      src={section.imageUrl}
+                      alt={getContent(section.subtitle) || `Section ${index + 1} Image`}
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
+                        borderRadius: '8px',
+                        boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
+                        border: '1px solid #000'
+                      }}
+                    />
+                  </Box>
                 )}
                 {section.videoUrl && (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
-                    title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
-                    style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
-                    allowFullScreen
-                  />
+                  <Box sx={{ my: 3 }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
+                      title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        aspectRatio: '16/9',
+                        borderRadius: '8px',
+                        border: '2px solid #000'
+                      }}
+                      allowFullScreen
+                    />
+                  </Box>
                 )}
                 {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
-                  <Box sx={{ mt: 2 }}>
+                  <Box sx={{ mt: 2, p: 2, bgcolor: '#fff', borderRadius: 2, border: '1px solid #000' }}>
                     {getContent(section.videoTitle) && (
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          fontWeight: 700,
+                          fontFamily: 'Georgia, serif',
+                          color: '#000',
+                          mb: 1
+                        }}
+                      >
                         {getContent(section.videoTitle)}
                       </Typography>
                     )}
                     {getContent(section.videoDescription) && (
-                      <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          lineHeight: 1.7,
+                          fontFamily: 'Georgia, serif',
+                          color: '#2c2c2c'
+                        }}
+                      >
                         {getContent(section.videoDescription)}
                       </Typography>
                     )}
@@ -1409,33 +1412,34 @@ function KingDetail() {
               </Box>
             </Box>
           )}
-          </Box>
         </Box>
+      </Box>
 
-      {/* Comments Section */}
-      <Box 
-        sx={{ 
-          mt: 4, 
-          width: '100%', 
-          maxWidth: 800,  
-          mx: 'auto',    
-          display: 'flex', 
-          flexDirection: 'column', 
+      {/* Likes and Comments Section */}
+      <Box
+        sx={{
+          mt: 4,
+          width: '100%',
+          maxWidth: 900,
+          mx: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
           alignItems: 'stretch',
           border: '1px solid #000',
+          borderRadius: 2,
           p: 2,
           backgroundColor: '#fff',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
         }}
       >
         {/* Likes and Share Row */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 2,
-            pb: 1,
+            mb: 3,
+            pb: 2,
             borderBottom: '1px solid #000'
           }}
         >
@@ -1446,18 +1450,28 @@ function KingDetail() {
             disabled={!user}
             sx={{
               color: '#000',
+              fontFamily: 'Georgia, serif',
               textTransform: 'uppercase',
-              fontSize: '0.75rem',
+              fontSize: '0.85rem',
+              fontWeight: 700,
               letterSpacing: 1,
-              border: '1px solid #000',
-              p: '4px 8px',
+              border: '2px solid #000',
+              borderRadius: 1,
+              bgcolor: '#fff',
+              px: 2,
+              py: 1,
               minWidth: 'auto',
               '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.05)'
+                bgcolor: 'rgba(0,0,0,0.05)',
+                color: '#000',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
               },
+              transition: 'all 0.3s ease',
               '&.Mui-disabled': {
                 color: '#ccc',
-                borderColor: '#ccc'
+                borderColor: '#ccc',
+                bgcolor: '#f5f5f5'
               }
             }}
           >
@@ -1466,7 +1480,7 @@ function KingDetail() {
 
           {/* Share */}
           <Tooltip title="இந்த பக்கத்தை பகிர் (Share this page)">
-            <IconButton 
+            <IconButton
               onClick={() => {
                 if (navigator.share) {
                   navigator.share({
@@ -1482,11 +1496,15 @@ function KingDetail() {
               }}
               sx={{
                 color: '#000',
-                border: '1px solid #000',
+                border: '2px solid #000',
+                borderRadius: 1,
+                bgcolor: '#fff',
                 transition: 'all 0.3s ease',
                 '&:hover': {
                   bgcolor: 'rgba(0,0,0,0.05)',
-                  transform: 'scale(1.1)'
+                  color: '#000',
+                  transform: 'scale(1.1) rotate(10deg)',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
                 }
               }}
             >
@@ -1495,29 +1513,35 @@ function KingDetail() {
           </Tooltip>
         </Box>
 
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontWeight: 700,
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 800,
             textTransform: 'uppercase',
             textAlign: 'center',
-            letterSpacing: 1,
+            letterSpacing: 2,
+            color: '#000',
             borderBottom: '1px solid #000',
-            pb: 1,
-            mb: 2,
-            fontFamily: "'Montserrat', sans-serif"
+            pb: 2,
+            mb: 3,
+            fontFamily: 'Georgia, serif'
           }}
         >
           கருத்துக்கள் | Comments ({comments.length})
         </Typography>
 
         {/* Comment Input */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             mb: 3,
-            position: 'relative'
+            position: 'relative',
+            bgcolor: '#fff',
+            borderRadius: 2,
+            border: '2px solid #000',
+            px: 2,
+            py: 1
           }}
         >
           <TextField
@@ -1526,29 +1550,40 @@ function KingDetail() {
             placeholder="கருத்து எழுதவும் | Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            sx={{ 
+            sx={{
               flex: 1,
-              fontFamily: "'Open Sans', sans-serif",
+              fontFamily: 'Georgia, serif',
               '& .MuiInput-underline:before': {
-                borderBottomColor: '#000',
+                borderBottom: 'none'
               },
               '& .MuiInput-underline:after': {
-                borderBottomColor: '#000',
+                borderBottom: 'none'
               },
+              '& input': {
+                fontSize: '1rem',
+                color: '#2c2c2c'
+              },
+              '& input::placeholder': {
+                fontFamily: 'Georgia, serif',
+                opacity: 0.6
+              }
             }}
           />
-          <IconButton 
+          <IconButton
             onClick={handleAddComment}
             disabled={!newComment.trim() || !user}
             sx={{
-              position: 'absolute',
-              right: 0,
-              color: '#000',
+              color: '#fff',
+              bgcolor: '#000',
+              ml: 1,
               '&:hover': {
-                bgcolor: 'transparent'
+                bgcolor: '#333',
+                transform: 'scale(1.1)'
               },
+              transition: 'all 0.3s ease',
               '&.Mui-disabled': {
-                color: '#ccc'
+                color: '#ccc',
+                bgcolor: '#f0f0f0'
               }
             }}
           >
@@ -1558,14 +1593,15 @@ function KingDetail() {
 
         {/* Comments List */}
         {comments.length === 0 ? (
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              textAlign: 'center', 
-              py: 2,
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              py: 4,
               color: '#666',
               fontStyle: 'italic',
-              fontFamily: "'Open Sans', sans-serif"
+              fontFamily: 'Georgia, serif',
+              fontSize: '1.1rem'
             }}
           >
             கருத்துகள் இல்லை. முதலில் எழுதுங்கள்! | No comments yet. Be the first to comment!
@@ -1573,16 +1609,23 @@ function KingDetail() {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {comments.map((comment) => (
-              <Box 
-                key={comment._id} 
-                sx={{ 
-                  display: 'flex', 
+              <Box
+                key={comment._id}
+                sx={{
+                  display: 'flex',
                   flexDirection: 'column',
                   gap: 1,
                   border: '1px solid #eee',
                   borderRadius: 2,
-                  p: 2,
-                  position: 'relative'
+                  bgcolor: '#fff',
+                  p: 2.5,
+                  position: 'relative',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                    transform: 'translateY(-2px)'
+                  }
                 }}
               >
                 {/* Main Comment */}
@@ -1591,44 +1634,46 @@ function KingDetail() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    mb: 1
+                    mb: 1,
+                    pb: 1,
+                    borderBottom: '1px solid rgba(0,0,0,0.05)'
                   }}
                 >
                   <Typography
                     variant="subtitle2"
-                    sx={{ 
-                      fontFamily: "'Montserrat', sans-serif", 
-                      fontWeight: 700, 
+                    sx={{
+                      fontFamily: 'Georgia, serif',
+                      fontWeight: 700,
                       textTransform: 'uppercase',
-                      fontSize: '0.75rem',
-                      color: '#333',
+                      fontSize: '0.9rem',
+                      color: '#000',
                       letterSpacing: 0.5
                     }}
                   >
                     {comment.user?.displayName || 'Anonymous'}
                   </Typography>
-                  <Typography 
+                  <Typography
                     variant="caption"
-                    sx={{ 
-                      fontFamily: "'Roboto', sans-serif",
+                    sx={{
+                      fontFamily: 'Georgia, serif',
                       color: '#666',
-                      fontSize: '0.625rem',
+                      fontSize: '0.75rem',
                       fontStyle: 'italic'
                     }}
                   >
                     {new Date(comment.createdAt).toLocaleString()}
                   </Typography>
                 </Box>
-                
-                <Typography 
+
+                <Typography
                   variant="body2"
-                  sx={{ 
-                    fontFamily: "'Open Sans', sans-serif",
-                    lineHeight: 1.6,
+                  sx={{
+                    fontFamily: 'Georgia, serif',
+                    lineHeight: 1.8,
                     wordBreak: 'break-word',
-                    mb: 1,
-                    fontSize: '0.875rem',
-                    color: '#333'
+                    mb: 2,
+                    fontSize: '1rem',
+                    color: '#2c2c2c'
                   }}
                 >
                   {comment.content}
@@ -1645,10 +1690,14 @@ function KingDetail() {
                       sx={{
                         minWidth: 'auto',
                         p: 0.5,
-                        color: '#666',
+                        color: '#000',
+                        border: '1px solid #000',
+                        borderRadius: 1,
                         '&:hover': {
-                          bgcolor: 'rgba(0,0,0,0.05)'
-                        }
+                          bgcolor: 'rgba(0,0,0,0.03)',
+                          transform: 'scale(1.1)'
+                        },
+                        transition: 'all 0.3s ease'
                       }}
                     >
                       <EmojiEmotions sx={{ fontSize: '1.2rem' }} />
@@ -1657,10 +1706,10 @@ function KingDetail() {
                     {/* Current Reaction Display */}
                     {getUserReaction(comment._id) && (
                       <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
-                        <Typography sx={{ fontSize: '1rem', mr: 0.5 }}>
+                        <Typography sx={{ fontSize: '1.2rem', mr: 0.5 }}>
                           {emojiData.find(e => e.type === getUserReaction(comment._id))?.emoji || '👍'}
                         </Typography>
-                        <Typography variant="caption" sx={{ fontSize: '0.75rem', color: '#666' }}>
+                        <Typography variant="caption" sx={{ fontSize: '0.85rem', color: '#000', fontWeight: 700, fontFamily: 'Georgia, serif' }}>
                           {getReactionCount(comment._id, getUserReaction(comment._id))}
                         </Typography>
                       </Box>
@@ -1674,14 +1723,14 @@ function KingDetail() {
                           bottom: '100%',
                           left: 0,
                           bgcolor: '#fff',
-                          border: '1px solid #ddd',
+                          border: '1px solid #eee',
                           borderRadius: 2,
-                          p: 1,
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          p: 1.5,
+                          boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
                           zIndex: 1000,
                           display: 'grid',
                           gridTemplateColumns: 'repeat(4, 1fr)',
-                          gap: 0.5,
+                          gap: 1,
                           minWidth: 200,
                           mb: 1
                         }}
@@ -1694,17 +1743,21 @@ function KingDetail() {
                             onClick={() => handleEmojiSelect(comment._id, emoji.type)}
                             sx={{
                               minWidth: 'auto',
-                              p: 0.5,
+                              p: 1,
                               color: getUserReaction(comment._id) === emoji.type ? emoji.color : '#666',
+                              bgcolor: getUserReaction(comment._id) === emoji.type ? '#fff' : 'transparent',
+                              border: getUserReaction(comment._id) === emoji.type ? '1px solid #000' : '1px solid transparent',
+                              borderRadius: 1,
                               '&:hover': {
-                                bgcolor: 'rgba(0,0,0,0.05)',
-                                transform: 'scale(1.1)'
+                                bgcolor: '#fff',
+                                transform: 'scale(1.2)',
+                                border: '1px solid #000'
                               },
                               transition: 'all 0.2s ease'
                             }}
                             title={emoji.label}
                           >
-                            <Typography sx={{ fontSize: '1.2rem' }}>
+                            <Typography sx={{ fontSize: '1.5rem' }}>
                               {emoji.emoji}
                             </Typography>
                           </Button>
@@ -1715,30 +1768,36 @@ function KingDetail() {
                 )}
 
                 {/* Comment Actions */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center' 
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    pt: 1,
+                    borderTop: '1px solid rgba(218, 165, 32, 0.3)'
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Box sx={{ display: 'flex', gap: 2 }}>
                     {/* Reply Button */}
                     {user && (
                       <Button
                         size="small"
                         sx={{
-                          fontFamily: "'Montserrat', sans-serif",
+                          fontFamily: 'Georgia, serif',
                           color: '#000',
                           textTransform: 'uppercase',
-                          fontSize: '0.625rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
                           p: 0,
                           minWidth: 'auto',
                           letterSpacing: 0.5,
+                          border: '1px solid transparent',
                           '&:hover': {
                             bgcolor: 'transparent',
-                            textDecoration: 'underline'
-                          }
+                            borderBottom: '1px solid #000',
+                            color: '#000'
+                          },
+                          transition: 'all 0.3s ease'
                         }}
                         onClick={() => setReplyingTo(comment._id)}
                       >
@@ -1751,22 +1810,26 @@ function KingDetail() {
                       <Button
                         size="small"
                         sx={{
-                          fontFamily: "'Montserrat', sans-serif",
-                          color: '#666',
+                          fontFamily: 'Georgia, serif',
+                          color: '#000',
                           textTransform: 'uppercase',
-                          fontSize: '0.625rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
                           p: 0,
                           minWidth: 'auto',
                           letterSpacing: 0.5,
+                          border: '1px solid transparent',
                           '&:hover': {
                             bgcolor: 'transparent',
-                            textDecoration: 'underline'
-                          }
+                            borderBottom: '1px solid #000',
+                            color: '#000'
+                          },
+                          transition: 'all 0.3s ease'
                         }}
                         onClick={() => {
                           // Toggle replies for this comment
-                          const updatedComments = comments.map(c => 
-                            c._id === comment._id 
+                          const updatedComments = comments.map(c =>
+                            c._id === comment._id
                               ? { ...c, showReplies: !c.showReplies }
                               : c
                           );
@@ -1785,9 +1848,14 @@ function KingDetail() {
                       onClick={() => handleDeleteComment(comment._id)}
                       sx={{
                         color: '#000',
+                        border: '1px solid #000',
+                        borderRadius: 1,
                         '&:hover': {
-                          bgcolor: 'rgba(0,0,0,0.1)'
-                        }
+                          bgcolor: 'rgba(0,0,0,0.08)',
+                          color: '#000',
+                          transform: 'scale(1.1)'
+                        },
+                        transition: 'all 0.3s ease'
                       }}
                       title="Delete Comment (Admin Only)"
                     >
@@ -1798,13 +1866,17 @@ function KingDetail() {
 
                 {/* Reply Input */}
                 {replyingTo === comment._id && (
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      mt: 1,
-                      borderTop: '1px solid #eee',
-                      pt: 1
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      mt: 2,
+                      borderTop: '2px solid #000',
+                      pt: 2,
+                      bgcolor: '#f9f9f9',
+                      borderRadius: 1,
+                      px: 2,
+                      py: 1
                     }}
                   >
                     <TextField
@@ -1813,28 +1885,40 @@ function KingDetail() {
                       placeholder={`Reply to ${comment.user?.displayName || 'Anonymous'}`}
                       value={newReply}
                       onChange={(e) => setNewReply(e.target.value)}
-                      sx={{ 
+                      sx={{
                         flex: 1,
-                        fontFamily: "'Open Sans', sans-serif",
+                        fontFamily: 'Georgia, serif',
                         '& .MuiInput-underline:before': {
-                          borderBottomColor: '#000',
+                          borderBottom: 'none'
                         },
                         '& .MuiInput-underline:after': {
-                          borderBottomColor: '#000',
+                          borderBottom: 'none'
                         },
+                        '& input': {
+                          fontSize: '0.95rem',
+                          color: '#2c2c2c'
+                        },
+                        '& input::placeholder': {
+                          fontFamily: 'Georgia, serif',
+                          opacity: 0.6
+                        }
                       }}
                     />
-                    <IconButton 
+                    <IconButton
                       onClick={() => handleAddReply(comment._id)}
                       disabled={!newReply.trim()}
                       sx={{
                         ml: 1,
-                        color: '#000',
+                        color: '#fff',
+                        bgcolor: '#000',
                         '&:hover': {
-                          bgcolor: 'transparent'
+                          bgcolor: '#333',
+                          transform: 'scale(1.1)'
                         },
+                        transition: 'all 0.3s ease',
                         '&.Mui-disabled': {
-                          color: '#ccc'
+                          color: '#ccc',
+                          bgcolor: '#f0f0f0'
                         }
                       }}
                     >
@@ -1845,27 +1929,27 @@ function KingDetail() {
 
                 {/* Replies Section - Now positioned inside the comment container */}
                 {comment.showReplies && comment.replies && comment.replies.length > 0 && (
-                  <Box 
-                    sx={{ 
+                  <Box
+                    sx={{
                       mt: 2,
                       pt: 2,
-                      borderTop: '1px solid #eee',
+                      borderTop: '2px solid #000',
                       bgcolor: '#f9f9f9',
                       p: 2,
                       borderRadius: 2,
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
                     }}
                   >
                     <Typography
                       variant="subtitle2"
                       sx={{
-                        fontFamily: "'Montserrat', sans-serif",
+                        fontFamily: 'Georgia, serif',
                         fontWeight: 700,
                         textTransform: 'uppercase',
-                        fontSize: '0.75rem',
-                        color: '#333',
+                        fontSize: '0.85rem',
+                        color: '#000',
                         mb: 2,
-                        borderBottom: '1px solid #eee',
+                        borderBottom: '1px solid #000',
                         pb: 1
                       }}
                     >
@@ -1876,38 +1960,45 @@ function KingDetail() {
                         key={reply._id}
                         sx={{
                           bgcolor: '#fff',
-                          p: 1.5,
+                          p: 2,
                           borderRadius: 2,
-                          mb: 1,
-                          border: '1px solid #eee'
+                          mb: 1.5,
+                          border: '1px solid #eee',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            transform: 'translateX(8px)'
+                          }
                         }}
                       >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, pb: 0.5, borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography
                               variant="subtitle2"
-                              sx={{ 
-                                fontFamily: "'Montserrat', sans-serif",
-                                fontWeight: 700, 
+                              sx={{
+                                fontFamily: 'Georgia, serif',
+                                fontWeight: 700,
                                 textTransform: 'uppercase',
-                                fontSize: '0.625rem',
-                                color: '#0066cc'
+                                fontSize: '0.75rem',
+                                color: '#000'
                               }}
                             >
                               {reply.user?.displayName || 'Anonymous'}
                             </Typography>
-                            <Typography 
+                            <Typography
                               variant="caption"
-                              sx={{ 
-                                fontFamily: "'Roboto', sans-serif",
+                              sx={{
+                                fontFamily: 'Georgia, serif',
                                 color: '#666',
-                                fontSize: '0.5rem'
+                                fontSize: '0.65rem',
+                                fontStyle: 'italic'
                               }}
                             >
                               {new Date(reply.createdAt).toLocaleString()}
                             </Typography>
                           </Box>
-                          
+
                           {/* Admin Delete Reply Button */}
                           {user && user.role === "admin" && (
                             <IconButton
@@ -1915,9 +2006,14 @@ function KingDetail() {
                               onClick={() => handleDeleteReply(comment._id, reply._id)}
                               sx={{
                                 color: '#000',
+                                border: '1px solid #000',
+                                borderRadius: 1,
                                 '&:hover': {
-                                  bgcolor: 'rgba(0,0,0,0.1)'
-                                }
+                                  bgcolor: 'rgba(0,0,0,0.08)',
+                                  color: '#000',
+                                  transform: 'scale(1.1)'
+                                },
+                                transition: 'all 0.3s ease'
                               }}
                               title="Delete Reply (Admin Only)"
                             >
@@ -1925,13 +2021,14 @@ function KingDetail() {
                             </IconButton>
                           )}
                         </Box>
-                        <Typography 
+                        <Typography
                           variant="body2"
-                          sx={{ 
-                            fontFamily: "'Open Sans', sans-serif",
-                            lineHeight: 1.6,
+                          sx={{
+                            fontFamily: 'Georgia, serif',
+                            lineHeight: 1.7,
                             wordBreak: 'break-word',
-                            fontSize: '0.75rem'
+                            fontSize: '0.95rem',
+                            color: '#2c2c2c'
                           }}
                         >
                           {reply.content}
@@ -2041,17 +2138,17 @@ function KingDetail() {
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
+            bgcolor: '#000',
+            color: '#fff',
             textAlign: 'center',
-            fontWeight: 700 
+            fontWeight: 700
           }}
         >
           அரசர் விவரங்கள் திருத்த | Edit King Details
         </DialogTitle>
-  <DialogContent sx={{ p: 3 }}>
+        <DialogContent sx={{ p: 3 }}>
           {/* Name */}
-          <Box sx={{ display:'flex', gap:2, mb:2 }}>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <TextField
               label="Name (EN)"
               value={formData.name_en}
@@ -2070,51 +2167,51 @@ function KingDetail() {
             />
           </Box>
           {/* Dynasty + Period */}
-          <Box sx={{ display:'flex', gap:2, mb:2 }}>
-            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
-              <TextField label="Dynasty (EN)" value={formData.dynasty_en} onChange={(e)=>setFormData({ ...formData, dynasty_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Dynasty (TA)" value={formData.dynasty_ta} onChange={(e)=>setFormData({ ...formData, dynasty_ta: e.target.value })} fullWidth variant="standard" />
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <TextField label="Dynasty (EN)" value={formData.dynasty_en} onChange={(e) => setFormData({ ...formData, dynasty_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Dynasty (TA)" value={formData.dynasty_ta} onChange={(e) => setFormData({ ...formData, dynasty_ta: e.target.value })} fullWidth variant="standard" />
             </Box>
-            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
-              <TextField label="Period (EN)" value={formData.period_en} onChange={(e)=>setFormData({ ...formData, period_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Period (TA)" value={formData.period_ta} onChange={(e)=>setFormData({ ...formData, period_ta: e.target.value })} fullWidth variant="standard" />
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <TextField label="Period (EN)" value={formData.period_en} onChange={(e) => setFormData({ ...formData, period_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Period (TA)" value={formData.period_ta} onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })} fullWidth variant="standard" />
             </Box>
           </Box>
           {/* Achievements */}
-          <Box sx={{ display:'flex', gap:2, mb:2 }}>
-            <TextField label="Achievements (EN)" value={formData.achievements_en} onChange={(e)=>setFormData({ ...formData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" />
-            <TextField label="Achievements (TA)" value={formData.achievements_ta} onChange={(e)=>setFormData({ ...formData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <TextField label="Achievements (EN)" value={formData.achievements_en} onChange={(e) => setFormData({ ...formData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+            <TextField label="Achievements (TA)" value={formData.achievements_ta} onChange={(e) => setFormData({ ...formData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
           </Box>
           {/* Description */}
-          <Box sx={{ display:'flex', gap:2, mb:2 }}>
-            <TextField label="Description (EN)" value={formData.description_en} onChange={(e)=>setFormData({ ...formData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" />
-            <TextField label="Description (TA)" value={formData.description_ta} onChange={(e)=>setFormData({ ...formData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <TextField label="Description (EN)" value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+            <TextField label="Description (TA)" value={formData.description_ta} onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
           </Box>
           {/* Media URLs */}
-          <TextField label="Image URL" value={formData.image} onChange={(e)=>setFormData({ ...formData, image: e.target.value })} fullWidth sx={{ mb:2 }} margin="normal" />
-          <TextField label="Video URL" value={formData.videoUrl} onChange={(e)=>setFormData({ ...formData, videoUrl: e.target.value })} fullWidth sx={{ mb:2 }} margin="normal" />
+          <TextField label="Image URL" value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} fullWidth sx={{ mb: 2 }} margin="normal" />
+          <TextField label="Video URL" value={formData.videoUrl} onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })} fullWidth sx={{ mb: 2 }} margin="normal" />
           {/* Video Meta */}
-          <Box sx={{ display:'flex', gap:2 }}>
-            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
-              <TextField label="Video Title (EN)" value={formData.videoTitle_en} onChange={(e)=>setFormData({ ...formData, videoTitle_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Video Title (TA)" value={formData.videoTitle_ta} onChange={(e)=>setFormData({ ...formData, videoTitle_ta: e.target.value })} fullWidth variant="standard" />
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <TextField label="Video Title (EN)" value={formData.videoTitle_en} onChange={(e) => setFormData({ ...formData, videoTitle_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Video Title (TA)" value={formData.videoTitle_ta} onChange={(e) => setFormData({ ...formData, videoTitle_ta: e.target.value })} fullWidth variant="standard" />
             </Box>
-            <Box sx={{ flex:1, display:'flex', flexDirection:'column', gap:1 }}>
-              <TextField label="Video Description (EN)" value={formData.videoDescription_en} onChange={(e)=>setFormData({ ...formData, videoDescription_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Video Description (TA)" value={formData.videoDescription_ta} onChange={(e)=>setFormData({ ...formData, videoDescription_ta: e.target.value })} fullWidth variant="standard" />
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <TextField label="Video Description (EN)" value={formData.videoDescription_en} onChange={(e) => setFormData({ ...formData, videoDescription_en: e.target.value })} fullWidth variant="standard" />
+              <TextField label="Video Description (TA)" value={formData.videoDescription_ta} onChange={(e) => setFormData({ ...formData, videoDescription_ta: e.target.value })} fullWidth variant="standard" />
             </Box>
           </Box>
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
+          sx={{
+            p: 2,
             justifyContent: 'space-between',
-            bgcolor: '#f0f0f0' 
+            bgcolor: '#f0f0f0'
           }}
         >
-          <Button 
+          <Button
             onClick={() => setEditOpen(false)}
-            sx={{ 
+            sx={{
               color: '#000',
               transition: 'all 0.3s ease',
               '&:hover': {
@@ -2131,7 +2228,7 @@ function KingDetail() {
               bgcolor: '#000',
               color: '#fff',
               borderRadius: 0,
-              '&:hover': { 
+              '&:hover': {
                 bgcolor: '#333',
                 transform: 'translateY(-3px)',
                 boxShadow: '0 8px 15px rgba(0,0,0,0.2)'
@@ -2159,10 +2256,10 @@ function KingDetail() {
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
+            bgcolor: '#000',
+            color: '#fff',
             textAlign: 'center',
-            fontWeight: 700 
+            fontWeight: 700
           }}
         >
           நீக்கம் உறுதிப்படுத்த | Confirm Delete
@@ -2176,16 +2273,16 @@ function KingDetail() {
           </Typography>
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
+          sx={{
+            p: 2,
             justifyContent: 'center',
             gap: 2,
-            bgcolor: '#f0f0f0' 
+            bgcolor: '#f0f0f0'
           }}
         >
-          <Button 
+          <Button
             onClick={() => setDeleteDialogOpen(false)}
-            sx={{ 
+            sx={{
               color: '#000',
               border: '1px solid #000',
               '&:hover': {
@@ -2201,7 +2298,7 @@ function KingDetail() {
             sx={{
               bgcolor: '#000',
               color: '#fff',
-              '&:hover': { 
+              '&:hover': {
                 bgcolor: '#333'
               }
             }}
@@ -2210,6 +2307,32 @@ function KingDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Standardized Back Button */}
+      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/explore/kings')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← Back to Kings
+        </Button>
+      </Box>
     </Container>
   );
 }

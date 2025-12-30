@@ -115,7 +115,7 @@ export default function Foods({ user }) {
       category_ta: "",
       description_en: "",
       description_ta: "",
-      image: "" 
+      image: ""
     });
     setAddOpen(true);
   };
@@ -123,14 +123,14 @@ export default function Foods({ user }) {
   const handleSave = () => {
     (async () => {
       try {
-    const payload = {
-      name: { en: formData.name_en, ta: formData.name_ta },
-      category: { en: formData.category_en, ta: formData.category_ta },
-      description: { en: formData.description_en, ta: formData.description_ta },
-      image: formData.image,
-    };
+        const payload = {
+          name: { en: formData.name_en, ta: formData.name_ta },
+          category: { en: formData.category_en, ta: formData.category_ta },
+          description: { en: formData.description_en, ta: formData.description_ta },
+          image: formData.image,
+        };
 
-    if (editItem) {
+        if (editItem) {
           const res = await fetch(`${API_BASE_URL}/api/foods/${editItem._id}`, {
             method: "PUT",
             credentials: "include",
@@ -148,12 +148,12 @@ export default function Foods({ user }) {
           if (!res.ok) throw new Error("Create failed");
         }
         await fetchFoods();
-      setEditOpen(false);
-      setAddOpen(false);
+        setEditOpen(false);
+        setAddOpen(false);
       } catch (err) {
         console.error(err);
         alert("Failed to save recipe");
-    }
+      }
     })();
   };
 
@@ -165,14 +165,14 @@ export default function Foods({ user }) {
             method: "DELETE",
             credentials: "include",
           });
-          
+
           if (!res.ok) throw new Error("Delete failed");
-          
+
           // Optimistic update
-          setFoods(prevFoods => 
+          setFoods(prevFoods =>
             prevFoods.filter((food) => food._id !== id)
           );
-          
+
           // Optional: Refresh to ensure consistency
           await fetchFoods();
         } catch (err) {
@@ -199,241 +199,276 @@ export default function Foods({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.foods} />
       {/* Unique Heading Section */}
-      <Box 
-        sx={{ 
-          mb: 6, 
+      <Box
+        sx={{
+          mb: 6,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          justifyContent: 'space-between',
           flexDirection: { xs: 'column', md: 'row' },
           gap: { xs: 2, md: 0 },
           position: 'relative',
-          overflow: 'hidden',
         }}
       >
-       <Typography
-          variant="h2" 
+        <Box sx={{ flex: 1 }}>
+          <Typography
+            variant="h2"
             sx={{
-            fontWeight: 900, 
-            color: "#000", 
-            position: 'relative',
-            display: 'inline-block',
-            letterSpacing: -1,
-            padding: '0 10px',
-            transition: 'all 0.3s ease',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              right: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&:hover': {
-              color: '#333',
-              transform: 'scale(1.02)',
-              '&::before': {
-                width: '60px',
-                left: '-70px',
-                backgroundColor: '#666',
-              },
+              fontWeight: 700,
+              color: "#8B0000",
+              fontFamily: 'Georgia, serif',
+              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              letterSpacing: 2,
+              mb: { xs: 0.5, md: 1 },
+              position: 'relative',
+              display: 'inline-block',
+              textTransform: 'uppercase',
               '&::after': {
-                width: '60px',
-                right: '-70px',
-                backgroundColor: '#666',
+                content: '""',
+                position: 'absolute',
+                bottom: -8,
+                left: 0,
+                width: '120px',
+                height: '4px',
+                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
               },
-            },
-          }}
-        >
-          {t('foods.title','Foods')}
-        </Typography>
-        
-        {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'scale(1.05)',
-                '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                }
-              }
             }}
           >
-            <Button
-              onClick={handleAdd}
-              variant="contained"
-              startIcon={<Add />}
+            {t('foods.title', 'Foods')}
+          </Typography>
+        </Box>
+
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: { xs: 'center', md: 'flex-end' },
+          gap: 1
+        }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: '#666',
+              fontStyle: 'italic',
+              fontSize: { xs: '0.95rem', md: '1.05rem' },
+              textAlign: { xs: 'center', md: 'right' },
+              fontFamily: 'Georgia, serif',
+            }}
+          >
+            {t('foods.subtitle', 'Culinary Traditions of Tamil Lands')}
+          </Typography>
+
+          {user && user.role === "admin" && (
+            <Box
               sx={{
-                bgcolor: "#000",
-                color: "#fff",
                 transition: 'all 0.3s ease',
-                "&:hover": { 
-                  bgcolor: "#333",
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                },
-                borderRadius: 0,
-                px: 3,
+                mt: 1,
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  '& button': {
+                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
+                  }
+                }
               }}
             >
-              {t('foods.add','Add Recipe')}
-            </Button>
-          </Box>
-        )}
+              <Button
+                onClick={handleAdd}
+                variant="contained"
+                startIcon={<Add />}
+                sx={{
+                  bgcolor: "#8B0000",
+                  color: "#fff",
+                  transition: 'all 0.3s ease',
+                  "&:hover": {
+                    bgcolor: "#6B0000",
+                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
+                  },
+                  borderRadius: 0,
+                  px: 3,
+                  py: 1,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  fontFamily: 'Georgia, serif',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t('foods.add', 'Add Recipe')}
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
-          transition: 'all 0.3s ease',
-          '& > .MuiGrid-item': {
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.02)',
-              zIndex: 10,
-            }
-          }
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)'
+          },
+          gap: { xs: 3, md: 4 },
         }}
       >
         {foods.map((food, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
+          <Fade
+            in={true}
+            timeout={500 + index * 150}
             key={food._id}
           >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'center',
+            <Box
+              sx={{
+                width: '100%',
                 transition: 'all 0.3s ease',
               }}
             >
               <Card
                 sx={{
-                  width: { xs: '100%', sm: 350 },  // Responsive width: full on xs, fixed on sm+
-                  maxWidth: '100%', // Ensure it doesn't exceed parent on smaller screens
-                  // height: 450, // Fixed height
+                  width: '100%',
+                  height: { xs: 460, md: 500 },
                   display: 'flex',
                   flexDirection: 'column',
-                  border: "3px solid #000",
+                  border: 'none',
                   borderRadius: 0,
                   bgcolor: "#fff",
-                  transition: "all 0.3s ease",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                   cursor: "pointer",
                   position: 'relative',
-                  overflow: 'hidden',
-                  "&::before": {
+                  overflow: 'visible',
+                  boxShadow: '0 8px 25px rgba(139,0,0,0.12)',
+                  '&::after': {
                     content: '""',
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
-                    transform: 'translateX(-100%)',
-                    transition: 'transform 0.6s ease',
+                    top: -8,
+                    left: -8,
+                    right: -8,
+                    bottom: -8,
+                    border: '2px solid #8B0000',
+                    opacity: 0,
+                    transition: 'opacity 0.4s ease',
+                    zIndex: -1,
                   },
                   "&:hover": {
-                    transform: "translateY(-15px) rotate(1deg)",
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    "&::before": {
-                      transform: 'translateX(100%)',
+                    transform: "translateY(-16px)",
+                    boxShadow: '0 25px 50px rgba(139,0,0,0.25)',
+                    '&::after': {
+                      opacity: 1,
                     },
-                    "& .card-content": {
-                      transform: "scale(1.02)",
-                      opacity: 0.95,
+                    "& .temple-image": {
+                      transform: 'scale(1.1) rotate(2deg)',
+                    },
+                    "& .temple-overlay": {
+                      opacity: 1,
+                    },
+                    "& .card-title": {
+                      color: '#8B0000',
+                    },
+                    "& .view-button": {
+                      bgcolor: '#8B0000',
+                      color: '#fff',
+                      transform: 'translateY(-4px)',
+                    },
+                    "& .admin-controls": {
+                      opacity: 1,
+                      transform: 'translateY(0)',
+                    },
+                    "& .like-badge": {
+                      transform: 'scale(1.1) rotate(-5deg)',
                     }
                   },
                 }}
                 onClick={() => navigate(`/explore/foods/${food._id}`)}
               >
-                {(food.image || food.imageLink) ? (
-                  <CardMedia
-                    component="img"
-                    height={200}
-                    image={food.image || food.imageLink}
-                    alt={getContent(food.name)}
-                    sx={{ 
-                      objectFit: "contain",
-                      width: '100%',
-                      maxHeight: 200,
-                      backgroundColor: '#f0f0f0',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                    onError={(e) => {
-                      console.error('Image failed to load:', food.image || food.imageLink);
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
-                      e.target.style.display = 'block';
+                {/* Image Section with Overlay */}
+                <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+                  {(food.image || food.imageLink) ? (
+                    <CardMedia
+                      component="img"
+                      image={food.image || food.imageLink}
+                      alt={getContent(food.name)}
+                      className="temple-image"
+                      sx={{
+                        objectFit: "cover",
+                        width: '100%',
+                        height: '100%',
+                        transition: 'all 0.6s ease',
+                      }}
+                      onError={(e) => {
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23e0e0e0' width='400' height='240'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18px' fill='%23999'%3E🍽 Food%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        height: '100%',
+                        width: '100%',
+                        backgroundColor: '#e0e0e0',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{ fontFamily: 'Georgia, serif', fontSize: '3rem' }}
+                      >
+                        🍽
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Gradient Overlay */}
+                  <Box
+                    className="temple-overlay"
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '60%',
+                      background: 'linear-gradient(to top, rgba(139,0,0,0.85) 0%, rgba(139,0,0,0.3) 50%, transparent 100%)',
+                      opacity: 0.7,
+                      transition: 'opacity 0.4s ease',
                     }}
                   />
-                ) : (
+
+                  {/* Like Badge - Top Right */}
                   <Box
+                    className="like-badge"
                     sx={{
-                      height: 200,
-                      width: '100%',
-                      backgroundColor: '#f0f0f0',
+                      position: 'absolute',
+                      top: 16,
+                      right: 16,
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      px: 1.5,
+                      py: 0.8,
                       display: 'flex',
-                      justifyContent: 'center',
                       alignItems: 'center',
-                      padding: '10px',
-                      boxSizing: 'border-box',
+                      gap: 0.5,
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                      transition: 'transform 0.3s ease',
                     }}
                   >
-                    <Typography 
-                      variant="body2" 
-                      color="textSecondary"
-                      sx={{ textAlign: 'center' }}
-                    >
-                      No Image Available
+                    <Favorite sx={{ color: '#8B0000', fontSize: '1rem' }} />
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#000' }}>
+                      {food.likes ? food.likes.length : 0}
                     </Typography>
                   </Box>
-                )}
-                <CardContent
-                  className="card-content"
-                  sx={{
-                    p: 3,
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
-                    transition: 'all 0.3s ease',
-                  }}
-                >
+
+                  {/* Admin Controls - Absolute positioned on image */}
                   {user && user.role === "admin" && (
-                    <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: 10, 
-                        right: 10, 
-                        display: "flex", 
-                        gap: 1 
+                    <Box
+                      className="admin-controls"
+                      sx={{
+                        position: 'absolute',
+                        bottom: 16,
+                        right: 16,
+                        display: "flex",
+                        gap: 1,
+                        zIndex: 5,
+                        opacity: 0,
+                        transform: 'translateY(10px)',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       <IconButton
@@ -443,16 +478,19 @@ export default function Foods({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                          bgcolor: 'rgba(255,255,255,0.95)',
+                          color: '#000',
+                          width: 36,
+                          height: 36,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
+                            color: '#fff',
                           },
-                          transition: 'all 0.2s ease',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          transition: 'all 0.3s ease',
                         }}
                       >
-                        <Edit />
+                        <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
@@ -461,32 +499,59 @@ export default function Foods({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                          bgcolor: 'rgba(255,255,255,0.95)',
+                          color: '#000',
+                          width: 36,
+                          height: 36,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
+                            color: '#fff',
                           },
-                          transition: 'all 0.2s ease',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          transition: 'all 0.3s ease',
                         }}
                       >
-                        <Delete />
+                        <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   )}
+                </Box>
+                {/* Content Section */}
+                <CardContent
+                  sx={{
+                    p: 3,
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    bgcolor: '#fff',
+                  }}
+                >
+                  {/* Title */}
                   <Box>
                     <Typography
-                      variant="h5"
+                      className="card-title"
+                      variant="h6"
                       sx={{
-                        fontWeight: 700, 
-                        color: "#000", 
+                        fontWeight: 700,
+                        color: "#000",
                         mb: 1,
                         lineHeight: 1.3,
-                        fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
-                        textTransform: 'capitalize',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        fontSize: { xs: '1.15rem', md: '1.25rem' },
+                        fontFamily: 'Georgia, serif',
+                        transition: 'color 0.3s ease',
+                        position: 'relative',
+                        display: 'inline-block',
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: -6,
+                          left: 0,
+                          width: '48px',
+                          height: '3px',
+                          bgcolor: '#DAA520',
+                          borderRadius: 1,
+                        },
                       }}
                     >
                       {getContent(food.name)}
@@ -496,52 +561,34 @@ export default function Foods({ user }) {
                       sx={{
                         color: "#666",
                         fontStyle: "italic",
-                        fontSize: { xs: '0.8rem', md: '0.9rem' }, // Responsive font size
+                        fontSize: { xs: '0.85rem', md: '0.9rem' },
                         mb: 2,
-                        textTransform: 'capitalize',
+                        mt: 1.5,
+                        fontFamily: 'Georgia, serif',
                       }}
                     >
-            {getContent(food.category)}
+                      {getContent(food.category)}
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ 
-                        color: "#000", 
-                        lineHeight: 1.6, 
-                        mb: 2,
+                      sx={{
+                        color: "#555",
+                        lineHeight: 1.6,
+                        fontSize: '0.875rem',
                         display: '-webkit-box',
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: { xs: '4.2rem', md: '4.8rem' }, // Responsive minHeight
+                        minHeight: '2.8rem',
                       }}
                     >
-                      {(() => {
-                        const desc = getContent(food.description);
-                        return desc && desc.length > 150 
-                          ? `${desc.substring(0, 150)}...` 
-                          : desc;
-                      })()}
+                      {getContent(food.description) || `Authentic Tamil cuisine showcasing traditional flavors and heritage.`}
                     </Typography>
-                    
-                    {/* Like Count Display */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: '#000', 
-                          fontSize: '0.875rem',
-                          fontWeight: 500 
-                        }}
-                      >
-                        {food.likes ? food.likes.length : 0} Likes
-                      </Typography>
-                    </Box>
                   </Box>
 
                   <Button
+                    className="view-button"
                     component={Link}
                     to={`/explore/foods/${food._id}`}
                     variant="outlined"
@@ -549,19 +596,27 @@ export default function Foods({ user }) {
                     sx={{
                       color: "#000",
                       borderColor: "#000",
+                      borderWidth: 2,
                       borderRadius: 0,
-                      mt: 'auto',
-                      "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
+                      mt: 2,
+                      py: 1,
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      letterSpacing: 0.5,
+                      transition: 'all 0.3s ease',
+                      "&:hover": {
+                        borderColor: "#8B0000",
+                      },
                     }}
                   >
-                    {t('actions.readMore', 'Read more')}
+                    Explore Food
                   </Button>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
           </Fade>
         ))}
-      </Grid>
+      </Box>
 
       {/* Edit/Add Dialog */}
       <Dialog
@@ -581,74 +636,74 @@ export default function Foods({ user }) {
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
+            bgcolor: '#000',
+            color: '#fff',
             textAlign: 'center',
-            fontWeight: 700 
+            fontWeight: 700
           }}
         >
-          {editItem ? t('foods.edit','Edit Recipe') : t('foods.addNew','Add New Recipe')}
+          {editItem ? t('foods.edit', 'Edit Recipe') : t('foods.addNew', 'Add New Recipe')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
-              <TextField
-                fullWidth
-                label={`${t('form.name','Name')} (EN)`}
-                value={formData.name_en}
-                onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.name','Name')} (TA)`}
-                value={formData.name_ta}
-                onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.category','Category')} (EN)`}
-                value={formData.category_en}
-                onChange={(e) => setFormData({ ...formData, category_en: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.category','Category')} (TA)`}
-                value={formData.category_ta}
-                onChange={(e) => setFormData({ ...formData, category_ta: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.description','Description')} (EN)`}
-                value={formData.description_en}
-                onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
-                multiline
-                minRows={3}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.description','Description')} (TA)`}
-                value={formData.description_ta}
-                onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })}
-                multiline
-                minRows={3}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={t('form.imageUrl','Image URL')}
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                sx={{ mb: 2 }}
-              />
+          <TextField
+            fullWidth
+            label={`${t('form.name', 'Name')} (EN)`}
+            value={formData.name_en}
+            onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.name', 'Name')} (TA)`}
+            value={formData.name_ta}
+            onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.category', 'Category')} (EN)`}
+            value={formData.category_en}
+            onChange={(e) => setFormData({ ...formData, category_en: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.category', 'Category')} (TA)`}
+            value={formData.category_ta}
+            onChange={(e) => setFormData({ ...formData, category_ta: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.description', 'Description')} (EN)`}
+            value={formData.description_en}
+            onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
+            multiline
+            minRows={3}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.description', 'Description')} (TA)`}
+            value={formData.description_ta}
+            onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })}
+            multiline
+            minRows={3}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={t('form.imageUrl', 'Image URL')}
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            sx={{ mb: 2 }}
+          />
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
+          sx={{
+            p: 2,
             justifyContent: 'space-between',
-            bgcolor: '#f0f0f0' 
+            bgcolor: '#f0f0f0'
           }}
         >
           <Button
@@ -658,7 +713,7 @@ export default function Foods({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            {t('actions.cancel','Cancel')}
+            {t('actions.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -670,7 +725,7 @@ export default function Foods({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
+            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -19,7 +19,7 @@ import {
   Alert
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, GetApp, Favorite } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import SEO, { pageSEO } from './common/SEO';
 
@@ -333,20 +333,14 @@ export default function Resources({ user }) {
 
       <Grid
         container
-        spacing={4}
+        spacing={0}
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+          gap: { xs: 4, md: 5 },
+          justifyItems: 'center',
           alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
-          transition: 'all 0.3s ease',
-          '& > .MuiGrid-item': {
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.02)',
-              zIndex: 10,
-            }
-          }
+          pt: 2,
         }}
       >
         {resources.map((resource, index) => (
@@ -364,110 +358,204 @@ export default function Resources({ user }) {
                 display: 'flex',
                 justifyContent: 'center',
                 transition: 'all 0.3s ease',
+                alignItems: 'stretch',
+                px: { xs: 1, md: 1.5 },
+                boxSizing: 'border-box',
+                width: '100%',
               }}
             >
               <Card
                 sx={{
-                  width: { xs: '100%', sm: 350 },
-                  maxWidth: '100%',
-                  // height: 450, // Removed fixed height for responsiveness
+                  width: '100%',
+                  maxWidth: 370,
+                  height: 540,
                   display: 'flex',
                   flexDirection: 'column',
-                  border: "3px solid #000",
-                  borderRadius: 0,
-                  bgcolor: "#fff",
-                  transition: "all 0.3s ease",
-                  cursor: "pointer",
                   position: 'relative',
                   overflow: 'hidden',
-                  "&::before": {
+                  borderRadius: 0,
+                  border: '3px solid transparent',
+                  bgcolor: '#fff',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.08)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&::before': {
                     content: '""',
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
-                    transform: 'translateX(-100%)',
-                    transition: 'transform 0.6s ease',
+                    height: '4px',
+                    background: 'linear-gradient(90deg, #8B0000 0%, #B8860B 100%)',
+                    transform: 'scaleX(0)',
+                    transformOrigin: 'left',
+                    transition: 'transform 0.4s ease',
                   },
-                  "&:hover": {
-                    transform: "translateY(-15px) rotate(1deg)",
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    "&::before": {
-                      transform: 'translateX(100%)',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    top: -8,
+                    left: -8,
+                    right: -8,
+                    bottom: -8,
+                    border: '2px solid #8B0000',
+                    opacity: 0,
+                    transition: 'opacity 0.35s ease',
+                    zIndex: -1,
+                  },
+                  '&:hover': {
+                    transform: 'translateY(-16px)',
+                    boxShadow: '0 25px 50px rgba(0,0,0,0.12)',
+                    '&::before': {
+                      transform: 'scaleX(1)',
                     },
-                    "& .card-content": {
-                      transform: "scale(1.02)",
-                      opacity: 0.95,
+                    '&::after': {
+                      opacity: 1,
+                    },
+                    '& .book-image': {
+                      transform: 'scale(1.12)',
+                    },
+                    '& .book-overlay': {
+                      opacity: 1,
+                    },
+                    '& .admin-actions': {
+                      opacity: 1,
+                      transform: 'translateY(0)',
                     }
                   },
                 }}
                 onClick={() => navigate(`/resources/${resource._id}`)}
               >
-                {(resource.image) ? (
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={resource.image}
-                    alt={getContent(resource.title)}
+                {/* Book Cover Image */}
+                <Box
+                  sx={{
+                    position: 'relative',
+                    height: 300,
+                    overflow: 'hidden',
+                    bgcolor: '#f8f7f5',
+                  }}
+                
+                >
+                  {(resource.image) ? (
+                    <CardMedia
+                      component="img"
+                      image={resource.image}
+                      alt={getContent(resource.title)}
+                      className="book-image"
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.4s ease',
+                      }}
+                      onError={(e) => {
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='370' height='300' viewBox='0 0 370 300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f8f7f5;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23e8e6e0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='370' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia, serif' font-size='36px' fill='%23B8860B' opacity='0.6'%3ENo Image%3C/text%3E%3Ctext x='50%25' y='70%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia, serif' font-size='14px' fill='%23666' font-weight='400'%3ETamil Heritage%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        background: 'linear-gradient(135deg, #f8f7f5 0%, #e8e6e0 100%)',
+                      }}
+                    >
+                      <Box sx={{ width: '70%', height: 100, bgcolor: '#eee', borderRadius: 1, mb: 1 }} />
+                    </Box>
+                  )}
+                  {/* Subtle overlay on hover */}
+                  <Box
+                    className="book-overlay"
                     sx={{
-                      objectFit: "contain",
-                      width: '100%',
-                      maxHeight: 200,
-                      backgroundColor: '#f0f0f0',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                    onError={(e) => {
-                      console.error('Image failed to load:', resource.image);
-                      console.log('Full resource object:', resource);
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
-                      e.target.style.display = 'block';
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)',
+                      opacity: 0,
+                      transition: 'opacity 0.4s ease',
                     }}
                   />
-                ) : (
-                  <Box
-                    sx={{
-                      height: 200,
-                      width: '100%',
-                      backgroundColor: '#f0f0f0',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      sx={{ textAlign: 'center' }}
-                    >
-                      No Image Available (Debug: {JSON.stringify(resource)})
-                    </Typography>
-                  </Box>
-                )}
-                <CardContent
-                  className="card-content"
-                  sx={{
-                    p: 3,
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    position: 'relative', // For absolute positioning of admin buttons
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {user && user.role === "admin" && (
+
+                  {/* Category Tag */}
+                  {getContent(resource.category) && (
                     <Box
                       sx={{
                         position: 'absolute',
-                        top: 10,
-                        right: 10,
+                        bottom: 16,
+                        left: 16,
+                        bgcolor: 'rgba(255,255,255,0.95)',
+                        color: '#8B0000',
+                        px: 2,
+                        py: 0.5,
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        letterSpacing: '1px',
+                        textTransform: 'uppercase',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      }}
+                    >
+                      {getContent(resource.category)}
+                    </Box>
+                  )}
+
+                  {/* Like Badge */}
+                  <Box
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      bgcolor: '#fff',
+                      border: '1px solid #eee',
+                      px: 1.25,
+                      py: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      borderRadius: 1,
+                      zIndex: 12,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+                    }}
+                  >
+                    <Favorite sx={{ color: '#8B0000', fontSize: 18 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                      {resource.likes ? (Array.isArray(resource.likes) ? resource.likes.length : resource.likes) : 0}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Content Section */}
+                <CardContent
+                  sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    p: 3,
+                    position: 'relative',
+                    bgcolor: '#fff',
+                  }}
+                >
+                  {/* Admin Controls */}
+                  {user && user.role === "admin" && (
+                    <Box
+                      className="admin-actions"
+                      sx={{
+                        position: 'absolute',
+                        top: 16,
+                        right: 16,
                         display: "flex",
-                        gap: 1
+                        gap: 1,
+                        zIndex: 10,
+                        opacity: 0,
+                        transform: 'translateY(-8px)',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       <IconButton
@@ -477,16 +565,16 @@ export default function Resources({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": {
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)'
+                          bgcolor: 'rgba(0,0,0,0.8)',
+                          color: '#fff',
+                          width: 32,
+                          height: 32,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
                           },
-                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <Edit />
+                        <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
@@ -495,105 +583,145 @@ export default function Resources({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": {
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)'
+                          bgcolor: 'rgba(0,0,0,0.8)',
+                          color: '#fff',
+                          width: 32,
+                          height: 32,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
                           },
-                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <Delete />
+                        <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   )}
-                  <Box>
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        fontWeight: 700,
-                        color: "#000",
-                        mb: 1,
-                        lineHeight: 1.3,
-                        fontSize: '1.5rem',
-                        textTransform: 'capitalize',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {getContent(resource.title)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        fontStyle: "italic",
-                        fontSize: "0.9rem",
-                        mb: 2,
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {getContent(resource.author) || getContent(resource.category)}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#000",
-                        lineHeight: 1.6,
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '4.8rem', // Ensures consistent height for 3 lines
-                      }}
-                    >
-                      {getContent(resource.description).length > 150
-                        ? `${getContent(resource.description).substring(0, 150)}...`
-                        : getContent(resource.description)}
-                    </Typography>
-                  </Box>
 
+                  {/* Title */}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#8B0000',
+                      mb: 1,
+                      lineHeight: 1.4,
+                      fontSize: '1.15rem',
+                      fontFamily: 'Georgia, serif',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      minHeight: '3.3rem',
+                      position: 'relative',
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: -8,
+                        left: 0,
+                        width: '48px',
+                        height: '3px',
+                        bgcolor: '#DAA520',
+                        borderRadius: 1,
+                      }
+                    }}
+                  >
+                    {getContent(resource.title)}
+                  </Typography>
+
+                  {/* Author */}
+                  {getContent(resource.author) && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#8B0000',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        mb: 2,
+                        fontFamily: 'Georgia, serif',
+                      }}
+                    >
+                      {getContent(resource.author)}
+                    </Typography>
+                  )}
+
+                  {/* Description */}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#555',
+                      lineHeight: 1.7,
+                      fontSize: '0.875rem',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      minHeight: '4.5rem',
+                      mb: 3,
+                    }}
+                  >
+                    {getContent(resource.description)}
+                  </Typography>
+
+                  {/* Action Buttons */}
                   <Box
                     sx={{
                       display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
+                      gap: 2,
+                      pt: 2,
+                      borderTop: '1px solid rgba(0,0,0,0.08)',
                     }}
                   >
                     <Button
                       component={Link}
                       to={`/resources/${resource._id}`}
-                      variant="outlined"
+                      variant="contained"
+                      fullWidth
                       sx={{
-                        color: "#000",
-                        borderColor: "#000",
+                        bgcolor: '#8B0000',
+                        color: '#fff',
                         borderRadius: 0,
-                        "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
+                        py: 1.2,
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        letterSpacing: '0.5px',
+                        textTransform: 'none',
+                        boxShadow: 'none',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          bgcolor: '#6B0000',
+                          boxShadow: '0 4px 12px rgba(139,0,0,0.3)',
+                        },
                       }}
                     >
-                      {t('actions.readMore', 'Read more')}
+                      View Details
                     </Button>
                     {resource.downloadLink && (
                       <Button
                         href={resource.downloadLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        variant="contained"
+                        variant="outlined"
+                        onClick={(e) => e.stopPropagation()}
                         sx={{
-                          bgcolor: "#000",
-                          color: "#fff",
+                          color: '#B8860B',
+                          borderColor: '#B8860B',
                           borderRadius: 0,
-                          "&:hover": {
-                            bgcolor: "#333",
+                          py: 1.2,
+                          px: 2,
+                          minWidth: 'auto',
+                          fontWeight: 600,
+                          fontSize: '1.1rem',
+                          boxShadow: 'none',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            bgcolor: '#B8860B',
+                            color: '#fff',
+                            borderColor: '#B8860B',
                           },
                         }}
-                      >
-                        {t('actions.download', 'Download')}
-                      </Button>
+> <GetApp /> </Button> 
                     )}
                   </Box>
                 </CardContent>

@@ -27,6 +27,7 @@ const NotFound = React.lazy(() => import("./components/NotFound"));
 const Explore = React.lazy(() => import("./components/Explore"));
 const Lands = React.lazy(() => import("./components/Lands"));
 const Kings = React.lazy(() => import("./components/categories/Kings"));
+const DynastyKings = React.lazy(() => import("./components/categories/DynastyKings"));
 const Literature = React.lazy(() => import("./components/categories/Literature"));
 const Dance = React.lazy(() => import("./components/categories/Dance"));
 const Temples = React.lazy(() => import("./components/categories/Temples"));
@@ -671,6 +672,7 @@ function App() {
             <Route path="/explore" element={<Explore user={user} />} />
             <Route path="/explore/lands" element={<Lands user={user} />} />
             <Route path="/explore/kings" element={<Kings user={user} />} />
+            <Route path="/explore/kings/dynasty/:dynastyId" element={<DynastyKings user={user} />} />
             <Route
               path="/explore/literature"
               element={<Literature user={user} />}

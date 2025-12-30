@@ -18,47 +18,60 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
   const slidesPerView = isMdUp ? 4 : isSmUp ? 2 : 1;
   const preparedSlides = useMemo(() => slides.filter(Boolean), [slides]);
   const slideCount = preparedSlides.length;
-  const maxIndex = Math.max(slideCount - slidesPerView, 0);
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Create an extended slide array (tripled) for smooth infinite looping
+  const extendedSlides = useMemo(() => {
+    if (!slideCount) return [];
+    return [...preparedSlides, ...preparedSlides, ...preparedSlides];
+  }, [preparedSlides, slideCount]);
+
+  const middleStart = slideCount; // start index in the middle copy
+
+  const [activeIndex, setActiveIndex] = useState(middleStart);
+  const activeIndexRef = React.useRef(activeIndex);
   const [isPaused, setIsPaused] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [disableTransition, setDisableTransition] = useState(false);
 
+  // keep ref in sync
+  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+
+  // Auto-advance continuously
   useEffect(() => {
-    if (!slideCount || maxIndex === 0 || isPaused) {
-      return undefined;
-    }
+    if (!slideCount || isPaused) return undefined;
 
     const timer = setTimeout(() => {
-      setActiveIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+      setActiveIndex((prev) => prev + 1);
     }, AUTO_INTERVAL);
 
     return () => clearTimeout(timer);
-  }, [activeIndex, isPaused, maxIndex, slideCount]);
+  }, [activeIndex, isPaused, slideCount]);
 
+  // When slideCount or slidesPerView changes, ensure we are in the middle chunk
   useEffect(() => {
-    setActiveIndex((prev) => Math.min(prev, maxIndex));
-  }, [maxIndex]);
+    setActiveIndex(middleStart);
+  }, [middleStart, slidesPerView, slideCount]);
 
   if (!slideCount) {
     return null;
   }
 
   const slideWidth = 100 / slidesPerView;
-  const showDots = maxIndex > 0;
-  const dotCount = maxIndex + 1;
+  const showDots = slideCount > slidesPerView;
+  const dotCount = Math.max(slideCount - slidesPerView + 1, 1);
 
   const handlePrev = () => {
-    if (!maxIndex) return;
-    setActiveIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+    setActiveIndex((prev) => prev - 1);
   };
 
   const handleNext = () => {
-    if (!maxIndex) return;
-    setActiveIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    setActiveIndex((prev) => prev + 1);
   };
 
-  const handleDotClick = (index) => setActiveIndex(index);
+  const handleDotClick = (index) => {
+    // map dot index to middle chunk index
+    setActiveIndex(middleStart + index);
+  };
 
   const handleCourseClick = (route) => {
     if (route) {
@@ -75,7 +88,7 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
   return (
     <Box sx={{ position: "relative", mt: 2 }}>
       {/* Navigation Arrows */}
-      {maxIndex > 0 && (
+      {slideCount > slidesPerView && (
         <>
           <IconButton
             onClick={handlePrev}
@@ -147,17 +160,37 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
         }}
       >
         <Box
+          onTransitionEnd={() => {
+            // Reset without transition when we cross the copies boundary
+            const idx = activeIndexRef.current;
+            if (!slideCount) return;
+
+            if (idx >= middleStart + slideCount) {
+              // moved forward past 2nd copy
+              setDisableTransition(true);
+              setActiveIndex(idx - slideCount);
+              // re-enable transition next tick
+              setTimeout(() => setDisableTransition(false), 40);
+            } else if (idx < middleStart) {
+              // moved backward past 1st copy
+              setDisableTransition(true);
+              setActiveIndex(idx + slideCount);
+              setTimeout(() => setDisableTransition(false), 40);
+            }
+          }}
           sx={{
             display: "flex",
-            transition: "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: disableTransition ? 'none' : "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
             transform: `translateX(-${activeIndex * slideWidth}%)`,
           }}
         >
-          {preparedSlides.map((slide, index) => {
+          {extendedSlides.map((slide, index) => {
             const title = getContent(slide.title);
             const duration = getContent(slide.duration);
-            const number = slide.number || String(index + 1).padStart(2, "0");
-            const isHovered = hoveredIndex === index;
+            // number should follow logical slide index within single copy
+            const logicalIndex = index % slideCount;
+            const number = slide.number || String(logicalIndex + 1).padStart(2, "0");
+            const isHovered = hoveredIndex === (index % slideCount);
 
             return (
               <Box
@@ -167,11 +200,14 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
                   width: `${slideWidth}%`,
                   px: { xs: 1, md: 1.5 },
                 }}
-                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseEnter={() => setHoveredIndex(index % slideCount)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 <Card
                   onClick={() => handleCourseClick(slide.route)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCourseClick(slide.route); } }}
                   sx={{
                     height: "100%",
                     borderRadius: "16px",
@@ -302,11 +338,16 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
 
                     <Typography
                       variant="body2"
+                      onClick={(e) => { e.stopPropagation(); handleCourseClick(slide.route); }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); handleCourseClick(slide.route); } }}
                       sx={{
                         color: isHovered ? "#8B0000" : "#666",
                         fontWeight: 600,
                         fontSize: "0.85rem",
                         transition: "color 0.3s ease",
+                        cursor: 'pointer',
                       }}
                     >
                       View Details →
@@ -329,23 +370,28 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
             mt: 4,
           }}
         >
-          {Array.from({ length: dotCount }).map((_, index) => (
-            <Box
-              key={index}
-              onClick={() => handleDotClick(index)}
-              sx={{
-                width: activeIndex === index ? 40 : 8,
-                height: 8,
-                borderRadius: "4px",
-                bgcolor: activeIndex === index ? "#8B0000" : "rgba(139,0,0,0.25)",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  bgcolor: activeIndex === index ? "#8B0000" : "rgba(139,0,0,0.5)",
-                },
-              }}
-            />
-          ))}
+          {(() => {
+            // compute active logical position for dots
+            const normalized = ((activeIndex - middleStart) % slideCount + slideCount) % slideCount;
+            const activeDot = Math.min(normalized, Math.max(slideCount - slidesPerView, 0));
+            return Array.from({ length: dotCount }).map((_, index) => (
+              <Box
+                key={index}
+                onClick={() => handleDotClick(index)}
+                sx={{
+                  width: activeDot === index ? 40 : 8,
+                  height: 8,
+                  borderRadius: "4px",
+                  bgcolor: activeDot === index ? "#8B0000" : "rgba(139,0,0,0.25)",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: activeDot === index ? "#8B0000" : "rgba(139,0,0,0.5)",
+                  },
+                }}
+              />
+            ));
+          })()}
         </Box>
       )}
 

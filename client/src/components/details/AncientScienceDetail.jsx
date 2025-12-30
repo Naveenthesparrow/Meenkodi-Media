@@ -93,9 +93,9 @@ function AncientScienceDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...prev.contentSections, 
-        { 
-          subtitle_en: "", 
+        ...prev.contentSections,
+        {
+          subtitle_en: "",
           subtitle_ta: "",
           content_en: "",
           content_ta: "",
@@ -181,16 +181,16 @@ function AncientScienceDetail() {
   const fetchUser = async () => {
     try {
       console.log("Fetching user in AncientScienceDetail...");
-      const res = await fetch(`${API_BASE_URL}/auth/user`, { 
+      const res = await fetch(`${API_BASE_URL}/auth/user`, {
         method: "GET",
         credentials: "include",
         headers: {
           "Accept": "application/json"
         }
       });
-      
+
       console.log("User fetch response status:", res.status);
-      
+
       if (res.status === 401) {
         console.log("User not authenticated");
         setUser(null);
@@ -203,9 +203,9 @@ function AncientScienceDetail() {
         return;
       }
 
-        const userData = await res.json();
+      const userData = await res.json();
       console.log("Fetched User Data:", userData);
-        setUser(userData);
+      setUser(userData);
     } catch (err) {
       console.error("Error fetching user:", err);
       setUser(null);
@@ -227,11 +227,11 @@ function AncientScienceDetail() {
       console.log("Image field:", data.image);
       setScience(data);
       setComments(data.comments || []);
-      
+
       // Handle likes - ensure it's an array and check if user liked
       const likesArray = Array.isArray(data.likes) ? data.likes : [];
       setLikes(likesArray.length);
-      
+
       // Check if user liked after user data is available
       if (user) {
         setUserLiked(likesArray.some(likeId => likeId.toString() === user._id.toString()));
@@ -274,15 +274,15 @@ function AncientScienceDetail() {
           })),
         }),
       });
-      
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to update ancient science");
       }
-      
+
       // Refresh the science data
       await fetchScience();
-      
+
       // Exit editing mode
       setIsEditing(false);
     } catch (err) {
@@ -298,9 +298,9 @@ function AncientScienceDetail() {
           method: "DELETE",
           credentials: "include",
         });
-        
+
         if (!res.ok) throw new Error("Delete failed");
-        
+
         // Navigate back to the list after successful deletion
         navigate("/explore/ancientscience");
       } catch (err) {
@@ -316,7 +316,7 @@ function AncientScienceDetail() {
     console.log("User state:", user);
     console.log("User ID:", user?._id);
     console.log("Science ID:", id);
-    
+
     if (!user) {
       console.log("No user found, showing login alert");
       alert("Please login to like this ancient science");
@@ -433,12 +433,12 @@ function AncientScienceDetail() {
       }
 
       const data = await res.json();
-      
+
       // Update the specific comment in the comments array
-      const updatedComments = comments.map(comment => 
+      const updatedComments = comments.map(comment =>
         comment._id === commentId ? data.comment : comment
       );
-      
+
       setComments(updatedComments);
       setNewReply("");
       setReplyingTo(null);
@@ -489,7 +489,7 @@ function AncientScienceDetail() {
     setCommentReactions(prev => {
       const commentReactions = prev[commentId] || {};
       const userReaction = commentReactions[user._id];
-      
+
       if (userReaction === emoji) {
         // Remove reaction
         const newCommentReactions = { ...commentReactions };
@@ -575,7 +575,7 @@ function AncientScienceDetail() {
         </Typography>
         {user && user.role === "admin" && (
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton 
+            <IconButton
               onClick={() => {
                 // Prepare editable data when edit is clicked (bilingual)
                 const toStr = (val) => {
@@ -638,18 +638,18 @@ function AncientScienceDetail() {
       </Box>
 
       {/* Main Content */}
-      <Box 
-        sx={{ 
-          width: '100%', 
-          display: 'flex', 
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
           flexDirection: 'column',
           gap: 4,
         }}
       >
         {/* Image Section - Top */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
+        <Box
+          sx={{
+            display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             border: '2px solid #000',
@@ -662,8 +662,8 @@ function AncientScienceDetail() {
           }}
         >
           {science.image ? (
-            <img 
-              src={science.image} 
+            <img
+              src={science.image}
               alt={getContent(science.name)}
               style={{
                 maxWidth: '100%',
@@ -677,11 +677,11 @@ function AncientScienceDetail() {
               }}
             />
           ) : (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
                 justifyContent: 'center',
                 p: 4,
                 color: '#666',
@@ -690,22 +690,22 @@ function AncientScienceDetail() {
             >
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
                 No Image Available
-        </Typography>
+              </Typography>
               <Typography variant="body2">
                 {getContent(science.name)} - {getContent(science.field) || 'Ancient Science'}
               </Typography>
               <Typography variant="caption" sx={{ mt: 1, fontStyle: 'italic' }}>
                 Add an image URL in edit mode to display an image here
-        </Typography>
+              </Typography>
             </Box>
           )}
-      </Box>
+        </Box>
 
         {/* Details Section - Bottom */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
             gap: 3,
             maxWidth: 800,
             mx: 'auto',
@@ -713,9 +713,9 @@ function AncientScienceDetail() {
           }}
         >
           {/* Period, Field, and Scholar */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
+          <Box
+            sx={{
+              display: 'flex',
               justifyContent: 'space-between',
               borderBottom: '1px solid #000',
               pb: 2,
@@ -724,10 +724,10 @@ function AncientScienceDetail() {
             {!isEditing ? (
               <>
                 {getContent(science.period) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: 1,
                     }}
@@ -736,10 +736,10 @@ function AncientScienceDetail() {
                   </Typography>
                 )}
                 {getContent(science.field) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: 1,
                     }}
@@ -748,10 +748,10 @@ function AncientScienceDetail() {
                   </Typography>
                 )}
                 {getContent(science.scholar) && (
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      fontWeight: 700, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       letterSpacing: 1,
                     }}
@@ -761,18 +761,18 @@ function AncientScienceDetail() {
                 )}
               </>
             ) : (
-              <Box sx={{ display: 'flex', width: '100%', gap: 2, flexWrap:'wrap' }}>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, flex:1, minWidth:220 }}>
-                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+              <Box sx={{ display: 'flex', width: '100%', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 220 }}>
+                  <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, flex:1, minWidth:220 }}>
-                  <TextField label="Field (EN)" value={editableData.field_en} onChange={(e)=>setEditableData({ ...editableData, field_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Field (TA)" value={editableData.field_ta} onChange={(e)=>setEditableData({ ...editableData, field_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 220 }}>
+                  <TextField label="Field (EN)" value={editableData.field_en} onChange={(e) => setEditableData({ ...editableData, field_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Field (TA)" value={editableData.field_ta} onChange={(e) => setEditableData({ ...editableData, field_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
-                <Box sx={{ display:'flex', flexDirection:'column', gap:1, flex:1, minWidth:220 }}>
-                  <TextField label="Scholar (EN)" value={editableData.scholar_en} onChange={(e)=>setEditableData({ ...editableData, scholar_en: e.target.value })} fullWidth variant="standard" />
-                  <TextField label="Scholar (TA)" value={editableData.scholar_ta} onChange={(e)=>setEditableData({ ...editableData, scholar_ta: e.target.value })} fullWidth variant="standard" />
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, minWidth: 220 }}>
+                  <TextField label="Scholar (EN)" value={editableData.scholar_en} onChange={(e) => setEditableData({ ...editableData, scholar_en: e.target.value })} fullWidth variant="standard" />
+                  <TextField label="Scholar (TA)" value={editableData.scholar_ta} onChange={(e) => setEditableData({ ...editableData, scholar_ta: e.target.value })} fullWidth variant="standard" />
                 </Box>
               </Box>
             )}
@@ -781,10 +781,10 @@ function AncientScienceDetail() {
           {/* Description */}
           {!isEditing ? (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -800,14 +800,14 @@ function AncientScienceDetail() {
                 }}
               >
                 {getContent(science.description)}
-      </Typography>
+              </Typography>
             </Box>
           ) : (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -815,8 +815,8 @@ function AncientScienceDetail() {
               >
                 Description
               </Typography>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb: 1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           )}
 
@@ -824,10 +824,10 @@ function AncientScienceDetail() {
           {!isEditing ? (
             science.image && (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -849,10 +849,10 @@ function AncientScienceDetail() {
             )
           ) : (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -876,14 +876,14 @@ function AncientScienceDetail() {
             science.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
                 {getContent(section.subtitle) && (
-                  <Typography 
-                    variant="h6" 
+                  <Typography
+                    variant="h6"
                     key={`subtitle-${section.id || index}`}
                   >
                     {getContent(section.subtitle)}
                   </Typography>
                 )}
-                
+
                 {getContent(section.content) && (
                   <Typography
                     variant="body1"
@@ -895,43 +895,43 @@ function AncientScienceDetail() {
 
                 {/* Section Image */}
                 {section.imageUrl && (
-                  <img 
+                  <img
                     key={`image-${section.id || index}`}
-                    src={section.imageUrl} 
-                    alt={section.subtitle || `Section ${index + 1} Image`} 
+                    src={section.imageUrl}
+                    alt={section.subtitle || `Section ${index + 1} Image`}
                     style={{ maxWidth: '100%', height: 'auto', marginTop: 16 }}
                   />
                 )}
 
                 {/* Section Video */}
                 {section.videoUrl && (
-                  <iframe 
+                  <iframe
                     key={`video-${section.id || index}`}
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
                     title={section.videoTitle || `Section ${index + 1} Video`}
                     style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                     allowFullScreen
                   />
                 )}
-                
+
                 {/* Section Video Details */}
                 {(section.videoTitle || section.videoDescription) && (
-                  <Box 
-                    key={`video-details-${section.id || index}`} 
+                  <Box
+                    key={`video-details-${section.id || index}`}
                     sx={{ mt: 2 }}
                   >
                     {section.videoTitle && (
-                      <Typography 
-                        variant="subtitle1" 
+                      <Typography
+                        variant="subtitle1"
                         key={`video-title-${section.id || index}`}
                       >
                         {section.videoTitle}
                       </Typography>
                     )}
-                    
+
                     {section.videoDescription && (
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         key={`video-description-${section.id || index}`}
                       >
                         {section.videoDescription}
@@ -946,10 +946,10 @@ function AncientScienceDetail() {
           {/* Editable Content Sections */}
           {isEditing && user && user.role === "admin" && (
             <Box sx={{ mt: 4 }}>
-              <Typography 
-                variant="h6" 
+              <Typography
+                variant="h6"
                 sx={{
-                  mb: 2, 
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '1px solid #000',
                   pb: 1,
@@ -957,31 +957,31 @@ function AncientScienceDetail() {
               >
                 Additional Content Sections
               </Typography>
-              
+
               {editableData.contentSections.map((section, index) => (
-                <Box 
-                  key={section.id || `editable-section-${index}`} 
-                  sx={{ 
-                    mb: 3, 
-                    p: 2, 
+                <Box
+                  key={section.id || `editable-section-${index}`}
+                  sx={{
+                    mb: 3,
+                    p: 2,
                     border: '1px solid #000',
-                    position: 'relative' 
+                    position: 'relative'
                   }}
                 >
-                  <Box sx={{ display:'flex', gap:2, mb:2, flexWrap:'wrap' }}>
-                    <TextField label="Subtitle (EN)" value={section.subtitle_en} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].subtitle_en=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth variant="standard" />
-                    <TextField label="Subtitle (TA)" value={section.subtitle_ta} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].subtitle_ta=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth variant="standard" />
+                  <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                    <TextField label="Subtitle (EN)" value={section.subtitle_en} onChange={(e) => { const updated = [...editableData.contentSections]; updated[index].subtitle_en = e.target.value; setEditableData(prev => ({ ...prev, contentSections: updated })); }} fullWidth variant="standard" />
+                    <TextField label="Subtitle (TA)" value={section.subtitle_ta} onChange={(e) => { const updated = [...editableData.contentSections]; updated[index].subtitle_ta = e.target.value; setEditableData(prev => ({ ...prev, contentSections: updated })); }} fullWidth variant="standard" />
                   </Box>
-                  
-                  <TextField label="Content (EN)" value={section.content_en} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].content_en=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
-                  <TextField label="Content (TA)" value={section.content_ta} onChange={(e)=>{ const updated=[...editableData.contentSections]; updated[index].content_ta=e.target.value; setEditableData(prev=>({ ...prev, contentSections: updated })); }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+
+                  <TextField label="Content (EN)" value={section.content_en} onChange={(e) => { const updated = [...editableData.contentSections]; updated[index].content_en = e.target.value; setEditableData(prev => ({ ...prev, contentSections: updated })); }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
+                  <TextField label="Content (TA)" value={section.content_ta} onChange={(e) => { const updated = [...editableData.contentSections]; updated[index].content_ta = e.target.value; setEditableData(prev => ({ ...prev, contentSections: updated })); }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
 
                   {/* Image URL for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mt: 2,
+                      mb: 1,
                       fontWeight: 700,
                       borderBottom: '1px solid #000',
                       pb: 1,
@@ -989,8 +989,8 @@ function AncientScienceDetail() {
                   >
                     Section Image
                   </Typography>
-                  
-          <TextField
+
+                  <TextField
                     label="Image URL"
                     value={section.imageUrl}
                     onChange={(e) => {
@@ -1001,18 +1001,18 @@ function AncientScienceDetail() {
                         contentSections: updatedSections
                       }));
                     }}
-            fullWidth
-            sx={{ mb: 2 }}
+                    fullWidth
+                    sx={{ mb: 2 }}
                     variant="standard"
                     placeholder="Enter full image URL"
                   />
 
                   {/* Video Details for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mt: 2,
+                      mb: 1,
                       fontWeight: 700,
                       borderBottom: '1px solid #000',
                       pb: 1,
@@ -1020,8 +1020,8 @@ function AncientScienceDetail() {
                   >
                     Section Video Details
                   </Typography>
-                  
-          <TextField
+
+                  <TextField
                     label="Video URL"
                     value={section.videoUrl}
                     onChange={(e) => {
@@ -1032,13 +1032,13 @@ function AncientScienceDetail() {
                         contentSections: updatedSections
                       }));
                     }}
-            fullWidth
-            sx={{ mb: 2 }}
+                    fullWidth
+                    sx={{ mb: 2 }}
                     variant="standard"
                     placeholder="Enter full YouTube video URL"
-          />
-                  
-          <TextField
+                  />
+
+                  <TextField
                     label="Video Title"
                     value={section.videoTitle}
                     onChange={(e) => {
@@ -1049,11 +1049,11 @@ function AncientScienceDetail() {
                         contentSections: updatedSections
                       }));
                     }}
-            fullWidth
-            sx={{ mb: 2 }}
+                    fullWidth
+                    sx={{ mb: 2 }}
                     variant="standard"
                   />
-                  
+
                   <TextField
                     label="Video Description"
                     value={section.videoDescription}
@@ -1070,7 +1070,7 @@ function AncientScienceDetail() {
                     rows={3}
                     variant="standard"
                   />
-                  
+
                   <IconButton
                     onClick={() => removeContentSection(section.id)}
                     sx={{
@@ -1084,7 +1084,7 @@ function AncientScienceDetail() {
                   </IconButton>
                 </Box>
               ))}
-              
+
               <Button
                 onClick={addContentSection}
                 variant="outlined"
@@ -1104,21 +1104,21 @@ function AncientScienceDetail() {
 
           {/* Separate Update Button for Content Sections */}
           {isEditing && user && user.role === "admin" && (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 mt: 4,
                 pt: 2,
-                borderTop: '1px solid #000' 
+                borderTop: '1px solid #000'
               }}
             >
               <Button
                 onClick={() => setIsEditing(false)}
-                sx={{ 
+                sx={{
                   color: '#000',
-                  '&:hover': { 
-                    bgcolor: 'rgba(0,0,0,0.05)' 
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.05)'
                   }
                 }}
               >
@@ -1145,8 +1145,8 @@ function AncientScienceDetail() {
                   sx={{
                     bgcolor: '#000',
                     color: '#fff',
-                    '&:hover': { 
-                      bgcolor: '#333' 
+                    '&:hover': {
+                      bgcolor: '#333'
                     }
                   }}
                 >
@@ -1159,14 +1159,14 @@ function AncientScienceDetail() {
       </Box>
 
       {/* Likes, Comments, and Reactions Section */}
-      <Box 
-        sx={{ 
-          mt: 4, 
-          width: '100%', 
-          maxWidth: 800,  
-          mx: 'auto',    
-          display: 'flex', 
-          flexDirection: 'column', 
+      <Box
+        sx={{
+          mt: 4,
+          width: '100%',
+          maxWidth: 800,
+          mx: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
           alignItems: 'stretch',
           border: '1px solid #000',
           p: 2,
@@ -1175,10 +1175,10 @@ function AncientScienceDetail() {
         }}
       >
         {/* Likes and Share Row */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             mb: 2,
             pb: 1,
@@ -1228,9 +1228,9 @@ function AncientScienceDetail() {
           </Button>
         </Box>
 
-        <Typography 
-          variant="h6" 
-          sx={{ 
+        <Typography
+          variant="h6"
+          sx={{
             fontWeight: 700,
             textTransform: 'uppercase',
             textAlign: 'center',
@@ -1244,10 +1244,10 @@ function AncientScienceDetail() {
         </Typography>
 
         {/* Comment Input */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             mb: 3,
             position: 'relative'
           }}
@@ -1258,7 +1258,7 @@ function AncientScienceDetail() {
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            sx={{ 
+            sx={{
               flex: 1,
               '& .MuiInput-underline:before': {
                 borderBottomColor: '#000',
@@ -1268,7 +1268,7 @@ function AncientScienceDetail() {
               },
             }}
           />
-          <IconButton 
+          <IconButton
             onClick={handleAddComment}
             disabled={!newComment.trim() || !user}
             sx={{
@@ -1289,10 +1289,10 @@ function AncientScienceDetail() {
 
         {/* Comments List */}
         {comments.length === 0 ? (
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              textAlign: 'center', 
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: 'center',
               py: 2,
               color: '#666',
               fontStyle: 'italic'
@@ -1303,10 +1303,10 @@ function AncientScienceDetail() {
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {comments.map((comment) => (
-              <Box 
-                key={comment._id} 
-                sx={{ 
-                  display: 'flex', 
+              <Box
+                key={comment._id}
+                sx={{
+                  display: 'flex',
                   flexDirection: 'column',
                   gap: 1,
                   border: '1px solid #eee',
@@ -1326,8 +1326,8 @@ function AncientScienceDetail() {
                 >
                   <Typography
                     variant="subtitle2"
-                    sx={{ 
-                      fontWeight: 700, 
+                    sx={{
+                      fontWeight: 700,
                       textTransform: 'uppercase',
                       fontSize: '0.75rem',
                       color: '#333',
@@ -1336,7 +1336,7 @@ function AncientScienceDetail() {
                   >
                     {comment.user?.displayName || 'Anonymous'}
                   </Typography>
-                  <Typography 
+                  <Typography
                     variant="caption"
                     sx={{
                       color: '#666',
@@ -1347,8 +1347,8 @@ function AncientScienceDetail() {
                     {new Date(comment.createdAt).toLocaleString()}
                   </Typography>
                 </Box>
-                
-                <Typography 
+
+                <Typography
                   variant="body2"
                   sx={{
                     lineHeight: 1.6,
@@ -1450,11 +1450,11 @@ function AncientScienceDetail() {
                 )}
 
                 {/* Comment Actions */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center' 
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                   }}
                 >
                   <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1498,8 +1498,8 @@ function AncientScienceDetail() {
                         }}
                         onClick={() => {
                           // Toggle replies for this comment
-                          const updatedComments = comments.map(c => 
-                            c._id === comment._id 
+                          const updatedComments = comments.map(c =>
+                            c._id === comment._id
                               ? { ...c, showReplies: !c.showReplies }
                               : c
                           );
@@ -1535,10 +1535,10 @@ function AncientScienceDetail() {
 
                 {/* Reply Input */}
                 {replyingTo === comment._id && (
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
                       mt: 1,
                       borderTop: '1px solid #eee',
                       pt: 1
@@ -1550,7 +1550,7 @@ function AncientScienceDetail() {
                       placeholder={`Reply to ${comment.user?.displayName || 'Anonymous'}`}
                       value={newReply}
                       onChange={(e) => setNewReply(e.target.value)}
-                      sx={{ 
+                      sx={{
                         flex: 1,
                         '& .MuiInput-underline:before': {
                           borderBottomColor: '#000',
@@ -1560,7 +1560,7 @@ function AncientScienceDetail() {
                         },
                       }}
                     />
-                    <IconButton 
+                    <IconButton
                       onClick={() => handleAddReply(comment._id)}
                       disabled={!newReply.trim()}
                       sx={{
@@ -1581,8 +1581,8 @@ function AncientScienceDetail() {
 
                 {/* Replies Section */}
                 {comment.showReplies && comment.replies && comment.replies.length > 0 && (
-                  <Box 
-                    sx={{ 
+                  <Box
+                    sx={{
                       mt: 2,
                       pt: 2,
                       borderTop: '1px solid #eee',
@@ -1622,7 +1622,7 @@ function AncientScienceDetail() {
                             <Typography
                               variant="subtitle2"
                               sx={{
-                                fontWeight: 700, 
+                                fontWeight: 700,
                                 textTransform: 'uppercase',
                                 fontSize: '0.625rem',
                                 color: '#0066cc'
@@ -1630,7 +1630,7 @@ function AncientScienceDetail() {
                             >
                               {reply.user?.displayName || 'Anonymous'}
                             </Typography>
-                            <Typography 
+                            <Typography
                               variant="caption"
                               sx={{
                                 color: '#666',
@@ -1640,7 +1640,7 @@ function AncientScienceDetail() {
                               {new Date(reply.createdAt).toLocaleString()}
                             </Typography>
                           </Box>
-                          
+
                           {/* Admin Delete Reply Button */}
                           {user && user.role === "admin" && (
                             <IconButton
@@ -1662,7 +1662,7 @@ function AncientScienceDetail() {
                             </IconButton>
                           )}
                         </Box>
-                        <Typography 
+                        <Typography
                           variant="body2"
                           sx={{
                             lineHeight: 1.6,
@@ -1785,10 +1785,10 @@ function AncientScienceDetail() {
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
+            bgcolor: '#000',
+            color: '#fff',
             textAlign: 'center',
-            fontWeight: 700 
+            fontWeight: 700
           }}
         >
           Confirm Delete
@@ -1802,16 +1802,16 @@ function AncientScienceDetail() {
           </Typography>
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
+          sx={{
+            p: 2,
             justifyContent: 'center',
             gap: 2,
-            bgcolor: '#f0f0f0' 
+            bgcolor: '#f0f0f0'
           }}
         >
-          <Button 
+          <Button
             onClick={() => setDeleteDialogOpen(false)}
-            sx={{ 
+            sx={{
               color: '#000',
               border: '1px solid #000',
               '&:hover': {
@@ -1827,7 +1827,7 @@ function AncientScienceDetail() {
             sx={{
               bgcolor: '#000',
               color: '#fff',
-              '&:hover': { 
+              '&:hover': {
                 bgcolor: '#333'
               }
             }}
@@ -1839,6 +1839,32 @@ function AncientScienceDetail() {
 
       {/* Edit Dialog */}
 
+      {/* Standardized Back Button */}
+      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/explore/ancientscience')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← Back to Ancient Science
+        </Button>
+      </Box>
     </Container>
   );
 }

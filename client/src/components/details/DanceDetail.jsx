@@ -123,7 +123,7 @@ function DanceDetail() {
     imageUrl: "",
     contentSections: [], // bilingual sections
   });
-  
+
   // Function to add a new content section
   const addContentSection = () => {
     setEditableData(prev => ({
@@ -152,7 +152,7 @@ function DanceDetail() {
   const removeContentSection = (idToRemove) => {
     setEditableData(prev => ({
       ...prev,
-      contentSections: prev.contentSections && prev.contentSections.length > 0 
+      contentSections: prev.contentSections && prev.contentSections.length > 0
         ? prev.contentSections.filter(section => section.id !== idToRemove)
         : []
     }));
@@ -274,10 +274,10 @@ function DanceDetail() {
         const { id, subtitle_en, subtitle_ta, content_en, content_ta, videoTitle_en, videoTitle_ta, videoDescription_en, videoDescription_ta, ...rest } = section;
         return {
           ...rest,
-            subtitle: toBilingual(subtitle_en, subtitle_ta),
-            content: toBilingual(content_en, content_ta),
-            videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
-            videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+          subtitle: toBilingual(subtitle_en, subtitle_ta),
+          content: toBilingual(content_en, content_ta),
+          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
+          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
         };
       });
       const updateData = {
@@ -661,7 +661,7 @@ function DanceDetail() {
             >
               {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
-            <IconButton 
+            <IconButton
               onClick={handleDelete}
               sx={{
                 color: "#000",
@@ -788,13 +788,13 @@ function DanceDetail() {
                 </>
               ) : (
                 <Box sx={{ display: "flex", width: "100%", gap: 2 }}>
-                  <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                    <TextField label="Style (EN)" value={editableData.style_en} onChange={(e)=>setEditableData({ ...editableData, style_en: e.target.value })} fullWidth variant="standard" />
-                    <TextField label="Style (TA)" value={editableData.style_ta} onChange={(e)=>setEditableData({ ...editableData, style_ta: e.target.value })} fullWidth variant="standard" />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                    <TextField label="Style (EN)" value={editableData.style_en} onChange={(e) => setEditableData({ ...editableData, style_en: e.target.value })} fullWidth variant="standard" />
+                    <TextField label="Style (TA)" value={editableData.style_ta} onChange={(e) => setEditableData({ ...editableData, style_ta: e.target.value })} fullWidth variant="standard" />
                   </Box>
-                  <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                    <TextField label="Period (EN)" value={editableData.period_en} onChange={(e)=>setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
-                    <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e)=>setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                    <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth variant="standard" />
+                    <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth variant="standard" />
                   </Box>
                 </Box>
               )}
@@ -838,8 +838,8 @@ function DanceDetail() {
               >
                 Achievements
               </Typography>
-              <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e)=>setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
-              <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e)=>setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+              <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e) => setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" sx={{ mb: 1 }} />
+              <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e) => setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
             </Box>
           ) : null}
 
@@ -880,8 +880,8 @@ function DanceDetail() {
               >
                 Description
               </Typography>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb:1 }} />
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" sx={{ mb: 1 }} />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
             </Box>
           ) : null}
 
@@ -962,55 +962,55 @@ function DanceDetail() {
                 >
                   Additional Content Sections
                 </Typography>
-                
+
                 {editableData.contentSections && editableData.contentSections.map((section, index) => (
-                  <Box 
-                    key={section.id || `editable-section-${index}`} 
-                    sx={{ 
-                      mb: 3, 
-                      p: 2, 
+                  <Box
+                    key={section.id || `editable-section-${index}`}
+                    sx={{
+                      mb: 3,
+                      p: 2,
                       border: '1px solid #000',
-                      position: 'relative' 
+                      position: 'relative'
                     }}
                   >
-                    <Box sx={{ display:'flex', gap:2 }}>
-                      <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e)=>{
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField label="Subtitle (EN)" value={section.subtitle_en || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].subtitle_en = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth variant="standard" sx={{ mb:2 }} />
-                      <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e)=>{
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth variant="standard" sx={{ mb: 2 }} />
+                      <TextField label="Subtitle (TA)" value={section.subtitle_ta || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].subtitle_ta = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth variant="standard" sx={{ mb:2 }} />
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth variant="standard" sx={{ mb: 2 }} />
                     </Box>
-                    
-                    <Box sx={{ display:'flex', gap:2 }}>
-                      <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e)=>{
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField label="Content (EN)" value={section.content_en || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].content_en = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
-                      <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e)=>{
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
+                      <TextField label="Content (TA)" value={section.content_ta || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].content_ta = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth multiline rows={4} variant="standard" sx={{ mb:2 }} />
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth multiline rows={4} variant="standard" sx={{ mb: 2 }} />
                     </Box>
 
                     <Divider sx={{ my: 2 }} />
 
                     {/* Section Image */}
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
                         fontWeight: 700,
                       }}
                     >
                       Section Image
                     </Typography>
-                    
+
                     <TextField
                       label="Image URL"
                       value={section.imageUrl}
@@ -1030,29 +1030,29 @@ function DanceDetail() {
                     />
 
                     {/* Section Image Upload */}
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
                         mt: 2,
                         fontWeight: 700,
                       }}
                     >
                       Section Image
                     </Typography>
-                    
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        mb: 1, 
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mb: 1,
                         color: '#666',
                       }}
                     >
                       Upload files directly from your device (alternative to using links above)
                     </Typography>
 
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
+                    <Typography
+                      variant="body2"
+                      sx={{
                         fontWeight: 500,
                         color: '#333'
                       }}
@@ -1060,10 +1060,10 @@ function DanceDetail() {
                       Upload Image from Device
                     </Typography>
 
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        mb: 1, 
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        mb: 1,
                         color: '#888',
                         display: 'block'
                       }}
@@ -1100,15 +1100,15 @@ function DanceDetail() {
                     <Divider sx={{ my: 2 }} />
 
                     {/* Section Video Details */}
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
                         fontWeight: 700,
                       }}
                     >
                       Section Video Details
                     </Typography>
-                    
+
                     <TextField
                       label="Video URL"
                       value={section.videoUrl}
@@ -1126,32 +1126,32 @@ function DanceDetail() {
                       sx={{ mb: 2 }}
                       variant="standard"
                     />
-                    
-                    <Box sx={{ display:'flex', gap:2 }}>
-                      <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e)=>{
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField label="Video Title (EN)" value={section.videoTitle_en || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].videoTitle_en = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth variant="standard" sx={{ mb:2 }} />
-                      <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e)=>{
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth variant="standard" sx={{ mb: 2 }} />
+                      <TextField label="Video Title (TA)" value={section.videoTitle_ta || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].videoTitle_ta = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth variant="standard" sx={{ mb:2 }} />
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth variant="standard" sx={{ mb: 2 }} />
                     </Box>
-                    <Box sx={{ display:'flex', gap:2 }}>
-                      <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e)=>{
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField label="Video Description (EN)" value={section.videoDescription_en || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].videoDescription_en = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
-                      <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e)=>{
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
+                      <TextField label="Video Description (TA)" value={section.videoDescription_ta || ""} onChange={(e) => {
                         const updatedSections = [...editableData.contentSections];
                         updatedSections[index].videoDescription_ta = e.target.value;
-                        setEditableData(prev=>({...prev, contentSections: updatedSections}));
-                      }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                        setEditableData(prev => ({ ...prev, contentSections: updatedSections }));
+                      }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
                     </Box>
-                    
+
                     <IconButton
                       onClick={() => removeContentSection(section.id)}
                       sx={{
@@ -1172,14 +1172,14 @@ function DanceDetail() {
                 // Only render sections that have at least one piece of content
                 const hasContent = getContent(section.subtitle) || getContent(section.content) || section.imageUrl || section.videoUrl;
                 if (!hasContent) return null;
-                
+
                 return (
                   <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
                     {getContent(section.subtitle) && (
-                      <Typography 
-                        variant="h6" 
+                      <Typography
+                        variant="h6"
                         sx={{
-                          mb: 2, 
+                          mb: 2,
                           fontWeight: 700,
                           borderBottom: '2px solid #000',
                           pb: 1,
@@ -1188,7 +1188,7 @@ function DanceDetail() {
                         {getContent(section.subtitle)}
                       </Typography>
                     )}
-                    
+
                     {getContent(section.content) && (
                       <Typography
                         variant="body1"
@@ -1203,12 +1203,12 @@ function DanceDetail() {
 
                     {/* Section Image */}
                     {section.imageUrl && (
-                      <img 
-                        src={section.imageUrl} 
-                        alt={section.subtitle || `Section ${index + 1} Image`} 
-                        style={{ 
-                          maxWidth: '100%', 
-                          height: 'auto', 
+                      <img
+                        src={section.imageUrl}
+                        alt={section.subtitle || `Section ${index + 1} Image`}
+                        style={{
+                          maxWidth: '100%',
+                          height: 'auto',
                           marginTop: 16,
                           border: '1px solid #ddd',
                           padding: 8
@@ -1221,29 +1221,29 @@ function DanceDetail() {
 
                     {/* Section Video */}
                     {section.videoUrl && (
-                      <iframe 
-                        src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                      <iframe
+                        src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
                         title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
                         style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                         allowFullScreen
                       />
                     )}
-                    
+
                     {/* Section Video Details - Only show if either title or description exists */}
                     {(getContent(section.videoTitle) || getContent(section.videoDescription)) && (
                       <Box sx={{ mt: 2 }}>
                         {getContent(section.videoTitle) && getContent(section.videoTitle).trim() !== '' && (
-                          <Typography 
-                            variant="subtitle1" 
+                          <Typography
+                            variant="subtitle1"
                             sx={{ fontWeight: 600 }}
                           >
                             {getContent(section.videoTitle)}
                           </Typography>
                         )}
-                        
+
                         {getContent(section.videoDescription) && getContent(section.videoDescription).trim() !== '' && (
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             sx={{ color: '#555', fontStyle: 'italic' }}
                           >
                             {getContent(section.videoDescription)}
@@ -1261,10 +1261,10 @@ function DanceDetail() {
 
       {/* Separate Update Button for Content Sections */}
       {isEditing && user && user.role === "admin" && (
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
             mt: 4,
             pt: 2,
             borderTop: '1px solid #000',
@@ -1275,10 +1275,10 @@ function DanceDetail() {
         >
           <Button
             onClick={() => setIsEditing(false)}
-            sx={{ 
+            sx={{
               color: '#000',
-              '&:hover': { 
-                bgcolor: 'rgba(0,0,0,0.05)' 
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.05)'
               }
             }}
           >
@@ -1305,8 +1305,8 @@ function DanceDetail() {
               sx={{
                 bgcolor: '#000',
                 color: '#fff',
-                '&:hover': { 
-                  bgcolor: '#333' 
+                '&:hover': {
+                  bgcolor: '#333'
                 }
               }}
             >
@@ -1376,9 +1376,8 @@ function DanceDetail() {
                   navigator
                     .share({
                       title: `Learn about ${dance?.name || "this dance"}`,
-                      text: `Check out this fascinating article about ${
-                        dance?.name || "this dance"
-                      }`,
+                      text: `Check out this fascinating article about ${dance?.name || "this dance"
+                        }`,
                       url: window.location.href,
                     })
                     .catch(console.error);
@@ -1405,14 +1404,14 @@ function DanceDetail() {
         </Box>
 
         {/* Comments Section */}
-        <Box 
-          sx={{ 
-            mt: 4, 
-            width: '100%', 
-            maxWidth: 800,  
-            mx: 'auto',    
-            display: 'flex', 
-            flexDirection: 'column', 
+        <Box
+          sx={{
+            mt: 4,
+            width: '100%',
+            maxWidth: 800,
+            mx: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
             alignItems: 'stretch',
             border: '1px solid #000',
             p: 2,
@@ -1420,9 +1419,9 @@ function DanceDetail() {
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}
         >
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               fontWeight: 700,
               textTransform: 'uppercase',
               textAlign: 'center',
@@ -1437,10 +1436,10 @@ function DanceDetail() {
           </Typography>
 
           {/* Comment Input */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
               mb: 3,
               position: 'relative'
             }}
@@ -1451,7 +1450,7 @@ function DanceDetail() {
               placeholder="Write a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              sx={{ 
+              sx={{
                 flex: 1,
                 fontFamily: "'Open Sans', sans-serif",
                 '& .MuiInput-underline:before': {
@@ -1462,7 +1461,7 @@ function DanceDetail() {
                 },
               }}
             />
-            <IconButton 
+            <IconButton
               onClick={handleAddComment}
               disabled={!newComment.trim() || !user}
               sx={{
@@ -1483,10 +1482,10 @@ function DanceDetail() {
 
           {/* Comments List */}
           {comments.length === 0 ? (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                textAlign: 'center', 
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: 'center',
                 py: 2,
                 color: '#666',
                 fontStyle: 'italic',
@@ -1498,10 +1497,10 @@ function DanceDetail() {
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {comments.map((comment) => (
-                <Box 
-                  key={comment._id} 
-                  sx={{ 
-                    display: 'flex', 
+                <Box
+                  key={comment._id}
+                  sx={{
+                    display: 'flex',
                     flexDirection: 'column',
                     gap: 1,
                     border: '1px solid #eee',
@@ -1521,9 +1520,9 @@ function DanceDetail() {
                   >
                     <Typography
                       variant="subtitle2"
-                      sx={{ 
-                        fontFamily: "'Montserrat', sans-serif", 
-                        fontWeight: 700, 
+                      sx={{
+                        fontFamily: "'Montserrat', sans-serif",
+                        fontWeight: 700,
                         textTransform: 'uppercase',
                         fontSize: '0.75rem',
                         color: '#333',
@@ -1532,9 +1531,9 @@ function DanceDetail() {
                     >
                       {comment.user?.displayName || 'Anonymous'}
                     </Typography>
-                    <Typography 
+                    <Typography
                       variant="caption"
-                      sx={{ 
+                      sx={{
                         fontFamily: "'Roboto', sans-serif",
                         color: '#666',
                         fontSize: '0.625rem',
@@ -1914,10 +1913,10 @@ function DanceDetail() {
         >
           <DialogTitle
             sx={{
-              bgcolor: '#000', 
-              color: '#fff', 
+              bgcolor: '#000',
+              color: '#fff',
               textAlign: 'center',
-              fontWeight: 700 
+              fontWeight: 700
             }}
           >
             Confirm Delete
@@ -1931,16 +1930,16 @@ function DanceDetail() {
             </Typography>
           </DialogContent>
           <DialogActions
-            sx={{ 
-              p: 2, 
+            sx={{
+              p: 2,
               justifyContent: 'center',
               gap: 2,
-              bgcolor: '#f0f0f0' 
+              bgcolor: '#f0f0f0'
             }}
           >
-            <Button 
+            <Button
               onClick={() => setDeleteDialogOpen(false)}
-              sx={{ 
+              sx={{
                 color: '#000',
                 border: '1px solid #000',
                 '&:hover': {
@@ -1956,7 +1955,7 @@ function DanceDetail() {
               sx={{
                 bgcolor: '#000',
                 color: '#fff',
-                '&:hover': { 
+                '&:hover': {
                   bgcolor: '#333'
                 }
               }}
@@ -1965,6 +1964,32 @@ function DanceDetail() {
             </Button>
           </DialogActions>
         </Dialog>
+      </Box>
+      {/* Standardized Back Button */}
+      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/explore/dance')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← Back to Dance
+        </Button>
       </Box>
     </Container>
   );

@@ -54,12 +54,12 @@ function FoodDetail() {
   const [newReply, setNewReply] = useState("");
   const [likes, setLikes] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
-  
+
   // Delete confirmation states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState(''); // 'comment' or 'reply'
-  
+
   // Comment reactions states
   const [commentReactions, setCommentReactions] = useState({});
   const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
@@ -115,9 +115,9 @@ function FoodDetail() {
     setEditableData(prev => ({
       ...prev,
       contentSections: [
-        ...(prev.contentSections || []), 
-        { 
-          subtitle: "", 
+        ...(prev.contentSections || []),
+        {
+          subtitle: "",
           content: "",
           imageUrl: "",
           imageLink: "",
@@ -134,7 +134,7 @@ function FoodDetail() {
   const removeContentSection = (idToRemove) => {
     setEditableData(prev => ({
       ...prev,
-      contentSections: prev.contentSections && prev.contentSections.length > 0 
+      contentSections: prev.contentSections && prev.contentSections.length > 0
         ? prev.contentSections.filter(section => section.id !== idToRemove)
         : []
     }));
@@ -384,8 +384,8 @@ function FoodDetail() {
 
       const data = await res.json();
       // Update the specific comment in the comments array
-      const updatedComments = comments.map(comment => 
-        comment._id === commentId 
+      const updatedComments = comments.map(comment =>
+        comment._id === commentId
           ? { ...comment, reactions: data.reactions }
           : comment
       );
@@ -398,7 +398,7 @@ function FoodDetail() {
 
   const handleDelete = async () => {
     const confirmDelete = window.confirm("Are you sure you want to delete this food? This action cannot be undone.");
-    
+
     if (!confirmDelete) return;
 
     try {
@@ -528,13 +528,13 @@ function FoodDetail() {
         body: JSON.stringify({
           name: { en: formData.name_en || "", ta: formData.name_ta || "" },
           region: (formData.region_en || formData.region_ta) ? { en: formData.region_en || "", ta: formData.region_ta || "" } : undefined,
-            type: (formData.type_en || formData.type_ta) ? { en: formData.type_en || "", ta: formData.type_ta || "" } : undefined,
-            ingredients: (formData.ingredients_en || formData.ingredients_ta) ? { en: formData.ingredients_en || "", ta: formData.ingredients_ta || "" } : undefined,
-            recipe: (formData.recipe_en || formData.recipe_ta) ? { en: formData.recipe_en || "", ta: formData.recipe_ta || "" } : undefined,
-            description: { en: formData.description_en || "", ta: formData.description_ta || "" },
-            occasion: (formData.occasion_en || formData.occasion_ta) ? { en: formData.occasion_en || "", ta: formData.occasion_ta || "" } : undefined,
-            significance: (formData.significance_en || formData.significance_ta) ? { en: formData.significance_en || "", ta: formData.significance_ta || "" } : undefined,
-            image: formData.image || ""
+          type: (formData.type_en || formData.type_ta) ? { en: formData.type_en || "", ta: formData.type_ta || "" } : undefined,
+          ingredients: (formData.ingredients_en || formData.ingredients_ta) ? { en: formData.ingredients_en || "", ta: formData.ingredients_ta || "" } : undefined,
+          recipe: (formData.recipe_en || formData.recipe_ta) ? { en: formData.recipe_en || "", ta: formData.recipe_ta || "" } : undefined,
+          description: { en: formData.description_en || "", ta: formData.description_ta || "" },
+          occasion: (formData.occasion_en || formData.occasion_ta) ? { en: formData.occasion_en || "", ta: formData.occasion_ta || "" } : undefined,
+          significance: (formData.significance_en || formData.significance_ta) ? { en: formData.significance_en || "", ta: formData.significance_ta || "" } : undefined,
+          image: formData.image || ""
         }),
       });
       if (!res.ok) {
@@ -556,22 +556,22 @@ function FoodDetail() {
       return "";
     };
     setFormData({
-      name_en: extract(food.name,'en'),
-      name_ta: extract(food.name,'ta'),
-      region_en: extract(food.region,'en'),
-      region_ta: extract(food.region,'ta'),
-      type_en: extract(food.type,'en'),
-      type_ta: extract(food.type,'ta'),
-      ingredients_en: extract(food.ingredients,'en'),
-      ingredients_ta: extract(food.ingredients,'ta'),
-      recipe_en: extract(food.recipe,'en'),
-      recipe_ta: extract(food.recipe,'ta'),
-      description_en: extract(food.description,'en'),
-      description_ta: extract(food.description,'ta'),
-      occasion_en: extract(food.occasion,'en'),
-      occasion_ta: extract(food.occasion,'ta'),
-      significance_en: extract(food.significance,'en'),
-      significance_ta: extract(food.significance,'ta'),
+      name_en: extract(food.name, 'en'),
+      name_ta: extract(food.name, 'ta'),
+      region_en: extract(food.region, 'en'),
+      region_ta: extract(food.region, 'ta'),
+      type_en: extract(food.type, 'en'),
+      type_ta: extract(food.type, 'ta'),
+      ingredients_en: extract(food.ingredients, 'en'),
+      ingredients_ta: extract(food.ingredients, 'ta'),
+      recipe_en: extract(food.recipe, 'en'),
+      recipe_ta: extract(food.recipe, 'ta'),
+      description_en: extract(food.description, 'en'),
+      description_ta: extract(food.description, 'ta'),
+      occasion_en: extract(food.occasion, 'en'),
+      occasion_ta: extract(food.occasion, 'ta'),
+      significance_en: extract(food.significance, 'en'),
+      significance_ta: extract(food.significance, 'ta'),
       image: food.image || food.imageUrl || "",
     });
     setEditOpen(true);
@@ -626,10 +626,10 @@ function FoodDetail() {
   }
 
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{ 
-        py: 4, 
+    <Container
+      maxWidth="lg"
+      sx={{
+        py: 4,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -637,35 +637,35 @@ function FoodDetail() {
       }}
     >
       {/* Header */}
-      <Box 
-        sx={{ 
-          display: "flex", 
-          alignItems: "center", 
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
           mb: 4,
-          justifyContent: 'space-between' 
+          justifyContent: 'space-between'
         }}
       >
         <IconButton onClick={() => navigate("/explore/foods")}>
           <ArrowBack />
         </IconButton>
-        
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            fontWeight: 700, 
+
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 700,
             textTransform: 'uppercase',
             textAlign: 'center',
             flex: 1,
             mx: 2,
           }}
         >
-      {getContent(food.name)}
+          {getContent(food.name)}
         </Typography>
 
         {/* Admin Actions */}
         {user && user.role === "admin" && (
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton 
+            <IconButton
               onClick={() => {
                 // Prepare editable data when edit is clicked
                 setEditableData({
@@ -706,7 +706,7 @@ function FoodDetail() {
             >
               {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
-            <IconButton 
+            <IconButton
               onClick={handleDelete}
               sx={{
                 color: '#000',
@@ -725,19 +725,19 @@ function FoodDetail() {
       </Box>
 
       {/* Main Content */}
-      <Box 
-        sx={{ 
-          width: '100%', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 4 
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 4
         }}
       >
         {/* Image Section - Top */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center',
             border: '2px solid #000',
             position: 'relative',
@@ -777,10 +777,10 @@ function FoodDetail() {
         </Box>
 
         {/* Details Section - Bottom */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
             gap: 3,
             maxWidth: 800,
             mx: 'auto',
@@ -789,9 +789,9 @@ function FoodDetail() {
         >
           {/* Region and Type - Only show if there's content or in edit mode */}
           {(!isEditing && (food.region || food.type)) || isEditing ? (
-            <Box 
-              sx={{ 
-                display: 'flex', 
+            <Box
+              sx={{
+                display: 'flex',
                 justifyContent: 'space-between',
                 borderBottom: '1px solid #000',
                 pb: 2,
@@ -800,10 +800,10 @@ function FoodDetail() {
               {!isEditing ? (
                 <>
                   {getContent(food.region) && getContent(food.region).trim() !== '' && (
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 700, 
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: 1,
                       }}
@@ -812,10 +812,10 @@ function FoodDetail() {
                     </Typography>
                   )}
                   {getContent(food.type) && getContent(food.type).trim() !== '' && (
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 700, 
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: 1,
                       }}
@@ -826,13 +826,13 @@ function FoodDetail() {
                 </>
               ) : (
                 <Box sx={{ display: 'flex', width: '100%', gap: 2 }}>
-                  <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                    <TextField label="Region (EN)" value={editableData.region_en} onChange={(e)=>setEditableData({ ...editableData, region_en: e.target.value })} fullWidth variant="standard" />
-                    <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e)=>setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth variant="standard" />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                    <TextField label="Region (EN)" value={editableData.region_en} onChange={(e) => setEditableData({ ...editableData, region_en: e.target.value })} fullWidth variant="standard" />
+                    <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e) => setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth variant="standard" />
                   </Box>
-                  <Box sx={{ display:'flex', flexDirection:'column', gap:1, width:'50%' }}>
-                    <TextField label="Type (EN)" value={editableData.type_en} onChange={(e)=>setEditableData({ ...editableData, type_en: e.target.value })} fullWidth variant="standard" />
-                    <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e)=>setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth variant="standard" />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '50%' }}>
+                    <TextField label="Type (EN)" value={editableData.type_en} onChange={(e) => setEditableData({ ...editableData, type_en: e.target.value })} fullWidth variant="standard" />
+                    <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e) => setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth variant="standard" />
                   </Box>
                 </Box>
               )}
@@ -843,10 +843,10 @@ function FoodDetail() {
           {(food.ingredients || isEditing) && (
             !isEditing ? (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -866,10 +866,10 @@ function FoodDetail() {
               </Box>
             ) : (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -877,49 +877,49 @@ function FoodDetail() {
                 >
                   Ingredients
                 </Typography>
-                <TextField label="Ingredients (EN)" value={editableData.ingredients_en} onChange={(e)=>setEditableData({ ...editableData, ingredients_en: e.target.value })} fullWidth multiline rows={2} variant="standard" />
-                <TextField label="Ingredients (TA)" value={editableData.ingredients_ta} onChange={(e)=>setEditableData({ ...editableData, ingredients_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
+                <TextField label="Ingredients (EN)" value={editableData.ingredients_en} onChange={(e) => setEditableData({ ...editableData, ingredients_en: e.target.value })} fullWidth multiline rows={2} variant="standard" />
+                <TextField label="Ingredients (TA)" value={editableData.ingredients_ta} onChange={(e) => setEditableData({ ...editableData, ingredients_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
               </Box>
             )
           )}
 
           {/* Occasion */}
-          <Box 
-            sx={{ 
-              display: 'flex', 
+          <Box
+            sx={{
+              display: 'flex',
               justifyContent: 'space-between',
               borderBottom: '1px solid #000',
               pb: 2,
             }}
           >
-          {!isEditing ? (
-            getContent(food.occasion) && (
-              <Typography 
-                variant="subtitle1" 
-                sx={{ 
-                  fontWeight: 700, 
-                  textTransform: 'uppercase',
-                  letterSpacing: 1,
-                }}
-              >
-                Occasion: {getContent(food.occasion)}
-              </Typography>
-            )
-          ) : (
-            <Box sx={{ display:'flex', flexDirection:'column', width:'100%', gap:1 }}>
-              <TextField label="Occasion (EN)" value={editableData.occasion_en} onChange={(e)=>setEditableData({ ...editableData, occasion_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Occasion (TA)" value={editableData.occasion_ta} onChange={(e)=>setEditableData({ ...editableData, occasion_ta: e.target.value })} fullWidth variant="standard" />
-            </Box>
-          )}
+            {!isEditing ? (
+              getContent(food.occasion) && (
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                  }}
+                >
+                  Occasion: {getContent(food.occasion)}
+                </Typography>
+              )
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 1 }}>
+                <TextField label="Occasion (EN)" value={editableData.occasion_en} onChange={(e) => setEditableData({ ...editableData, occasion_en: e.target.value })} fullWidth variant="standard" />
+                <TextField label="Occasion (TA)" value={editableData.occasion_ta} onChange={(e) => setEditableData({ ...editableData, occasion_ta: e.target.value })} fullWidth variant="standard" />
+              </Box>
+            )}
           </Box>
 
           {/* Description */}
           {!isEditing ? (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -939,10 +939,10 @@ function FoodDetail() {
             </Box>
           ) : (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -950,18 +950,18 @@ function FoodDetail() {
               >
                 Description
               </Typography>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e)=>setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={3} variant="standard" />
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e)=>setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={3} variant="standard" />
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
             </Box>
           )}
 
           {/* Main Image (URL + Upload) - Edit mode only */}
           {isEditing && (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -986,19 +986,19 @@ function FoodDetail() {
               />
 
               {(editableData.imageUrl) && (
-                <Box 
-                  sx={{ 
-                    mt: 2, 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    border: '1px solid #ddd', 
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    border: '1px solid #ddd',
                     borderRadius: 1,
-                    p: 2 
+                    p: 2
                   }}
                 >
-                  <img 
-                    src={editableData.imageUrl} 
-                    alt="Preview" 
+                  <img
+                    src={editableData.imageUrl}
+                    alt="Preview"
                     style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }}
                     onError={(e) => {
                       e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
@@ -1012,10 +1012,10 @@ function FoodDetail() {
           {/* Recipe - Only show if there's content or in edit mode */}
           {(!isEditing && food.recipe && food.recipe.trim() !== '') ? (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -1035,10 +1035,10 @@ function FoodDetail() {
             </Box>
           ) : isEditing ? (
             <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  mb: 2, 
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '2px solid #000',
                   pb: 1,
@@ -1046,8 +1046,8 @@ function FoodDetail() {
               >
                 Recipe
               </Typography>
-              <TextField label="Recipe (EN)" value={editableData.recipe_en} onChange={(e)=>setEditableData({ ...editableData, recipe_en: e.target.value })} fullWidth multiline rows={2} variant="standard" />
-              <TextField label="Recipe (TA)" value={editableData.recipe_ta} onChange={(e)=>setEditableData({ ...editableData, recipe_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
+              <TextField label="Recipe (EN)" value={editableData.recipe_en} onChange={(e) => setEditableData({ ...editableData, recipe_en: e.target.value })} fullWidth multiline rows={2} variant="standard" />
+              <TextField label="Recipe (TA)" value={editableData.recipe_ta} onChange={(e) => setEditableData({ ...editableData, recipe_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
             </Box>
           ) : null}
 
@@ -1055,10 +1055,10 @@ function FoodDetail() {
           {(food.significance || isEditing) && (
             !isEditing ? (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -1078,10 +1078,10 @@ function FoodDetail() {
               </Box>
             ) : (
               <Box>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    mb: 2, 
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
                     fontWeight: 700,
                     borderBottom: '2px solid #000',
                     pb: 1,
@@ -1089,26 +1089,26 @@ function FoodDetail() {
                 >
                   Significance
                 </Typography>
-                <TextField label="Significance (EN)" value={editableData.significance_en} onChange={(e)=>setEditableData({ ...editableData, significance_en: e.target.value })} fullWidth multiline rows={2} variant="standard" />
-                <TextField label="Significance (TA)" value={editableData.significance_ta} onChange={(e)=>setEditableData({ ...editableData, significance_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
+                <TextField label="Significance (EN)" value={editableData.significance_en} onChange={(e) => setEditableData({ ...editableData, significance_en: e.target.value })} fullWidth multiline rows={2} variant="standard" />
+                <TextField label="Significance (TA)" value={editableData.significance_ta} onChange={(e) => setEditableData({ ...editableData, significance_ta: e.target.value })} fullWidth multiline rows={2} variant="standard" />
               </Box>
             )
           )}
 
           {/* Content Sections */}
-          {!isEditing && food.contentSections && food.contentSections.length > 0 && 
+          {!isEditing && food.contentSections && food.contentSections.length > 0 &&
             food.contentSections.map((section, index) => {
               // Only render sections that have at least one piece of content
               const hasContent = section.subtitle || section.content || section.imageUrl || section.videoUrl;
               if (!hasContent) return null;
-              
+
               return (
                 <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
                   {getContent(section.subtitle) && getContent(section.subtitle).trim() !== '' && (
-                    <Typography 
-                      variant="h6" 
+                    <Typography
+                      variant="h6"
                       sx={{
-                        mb: 2, 
+                        mb: 2,
                         fontWeight: 700,
                         borderBottom: '2px solid #000',
                         pb: 1,
@@ -1117,7 +1117,7 @@ function FoodDetail() {
                       {getContent(section.subtitle)}
                     </Typography>
                   )}
-                  
+
                   {getContent(section.content) && getContent(section.content).trim() !== '' && (
                     <Typography
                       variant="body1"
@@ -1132,12 +1132,12 @@ function FoodDetail() {
 
                   {/* Section Image */}
                   {section.imageUrl && section.imageUrl.trim() !== '' && (
-                    <img 
-                      src={section.imageUrl} 
-                      alt={getContent(section.subtitle) || `Section ${index + 1} Image`} 
-                      style={{ 
-                        maxWidth: '100%', 
-                        height: 'auto', 
+                    <img
+                      src={section.imageUrl}
+                      alt={getContent(section.subtitle) || `Section ${index + 1} Image`}
+                      style={{
+                        maxWidth: '100%',
+                        height: 'auto',
                         marginTop: 16,
                         border: '1px solid #ddd',
                         padding: 8
@@ -1150,29 +1150,29 @@ function FoodDetail() {
 
                   {/* Section Video */}
                   {section.videoUrl && section.videoUrl.trim() !== '' && (
-                    <iframe 
-                      src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                    <iframe
+                      src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
                       title={getContent(section.videoTitle) || `Section ${index + 1} Video`}
                       style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                       allowFullScreen
                     />
                   )}
-                  
+
                   {/* Section Video Details */}
                   {(section.videoTitle && section.videoTitle.trim() !== '') || (section.videoDescription && section.videoDescription.trim() !== '') ? (
                     <Box sx={{ mt: 2 }}>
                       {getContent(section.videoTitle) && getContent(section.videoTitle).trim() !== '' && (
-                        <Typography 
-                          variant="subtitle1" 
+                        <Typography
+                          variant="subtitle1"
                           sx={{ fontWeight: 600 }}
                         >
                           {getContent(section.videoTitle)}
                         </Typography>
                       )}
-                      
+
                       {getContent(section.videoDescription) && getContent(section.videoDescription).trim() !== '' && (
-                        <Typography 
-                          variant="body2" 
+                        <Typography
+                          variant="body2"
                           sx={{ color: '#555', fontStyle: 'italic' }}
                         >
                           {getContent(section.videoDescription)}
@@ -1188,11 +1188,11 @@ function FoodDetail() {
           {/* Editable Content Sections */}
           {isEditing && user && user.role === "admin" && (
             <>
-              <Typography 
-                variant="h6" 
+              <Typography
+                variant="h6"
                 sx={{
                   mt: 4,
-                  mb: 2, 
+                  mb: 2,
                   fontWeight: 700,
                   borderBottom: '1px solid #000',
                   pb: 1,
@@ -1200,45 +1200,45 @@ function FoodDetail() {
               >
                 Additional Content Sections
               </Typography>
-              
+
               {editableData.contentSections && editableData.contentSections.map((section, index) => (
-                <Box 
-                  key={section.id || `editable-section-${index}`} 
-                  sx={{ 
-                    mb: 3, 
-                    p: 2, 
+                <Box
+                  key={section.id || `editable-section-${index}`}
+                  sx={{
+                    mb: 3,
+                    p: 2,
                     border: '1px solid #000',
-                    position: 'relative' 
+                    position: 'relative'
                   }}
                 >
-                  <TextField label="Subtitle (EN)" value={section.subtitle_en} onChange={(e)=>{
+                  <TextField label="Subtitle (EN)" value={section.subtitle_en} onChange={(e) => {
                     const updated = [...editableData.contentSections];
                     updated[index].subtitle_en = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
-                  }} fullWidth sx={{ mb:1 }} variant="standard" />
-                  <TextField label="Subtitle (TA)" value={section.subtitle_ta} onChange={(e)=>{
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb: 1 }} variant="standard" />
+                  <TextField label="Subtitle (TA)" value={section.subtitle_ta} onChange={(e) => {
                     const updated = [...editableData.contentSections];
                     updated[index].subtitle_ta = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
-                  }} fullWidth sx={{ mb:2 }} variant="standard" />
-                  
-                  <TextField label="Content (EN)" value={section.content_en} onChange={(e)=>{
-                    const updated=[...editableData.contentSections];
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb: 2 }} variant="standard" />
+
+                  <TextField label="Content (EN)" value={section.content_en} onChange={(e) => {
+                    const updated = [...editableData.contentSections];
                     updated[index].content_en = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
-                  }} fullWidth multiline rows={3} variant="standard" sx={{ mb:1 }} />
-                  <TextField label="Content (TA)" value={section.content_ta} onChange={(e)=>{
-                    const updated=[...editableData.contentSections];
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
+                  }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 1 }} />
+                  <TextField label="Content (TA)" value={section.content_ta} onChange={(e) => {
+                    const updated = [...editableData.contentSections];
                     updated[index].content_ta = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
-                  }} fullWidth multiline rows={3} variant="standard" sx={{ mb:2 }} />
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
+                  }} fullWidth multiline rows={3} variant="standard" sx={{ mb: 2 }} />
 
                   {/* Image URL for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mt: 2,
+                      mb: 1,
                       fontWeight: 700,
                       borderBottom: '1px solid #000',
                       pb: 1,
@@ -1246,7 +1246,7 @@ function FoodDetail() {
                   >
                     Section Image
                   </Typography>
-                  
+
                   <TextField
                     label="Image URL"
                     value={section.imageUrl}
@@ -1295,23 +1295,23 @@ function FoodDetail() {
 
                   {/* Preview of uploaded/entered image */}
                   {section.imageUrl && (
-                    <Box 
-                      sx={{ 
-                        mt: 2, 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        border: '1px solid #ddd', 
+                    <Box
+                      sx={{
+                        mt: 2,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        border: '1px solid #ddd',
                         borderRadius: 1,
-                        p: 2 
+                        p: 2
                       }}
                     >
-                      <img 
-                        src={section.imageUrl} 
-                        alt="Preview" 
-                        style={{ 
-                          maxWidth: '100%', 
-                          maxHeight: 200, 
-                          objectFit: 'contain' 
+                      <img
+                        src={section.imageUrl}
+                        alt="Preview"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: 200,
+                          objectFit: 'contain'
                         }}
                         onError={(e) => {
                           e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3EImage Not Available%3C/text%3E%3C/svg%3E";
@@ -1321,11 +1321,11 @@ function FoodDetail() {
                   )}
 
                   {/* Video Details for Content Section */}
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mt: 2, 
-                      mb: 1, 
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      mt: 2,
+                      mb: 1,
                       fontWeight: 700,
                       borderBottom: '1px solid #000',
                       pb: 1,
@@ -1333,7 +1333,7 @@ function FoodDetail() {
                   >
                     Section Video Details
                   </Typography>
-                  
+
                   <TextField
                     label="Video URL"
                     value={section.videoUrl}
@@ -1352,29 +1352,29 @@ function FoodDetail() {
                     variant="standard"
                     placeholder="Enter full YouTube video URL"
                   />
-                  
-                  <TextField label="Video Title (EN)" value={section.videoTitle_en} onChange={(e)=>{
-                    const updated=[...editableData.contentSections];
+
+                  <TextField label="Video Title (EN)" value={section.videoTitle_en} onChange={(e) => {
+                    const updated = [...editableData.contentSections];
                     updated[index].videoTitle_en = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
-                  }} fullWidth sx={{ mb:1 }} variant="standard" />
-                  <TextField label="Video Title (TA)" value={section.videoTitle_ta} onChange={(e)=>{
-                    const updated=[...editableData.contentSections];
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb: 1 }} variant="standard" />
+                  <TextField label="Video Title (TA)" value={section.videoTitle_ta} onChange={(e) => {
+                    const updated = [...editableData.contentSections];
                     updated[index].videoTitle_ta = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
-                  }} fullWidth sx={{ mb:2 }} variant="standard" />
-                  
-                  <TextField label="Video Description (EN)" value={section.videoDescription_en} onChange={(e)=>{
-                    const updated=[...editableData.contentSections];
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
+                  }} fullWidth sx={{ mb: 2 }} variant="standard" />
+
+                  <TextField label="Video Description (EN)" value={section.videoDescription_en} onChange={(e) => {
+                    const updated = [...editableData.contentSections];
                     updated[index].videoDescription_en = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
                   }} fullWidth multiline rows={2} variant="standard" />
-                  <TextField label="Video Description (TA)" value={section.videoDescription_ta} onChange={(e)=>{
-                    const updated=[...editableData.contentSections];
+                  <TextField label="Video Description (TA)" value={section.videoDescription_ta} onChange={(e) => {
+                    const updated = [...editableData.contentSections];
                     updated[index].videoDescription_ta = e.target.value;
-                    setEditableData(prev=>({ ...prev, contentSections: updated }));
+                    setEditableData(prev => ({ ...prev, contentSections: updated }));
                   }} fullWidth multiline rows={2} variant="standard" />
-                  
+
                   <IconButton
                     onClick={() => removeContentSection(section.id)}
                     sx={{
@@ -1390,7 +1390,7 @@ function FoodDetail() {
               ))}
             </>
           )}
-          
+
           {/* Update Buttons - Only show when editing */}
           {isEditing && user && user.role === "admin" && (
             <Box
@@ -1447,16 +1447,16 @@ function FoodDetail() {
               </Box>
             </Box>
           )}
-          
+
           {/* Content Sections */}
-          {!isEditing && food.contentSections && food.contentSections.length > 0 && 
+          {!isEditing && food.contentSections && food.contentSections.length > 0 &&
             food.contentSections.map((section, index) => (
               <Box key={section.id || `content-section-${index}`} sx={{ mt: 4 }}>
                 {section.subtitle && (
-                  <Typography 
-                    variant="h6" 
+                  <Typography
+                    variant="h6"
                     sx={{
-                      mb: 2, 
+                      mb: 2,
                       fontWeight: 700,
                       borderBottom: '2px solid #000',
                       pb: 1,
@@ -1465,7 +1465,7 @@ function FoodDetail() {
                     {section.subtitle}
                   </Typography>
                 )}
-                
+
                 {section.content && (
                   <Typography
                     variant="body1"
@@ -1480,12 +1480,12 @@ function FoodDetail() {
 
                 {/* Section Image */}
                 {section.imageUrl && (
-                  <img 
-                    src={section.imageUrl} 
-                    alt={section.subtitle || `Section ${index + 1} Image`} 
-                    style={{ 
-                      maxWidth: '100%', 
-                      height: 'auto', 
+                  <img
+                    src={section.imageUrl}
+                    alt={section.subtitle || `Section ${index + 1} Image`}
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
                       marginTop: 16,
                       border: '1px solid #ddd',
                       padding: 8
@@ -1498,29 +1498,29 @@ function FoodDetail() {
 
                 {/* Section Video */}
                 {section.videoUrl && (
-                  <iframe 
-                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`} 
+                  <iframe
+                    src={`https://www.youtube.com/embed/${section.videoUrl.split('v=')[1] || section.videoUrl.split('/').pop()}`}
                     title={section.videoTitle || `Section ${index + 1} Video`}
                     style={{ width: '100%', height: 'auto', aspectRatio: '16/9', marginTop: 16 }}
                     allowFullScreen
                   />
                 )}
-                
+
                 {/* Section Video Details */}
                 {(section.videoTitle || section.videoDescription) && (
                   <Box sx={{ mt: 2 }}>
                     {section.videoTitle && (
-                      <Typography 
-                        variant="subtitle1" 
+                      <Typography
+                        variant="subtitle1"
                         sx={{ fontWeight: 600 }}
                       >
                         {section.videoTitle}
                       </Typography>
                     )}
-                    
+
                     {section.videoDescription && (
-                      <Typography 
-                        variant="body2" 
+                      <Typography
+                        variant="body2"
                         sx={{ color: '#555', fontStyle: 'italic' }}
                       >
                         {section.videoDescription}
@@ -1532,21 +1532,21 @@ function FoodDetail() {
             ))
           }
 
-{/* Comments Section */}
+          {/* Comments Section */}
         </Box>
       </Box>
 
       {/* Like/Share row removed to match streamlined layout */}
 
       {/* Comments Section */}
-      <Box 
-        sx={{ 
-          mt: 4, 
-          width: '100%', 
-          maxWidth: 800,  
-          mx: 'auto',    
-          display: 'flex', 
-          flexDirection: 'column', 
+      <Box
+        sx={{
+          mt: 4,
+          width: '100%',
+          maxWidth: 800,
+          mx: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
           alignItems: 'stretch',
           border: '1px solid #000',
           p: 2,
@@ -1937,6 +1937,32 @@ function FoodDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Standardized Back Button */}
+      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/explore/foods')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← Back to Foods
+        </Button>
+      </Box>
     </Container>
   );
 }

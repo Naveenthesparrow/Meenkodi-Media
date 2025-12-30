@@ -112,7 +112,7 @@ export default function Literature({ user }) {
       author_ta: "",
       period_en: "",
       period_ta: "",
-      image: "" 
+      image: ""
     });
     setAddOpen(true);
   };
@@ -162,14 +162,14 @@ export default function Literature({ user }) {
             method: "DELETE",
             credentials: "include",
           });
-          
+
           if (!res.ok) throw new Error("Delete failed");
-          
+
           // Optimistic update
-          setLiterature(prevLiterature => 
+          setLiterature(prevLiterature =>
             prevLiterature.filter((lit) => lit._id !== id)
           );
-          
+
           // Optional: Refresh to ensure consistency
           await fetchLiterature();
         } catch (err) {
@@ -192,240 +192,252 @@ export default function Literature({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.literature} />
       {/* Unique Heading Section */}
-      <Box 
-        sx={{ 
-          mb: 6, 
+      <Box
+        sx={{
+          mb: 6,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: user && user.role === "admin" ? 'space-between' : 'center',
+          justifyContent: 'space-between',
           flexDirection: { xs: 'column', md: 'row' },
           gap: { xs: 2, md: 0 },
           position: 'relative',
-          overflow: 'hidden',
         }}
       >
-        <Typography
-          variant="h2" 
+        <Box sx={{ flex: 1 }}>
+          <Typography
+            variant="h2"
             sx={{
-            fontWeight: 900, 
-            color: "#000", 
-            position: 'relative',
-            display: 'inline-block',
-            letterSpacing: -1,
-            padding: '0 10px',
-            transition: 'all 0.3s ease',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              right: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&:hover': {
-              color: '#333',
-              transform: 'scale(1.02)',
-              '&::before': {
-                width: '60px',
-                left: '-70px',
-                backgroundColor: '#666',
-              },
+              fontWeight: 700,
+              color: "#8B0000",
+              fontFamily: 'Georgia, serif',
+              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              letterSpacing: 2,
+              mb: { xs: 0.5, md: 1 },
+              position: 'relative',
+              display: 'inline-block',
+              textTransform: 'uppercase',
               '&::after': {
-                width: '60px',
-                right: '-70px',
-                backgroundColor: '#666',
+                content: '""',
+                position: 'absolute',
+                bottom: -8,
+                left: 0,
+                width: '120px',
+                height: '4px',
+                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
               },
-            },
-          }}
-        >
-          {t('literature.title','Literature')}
-        </Typography>
-        
-        {user && user.role === "admin" && (
-          <Box 
-            sx={{ 
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'scale(1.05)',
-                '& button': {
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                }
-              }
             }}
           >
-            <Button
-              onClick={handleAdd}
-              variant="contained"
-              startIcon={<Add />}
+            {t('literature.title', 'Literature')}
+          </Typography>
+        </Box>
+
+        <Box sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: { xs: 'center', md: 'flex-end' },
+          gap: 1
+        }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: '#666',
+              fontStyle: 'italic',
+              fontSize: { xs: '0.95rem', md: '1.05rem' },
+              textAlign: { xs: 'center', md: 'right' },
+              fontFamily: 'Georgia, serif',
+            }}
+          >
+            {t('literature.subtitle', 'Timeless Tamil Literary Works')}
+          </Typography>
+
+          {user && user.role === "admin" && (
+            <Box
               sx={{
-                bgcolor: "#000",
-                color: "#fff",
                 transition: 'all 0.3s ease',
-                "&:hover": { 
-                  bgcolor: "#333",
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                },
-                borderRadius: 0,
-                px: 3,
+                mt: 1,
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  '& button': {
+                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
+                  }
+                }
               }}
             >
-              {t('literature.add','Add Literature')}
-            </Button>
-          </Box>
-        )}
+              <Button
+                onClick={handleAdd}
+                variant="contained"
+                startIcon={<Add />}
+                sx={{
+                  bgcolor: "#8B0000",
+                  color: "#fff",
+                  transition: 'all 0.3s ease',
+                  "&:hover": {
+                    bgcolor: "#6B0000",
+                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
+                  },
+                  borderRadius: 0,
+                  px: 3,
+                  py: 1,
+                  fontWeight: 700,
+                  letterSpacing: 0.5,
+                  fontFamily: 'Georgia, serif',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t('literature.add', 'Add Literature')}
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Box>
 
-      <Grid 
-        container 
-        spacing={4} 
+      <Box
         sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          perspective: '1000px', // 3D effect for cards
-          transition: 'all 0.3s ease',
-          '& > .MuiGrid-item': {
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'scale(1.02)',
-              zIndex: 10,
-            }
-          }
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)'
+          },
+          gap: { xs: 3, md: 4 },
         }}
       >
         {literature.map((literature, index) => (
-          <Fade 
-            in={true} 
-            timeout={500 + index * 200} 
+          <Fade
+            in={true}
+            timeout={500 + index * 150}
             key={literature._id}
           >
-            <Grid 
-              item 
-              xs={12} 
-              sm={6} 
-              md={4} 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'center',
+            <Box
+              sx={{
+                width: '100%',
                 transition: 'all 0.3s ease',
               }}
             >
               <Card
                 sx={{
-                  width: { xs: '100%', sm: 350 },  
-                  maxWidth: '100%',
-                  height: 'auto', 
-                  minHeight: 450,
+                  width: '100%',
+                  height: { xs: 460, md: 500 },
                   display: 'flex',
                   flexDirection: 'column',
-                  border: "3px solid #000",
+                  border: 'none',
                   borderRadius: 0,
-                  bgcolor: "#fff",
-                  transition: "all 0.3s ease",
+                  bgcolor: '#fff',
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                   cursor: "pointer",
                   position: 'relative',
-                  overflow: 'hidden',
-                  "&::before": {
+                  overflow: 'visible',
+                  boxShadow: '0 8px 25px rgba(139,0,0,0.12)',
+                  border: 'none',
+                  '&::after': {
                     content: '""',
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(45deg, transparent, transparent 40%, rgba(255,255,255,0.1) 40%, transparent 60%)',
-                    transform: 'translateX(-100%)',
-                    transition: 'transform 0.6s ease',
+                    top: -8,
+                    left: -8,
+                    right: -8,
+                    bottom: -8,
+                    border: '2px solid #8B0000',
+                    opacity: 0,
+                    transition: 'opacity 0.4s ease',
+                    zIndex: -1,
                   },
                   "&:hover": {
-                    transform: "translateY(-15px) rotate(1deg)",
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                    "&::before": {
-                      transform: 'translateX(100%)',
+                    transform: "translateY(-16px)",
+                    boxShadow: '0 25px 50px rgba(139,0,0,0.25)',
+                    '&::after': {
+                      opacity: 1,
                     },
-                    "& .card-content": {
-                      transform: "scale(1.02)",
-                      opacity: 0.95,
+                    "& .temple-image": {
+                      transform: 'scale(1.1) rotate(2deg)',
+                    },
+                    "& .temple-overlay": {
+                      opacity: 1,
+                    },
+                    "& .temple-title": {
+                      color: '#8B0000',
+                    },
+                    "& .view-button": {
+                      bgcolor: '#8B0000',
+                      color: '#fff',
+                      transform: 'translateY(-4px)',
+                    },
+                    "& .admin-controls": {
+                      opacity: 1,
+                      transform: 'translateY(0)',
+                    },
+                    "& .like-badge": {
+                      transform: 'scale(1.1) rotate(-5deg)',
                     }
                   },
                 }}
                 onClick={() => navigate(`/explore/literature/${literature._id}`)}
               >
-                {(literature.image || literature.imageLink) ? (
-                  <CardMedia
-                    component="img"
-                    height={200}
-                    image={literature.image || literature.imageLink}
-                    alt={getContent(literature.title)}
-                    sx={{ 
-                      objectFit: "contain",
-                      width: '100%',
-                      maxHeight: 200,
-                      backgroundColor: '#f0f0f0',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                    onError={(e) => {
-                      console.error('Image failed to load:', literature.image || literature.imageLink);
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E";
-                      e.target.style.display = 'block';
+                <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+                  {(literature.image || literature.imageLink) ? (
+                    <CardMedia
+                      component="img"
+                      image={literature.image || literature.imageLink}
+                      alt={getContent(literature.title)}
+                      className="temple-image"
+                      sx={{
+                        objectFit: "cover",
+                        width: '100%',
+                        height: '100%',
+                        transition: 'all 0.6s ease',
+                      }}
+                      onError={(e) => {
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23e0e0e0' width='400' height='240'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18px' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        height: '100%',
+                        width: '100%',
+                        backgroundColor: '#e0e0e0',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        sx={{ fontFamily: 'Georgia, serif', fontSize: '1rem' }}
+                      >
+                        No Image Available
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Gradient Overlay */}
+                  <Box
+                    className="temple-overlay"
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '60%',
+                      background: 'linear-gradient(to top, rgba(139,0,0,0.85) 0%, rgba(139,0,0,0.3) 50%, transparent 100%)',
+                      opacity: 0.7,
+                      transition: 'opacity 0.4s ease',
                     }}
                   />
-                ) : (
-                  <Box
-                    sx={{
-                      height: 200,
-                      width: '100%',
-                      backgroundColor: '#f0f0f0',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '10px',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    <Typography 
-                      variant="body2" 
-                      color="textSecondary"
-                      sx={{ textAlign: 'center' }}
-                    >
-                      No Image Available
-                    </Typography>
-                  </Box>
-                )}
-                <CardContent
-                  className="card-content"
-                  sx={{
-                    p: 3,
-                    flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    transition: 'all 0.3s ease',
-                  }}
-                >
+
+                  {/* Admin Controls */}
                   {user && user.role === "admin" && (
-                    <Box 
-                      sx={{ 
-                        display: "flex", 
-                        justifyContent: 'flex-end',
+                    <Box
+                      className="admin-controls"
+                      sx={{
+                        position: 'absolute',
+                        bottom: 10,
+                        right: 10,
+                        display: "flex",
                         gap: 1,
-                        mb: 1,
+                        opacity: 0,
+                        transform: 'translateY(8px)',
+                        transition: 'opacity 0.3s ease, transform 0.25s ease',
                       }}
                     >
                       <IconButton
@@ -435,16 +447,18 @@ export default function Literature({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                          bgcolor: "#FFF",
+                          color: '#000',
+                          "&:hover": {
+                            bgcolor: '#000',
+                            color: '#FFF',
+                            transform: 'scale(1.15)'
                           },
                           transition: 'all 0.2s ease',
+                          border: '2px solid #000',
                         }}
                       >
-                        <Edit />
+                        <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
@@ -453,32 +467,46 @@ export default function Literature({ user }) {
                         }}
                         size="small"
                         sx={{
-                          color: "#000",
-                          bgcolor: 'rgba(255,255,255,0.7)',
-                          "&:hover": { 
-                            bgcolor: 'rgba(255,255,255,0.9)',
-                            transform: 'scale(1.1)' 
+                          bgcolor: "#FFF",
+                          color: '#000',
+                          "&:hover": {
+                            bgcolor: '#000',
+                            color: '#FFF',
+                            transform: 'scale(1.15)'
                           },
                           transition: 'all 0.2s ease',
+                          border: '2px solid #000',
                         }}
                       >
-                        <Delete />
+                        <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   )}
+                </Box>
+                <CardContent
+                  sx={{
+                    p: 3,
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    bgcolor: '#fff',
+                  }}
+                >
                   <Box>
                     <Typography
                       variant="h5"
+                      className="temple-title"
                       sx={{
-                        fontWeight: 700, 
-                        color: "#000", 
-                        mb: 1,
-                        lineHeight: 1.3,
-                        fontSize: { xs: '1.25rem', md: '1.5rem' },
+                        fontFamily: 'Georgia, serif',
+                        fontWeight: 700,
+                        color: '#000',
+                        mb: 1.25,
+                        lineHeight: 1.12,
+                        fontSize: { xs: '1.35rem', md: '1.6rem' },
                         textTransform: 'capitalize',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        letterSpacing: '0.02em',
+                        transition: 'color 0.3s ease',
                       }}
                     >
                       {getContent(literature.title)}
@@ -497,9 +525,9 @@ export default function Literature({ user }) {
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ 
-                        color: "#000", 
-                        lineHeight: 1.6, 
+                      sx={{
+                        color: "#000",
+                        lineHeight: 1.6,
                         mb: 2,
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
@@ -511,21 +539,6 @@ export default function Literature({ user }) {
                     >
                       {getContent(literature.period)}
                     </Typography>
-                    
-                    {/* Like Count Display */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Favorite sx={{ color: '#000', fontSize: '1rem', mr: 0.5 }} />
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: '#000', 
-                          fontSize: '0.875rem',
-                          fontWeight: 500 
-                        }}
-                      >
-                        {literature.likes ? literature.likes.length : 0} Likes
-                      </Typography>
-                    </Box>
                   </Box>
 
                   <Button
@@ -533,22 +546,32 @@ export default function Literature({ user }) {
                     to={`/explore/literature/${literature._id}`}
                     variant="outlined"
                     fullWidth
+                    className="view-button"
                     sx={{
-                      color: "#000",
-                      borderColor: "#000",
+                      color: '#000',
+                      borderColor: '#000',
+                      borderWidth: 2,
                       borderRadius: 0,
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
                       mt: 'auto',
-                      "&:hover": { bgcolor: "#f5f5f5", borderColor: "#000" },
+                      py: 1.2,
+                      transition: 'all 0.25s ease',
+                      fontFamily: 'Georgia, serif',
+                      fontSize: '0.95rem',
+                      '&:hover': {
+                        borderColor: '#8B0000',
+                      }
                     }}
                   >
-                    {t('actions.readMore', 'Read more')}
+                    {t('actions.readMore', 'Read more').toUpperCase()}
                   </Button>
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
           </Fade>
         ))}
-      </Grid>
+      </Box>
 
       {/* Edit/Add Dialog */}
       <Dialog
@@ -568,70 +591,70 @@ export default function Literature({ user }) {
       >
         <DialogTitle
           sx={{
-            bgcolor: '#000', 
-            color: '#fff', 
+            bgcolor: '#000',
+            color: '#fff',
             textAlign: 'center',
-            fontWeight: 700 
+            fontWeight: 700
           }}
         >
-          {editItem ? t('literature.edit','Edit Literature Work') : t('literature.addNew','Add New Literature Work')}
+          {editItem ? t('literature.edit', 'Edit Literature Work') : t('literature.addNew', 'Add New Literature Work')}
         </DialogTitle>
         <DialogContent sx={{ p: 3 }}>
-              <TextField
-                fullWidth
-                label={`${t('form.name','Name')} / ${t('form.name','Name')} - ${t('literature.title','Title') || 'Title'} (EN)`}
-                value={formData.title_en}
-                onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('literature.title','Title') || 'Title'} (TA)`}
-                value={formData.title_ta}
-                onChange={(e) => setFormData({ ...formData, title_ta: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.author','Author')} (EN)`}
-                value={formData.author_en}
-                onChange={(e) => setFormData({ ...formData, author_en: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.author','Author')} (TA)`}
-                value={formData.author_ta}
-                onChange={(e) => setFormData({ ...formData, author_ta: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.period','Period')} (EN)`}
-                value={formData.period_en}
-                onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={`${t('form.period','Period')} (TA)`}
-                value={formData.period_ta}
-                onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                fullWidth
-                label={t('form.imageUrl','Image URL')}
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                sx={{ mb: 2 }}
-              />
+          <TextField
+            fullWidth
+            label={`${t('form.name', 'Name')} / ${t('form.name', 'Name')} - ${t('literature.title', 'Title') || 'Title'} (EN)`}
+            value={formData.title_en}
+            onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('literature.title', 'Title') || 'Title'} (TA)`}
+            value={formData.title_ta}
+            onChange={(e) => setFormData({ ...formData, title_ta: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.author', 'Author')} (EN)`}
+            value={formData.author_en}
+            onChange={(e) => setFormData({ ...formData, author_en: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.author', 'Author')} (TA)`}
+            value={formData.author_ta}
+            onChange={(e) => setFormData({ ...formData, author_ta: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.period', 'Period')} (EN)`}
+            value={formData.period_en}
+            onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={`${t('form.period', 'Period')} (TA)`}
+            value={formData.period_ta}
+            onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label={t('form.imageUrl', 'Image URL')}
+            value={formData.image}
+            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+            sx={{ mb: 2 }}
+          />
         </DialogContent>
         <DialogActions
-          sx={{ 
-            p: 2, 
+          sx={{
+            p: 2,
             justifyContent: 'space-between',
-            bgcolor: '#f0f0f0' 
+            bgcolor: '#f0f0f0'
           }}
         >
           <Button
@@ -641,7 +664,7 @@ export default function Literature({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            {t('actions.cancel','Cancel')}
+            {t('actions.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -653,7 +676,7 @@ export default function Literature({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update','Update') : t('actions.add','Add')}
+            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
           </Button>
         </DialogActions>
       </Dialog>
