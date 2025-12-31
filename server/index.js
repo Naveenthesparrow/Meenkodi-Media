@@ -52,6 +52,7 @@ mongoose
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5000",
+  "https://www.meenkodi.com",
   "https://meenkodi-media-fd.onrender.com",
   process.env.CLIENT_URL
 ].filter(Boolean);
