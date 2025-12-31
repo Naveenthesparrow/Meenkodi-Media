@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API_BASE_URL from "../../utils/api";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -39,7 +40,6 @@ import MediaUpload from "../common/MediaUpload";
 import { useBilingualContent } from "../../utils/bilingualContent";
 function ClothingDetail() {
   // Centralized API base for all requests
-  const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
@@ -158,7 +158,7 @@ function ClothingDetail() {
     try {
       console.log("Fetching user in ClothingDetail...");
       const res = await fetch(
-        `${API_BASE}/auth/user`,
+        `${API_BASE_URL}/auth/user`,
         {
           method: "GET",
           credentials: "include",
@@ -195,7 +195,7 @@ function ClothingDetail() {
 
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}`, {
         credentials: "include"
       });
       if (!res.ok) {
@@ -265,7 +265,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/clothing/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -299,7 +299,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/clothing/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -334,7 +334,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/replies`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}/comments/${commentId}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -364,7 +364,7 @@ function ClothingDetail() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/reactions`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}/comments/${commentId}/reactions`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -397,7 +397,7 @@ function ClothingDetail() {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}`, {
         method: "DELETE",
         credentials: "include"
       });
@@ -416,7 +416,7 @@ function ClothingDetail() {
   const handleDeleteConfirmation = async () => {
     if (deleteType === 'comment') {
       try {
-        const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${itemToDelete}`, {
+        const res = await fetch(`${API_BASE_URL}/api/clothing/${id}/comments/${itemToDelete}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -434,7 +434,7 @@ function ClothingDetail() {
     } else if (deleteType === 'reply') {
       try {
         const [commentId, replyId] = itemToDelete.split('-');
-        const res = await fetch(`${API_BASE}/api/clothing/${id}/comments/${commentId}/replies/${replyId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/clothing/${id}/comments/${commentId}/replies/${replyId}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -491,7 +491,7 @@ function ClothingDetail() {
         image: editableData.imageUrl || clothing.image || "",
         contentSections: formattedContentSections
       };
-      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -522,7 +522,7 @@ function ClothingDetail() {
         history: toBilingual(formData.history_en, formData.history_ta),
         image: formData.image || clothing.image || "",
       };
-      const res = await fetch(`${API_BASE}/api/clothing/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

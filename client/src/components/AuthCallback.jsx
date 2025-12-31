@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import API_BASE_URL from "../utils/api";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -13,10 +13,10 @@ export default function AuthCallback() {
     const verifyAuth = async () => {
       try {
         setStatus("Checking authentication...");
-        
+
         // Wait a moment for session to be established
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         const response = await fetch(`${API_BASE_URL}/auth/user`, {
           credentials: "include",
           headers: {
@@ -28,13 +28,13 @@ export default function AuthCallback() {
           const userData = await response.json();
           console.log("Authentication verified:", userData);
           setStatus("Success! Redirecting...");
-          
+
           // Trigger event FIRST to update user state
           window.dispatchEvent(new CustomEvent('auth-success', { detail: userData }));
-          
+
           // Wait for state to update
           await new Promise(resolve => setTimeout(resolve, 800));
-          
+
           // Redirect based on user role
           if (userData.role === 'admin' || userData.role === 'user') {
             navigate("/profile", { replace: true });

@@ -305,7 +305,7 @@ export default function Dance({ user }) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {t('dance.add', 'Add Dance')}
+                {t('dance.add', '3 Dance')}
               </Button>
             </Box>
           )}
