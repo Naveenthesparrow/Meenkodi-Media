@@ -2234,8 +2234,3 @@ function TempleDetail() {
 }
 
 export default TempleDetail;
-
-
-
-
-

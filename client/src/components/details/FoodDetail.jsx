@@ -19,6 +19,9 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
+  Paper,
+  Grid,
+  Divider,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -38,14 +41,14 @@ import {
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 
-function FoodDetail() {
+function FoodDetail({ user: initialUser }) {
+  const user = initialUser;
   const { id } = useParams();
-  const getContent = useBilingualContent();
   const navigate = useNavigate();
+  const getContent = useBilingualContent();
   const [food, setFood] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -64,28 +67,7 @@ function FoodDetail() {
   const [commentReactions, setCommentReactions] = useState({});
   const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
 
-  // Edit dialog states
-  const [editOpen, setEditOpen] = useState(false);
-  // Dialog (older) edit form state (keeping legacy but will store bilingual objects)
-  const [formData, setFormData] = useState({
-    name_en: "",
-    name_ta: "",
-    region_en: "",
-    region_ta: "",
-    type_en: "",
-    type_ta: "",
-    ingredients_en: "",
-    ingredients_ta: "",
-    recipe_en: "",
-    recipe_ta: "",
-    description_en: "",
-    description_ta: "",
-    occasion_en: "",
-    occasion_ta: "",
-    significance_en: "",
-    significance_ta: "",
-    image: "",
-  });
+
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
@@ -145,7 +127,6 @@ function FoodDetail() {
 
   useEffect(() => {
     const initializeData = async () => {
-      await fetchUser();
       await fetchFood();
     };
     initializeData();
@@ -155,46 +136,10 @@ function FoodDetail() {
   useEffect(() => {
     if (user && food) {
       const likesArray = Array.isArray(food.likes) ? food.likes : [];
-      setUserLiked(likesArray.some(likeId => likeId.toString() === user._id.toString()));
+      setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
     }
   }, [user, food]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in FoodDetail...");
-      const res = await fetch(
-        `${API_BASE_URL}/auth/user`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log("User fetch response status:", res.status);
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
-    }
-  };
 
   const fetchFood = async () => {
     try {
@@ -519,64 +464,6 @@ function FoodDetail() {
     }
   };
 
-  const handleEditSubmit = async () => {
-    try {
-      const res = await fetch(`/api/foods/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          name: { en: formData.name_en || "", ta: formData.name_ta || "" },
-          region: (formData.region_en || formData.region_ta) ? { en: formData.region_en || "", ta: formData.region_ta || "" } : undefined,
-          type: (formData.type_en || formData.type_ta) ? { en: formData.type_en || "", ta: formData.type_ta || "" } : undefined,
-          ingredients: (formData.ingredients_en || formData.ingredients_ta) ? { en: formData.ingredients_en || "", ta: formData.ingredients_ta || "" } : undefined,
-          recipe: (formData.recipe_en || formData.recipe_ta) ? { en: formData.recipe_en || "", ta: formData.recipe_ta || "" } : undefined,
-          description: { en: formData.description_en || "", ta: formData.description_ta || "" },
-          occasion: (formData.occasion_en || formData.occasion_ta) ? { en: formData.occasion_en || "", ta: formData.occasion_ta || "" } : undefined,
-          significance: (formData.significance_en || formData.significance_ta) ? { en: formData.significance_en || "", ta: formData.significance_ta || "" } : undefined,
-          image: formData.image || ""
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update food");
-      }
-      setEditOpen(false);
-      fetchFood();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleEditOpen = () => {
-    const extract = (val, lang) => {
-      if (!val) return "";
-      if (typeof val === 'string') return lang === 'en' ? val : "";
-      if (typeof val === 'object') return val[lang] || "";
-      return "";
-    };
-    setFormData({
-      name_en: extract(food.name, 'en'),
-      name_ta: extract(food.name, 'ta'),
-      region_en: extract(food.region, 'en'),
-      region_ta: extract(food.region, 'ta'),
-      type_en: extract(food.type, 'en'),
-      type_ta: extract(food.type, 'ta'),
-      ingredients_en: extract(food.ingredients, 'en'),
-      ingredients_ta: extract(food.ingredients, 'ta'),
-      recipe_en: extract(food.recipe, 'en'),
-      recipe_ta: extract(food.recipe, 'ta'),
-      description_en: extract(food.description, 'en'),
-      description_ta: extract(food.description, 'ta'),
-      occasion_en: extract(food.occasion, 'en'),
-      occasion_ta: extract(food.occasion, 'ta'),
-      significance_en: extract(food.significance, 'en'),
-      significance_ta: extract(food.significance, 'ta'),
-      image: food.image || food.imageUrl || "",
-    });
-    setEditOpen(true);
-  };
-
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -621,6 +508,118 @@ function FoodDetail() {
         <Button onClick={() => navigate("/explore/foods")}>
           Back to Foods
         </Button>
+      </Container>
+    );
+  }
+
+  // --- ADMIN EDIT VIEW ---
+  if (isEditing) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+              Edit Food
+            </Typography>
+            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
+          </Box>
+
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Region (EN)" value={editableData.region_en} onChange={(e) => setEditableData({ ...editableData, region_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e) => setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Type (EN)" value={editableData.type_en} onChange={(e) => setEditableData({ ...editableData, type_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e) => setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Ingredients (EN)" value={editableData.ingredients_en} onChange={(e) => setEditableData({ ...editableData, ingredients_en: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Ingredients (TA)" value={editableData.ingredients_ta} onChange={(e) => setEditableData({ ...editableData, ingredients_ta: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Recipe (EN)" value={editableData.recipe_en} onChange={(e) => setEditableData({ ...editableData, recipe_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Recipe (TA)" value={editableData.recipe_ta} onChange={(e) => setEditableData({ ...editableData, recipe_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Occasion (EN)" value={editableData.occasion_en} onChange={(e) => setEditableData({ ...editableData, occasion_en: e.target.value })} fullWidth multiline rows={2} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Occasion (TA)" value={editableData.occasion_ta} onChange={(e) => setEditableData({ ...editableData, occasion_ta: e.target.value })} fullWidth multiline rows={2} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
+                <TextField
+                  label="Image URL"
+                  value={editableData.imageUrl}
+                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <MediaUpload
+                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
+                  currentImage={editableData.imageUrl}
+                  label="Upload Image"
+                  showInputsOnly={true}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete Food
+              </Button>
+              <Button
+                onClick={handleInlineSave}
+                variant="contained"
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#333' },
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                Save Changes
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
       </Container>
     );
   }
@@ -1859,84 +1858,6 @@ function FoodDetail() {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Food</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-            <TextField
-              label="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              fullWidth
-            />
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Region"
-                value={formData.region}
-                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                fullWidth
-              />
-              <TextField
-                label="Type"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                fullWidth
-              />
-            </Box>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Main Ingredients"
-                value={formData.ingredients}
-                onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
-                fullWidth
-              />
-              <TextField
-                label="Occasion"
-                value={formData.occasion}
-                onChange={(e) => setFormData({ ...formData, occasion: e.target.value })}
-                fullWidth
-              />
-            </Box>
-            <TextField
-              label="Description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              multiline
-              rows={4}
-              fullWidth
-            />
-            <TextField
-              label="Recipe"
-              value={formData.recipe}
-              onChange={(e) => setFormData({ ...formData, recipe: e.target.value })}
-              multiline
-              rows={3}
-              fullWidth
-            />
-            <TextField
-              label="Significance"
-              value={formData.significance}
-              onChange={(e) => setFormData({ ...formData, significance: e.target.value })}
-              multiline
-              rows={3}
-              fullWidth
-            />
-            <TextField
-              label="Image URL"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditSubmit} variant="contained">
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
       {/* Standardized Back Button */}
       <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
         <Button
@@ -1966,5 +1887,6 @@ function FoodDetail() {
     </Container>
   );
 }
+
 
 export default FoodDetail;

@@ -13,7 +13,9 @@ import {
   Tooltip,
   Button,
   Container,
-  IconButton
+  IconButton,
+  Grid,
+  Paper,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -42,14 +44,14 @@ import MediaUpload from "../common/MediaUpload";
 import MediaDisplay from "../common/MediaDisplay";
 import { API_BASE_URL } from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
-function KingDetail() {
+function KingDetail({ user: initialUser }) {
+  const user = initialUser;
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const [king, setKing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -149,90 +151,9 @@ function KingDetail() {
     }));
   };
 
-  // Update handleEditOpen to include content sections (bilingual)
-  const handleEditOpen = () => {
-    const toStr = (val) => {
-      if (!val) return "";
-      if (typeof val === 'string') return val;
-      if (typeof val === 'object') return val.en || val.ta || "";
-      return "";
-    };
-    const toTa = (val) => {
-      if (!val) return "";
-      if (typeof val === 'object') return val.ta || "";
-      return "";
-    };
 
-    setEditableData({
-      name_en: toStr(king.name),
-      name_ta: toTa(king.name),
-      dynasty_en: toStr(king.dynasty),
-      dynasty_ta: toTa(king.dynasty),
-      period_en: toStr(king.period),
-      period_ta: toTa(king.period),
-      achievements_en: toStr(king.achievements),
-      achievements_ta: toTa(king.achievements),
-      description_en: toStr(king.description),
-      description_ta: toTa(king.description),
-      capital_en: toStr(king.capital),
-      capital_ta: toTa(king.capital),
-      content_en: toStr(king.content),
-      content_ta: toTa(king.content),
-      image: king.image || "",
-      contentSections: (king.contentSections || []).map(sec => ({
-        subtitle_en: toStr(sec.subtitle),
-        subtitle_ta: toTa(sec.subtitle),
-        content_en: toStr(sec.content),
-        content_ta: toTa(sec.content),
-        imageUrl: sec.imageUrl || "",
-        imageLink: sec.imageLink || "",
-        videoUrl: sec.videoUrl || "",
-        videoTitle_en: toStr(sec.videoTitle),
-        videoTitle_ta: toTa(sec.videoTitle),
-        videoDescription_en: toStr(sec.videoDescription),
-        videoDescription_ta: toTa(sec.videoDescription),
-        id: sec.id || sec._id || Date.now() + Math.random()
-      })),
-    });
-    setIsEditing(true);
-  };
-
-  // Open dialog editor: populate bilingual formData from king and open dialog
-  const openDialogEdit = () => {
-    const toStr = (val) => {
-      if (!val) return "";
-      if (typeof val === 'string') return val;
-      if (typeof val === 'object') return val.en || val.ta || "";
-      return "";
-    };
-    const toTa = (val) => {
-      if (!val) return "";
-      if (typeof val === 'object') return val.ta || "";
-      return "";
-    };
-    setFormData({
-      name_en: toStr(king?.name),
-      name_ta: toTa(king?.name),
-      dynasty_en: toStr(king?.dynasty),
-      dynasty_ta: toTa(king?.dynasty),
-      period_en: toStr(king?.period),
-      period_ta: toTa(king?.period),
-      achievements_en: toStr(king?.achievements),
-      achievements_ta: toTa(king?.achievements),
-      description_en: toStr(king?.description),
-      description_ta: toTa(king?.description),
-      image: king?.image || "",
-      videoUrl: king?.videoUrl || "",
-      videoTitle_en: toStr(king?.videoTitle),
-      videoTitle_ta: toTa(king?.videoTitle),
-      videoDescription_en: toStr(king?.videoDescription),
-      videoDescription_ta: toTa(king?.videoDescription),
-    });
-    setEditOpen(true);
-  };
 
   useEffect(() => {
-    fetchUser();
     fetchKing();
 
     // Load YouTube API script
@@ -250,49 +171,53 @@ function KingDetail() {
     };
   }, [id]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in KingDetail...");
-      const res = await fetch(`${API_BASE_URL}/auth/user`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Accept": "application/json"
-        }
+  useEffect(() => {
+    if (king) {
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
+      setEditableData({
+        name_en: toStr(king.name),
+        name_ta: toTa(king.name),
+        dynasty_en: toStr(king.dynasty),
+        dynasty_ta: toTa(king.dynasty),
+        period_en: toStr(king.period),
+        period_ta: toTa(king.period),
+        achievements_en: toStr(king.achievements),
+        achievements_ta: toTa(king.achievements),
+        description_en: toStr(king.description),
+        description_ta: toTa(king.description),
+        capital_en: toStr(king.capital),
+        capital_ta: toTa(king.capital),
+        content_en: toStr(king.content),
+        content_ta: toTa(king.content),
+        image: king.image || "",
+        contentSections: (king.contentSections || []).map(sec => ({
+          subtitle_en: toStr(sec.subtitle),
+          subtitle_ta: toTa(sec.subtitle),
+          content_en: toStr(sec.content),
+          content_ta: toTa(sec.content),
+          imageUrl: sec.imageUrl || "",
+          imageLink: sec.imageLink || "",
+          videoUrl: sec.videoUrl || "",
+          videoTitle_en: toStr(sec.videoTitle),
+          videoTitle_ta: toTa(sec.videoTitle),
+          videoDescription_en: toStr(sec.videoDescription),
+          videoDescription_ta: toTa(sec.videoDescription),
+          id: sec.id || sec._id || Date.now() + Math.random()
+        })),
       });
-
-      console.log("User fetch response status:", res.status);
-
-      // Check if the response is JSON
-      const contentType = res.headers.get("content-type");
-      console.log("Content-Type:", contentType);
-
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error("Received non-JSON response:", await res.text());
-        setUser(null);
-        return;
-      }
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
     }
-  };
+  }, [king]);
+
 
   const fetchKing = async () => {
     try {
@@ -307,7 +232,7 @@ function KingDetail() {
       // Handle likes - ensure it's an array and check if user liked
       const likesArray = Array.isArray(data.likes) ? data.likes : [];
       setLikes(likesArray.length);
-      setUserLiked(likesArray.some(likeId => likeId.toString() === user?._id?.toString()) || false);
+      setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)) || false);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -829,53 +754,7 @@ function KingDetail() {
             }}
           >
             <IconButton
-              onClick={() => {
-                // Prepare editable data when edit is clicked (bilingual)
-                const toStr = (val) => {
-                  if (!val) return "";
-                  if (typeof val === 'string') return val;
-                  if (typeof val === 'object') return val.en || val.ta || "";
-                  return "";
-                };
-                const toTa = (val) => {
-                  if (!val) return "";
-                  if (typeof val === 'object') return val.ta || "";
-                  return "";
-                };
-                setEditableData({
-                  name_en: toStr(king.name),
-                  name_ta: toTa(king.name),
-                  dynasty_en: toStr(king.dynasty),
-                  dynasty_ta: toTa(king.dynasty),
-                  period_en: toStr(king.period),
-                  period_ta: toTa(king.period),
-                  achievements_en: toStr(king.achievements),
-                  achievements_ta: toTa(king.achievements),
-                  description_en: toStr(king.description),
-                  description_ta: toTa(king.description),
-                  capital_en: toStr(king.capital),
-                  capital_ta: toTa(king.capital),
-                  content_en: toStr(king.content),
-                  content_ta: toTa(king.content),
-                  image: king.image || "",
-                  contentSections: (king.contentSections || []).map(sec => ({
-                    subtitle_en: toStr(sec.subtitle),
-                    subtitle_ta: toTa(sec.subtitle),
-                    content_en: toStr(sec.content),
-                    content_ta: toTa(sec.content),
-                    imageUrl: sec.imageUrl || "",
-                    imageLink: sec.imageLink || "",
-                    videoUrl: sec.videoUrl || "",
-                    videoTitle_en: toStr(sec.videoTitle),
-                    videoTitle_ta: toTa(sec.videoTitle),
-                    videoDescription_en: toStr(sec.videoDescription),
-                    videoDescription_ta: toTa(sec.videoDescription),
-                    id: sec.id || sec._id || Date.now() + Math.random()
-                  })),
-                });
-                // Toggle editing mode
-                setIsEditing(!isEditing);
-              }}
+              onClick={() => setIsEditing(!isEditing)}
               sx={{
                 bgcolor: '#fff',
                 color: '#000',
@@ -890,25 +769,7 @@ function KingDetail() {
             >
               {isEditing ? <Close /> : <EditIcon />}
             </IconButton>
-            <Tooltip title="Open dialog editor">
-              <IconButton
-                onClick={openDialogEdit}
-                sx={{
-                  bgcolor: '#fff',
-                  color: '#000',
-                  border: '1px solid #000',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    bgcolor: '#000',
-                    color: '#fff',
-                    transform: 'scale(1.05)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                  }
-                }}
-              >
-                <EditNote />
-              </IconButton>
-            </Tooltip>
+
             <IconButton
               onClick={handleDelete}
               sx={{
@@ -2124,122 +1985,7 @@ function KingDetail() {
       </Box>
 
       {/* Edit Dialog remains the same as in previous implementation */}
-      <Dialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: 0,
-            border: '3px solid #000',
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            bgcolor: '#000',
-            color: '#fff',
-            textAlign: 'center',
-            fontWeight: 700
-          }}
-        >
-          அரசர் விவரங்கள் திருத்த | Edit King Details
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          {/* Name */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField
-              label="Name (EN)"
-              value={formData.name_en}
-              onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-              fullWidth
-              margin="normal"
-              variant="standard"
-            />
-            <TextField
-              label="Name (TA)"
-              value={formData.name_ta}
-              onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
-              fullWidth
-              margin="normal"
-              variant="standard"
-            />
-          </Box>
-          {/* Dynasty + Period */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <TextField label="Dynasty (EN)" value={formData.dynasty_en} onChange={(e) => setFormData({ ...formData, dynasty_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Dynasty (TA)" value={formData.dynasty_ta} onChange={(e) => setFormData({ ...formData, dynasty_ta: e.target.value })} fullWidth variant="standard" />
-            </Box>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <TextField label="Period (EN)" value={formData.period_en} onChange={(e) => setFormData({ ...formData, period_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Period (TA)" value={formData.period_ta} onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })} fullWidth variant="standard" />
-            </Box>
-          </Box>
-          {/* Achievements */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField label="Achievements (EN)" value={formData.achievements_en} onChange={(e) => setFormData({ ...formData, achievements_en: e.target.value })} fullWidth multiline rows={3} variant="standard" />
-            <TextField label="Achievements (TA)" value={formData.achievements_ta} onChange={(e) => setFormData({ ...formData, achievements_ta: e.target.value })} fullWidth multiline rows={3} variant="standard" />
-          </Box>
-          {/* Description */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <TextField label="Description (EN)" value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} fullWidth multiline rows={4} variant="standard" />
-            <TextField label="Description (TA)" value={formData.description_ta} onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })} fullWidth multiline rows={4} variant="standard" />
-          </Box>
-          {/* Media URLs */}
-          <TextField label="Image URL" value={formData.image} onChange={(e) => setFormData({ ...formData, image: e.target.value })} fullWidth sx={{ mb: 2 }} margin="normal" />
-          <TextField label="Video URL" value={formData.videoUrl} onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })} fullWidth sx={{ mb: 2 }} margin="normal" />
-          {/* Video Meta */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <TextField label="Video Title (EN)" value={formData.videoTitle_en} onChange={(e) => setFormData({ ...formData, videoTitle_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Video Title (TA)" value={formData.videoTitle_ta} onChange={(e) => setFormData({ ...formData, videoTitle_ta: e.target.value })} fullWidth variant="standard" />
-            </Box>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <TextField label="Video Description (EN)" value={formData.videoDescription_en} onChange={(e) => setFormData({ ...formData, videoDescription_en: e.target.value })} fullWidth variant="standard" />
-              <TextField label="Video Description (TA)" value={formData.videoDescription_ta} onChange={(e) => setFormData({ ...formData, videoDescription_ta: e.target.value })} fullWidth variant="standard" />
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions
-          sx={{
-            p: 2,
-            justifyContent: 'space-between',
-            bgcolor: '#f0f0f0'
-          }}
-        >
-          <Button
-            onClick={() => setEditOpen(false)}
-            sx={{
-              color: '#000',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.05)'
-              }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleEditSubmit}
-            variant="contained"
-            sx={{
-              bgcolor: '#000',
-              color: '#fff',
-              borderRadius: 0,
-              '&:hover': {
-                bgcolor: '#333',
-                transform: 'translateY(-3px)',
-                boxShadow: '0 8px 15px rgba(0,0,0,0.2)'
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Update
-          </Button>
-        </DialogActions>
-      </Dialog>
+
 
       {/* Delete Confirmation Dialog */}
       <Dialog

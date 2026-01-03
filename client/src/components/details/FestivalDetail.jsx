@@ -17,6 +17,9 @@ import {
   Alert,
   CircularProgress,
   Tooltip,
+  Paper,
+  Grid,
+  Divider,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -38,14 +41,14 @@ import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
-function FestivalDetail() {
+function FestivalDetail({ user: initialUser }) {
+  const user = initialUser;
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const [festival, setFestival] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -64,27 +67,7 @@ function FestivalDetail() {
   const [commentReactions, setCommentReactions] = useState({});
   const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
 
-  // Edit dialog states
-  const [editOpen, setEditOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name_en: "",
-    name_ta: "",
-    region_en: "",
-    region_ta: "",
-    season_en: "",
-    season_ta: "",
-    duration_en: "",
-    duration_ta: "",
-    rituals_en: "",
-    rituals_ta: "",
-    description_en: "",
-    description_ta: "",
-    history_en: "",
-    history_ta: "",
-    significance_en: "",
-    significance_ta: "",
-    image: "",
-  });
+
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
@@ -146,7 +129,6 @@ function FestivalDetail() {
 
   useEffect(() => {
     const initializeData = async () => {
-      await fetchUser();
       await fetchFestival();
     };
     initializeData();
@@ -156,46 +138,10 @@ function FestivalDetail() {
   useEffect(() => {
     if (user && festival) {
       const likesArray = Array.isArray(festival.likes) ? festival.likes : [];
-      setUserLiked(likesArray.some(likeId => likeId.toString() === user._id.toString()));
+      setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
     }
   }, [user, festival]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in FestivalDetail...");
-      const res = await fetch(
-        `${API_BASE_URL}/auth/user`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log("User fetch response status:", res.status);
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
-    }
-  };
 
   const fetchFestival = async () => {
     try {
@@ -528,49 +474,7 @@ function FestivalDetail() {
     }
   };
 
-  const handleEditSubmit = async () => {
-    try {
-      const res = await fetch(`/api/festivals/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update festival");
-      }
-      setEditOpen(false);
-      fetchFestival();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
-  const handleEditOpen = () => {
-    const toStr = (val) => (typeof val === 'object' ? (val.en || val.ta || "") : (val || ""));
-    const toTa = (val) => (typeof val === 'object' ? (val.ta || "") : "");
-    setFormData({
-      name_en: toStr(festival.name),
-      name_ta: toTa(festival.name),
-      region_en: toStr(festival.region),
-      region_ta: toTa(festival.region),
-      season_en: toStr(festival.season),
-      season_ta: toTa(festival.season),
-      duration_en: toStr(festival.duration),
-      duration_ta: toTa(festival.duration),
-      rituals_en: toStr(festival.rituals),
-      rituals_ta: toTa(festival.rituals),
-      description_en: toStr(festival.description),
-      description_ta: toTa(festival.description),
-      history_en: toStr(festival.history),
-      history_ta: toTa(festival.history),
-      significance_en: toStr(festival.significance),
-      significance_ta: toTa(festival.significance),
-      image: festival.image || festival.imageUrl || "",
-    });
-    setEditOpen(true);
-  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -616,6 +520,118 @@ function FestivalDetail() {
         <Button onClick={() => navigate("/explore/festivals")}>
           Back to Festivals
         </Button>
+      </Container>
+    );
+  }
+
+  // --- ADMIN EDIT VIEW ---
+  if (isEditing) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+              Edit Festival
+            </Typography>
+            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
+          </Box>
+
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Region (EN)" value={editableData.region_en} onChange={(e) => setEditableData({ ...editableData, region_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e) => setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Season (EN)" value={editableData.season_en} onChange={(e) => setEditableData({ ...editableData, season_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Season (TA)" value={editableData.season_ta} onChange={(e) => setEditableData({ ...editableData, season_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Duration (EN)" value={editableData.duration_en} onChange={(e) => setEditableData({ ...editableData, duration_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Duration (TA)" value={editableData.duration_ta} onChange={(e) => setEditableData({ ...editableData, duration_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Rituals (EN)" value={editableData.rituals_en} onChange={(e) => setEditableData({ ...editableData, rituals_en: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Rituals (TA)" value={editableData.rituals_ta} onChange={(e) => setEditableData({ ...editableData, rituals_ta: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="History (EN)" value={editableData.history_en} onChange={(e) => setEditableData({ ...editableData, history_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="History (TA)" value={editableData.history_ta} onChange={(e) => setEditableData({ ...editableData, history_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
+                <TextField
+                  label="Image URL"
+                  value={editableData.imageUrl}
+                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <MediaUpload
+                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
+                  currentImage={editableData.imageUrl}
+                  label="Upload Image"
+                  showInputsOnly={true}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete Festival
+              </Button>
+              <Button
+                onClick={handleInlineSave}
+                variant="contained"
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#333' },
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                Save Changes
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
       </Container>
     );
   }
@@ -765,7 +781,7 @@ function FestivalDetail() {
           {(isEditing ? editableData.imageUrl : (festival.image || festival.imageUrl)) ? (
             <img
               src={isEditing ? editableData.imageUrl : (festival.image || festival.imageUrl)}
-              alt={festival.name}
+              alt={getContent(festival.name)}
               style={{
                 maxWidth: "100%",
                 maxHeight: 400,
@@ -1819,84 +1835,8 @@ function FestivalDetail() {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Festival</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-            <TextField
-              label="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              fullWidth
-            />
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Region"
-                value={formData.region}
-                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                fullWidth
-              />
-              <TextField
-                label="Season"
-                value={formData.season}
-                onChange={(e) => setFormData({ ...formData, season: e.target.value })}
-                fullWidth
-              />
-            </Box>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Duration"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                fullWidth
-              />
-              <TextField
-                label="Rituals"
-                value={formData.rituals}
-                onChange={(e) => setFormData({ ...formData, rituals: e.target.value })}
-                fullWidth
-              />
-            </Box>
-            <TextField
-              label="Description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              multiline
-              rows={4}
-              fullWidth
-            />
-            <TextField
-              label="History"
-              value={formData.history}
-              onChange={(e) => setFormData({ ...formData, history: e.target.value })}
-              multiline
-              rows={3}
-              fullWidth
-            />
-            <TextField
-              label="Significance"
-              value={formData.significance}
-              onChange={(e) => setFormData({ ...formData, significance: e.target.value })}
-              multiline
-              rows={3}
-              fullWidth
-            />
-            <TextField
-              label="Image URL"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditSubmit} variant="contained">
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+
       {/* Standardized Back Button */}
       <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
         <Button

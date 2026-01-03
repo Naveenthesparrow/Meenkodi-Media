@@ -12,7 +12,8 @@ import {
   Slider,
 } from "@mui/material";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
-import Comments from "./Comments";
+import { Link as RouterLink } from "react-router-dom";
+// import Comments from "./Comments"; // Removed: Comments are now on detail page
 import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from "../utils/api";
 import { useTranslation } from 'react-i18next';
@@ -106,9 +107,12 @@ export default function Lands({ user }) {
           {lands.map((land) => (
             <Grid item xs={12} sm={4} key={land._id}>
               <Card
+                component={RouterLink}
+                to={`/explore/lands/${land._id}`}
                 sx={{
                   width: { xs: '100%', sm: 350 },
                   maxWidth: '100%',
+                  textDecoration: 'none', // Remove link underline
                   // height: 450, // Removed fixed height for responsiveness
                   display: 'flex',
                   flexDirection: 'column',
@@ -116,6 +120,11 @@ export default function Lands({ user }) {
                   borderRadius: 4,
                   bgcolor: "#fff",
                   fontFamily: "Inter, Arial, sans-serif",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: 8,
+                  }
                 }}
               >
                 {land.image && (
@@ -173,11 +182,7 @@ export default function Lands({ user }) {
                       dangerouslySetInnerHTML={{ __html: line }}
                     />
                   ))}
-                  <Comments
-                    user={user}
-                    relatedType="Land"
-                    relatedId={land._id}
-                  />
+                  {/* Comments removed from list view */}
                 </CardContent>
               </Card>
             </Grid>

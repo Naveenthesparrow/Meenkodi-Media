@@ -18,6 +18,8 @@ import {
   CircularProgress,
   Tooltip,
   Divider,
+  Grid,
+  Paper,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -48,14 +50,14 @@ import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
-function LiteratureDetail() {
+function LiteratureDetail({ user: initialUser }) {
+  const user = initialUser;
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const [literature, setLiterature] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -74,27 +76,7 @@ function LiteratureDetail() {
   const [commentReactions, setCommentReactions] = useState({});
   const [emojiPickerOpen, setEmojiPickerOpen] = useState({});
 
-  // Edit dialog states
-  const [editOpen, setEditOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    title_en: "",
-    title_ta: "",
-    author_en: "",
-    author_ta: "",
-    period_en: "",
-    period_ta: "",
-    genre_en: "",
-    genre_ta: "",
-    language_en: "",
-    language_ta: "",
-    description_en: "",
-    description_ta: "",
-    content_en: "",
-    content_ta: "",
-    summary_en: "",
-    summary_ta: "",
-    image: "",
-  });
+
 
   // Add a new state for inline editing
   const [isEditing, setIsEditing] = useState(false);
@@ -158,7 +140,6 @@ function LiteratureDetail() {
 
   useEffect(() => {
     const initializeData = async () => {
-      await fetchUser();
       await fetchLiterature();
     };
     initializeData();
@@ -171,47 +152,13 @@ function LiteratureDetail() {
         ? literature.likes
         : [];
       setUserLiked(
-        likesArray.some((likeId) => likeId.toString() === user._id.toString())
+        likesArray.some((likeId) =>
+          user && user._id && likeId && String(likeId) === String(user._id)
+        )
       );
     }
   }, [user, literature]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in LiteratureDetail...");
-      const res = await fetch(
-        `${API_BASE_URL}/auth/user`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log("User fetch response status:", res.status);
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
-    }
-  };
 
   const fetchLiterature = async () => {
     try {
@@ -228,7 +175,7 @@ function LiteratureDetail() {
       setLikes(likesArray.length);
       setUserLiked(
         likesArray.some(
-          (likeId) => likeId.toString() === user?._id?.toString()
+          (likeId) => user && user._id && likeId && String(likeId) === String(user._id)
         ) || false
       );
     } catch (err) {
@@ -516,74 +463,7 @@ function LiteratureDetail() {
     }
   };
 
-  const handleEditSubmit = async () => {
-    try {
-      const res = await fetch(`/api/literature/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update literature");
-      }
-      setEditOpen(false);
-      fetchLiterature();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
-  const handleEditOpen = () => {
-    if (literature) {
-      const toStr = (val) => {
-        if (!val) return "";
-        if (typeof val === 'string') return val;
-        if (typeof val === 'object') return val.en || val.ta || "";
-        return "";
-      };
-      const toTa = (val) => {
-        if (!val) return "";
-        if (typeof val === 'object') return val.ta || "";
-        return "";
-      };
-      setEditableData({
-        title_en: toStr(literature.title),
-        title_ta: toTa(literature.title),
-        author_en: toStr(literature.author),
-        author_ta: toTa(literature.author),
-        period_en: toStr(literature.period),
-        period_ta: toTa(literature.period),
-        genre_en: toStr(literature.genre),
-        genre_ta: toTa(literature.genre),
-        language_en: toStr(literature.language),
-        language_ta: toTa(literature.language),
-        description_en: toStr(literature.description),
-        description_ta: toTa(literature.description),
-        content_en: toStr(literature.content),
-        content_ta: toTa(literature.content),
-        summary_en: toStr(literature.summary),
-        summary_ta: toTa(literature.summary),
-        imageUrl: literature.image || "",
-        contentSections: (literature.contentSections || []).map(sec => ({
-          subtitle_en: toStr(sec.subtitle),
-          subtitle_ta: toTa(sec.subtitle),
-          content_en: toStr(sec.content),
-          content_ta: toTa(sec.content),
-          imageUrl: sec.imageUrl || "",
-          imageLink: sec.imageLink || "",
-          videoUrl: sec.videoUrl || "",
-          videoTitle_en: toStr(sec.videoTitle),
-          videoTitle_ta: toTa(sec.videoTitle),
-          videoDescription_en: toStr(sec.videoDescription),
-          videoDescription_ta: toTa(sec.videoDescription),
-          id: sec.id || sec._id || Date.now() + Math.random()
-        }))
-      });
-      setIsEditing(true);
-    }
-  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -629,6 +509,125 @@ function LiteratureDetail() {
         <Button onClick={() => navigate("/explore/literature")}>
           Back to Literature
         </Button>
+      </Container>
+    );
+  }
+
+  // --- ADMIN EDIT VIEW ---
+  if (isEditing) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+              Edit Literature
+            </Typography>
+            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
+          </Box>
+
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <TextField label="Title (EN)" value={editableData.title_en} onChange={(e) => setEditableData({ ...editableData, title_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Title (TA)" value={editableData.title_ta} onChange={(e) => setEditableData({ ...editableData, title_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Author (EN)" value={editableData.author_en} onChange={(e) => setEditableData({ ...editableData, author_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Author (TA)" value={editableData.author_ta} onChange={(e) => setEditableData({ ...editableData, author_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Genre (EN)" value={editableData.genre_en} onChange={(e) => setEditableData({ ...editableData, genre_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Genre (TA)" value={editableData.genre_ta} onChange={(e) => setEditableData({ ...editableData, genre_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Language (EN)" value={editableData.language_en} onChange={(e) => setEditableData({ ...editableData, language_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Language (TA)" value={editableData.language_ta} onChange={(e) => setEditableData({ ...editableData, language_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Summary (EN)" value={editableData.summary_en} onChange={(e) => setEditableData({ ...editableData, summary_en: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Summary (TA)" value={editableData.summary_ta} onChange={(e) => setEditableData({ ...editableData, summary_ta: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Content (EN)" value={editableData.content_en} onChange={(e) => setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={6} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e) => setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={6} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
+                <TextField
+                  label="Image URL"
+                  value={editableData.imageUrl}
+                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <MediaUpload
+                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
+                  currentImage={editableData.imageUrl}
+                  label="Upload Image"
+                  showInputsOnly={true}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete Literature
+              </Button>
+              <Button
+                onClick={handleInlineSave}
+                variant="contained"
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#333' },
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                Save Changes
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
       </Container>
     );
   }
@@ -1898,107 +1897,7 @@ function LiteratureDetail() {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Edit Literature</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-            <TextField
-              label="Title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              fullWidth
-            />
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Author"
-                value={formData.author}
-                onChange={(e) =>
-                  setFormData({ ...formData, author: e.target.value })
-                }
-                fullWidth
-              />
-              <TextField
-                label="Period"
-                value={formData.period}
-                onChange={(e) =>
-                  setFormData({ ...formData, period: e.target.value })
-                }
-                fullWidth
-              />
-            </Box>
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Genre"
-                value={formData.genre}
-                onChange={(e) =>
-                  setFormData({ ...formData, genre: e.target.value })
-                }
-                fullWidth
-              />
-              <TextField
-                label="Language"
-                value={formData.language}
-                onChange={(e) =>
-                  setFormData({ ...formData, language: e.target.value })
-                }
-                fullWidth
-              />
-            </Box>
-            <TextField
-              label="Description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              multiline
-              rows={4}
-              fullWidth
-            />
-            <TextField
-              label="Summary"
-              value={formData.summary}
-              onChange={(e) =>
-                setFormData({ ...formData, summary: e.target.value })
-              }
-              multiline
-              rows={3}
-              fullWidth
-            />
-            <TextField
-              label="Content"
-              value={formData.content}
-              onChange={(e) =>
-                setFormData({ ...formData, content: e.target.value })
-              }
-              multiline
-              rows={4}
-              fullWidth
-            />
-            <TextField
-              label="Image URL"
-              value={formData.image}
-              onChange={(e) =>
-                setFormData({ ...formData, image: e.target.value })
-              }
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button onClick={handleEditSubmit} variant="contained">
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+
       {/* Standardized Back Button */}
       <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
         <Button

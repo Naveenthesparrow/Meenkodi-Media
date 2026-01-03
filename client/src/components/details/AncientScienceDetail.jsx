@@ -15,6 +15,8 @@ import {
   CircularProgress,
   Tooltip,
   Divider,
+  Grid,
+  Paper,
   Chip,
   Card,
   CardContent,
@@ -39,15 +41,15 @@ import MediaUpload from "../common/MediaUpload";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
-function AncientScienceDetail() {
+function AncientScienceDetail({ user: initialUser }) {
+  const user = initialUser;
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
+
   const [science, setScience] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
-
+  const [error, setError] = useState(null);
 
 
   // Add a new state for inline editing
@@ -118,53 +120,13 @@ function AncientScienceDetail() {
     }));
   };
 
-  // Update handleEditOpen to include content sections (bilingual mapping)
-  const handleEditOpen = () => {
-    const toStr = (val) => {
-      if (!val) return "";
-      if (typeof val === 'string') return val;
-      if (typeof val === 'object') return val.en || val.ta || "";
-      return "";
-    };
-    const toTa = (val) => {
-      if (!val) return "";
-      if (typeof val === 'object') return val.ta || "";
-      return "";
-    };
-    setEditableData({
-      name_en: toStr(science.name),
-      name_ta: toTa(science.name),
-      period_en: toStr(science.period),
-      period_ta: toTa(science.period),
-      field_en: toStr(science.field),
-      field_ta: toTa(science.field),
-      scholar_en: toStr(science.scholar),
-      scholar_ta: toTa(science.scholar),
-      description_en: toStr(science.description),
-      description_ta: toTa(science.description),
-      image: science.image || "",
-      contentSections: (science.contentSections || []).map(sec => ({
-        subtitle_en: toStr(sec.subtitle),
-        subtitle_ta: toTa(sec.subtitle),
-        content_en: toStr(sec.content),
-        content_ta: toTa(sec.content),
-        imageUrl: sec.imageUrl || "",
-        imageLink: sec.imageLink || "",
-        videoUrl: sec.videoUrl || "",
-        videoTitle: sec.videoTitle || "",
-        videoDescription: sec.videoDescription || "",
-        id: sec.id || sec._id || Date.now() + Math.random()
-      })),
-    });
-    setIsEditing(true);
-  };
+
 
 
 
   useEffect(() => {
     console.log("Fetching Ancient Science detail for ID:", id);
     const initializeData = async () => {
-      await fetchUser();
       await fetchScience();
     };
     initializeData();
@@ -174,43 +136,48 @@ function AncientScienceDetail() {
   useEffect(() => {
     if (user && science) {
       const likesArray = Array.isArray(science.likes) ? science.likes : [];
-      setUserLiked(likesArray.some(likeId => likeId.toString() === user._id.toString()));
+      setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
+    }
+    if (science) {
+      const toStr = (val) => {
+        if (!val) return "";
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.en || val.ta || "";
+        return "";
+      };
+      const toTa = (val) => {
+        if (!val) return "";
+        if (typeof val === 'object') return val.ta || "";
+        return "";
+      };
+      setEditableData({
+        name_en: toStr(science.name),
+        name_ta: toTa(science.name),
+        period_en: toStr(science.period),
+        period_ta: toTa(science.period),
+        field_en: toStr(science.field),
+        field_ta: toTa(science.field),
+        scholar_en: toStr(science.scholar),
+        scholar_ta: toTa(science.scholar),
+        description_en: toStr(science.description),
+        description_ta: toTa(science.description),
+        image: science.image || "",
+        contentSections: (science.contentSections || []).map(sec => ({
+          subtitle_en: toStr(sec.subtitle),
+          subtitle_ta: toTa(sec.subtitle),
+          content_en: toStr(sec.content),
+          content_ta: toTa(sec.content),
+          imageUrl: sec.imageUrl || "",
+          imageLink: sec.imageLink || "",
+          videoUrl: sec.videoUrl || "",
+          videoTitle: sec.videoTitle || "",
+          videoDescription: sec.videoDescription || "",
+          id: sec.id || sec._id || Date.now() + Math.random()
+        })),
+      });
     }
   }, [user, science]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in AncientScienceDetail...");
-      const res = await fetch(`${API_BASE_URL}/auth/user`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Accept": "application/json"
-        }
-      });
-
-      console.log("User fetch response status:", res.status);
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
-    }
-  };
 
   const fetchScience = async () => {
     try {
@@ -234,7 +201,7 @@ function AncientScienceDetail() {
 
       // Check if user liked after user data is available
       if (user) {
-        setUserLiked(likesArray.some(likeId => likeId.toString() === user._id.toString()));
+        setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
       }
     } catch (err) {
       console.error("Error fetching Ancient Science detail:", err);
@@ -560,6 +527,104 @@ function AncientScienceDetail() {
     );
   }
 
+  // --- ADMIN EDIT VIEW ---
+  if (isEditing) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+              Edit Ancient Science
+            </Typography>
+            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
+          </Box>
+
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Field (EN)" value={editableData.field_en} onChange={(e) => setEditableData({ ...editableData, field_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Field (TA)" value={editableData.field_ta} onChange={(e) => setEditableData({ ...editableData, field_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Scholar (EN)" value={editableData.scholar_en} onChange={(e) => setEditableData({ ...editableData, scholar_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Scholar (TA)" value={editableData.scholar_ta} onChange={(e) => setEditableData({ ...editableData, scholar_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
+                <TextField
+                  label="Image URL"
+                  value={editableData.imageUrl}
+                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <MediaUpload
+                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
+                  currentImage={editableData.imageUrl}
+                  label="Upload Image"
+                  showInputsOnly={true}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete Item
+              </Button>
+              <Button
+                onClick={handleInlineSave}
+                variant="contained"
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#333' },
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                Save Changes
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
@@ -577,44 +642,6 @@ function AncientScienceDetail() {
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton
               onClick={() => {
-                // Prepare editable data when edit is clicked (bilingual)
-                const toStr = (val) => {
-                  if (!val) return "";
-                  if (typeof val === 'string') return val;
-                  if (typeof val === 'object') return val.en || val.ta || "";
-                  return "";
-                };
-                const toTa = (val) => {
-                  if (!val) return "";
-                  if (typeof val === 'object') return val.ta || "";
-                  return "";
-                };
-                setEditableData({
-                  name_en: toStr(science.name),
-                  name_ta: toTa(science.name),
-                  period_en: toStr(science.period),
-                  period_ta: toTa(science.period),
-                  field_en: toStr(science.field),
-                  field_ta: toTa(science.field),
-                  scholar_en: toStr(science.scholar),
-                  scholar_ta: toTa(science.scholar),
-                  description_en: toStr(science.description),
-                  description_ta: toTa(science.description),
-                  image: science.image || "",
-                  contentSections: (science.contentSections || []).map(sec => ({
-                    subtitle_en: toStr(sec.subtitle),
-                    subtitle_ta: toTa(sec.subtitle),
-                    content_en: toStr(sec.content),
-                    content_ta: toTa(sec.content),
-                    imageUrl: sec.imageUrl || "",
-                    imageLink: sec.imageLink || "",
-                    videoUrl: sec.videoUrl || "",
-                    videoTitle: sec.videoTitle || "",
-                    videoDescription: sec.videoDescription || "",
-                    id: sec.id || sec._id || Date.now() + Math.random()
-                  })),
-                });
-                // Toggle editing mode
                 setIsEditing(!isEditing);
               }}
               sx={{
@@ -1837,7 +1864,7 @@ function AncientScienceDetail() {
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
+
 
       {/* Standardized Back Button */}
       <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>

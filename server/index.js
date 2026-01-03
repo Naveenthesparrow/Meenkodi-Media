@@ -718,10 +718,26 @@ app.get("/api/lands", async (req, res) => {
   res.json(localizeCollection(lands, 'lands', lang));
 });
 app.get("/api/lands/:id", async (req, res) => {
-  const lang = resolveLang(req);
-  const land = await Land.findById(req.params.id);
-  if (!land) return res.status(404).json({ error: 'Land not found' });
-  res.json(localizeSingle(land, 'lands', lang));
+  try {
+    const lang = resolveLang(req);
+    const { id } = req.params;
+    let land;
+
+    // Check if input is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      land = await Land.findById(id);
+    } else {
+      // Otherwise, search by 'type' (case-insensitive)
+      // e.g. /api/lands/kurinji maps to type: "Kurinji"
+      land = await Land.findOne({ type: { $regex: new RegExp(`^${id}$`, "i") } });
+    }
+
+    if (!land) return res.status(404).json({ error: 'Land not found' });
+    res.json(localizeSingle(land, 'lands', lang));
+  } catch (err) {
+    console.error("Error fetching land:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 app.post("/api/lands", ensureAdmin, async (req, res) => {
   try {

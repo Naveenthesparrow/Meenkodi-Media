@@ -22,6 +22,7 @@ import {
   Tab,
   Paper,
   Divider,
+  Grid,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -50,14 +51,16 @@ import { API_BASE_URL } from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
 
-function DanceDetail() {
+function DanceDetail({ user: initialUser }) {
+  const user = initialUser;
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
+
   const [dance, setDance] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+
   const [activeTab, setActiveTab] = useState(0);
 
   // Comments and likes states
@@ -158,8 +161,23 @@ function DanceDetail() {
     }));
   };
 
-  // Function to open edit mode and initialize editableData
-  const handleEditOpen = () => {
+
+
+  // Emoji options
+  const emojiOptions = [
+    "❤️",
+    "👍",
+    "👎",
+    "😊",
+    "😍",
+    "🤔",
+    "👏",
+    "🙏",
+    "🔥",
+    "💯",
+  ];
+
+  useEffect(() => {
     if (dance) {
       const toStr = (val) => {
         if (!val) return "";
@@ -201,68 +219,16 @@ function DanceDetail() {
           id: sec.id || sec._id || Date.now() + Math.random()
         }))
       });
-      setIsEditing(true);
     }
-  };
-
-  // Emoji options
-  const emojiOptions = [
-    "❤️",
-    "👍",
-    "👎",
-    "😊",
-    "😍",
-    "🤔",
-    "👏",
-    "🙏",
-    "🔥",
-    "💯",
-  ];
+  }, [dance]);
 
   useEffect(() => {
     const initializeData = async () => {
-      await fetchUser();
       await fetchDance();
     };
     initializeData();
   }, [id]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in DanceDetail...");
-      const res = await fetch(
-        `${API_BASE_URL}/auth/user`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log("User fetch response status:", res.status);
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
-    }
-  };
 
   const handleSave = async () => {
     try {
@@ -601,6 +567,111 @@ function DanceDetail() {
     );
   }
 
+  // --- ADMIN EDIT VIEW ---
+  if (isEditing) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+              Edit Dance Form
+            </Typography>
+            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
+          </Box>
+
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Style (EN)" value={editableData.style_en} onChange={(e) => setEditableData({ ...editableData, style_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Style (TA)" value={editableData.style_ta} onChange={(e) => setEditableData({ ...editableData, style_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Origin (EN)" value={editableData.origin_en} onChange={(e) => setEditableData({ ...editableData, origin_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Origin (TA)" value={editableData.origin_ta} onChange={(e) => setEditableData({ ...editableData, origin_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e) => setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e) => setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth multiline rows={3} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
+                <TextField
+                  label="Image URL"
+                  value={editableData.imageUrl}
+                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <MediaUpload
+                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
+                  currentImage={editableData.imageUrl}
+                  label="Upload Image"
+                  showInputsOnly={true}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete Item
+              </Button>
+              <Button
+                onClick={handleSave}
+                variant="contained"
+                startIcon={<EditIcon />}
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#333' },
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                Save Changes
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
+    );
+  }
+
   return (
     <Container
       maxWidth="lg"
@@ -641,13 +712,7 @@ function DanceDetail() {
         {user && user.role === "admin" && (
           <Box sx={{ display: "flex", gap: 1 }}>
             <IconButton
-              onClick={() => {
-                if (isEditing) {
-                  setIsEditing(false);
-                } else {
-                  handleEditOpen();
-                }
-              }}
+              onClick={() => setIsEditing(!isEditing)}
               sx={{
                 color: "#000",
                 border: "1px solid #000",
@@ -732,7 +797,7 @@ function DanceDetail() {
                 No Image Available
               </Typography>
               <Typography variant="body2" sx={{ color: "#999" }}>
-                {dance.name} - {dance.style || "Dance"}
+                {getContent(dance.name)} - {getContent(dance.style) || "Dance"}
               </Typography>
             </Box>
           )}
@@ -1260,61 +1325,63 @@ function DanceDetail() {
       </Box>
 
       {/* Separate Update Button for Content Sections */}
-      {isEditing && user && user.role === "admin" && (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            mt: 4,
-            pt: 2,
-            borderTop: '1px solid #000',
-            maxWidth: 800,
-            mx: 'auto',
-            width: '100%'
-          }}
-        >
-          <Button
-            onClick={() => setIsEditing(false)}
+      {
+        isEditing && user && user.role === "admin" && (
+          <Box
             sx={{
-              color: '#000',
-              '&:hover': {
-                bgcolor: 'rgba(0,0,0,0.05)'
-              }
+              display: 'flex',
+              justifyContent: 'space-between',
+              mt: 4,
+              pt: 2,
+              borderTop: '1px solid #000',
+              maxWidth: 800,
+              mx: 'auto',
+              width: '100%'
             }}
           >
-            Cancel
-          </Button>
-          <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
-              onClick={addContentSection}
-              variant="outlined"
-              startIcon={<Add />}
+              onClick={() => setIsEditing(false)}
               sx={{
                 color: '#000',
-                borderColor: '#000',
                 '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.05)'
+                  bgcolor: 'rgba(0,0,0,0.05)'
                 }
               }}
             >
-              Add Section
+              Cancel
             </Button>
-            <Button
-              onClick={handleSave}
-              variant="contained"
-              sx={{
-                bgcolor: '#000',
-                color: '#fff',
-                '&:hover': {
-                  bgcolor: '#333'
-                }
-              }}
-            >
-              Update Details
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                onClick={addContentSection}
+                variant="outlined"
+                startIcon={<Add />}
+                sx={{
+                  color: '#000',
+                  borderColor: '#000',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.05)'
+                  }
+                }}
+              >
+                Add Section
+              </Button>
+              <Button
+                onClick={handleSave}
+                variant="contained"
+                sx={{
+                  bgcolor: '#000',
+                  color: '#fff',
+                  '&:hover': {
+                    bgcolor: '#333'
+                  }
+                }}
+              >
+                Update Details
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      )}
+        )
+      }
 
       {/* Comments Section */}
       <Box
@@ -1991,7 +2058,7 @@ function DanceDetail() {
           ← Back to Dance
         </Button>
       </Box>
-    </Container>
+    </Container >
   );
 }
 

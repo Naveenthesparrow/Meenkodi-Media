@@ -60,8 +60,10 @@ const GalleryDetail = React.lazy(() => import("./components/GalleryDetail"));
 const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
 const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
 const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
+const LandDetail = React.lazy(() => import("./components/details/LandDetail"));
 import SiteLogo from "./components/common/SiteLogo";
 import Footer from "./components/common/Footer";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 // Debug function for tracking 404 errors
 function setupResourceErrorLogging() {
@@ -125,7 +127,7 @@ function App() {
       console.log("Was authenticating, clearing flag and fetching user");
       sessionStorage.removeItem('isAuthenticating');
       setIsAuthenticating(false);
-      
+
       // If just came from auth, fetch user and redirect to profile
       setTimeout(() => {
         fetch(`/auth/user`, { credentials: "include" })
@@ -163,12 +165,6 @@ function App() {
 
     fetchUser();
 
-    // Listen for focus events to re-check auth status when user returns to tab
-    const handleFocus = () => {
-      console.log("Window focused, re-checking auth status");
-      fetchUser();
-    };
-
     // Listen for auth success event from AuthCallback
     const handleAuthSuccess = (event) => {
       console.log("Auth success event received, setting user immediately");
@@ -183,10 +179,8 @@ function App() {
       fetchUser();
     };
 
-    window.addEventListener("focus", handleFocus);
     window.addEventListener("auth-success", handleAuthSuccess);
     return () => {
-      window.removeEventListener("focus", handleFocus);
       window.removeEventListener("auth-success", handleAuthSuccess);
     };
   }, [fetchUser]);
@@ -297,6 +291,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <AppBar
         key={i18n.language}
         position="fixed"
@@ -670,7 +665,8 @@ function App() {
             <Route path="/resources" element={<Resources user={user} />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/explore" element={<Explore user={user} />} />
-            <Route path="/explore/lands" element={<Lands user={user} />} />
+            {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}
+            <Route path="/explore/lands/:id" element={<LandDetail user={user} />} />
             <Route path="/explore/kings" element={<Kings user={user} />} />
             <Route path="/explore/kings/dynasty/:dynastyId" element={<DynastyKings user={user} />} />
             <Route
@@ -689,15 +685,15 @@ function App() {
               path="/explore/ancientscience"
               element={<AncientScience user={user} />}
             />
-            <Route path="/explore/temples/:id" element={<TempleDetail />} />
-            <Route path="/explore/kings/:id" element={<KingDetail />} />
+            <Route path="/explore/temples/:id" element={<TempleDetail user={user} />} />
+            <Route path="/explore/kings/:id" element={<KingDetail user={user} />} />
             <Route
               path="/explore/literature/:id"
-              element={<LiteratureDetail />}
+              element={<LiteratureDetail user={user} />}
             />
-            <Route path="/explore/dance/:id" element={<DanceDetail />} />
-            <Route path="/explore/foods/:id" element={<FoodDetail />} />
-            <Route path="/explore/festivals/:id" element={<FestivalDetail />} />
+            <Route path="/explore/dance/:id" element={<DanceDetail user={user} />} />
+            <Route path="/explore/foods/:id" element={<FoodDetail user={user} />} />
+            <Route path="/explore/festivals/:id" element={<FestivalDetail user={user} />} />
             <Route path="/events/:id" element={<EventDetail user={user} />} />
             <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
             <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
@@ -755,9 +751,9 @@ function App() {
             />
             <Route
               path="/explore/ancientscience/:id"
-              element={<AncientScienceDetail />}
+              element={<AncientScienceDetail user={user} />}
             />
-            <Route path="/explore/clothing/:id" element={<ClothingDetail />} />
+            <Route path="/explore/clothing/:id" element={<ClothingDetail user={user} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </React.Suspense>
