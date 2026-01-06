@@ -38,6 +38,47 @@ app.set('trust proxy', 1);
 
 app.use(express.json());
 
+// Redirect apex host to canonical www and optionally force HTTPS in production
+app.use((req, res, next) => {
+  try {
+    const host = (req.headers.host || '').replace(/:\d+$/, '').toLowerCase();
+    // Redirect the apex domain to the canonical www host
+    if (host === 'meenkodi.com') {
+      return res.redirect(301, `https://www.meenkodi.com${req.originalUrl}`);
+    }
+    // If running in production behind a proxy, force https
+    if (process.env.NODE_ENV === 'production' && !req.secure && req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(301, `https://${host}${req.originalUrl}`);
+    }
+  } catch (e) {
+    console.error('Redirect middleware error', e);
+  }
+  next();
+});
+
+// Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
+app.get('/robots.txt', (req, res) => {
+  console.log('Serving robots.txt for', req.hostname, req.originalUrl);
+  res.type('text/plain');
+  res.sendFile(path.join(__dirname, '../client/public/robots.txt'), (err) => {
+    if (err) {
+      console.error('Failed to serve robots.txt', err);
+      if (!res.headersSent) res.status(500).send('Server error');
+    }
+  });
+});
+
+app.get('/sitemap.xml', (req, res) => {
+  console.log('Serving sitemap.xml for', req.hostname, req.originalUrl);
+  res.type('application/xml');
+  res.sendFile(path.join(__dirname, '../client/public/sitemap.xml'), (err) => {
+    if (err) {
+      console.error('Failed to serve sitemap.xml', err);
+      if (!res.headersSent) res.status(500).send('Server error');
+    }
+  });
+});
+
 // Serve static files from the client build directory
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
