@@ -79,6 +79,20 @@ app.get('/sitemap.xml', (req, res) => {
   });
 });
 
+// Serve a favicon at /favicon.ico (fallback to the existing favicon.png)
+app.get('/favicon.ico', (req, res) => {
+  console.log('Serving favicon.ico for', req.hostname, req.originalUrl);
+  res.type('image/png');
+  // Force revalidation so browsers fetch updated icon after changes
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(__dirname, '../client/public/favicon.png'), (err) => {
+    if (err) {
+      console.error('Failed to serve favicon.ico', err);
+      if (!res.headersSent) res.status(500).send('Server error');
+    }
+  });
+});
+
 // Serve static files from the client build directory
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
