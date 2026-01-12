@@ -4,41 +4,101 @@
     <loc>https://www.meenkodi.com/</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>1.00</priority>
+    <priority>1</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore</loc>
-    <lastmod>2025-11-18</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/gallery</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/articles</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/events</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/resources</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/faq</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/kings</loc>
-    <lastmod>2025-11-18</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/literature</loc>
-    <lastmod>2025-11-18</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/dance</loc>
-    <lastmod>2025-11-18</lastmod>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/explore/temples</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/explore/foods</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/explore/festivals</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/explore/clothing</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/explore/ancientscience</loc>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/lands/kurinji</loc>
-    <lastmod>2026-01-06</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/lands/mullai</loc>
-    <lastmod>2026-01-06</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
@@ -46,78 +106,72 @@
     <loc>https://www.meenkodi.com/explore/lands/marutham</loc>
     <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.90</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/lands/neithal</loc>
-    <lastmod>2026-01-06</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
   <url>
     <loc>https://www.meenkodi.com/explore/lands/palai</loc>
-    <lastmod>2026-01-06</lastmod>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.64</priority>
   </url>
   <url>
-    <loc>https://www.meenkodi.com/explore/temples</loc>
-    <lastmod>2026-01-06</lastmod>
+    <loc>https://www.meenkodi.com/gallery/69424c2dfacdd47ffb194670</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.64</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.meenkodi.com/explore/foods</loc>
-    <lastmod>2026-01-06</lastmod>
+    <loc>https://www.meenkodi.com/gallery/69424d2dfacdd47ffb194690</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.64</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.meenkodi.com/explore/festivals</loc>
-    <lastmod>2026-01-06</lastmod>
+    <loc>https://www.meenkodi.com/gallery/69425025facdd47ffb1946c1</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.64</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.meenkodi.com/explore/clothing</loc>
-    <lastmod>2026-01-06</lastmod>
+    <loc>https://www.meenkodi.com/gallery/6964d93eb3c3e4b40bb1c1b6</loc>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.64</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.meenkodi.com/explore/ancientscience</loc>
-    <lastmod>2026-01-06</lastmod>
+    <loc>https://www.meenkodi.com/articles/69116c5703ba23cc2e360c27</loc>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.64</priority>
-  </url>
-  <url>
-    <loc>https://www.meenkodi.com/faq</loc>
-    <lastmod>2026-01-06</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.50</priority>
-  </url>
-  <url>
-    <loc>https://www.meenkodi.com/events</loc>
-    <lastmod>2025-11-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.70</priority>
-  </url>
-  <url>
-    <loc>https://www.meenkodi.com/gallery</loc>
-    <lastmod>2025-11-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.70</priority>
-  </url>
-  <url>
-    <loc>https://www.meenkodi.com/articles</loc>
-    <lastmod>2025-11-18</lastmod>
-    <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://www.meenkodi.com/resources</loc>
-    <lastmod>2025-11-18</lastmod>
+    <loc>https://www.meenkodi.com/articles/69116c5703ba23cc2e360c28</loc>
+    <lastmod>2025-12-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/events/69116c5603ba23cc2e360be8</loc>
+    <lastmod>2026-01-12</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.70</priority>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/events/69116c5603ba23cc2e360be9</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/events/69116c5603ba23cc2e360bea</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>

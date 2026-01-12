@@ -1158,6 +1158,12 @@ const landUpload = multer({ storage: landStorage });
 
 app.use(
   "/uploads/lands",
+  (req, res, next) => {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    next();
+  },
   express.static(path.join(process.cwd(), "uploads/lands"))
 );
 
@@ -3229,9 +3235,22 @@ app.delete(
   }
 );
 
-// Serve uploaded files statically so the client can load /uploads/gallery/* URLs
+// Serve uploaded files statically with SEO-friendly headers
 app.use(
   "/uploads/gallery",
+  (req, res, next) => {
+    // Add caching headers for images (1 year cache)
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    // Add proper content type
+    if (req.path.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
+      res.setHeader('Content-Type', 'image/' + req.path.split('.').pop().toLowerCase());
+    }
+    // Add CORS headers for image loading
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Help search engines understand this is an image
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    next();
+  },
   express.static(path.join(process.cwd(), "uploads/gallery"))
 );
 

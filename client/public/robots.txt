@@ -14,3 +14,5 @@ Sitemap: https://meenkodi.com/sitemap.xml
 
 # Crawl-delay (optional, adjust if needed)
 Crawl-delay: 1
+
+Sitemap: https://www.meenkodi.com/sitemap-images.xml

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://www.meenkodi.com/gallery/69424d2dfacdd47ffb194690</loc>
+    <lastmod>2025-12-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dwpsxbqql/image/upload/v1766144046/meenkodi_gallery/gqldenwmvfc2og224jzg.png</image:loc>
+      <image:title>Jallikattu</image:title>
+      <image:license>https://www.meenkodi.com/gallery/69424d2dfacdd47ffb194690</image:license>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/gallery/69425025facdd47ffb1946c1</loc>
+    <lastmod>2025-12-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dwpsxbqql/image/upload/v1766144021/meenkodi_gallery/ckifkpy7hujph86zerxj.png</image:loc>
+      <image:title>Mallar kambam</image:title>
+      <image:license>https://www.meenkodi.com/gallery/69425025facdd47ffb1946c1</image:license>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/gallery/6964d93eb3c3e4b40bb1c1b6</loc>
+    <lastmod>2026-01-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dwpsxbqql/image/upload/v1768216469/meenkodi_gallery/sbte4kjzo4blo6nvplia.png</image:loc>
+      <image:title>Pasupathi Pandiyar Jesintha Pandiyar</image:title>
+      <image:license>https://www.meenkodi.com/gallery/6964d93eb3c3e4b40bb1c1b6</image:license>
+    </image:image>
+  </url>
+</urlset>
