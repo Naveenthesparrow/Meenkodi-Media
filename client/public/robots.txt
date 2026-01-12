@@ -1,9 +1,16 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /api/
 
+# Priority crawl paths for Pandiya Dynasty, Pallar, Mallar, DKV content
+Allow: /explore/lands/marutham
+Allow: /explore/kings
+Allow: /articles
 
-# Canonical host and sitemap — make sure sitemap URLs use https://www.meenkodi.com
+# Canonical host and sitemap
 Sitemap: https://www.meenkodi.com/sitemap.xml
+Sitemap: https://meenkodi.com/sitemap.xml
 
-# Note: the `Host` directive is non-standard and ignored by Google — removed to avoid the
-# "Rule ignored by Googlebot" warning in Search Console.
+# Crawl-delay (optional, adjust if needed)
+Crawl-delay: 1

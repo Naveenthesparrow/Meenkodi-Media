@@ -1,22 +1,47 @@
 {
     "short_name": "Meenkodi",
-    "name": "Meenkodi Tamil Heritage Foundation",
-    "description": "Trace Tamil civilization from Attirampakkam stone tools to Sangam ports and unbroken 5000+ year continuum.",
+    "name": "Meenkodi | Pandiya Dynasty | Pandiyar | Pallar Mallar DKV Heritage",
+    "description": "Meenkodi - Official Pandiya Dynasty heritage portal. Complete Pandiyar history, rise of Pandiyas, hidden history, Pallar Mallar warriors, Devendra Kula Vellalar (DKV) pride, Marutham culture. Tamil kings spanning 5000+ years.",
+    "categories": ["education", "reference", "lifestyle", "history", "culture"],
+    "keywords": ["Meenkodi", "Meenkodi official", "Pandiya Dynasty", "Pandiyas", "Pandiyar", "Rise of Pandiyas", "Raise of Pandiyas", "Hidden history of Pandiyar", "Pandiya empire", "Pandiya kings", "Pallar", "Pallar warriors", "Pallar history", "Mallar", "Mallar heritage", "Devendra Kula Vellalar", "DKV", "DKV heritage", "Marutham", "Marutham land", "Tamil Heritage", "Tamil kings", "Moovendhar", "Tamil Dynasty", "Indiran", "Vendhan"],
     "icons": [
         {
-            "src": "/favicon.png",
-            "sizes": "64x64 32x32 24x24 16x16",
+            "src": "/favicon.ico",
+            "sizes": "48x48",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/favicon-96x96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/web-app-manifest-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/web-app-manifest-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/apple-touch-icon.png",
+            "sizes": "180x180",
             "type": "image/png"
         },
         {
             "src": "/logo.png",
-            "type": "image/png",
-            "sizes": "192x192"
-        },
-        {
-            "src": "/logo.png",
-            "type": "image/png",
-            "sizes": "512x512"
+            "sizes": "512x512",
+            "type": "image/png"
         }
     ],
     "start_url": ".",
