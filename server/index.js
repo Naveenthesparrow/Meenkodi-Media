@@ -56,6 +56,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint for keep-alive services
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
 app.get('/robots.txt', (req, res) => {
   console.log('Serving robots.txt for', req.hostname, req.originalUrl);
