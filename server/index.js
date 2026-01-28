@@ -88,10 +88,7 @@ if (!mongoUri) {
   console.error("WARNING: No MONGO_URI or MONGODB_URI environment variable found!");
 } else {
   mongoose
-    .connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
+    .connect(mongoUri)
     .then(() => console.log("MongoDB connected successfully"))
     .catch((err) => {
       console.error("MongoDB connection error:", err);
