@@ -7,7 +7,7 @@ services:
     region: oregon
     # Build the client first so `client/dist` is available, then install server deps
     buildCommand: cd client && npm ci && npm run build && cd ../server && npm ci
-    startCommand: cd server && npm start
+    startCommand: node server/index.js
 
   - type: static_site
     name: Meenkodi-Client (optional)
