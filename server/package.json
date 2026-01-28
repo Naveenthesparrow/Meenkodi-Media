@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "generate-sitemap": "node scripts/generate-sitemap.js",
-    "postinstall": "cd ../client && npm ci && npm run build || true"
+    "generate-sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
     "cloudinary": "^1.41.3",
