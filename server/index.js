@@ -82,13 +82,22 @@ app.get('/sitemap.xml', (req, res) => {
 // Serve static files from the client build directory
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// Connect to MongoDB
+const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.error("WARNING: No MONGO_URI or MONGODB_URI environment variable found!");
+} else {
+  mongoose
+    .connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+    .then(() => console.log("MongoDB connected successfully"))
+    .catch((err) => {
+      console.error("MongoDB connection error:", err);
+      console.error("Server will continue running but database operations will fail");
+    });
+}
 
 const allowedOrigins = [
   "http://localhost:5173",
@@ -169,7 +178,7 @@ const sessionConfig = {
   rolling: false,
   unset: 'keep',
   store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
+    mongoUrl: process.env.MONGO_URI || process.env.MONGODB_URI,
     collectionName: 'sessions',
     ttl: 24 * 60 * 60, // 1 day
   }),
@@ -3278,8 +3287,27 @@ if (fs.existsSync(clientIndex)) {
   console.log('No client build found at:', clientIndex, "— the Web Service will only serve API routes until you build the client.");
 }
 
-// Start the server
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Server accessible at http://localhost:${PORT}`);
+// Start the server immediately - don't wait for MongoDB
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server accessible at http://0.0.0.0:${PORT}`);
+  console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ MongoDB URI configured: ${!!(process.env.MONGO_URI || process.env.MONGODB_URI)}`);
+});
+
+// Handle server errors
+server.on('error', (err) => {
+  console.error('❌ Server error:', err);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
 });
