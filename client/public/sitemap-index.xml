@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://www.meenkodi.com/sitemap.xml</loc>
+    <lastmod>2026-01-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.meenkodi.com/sitemap-articles.xml</loc>
+    <lastmod>2026-01-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.meenkodi.com/sitemap-events.xml</loc>
+    <lastmod>2026-01-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.meenkodi.com/sitemap-resources.xml</loc>
+    <lastmod>2026-01-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.meenkodi.com/sitemap-lands.xml</loc>
+    <lastmod>2026-01-27</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.meenkodi.com/sitemap-images.xml</loc>
+    <lastmod>2026-01-27</lastmod>
+  </sitemap>
+</sitemapindex>

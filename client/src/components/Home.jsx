@@ -1,6 +1,7 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+﻿import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
+import { getRandomKural } from "../data/thirukkural";
 import {
   Box,
   Typography,
@@ -660,6 +661,19 @@ export default function Home() {
   const { t, i18n } = useTranslation();
   const { state } = useLocation();
 
+  // Get a random kural on component mount - memoized so it doesn't change on re-renders
+  const FEATURED_KURAL = useMemo(() => {
+    const randomKural = getRandomKural();
+    return {
+      title: { en: 'Thirukkural of the Day', ta: 'இன்றைய திருக்குறள்' },
+      theme: randomKural.theme,
+      number: randomKural.number,
+      coupletTamil: randomKural.coupletTamil,
+      coupletEnglish: randomKural.coupletEnglish,
+      meaning: randomKural.meaning
+    };
+  }, []); // Empty dependency array ensures this only runs once on mount
+
   useEffect(() => {
     if (state?.scrollTo) {
       setTimeout(() => {
@@ -1121,19 +1135,43 @@ export default function Home() {
                 </Typography>
               </Box>
 
-              {/* Show only Tamil in Tamil mode, only English in English mode */}
-              {/* Always show Tamil kural, and show meaning in Tamil or English based on language */}
+              {/* Theme and Kural Number */}
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 1 }}>
+                <Chip
+                  label={`${i18n.language === 'ta' ? 'அதிகாரம்' : 'Theme'}: ${FEATURED_KURAL.theme[i18n.language] || FEATURED_KURAL.theme.en}`}
+                  size="small"
+                  sx={{
+                    bgcolor: '#f5e6d3',
+                    color: '#8b4513',
+                    fontWeight: 600,
+                    fontSize: '0.75rem'
+                  }}
+                />
+                <Chip
+                  label={`${i18n.language === 'ta' ? 'குறள்' : 'Kural'} ${FEATURED_KURAL.number}`}
+                  size="small"
+                  sx={{
+                    bgcolor: '#e8d5c4',
+                    color: '#6b3410',
+                    fontWeight: 600,
+                    fontSize: '0.75rem'
+                  }}
+                />
+              </Box>
+
+              {/* Show couplet in selected language */}
               <>
                 <Box>
-                  {FEATURED_KURAL.coupletTamil.map((line, index) => (
+                  {(i18n.language === 'ta' ? FEATURED_KURAL.coupletTamil : FEATURED_KURAL.coupletEnglish).map((line, index) => (
                     <Typography
                       key={`featured-kural-line-${index}`}
                       variant="h5"
                       sx={{
-                        fontFamily: "'Noto Serif Tamil', serif",
+                        fontFamily: i18n.language === 'ta' ? "'Noto Serif Tamil', serif" : "'Georgia', serif",
                         fontWeight: 700,
-                        letterSpacing: '-0.5px',
-                        color: '#2c1810'
+                        letterSpacing: i18n.language === 'ta' ? '-0.5px' : '0.5px',
+                        color: '#2c1810',
+                        fontStyle: i18n.language === 'en' ? 'italic' : 'normal'
                       }}
                     >
                       {line}

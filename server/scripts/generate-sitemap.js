@@ -1,13 +1,16 @@
 /**
  * Dynamic Sitemap Generator for Meenkodi Tamil Heritage
  * 
- * This script generates a comprehensive sitemap.xml including:
- * - Static pages (home, explore, gallery, etc.)
- * - Dynamic gallery items (for SEO indexing)
- * - Dynamic article pages
- * - Dynamic event pages
+ * This script generates multiple sitemaps for better SEO:
+ * - sitemap-index.xml (main sitemap index)
+ * - sitemap.xml (static pages)
+ * - sitemap-articles.xml (all articles)
+ * - sitemap-events.xml (all events)
+ * - sitemap-resources.xml (all resources)
+ * - sitemap-lands.xml (all lands/explore pages)
+ * - sitemap-images.xml (gallery images)
  * 
- * Run this script after adding new content to update the sitemap:
+ * Run this script after adding new content to update all sitemaps:
  * node server/scripts/generate-sitemap.js
  */
 
@@ -28,6 +31,8 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 import Gallery from '../models/Gallery.js';
 import Article from '../models/Article.js';
 import Event from '../models/Event.js';
+import Resource from '../models/Resource.js';
+import Land from '../models/Land.js';
 
 const BASE_URL = 'https://www.meenkodi.com';
 
@@ -108,6 +113,136 @@ function generateImageSitemap(galleryItems) {
   return xml;
 }
 
+function generateArticlesSitemap(articles) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n';
+  xml += '        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n';
+
+  articles.forEach(article => {
+    const slug = article.slug || article._id;
+    const title = article.title_en || article.title?.en || 'Untitled';
+    const category = article.category_en || article.category?.en || 'Tamil Heritage';
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/articles/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(article.updatedAt || article.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.8</priority>\n';
+    xml += '    <news:news>\n';
+    xml += '      <news:publication>\n';
+    xml += '        <news:name>Meenkodi Tamil Heritage</news:name>\n';
+    xml += '        <news:language>en</news:language>\n';
+    xml += '      </news:publication>\n';
+    xml += `      <news:publication_date>${new Date(article.createdAt).toISOString()}</news:publication_date>\n`;
+    xml += `      <news:title>${escapeXml(title)}</news:title>\n`;
+    xml += `      <news:keywords>${escapeXml(category)}, Tamil Heritage, Tamil Culture</news:keywords>\n`;
+    xml += '    </news:news>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateEventsSitemap(events) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  events.forEach(event => {
+    const slug = event.slug || event._id;
+    const title = event.title_en || event.title?.en || 'Untitled Event';
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/events/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(event.updatedAt || event.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>weekly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateResourcesSitemap(resources) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  resources.forEach(resource => {
+    const slug = resource.slug || resource._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/resources/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(resource.updatedAt || resource.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateLandsSitemap() {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  const lands = [
+    { url: '/explore/lands/kurinji', name: 'Kurinji', priority: 0.8 },
+    { url: '/explore/lands/mullai', name: 'Mullai', priority: 0.8 },
+    { url: '/explore/lands/marutham', name: 'Marutham', priority: 0.9 },
+    { url: '/explore/lands/neithal', name: 'Neithal', priority: 0.8 },
+    { url: '/explore/lands/palai', name: 'Palai', priority: 0.8 },
+  ];
+
+  const exploreCategories = [
+    { url: '/explore/kings', name: 'Tamil Kings', priority: 0.8 },
+    { url: '/explore/literature', name: 'Tamil Literature', priority: 0.8 },
+    { url: '/explore/dance', name: 'Tamil Dance', priority: 0.75 },
+    { url: '/explore/temples', name: 'Tamil Temples', priority: 0.8 },
+    { url: '/explore/foods', name: 'Tamil Food', priority: 0.75 },
+    { url: '/explore/festivals', name: 'Tamil Festivals', priority: 0.75 },
+    { url: '/explore/clothing', name: 'Tamil Clothing', priority: 0.7 },
+    { url: '/explore/ancientscience', name: 'Ancient Science', priority: 0.7 },
+  ];
+
+  [...lands, ...exploreCategories].forEach(item => {
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}${item.url}</loc>\n`;
+    xml += `    <lastmod>${formatDate()}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += `    <priority>${item.priority}</priority>\n`;
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateSitemapIndex() {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  const sitemaps = [
+    { file: 'sitemap.xml', name: 'Main Pages' },
+    { file: 'sitemap-articles.xml', name: 'Articles' },
+    { file: 'sitemap-events.xml', name: 'Events' },
+    { file: 'sitemap-resources.xml', name: 'Resources' },
+    { file: 'sitemap-lands.xml', name: 'Lands & Explore' },
+    { file: 'sitemap-images.xml', name: 'Images' },
+  ];
+
+  sitemaps.forEach(sitemap => {
+    xml += '  <sitemap>\n';
+    xml += `    <loc>${BASE_URL}/${sitemap.file}</loc>\n`;
+    xml += `    <lastmod>${formatDate()}</lastmod>\n`;
+    xml += '  </sitemap>\n';
+  });
+
+  xml += '</sitemapindex>';
+  return xml;
+}
+
 async function generateSitemap() {
   try {
     // Connect to MongoDB
@@ -115,16 +250,21 @@ async function generateSitemap() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
 
     // Fetch dynamic content
     const galleryItems = await Gallery.find({}).select('_id name description keywords imageUrl createdAt updatedAt').lean();
-    const articles = await Article.find({}).select('_id slug createdAt updatedAt').lean();
-    const events = await Event.find({}).select('_id slug createdAt updatedAt').lean();
+    const articles = await Article.find({ status: 'published' }).select('_id slug title_en title category_en category createdAt updatedAt').lean();
+    const events = await Event.find({}).select('_id slug title_en title createdAt updatedAt').lean();
+    const resources = await Resource.find({}).select('_id slug title_en title createdAt updatedAt').lean();
 
-    console.log(`Found ${galleryItems.length} gallery items, ${articles.length} articles, ${events.length} events`);
+    console.log(`\n📊 Content Summary:`);
+    console.log(`   - ${galleryItems.length} gallery items`);
+    console.log(`   - ${articles.length} published articles`);
+    console.log(`   - ${events.length} events`);
+    console.log(`   - ${resources.length} resources\n`);
 
-    // Start building sitemap
+    // Start building main sitemap (static pages only)
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
@@ -138,63 +278,78 @@ async function generateSitemap() {
       xml += '  </url>\n';
     });
 
-    // Add gallery items (main sitemap)
-    galleryItems.forEach(item => {
-      xml += '  <url>\n';
-      xml += `    <loc>${BASE_URL}/gallery/${item._id}</loc>\n`;
-      xml += `    <lastmod>${formatDate(item.updatedAt || item.createdAt)}</lastmod>\n`;
-      xml += '    <changefreq>monthly</changefreq>\n';
-      xml += '    <priority>0.7</priority>\n';
-      xml += '  </url>\n';
-    });
-
-    // Add articles
-    articles.forEach(article => {
-      const slug = article.slug || article._id;
-      xml += '  <url>\n';
-      xml += `    <loc>${BASE_URL}/articles/${slug}</loc>\n`;
-      xml += `    <lastmod>${formatDate(article.updatedAt || article.createdAt)}</lastmod>\n`;
-      xml += '    <changefreq>monthly</changefreq>\n';
-      xml += '    <priority>0.75</priority>\n';
-      xml += '  </url>\n';
-    });
-
-    // Add events
-    events.forEach(event => {
-      const slug = event.slug || event._id;
-      xml += '  <url>\n';
-      xml += `    <loc>${BASE_URL}/events/${slug}</loc>\n`;
-      xml += `    <lastmod>${formatDate(event.updatedAt || event.createdAt)}</lastmod>\n`;
-      xml += '    <changefreq>weekly</changefreq>\n';
-      xml += '    <priority>0.7</priority>\n';
-      xml += '  </url>\n';
-    });
-
     xml += '</urlset>';
 
-    // Write main sitemap
+    // Write main sitemap (static pages)
     const sitemapPath = path.join(__dirname, '../../client/public/sitemap.xml');
     fs.writeFileSync(sitemapPath, xml, 'utf8');
-    console.log(`✅ Sitemap generated: ${sitemapPath}`);
+    console.log(`✅ Main sitemap generated: sitemap.xml`);
 
-    // Generate image sitemap
+    // Generate and write articles sitemap
+    if (articles.length > 0) {
+      const articlesSitemap = generateArticlesSitemap(articles);
+      const articlesSitemapPath = path.join(__dirname, '../../client/public/sitemap-articles.xml');
+      fs.writeFileSync(articlesSitemapPath, articlesSitemap, 'utf8');
+      console.log(`✅ Articles sitemap generated: sitemap-articles.xml (${articles.length} articles)`);
+    }
+
+    // Generate and write events sitemap
+    if (events.length > 0) {
+      const eventsSitemap = generateEventsSitemap(events);
+      const eventsSitemapPath = path.join(__dirname, '../../client/public/sitemap-events.xml');
+      fs.writeFileSync(eventsSitemapPath, eventsSitemap, 'utf8');
+      console.log(`✅ Events sitemap generated: sitemap-events.xml (${events.length} events)`);
+    }
+
+    // Generate and write resources sitemap
+    if (resources.length > 0) {
+      const resourcesSitemap = generateResourcesSitemap(resources);
+      const resourcesSitemapPath = path.join(__dirname, '../../client/public/sitemap-resources.xml');
+      fs.writeFileSync(resourcesSitemapPath, resourcesSitemap, 'utf8');
+      console.log(`✅ Resources sitemap generated: sitemap-resources.xml (${resources.length} resources)`);
+    }
+
+    // Generate and write lands/explore sitemap
+    const landsSitemap = generateLandsSitemap();
+    const landsSitemapPath = path.join(__dirname, '../../client/public/sitemap-lands.xml');
+    fs.writeFileSync(landsSitemapPath, landsSitemap, 'utf8');
+    console.log(`✅ Lands sitemap generated: sitemap-lands.xml`);
+
+    // Generate and write image sitemap
     const imageSitemap = generateImageSitemap(galleryItems);
     const imageSitemapPath = path.join(__dirname, '../../client/public/sitemap-images.xml');
     fs.writeFileSync(imageSitemapPath, imageSitemap, 'utf8');
-    console.log(`✅ Image sitemap generated: ${imageSitemapPath}`);
+    console.log(`✅ Image sitemap generated: sitemap-images.xml (${galleryItems.length} images)`);
 
-    // Update robots.txt to include both sitemaps
+    // Generate sitemap index
+    const sitemapIndex = generateSitemapIndex();
+    const sitemapIndexPath = path.join(__dirname, '../../client/public/sitemap-index.xml');
+    fs.writeFileSync(sitemapIndexPath, sitemapIndex, 'utf8');
+    console.log(`✅ Sitemap index generated: sitemap-index.xml`);
+
+    // Update robots.txt to point to sitemap index
     const robotsPath = path.join(__dirname, '../../client/public/robots.txt');
-    let robotsTxt = fs.readFileSync(robotsPath, 'utf8');
+    let robotsTxt = `User-agent: *\nAllow: /\n\n`;
+    robotsTxt += `# Main Sitemap Index\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-index.xml\n\n`;
+    robotsTxt += `# Individual Sitemaps\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-articles.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-events.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-resources.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-lands.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-images.xml\n`;
     
-    if (!robotsTxt.includes('sitemap-images.xml')) {
-      robotsTxt += `\nSitemap: ${BASE_URL}/sitemap-images.xml\n`;
-      fs.writeFileSync(robotsPath, robotsTxt, 'utf8');
-      console.log(`✅ Updated robots.txt with image sitemap`);
-    }
+    fs.writeFileSync(robotsPath, robotsTxt, 'utf8');
+    console.log(`✅ Updated robots.txt with all sitemaps\n`);
 
     await mongoose.disconnect();
-    console.log('✅ All done!');
+    console.log('🎉 All sitemaps generated successfully!');
+    console.log('\n📝 Next steps:');
+    console.log('   1. Submit sitemap-index.xml to Google Search Console');
+    console.log('   2. Submit to Bing Webmaster Tools');
+    console.log('   3. Monitor indexing status\n');
+    
     process.exit(0);
   } catch (error) {
     console.error('❌ Error generating sitemap:', error);

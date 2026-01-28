@@ -61,6 +61,8 @@ const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
 const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
 const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
 const LandDetail = React.lazy(() => import("./components/details/LandDetail"));
+const LandDetailExpanded = React.lazy(() => import("./components/details/LandDetailExpanded"));
+const ScrollExpandDemo = React.lazy(() => import("./components/demos/ScrollExpandDemo"));
 import SiteLogo from "./components/common/SiteLogo";
 import Footer from "./components/common/Footer";
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -666,7 +668,9 @@ function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/explore" element={<Explore user={user} />} />
             {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}
-            <Route path="/explore/lands/:id" element={<LandDetail user={user} />} />
+            <Route path="/explore/lands/:id" element={<LandDetailExpanded user={user} />} />
+            <Route path="/explore/lands/:id/classic" element={<LandDetail user={user} />} />
+            <Route path="/demo/scroll-expand" element={<ScrollExpandDemo />} />
             <Route path="/explore/kings" element={<Kings user={user} />} />
             <Route path="/explore/kings/dynasty/:dynastyId" element={<DynastyKings user={user} />} />
             <Route

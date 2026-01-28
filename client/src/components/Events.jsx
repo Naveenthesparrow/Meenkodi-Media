@@ -447,6 +447,33 @@ export default function Events({ user }) {
           <Button onClick={handleSave} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Back Button */}
+      <Box sx={{ mt: 6, mb: 4, textAlign: 'center' }}>
+        <Button
+          onClick={() => navigate('/')}
+          variant="outlined"
+          sx={{
+            color: '#000',
+            borderColor: '#000',
+            borderWidth: 2,
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            '&:hover': {
+              bgcolor: '#000',
+              borderColor: '#000',
+              color: '#fff',
+            }
+          }}
+        >
+          ← {t('actions.backToHome', 'Back to Home')}
+        </Button>
+      </Box>
       </Container>
     </Box>
   );

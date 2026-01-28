@@ -1,18 +1,13 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /api/
 
-# Priority crawl paths for Pandiya Dynasty, Pallar, Mallar, DKV content
-Allow: /explore/lands/marutham
-Allow: /explore/kings
-Allow: /articles
+# Main Sitemap Index
+Sitemap: https://www.meenkodi.com/sitemap-index.xml
 
-# Canonical host and sitemap
+# Individual Sitemaps
 Sitemap: https://www.meenkodi.com/sitemap.xml
-Sitemap: https://meenkodi.com/sitemap.xml
-
-# Crawl-delay (optional, adjust if needed)
-Crawl-delay: 1
-
+Sitemap: https://www.meenkodi.com/sitemap-articles.xml
+Sitemap: https://www.meenkodi.com/sitemap-events.xml
+Sitemap: https://www.meenkodi.com/sitemap-resources.xml
+Sitemap: https://www.meenkodi.com/sitemap-lands.xml
 Sitemap: https://www.meenkodi.com/sitemap-images.xml

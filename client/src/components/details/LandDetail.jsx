@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
     Box,
     Typography,
@@ -16,7 +16,7 @@ import {
     Divider
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -81,39 +81,75 @@ const SectionHeading = ({ children }) => (
     </Typography>
 );
 
-const AttributeCard = ({ label, items, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: delay }}
-    >
-        <Box sx={{ mb: 4 }}>
-            <SectionHeading>{label}</SectionHeading>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {items && items.length > 0 ? (
-                    items.map((item, idx) => (
-                        <Chip
-                            key={idx}
-                            label={item}
-                            sx={{
-                                bgcolor: '#fff',
-                                color: '#000',
-                                fontWeight: 600,
-                                borderRadius: '8px',
-                                border: `1px solid #e0e0e0`,
-                                '&:hover': { bgcolor: '#f5f5f5' }
-                            }}
-                        />
-                    ))
-                ) : (
-                    <Typography variant="body2" sx={{ color: '#aaa', fontStyle: 'italic' }}>
-                        No records found
-                    </Typography>
-                )}
+// Scroll-triggered animation component
+const ScrollReveal = ({ children, delay = 0 }) => {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+    return (
+        <motion.div
+            ref={ref}
+            initial={{ opacity: 0, y: 50 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+            transition={{ duration: 0.7, delay, ease: "easeOut" }}
+        >
+            {children}
+        </motion.div>
+    );
+};
+
+const AttributeCard = ({ label, items, delay }) => {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+    return (
+        <motion.div
+            ref={ref}
+            initial={{ opacity: 0, x: 20 }}
+            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+            transition={{ duration: 0.5, delay }}
+        >
+            <Box sx={{ mb: 4 }}>
+                <SectionHeading>{label}</SectionHeading>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {items && items.length > 0 ? (
+                        items.map((item, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.3, delay: delay + idx * 0.05 }}
+                                whileHover={{ scale: 1.05, y: -2 }}
+                            >
+                                <Chip
+                                    label={item}
+                                    sx={{
+                                        bgcolor: '#fff',
+                                        color: '#000',
+                                        fontWeight: 600,
+                                        borderRadius: '8px',
+                                        border: `1px solid #e0e0e0`,
+                                        cursor: 'default',
+                                        transition: 'all 0.2s',
+                                        '&:hover': { 
+                                            bgcolor: '#f5f5f5',
+                                            borderColor: '#000',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                        }
+                                    }}
+                                />
+                            </motion.div>
+                        ))
+                    ) : (
+                        <Typography variant="body2" sx={{ color: '#aaa', fontStyle: 'italic' }}>
+                            No records found
+                        </Typography>
+                    )}
+                </Box>
             </Box>
-        </Box>
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 export default function LandDetail({ user }) {
     const { id } = useParams();
@@ -122,6 +158,13 @@ export default function LandDetail({ user }) {
     const [land, setLand] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Parallax scroll effect for hero
+    const heroRef = useRef(null);
+    const { scrollY } = useScroll();
+    const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+    const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+    const heroScale = useTransform(scrollY, [0, 500], [1, 1.1]);
 
     // Edit Mode State
     const [editMode, setEditMode] = useState(false);
@@ -274,59 +317,104 @@ export default function LandDetail({ user }) {
 
     // --- PUBLIC PREMIUM VIEW ---
     return (
-        <Box sx={{ minHeight: '100vh', bgcolor: '#fff' }}>
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+        >
+        <Box sx={{ minHeight: '100vh', bgcolor: '#fff', overflow: 'hidden' }}>
             {/* HERO SECTION */}
-            <Box sx={{ height: '85vh', position: 'relative', overflow: 'hidden' }}>
-                <Box
-                    component={motion.div}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    sx={{
+            <Box ref={heroRef} sx={{ height: '85vh', position: 'relative', overflow: 'hidden' }}>
+                <motion.div
+                    style={{
                         position: 'absolute',
                         inset: 0,
-                        backgroundImage: `url(${land.image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
+                        y: heroY,
                     }}
-                />
+                >
+                    <Box
+                        component={motion.div}
+                        style={{ scale: heroScale }}
+                        sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundImage: `url(${land.image})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }}
+                    />
+                </motion.div>
+                <motion.div
+                    style={{ opacity: heroOpacity }}
+                >
                 <Box sx={{
                     position: 'absolute',
                     inset: 0,
                     background: `linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%)`
                 }} />
+                </motion.div>
 
                 {/* Back Button */}
                 <Box sx={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
                     <Button
                         startIcon={<ArrowBackIcon />}
                         onClick={() => navigate('/', { state: { scrollTo: `land-${land.type.toLowerCase()}` } })}
-                        sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(10px)', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+                        sx={{ 
+                            color: '#fff', 
+                            borderColor: 'rgba(255,255,255,0.3)', 
+                            backdropFilter: 'blur(10px)', 
+                            '&:hover': { 
+                                bgcolor: 'rgba(255,255,255,0.1)',
+                                borderColor: 'rgba(255,255,255,0.6)'
+                            } 
+                        }}
                         variant="outlined"
                     >
                         Back
                     </Button>
+                    </motion.div>
                 </Box>
                 {/* Admin Edit Trigger */}
                 {user?.role === 'admin' && (
                     <Box sx={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            whileHover={{ scale: 1.1, rotate: 90 }}
+                            whileTap={{ scale: 0.9 }}
+                        >
                         <IconButton
                             onClick={() => setEditMode(true)}
                             sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.1)', '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' } }}
                         >
                             <EditIcon />
                         </IconButton>
+                        </motion.div>
                     </Box>
                 )}
 
                 {/* Hero Content */}
-                <Container maxWidth="xl" sx={{ height: '100%', position: 'relative', display: 'flex', alignItems: 'flex-end', pb: 12 }}>
+                <Container maxWidth="xl" sx={{ height: '100%', position: 'relative', display: 'flex', alignItems: 'flex-end', pb: 12, zIndex: 2 }}>
                     <Box sx={{ maxWidth: 900 }}>
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
+                            initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
+                            transition={{ duration: 0.8, delay: 0.4 }}
                         >
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.5, delay: 0.5 }}
+                            >
                             <Chip
                                 label={land.type.toUpperCase()}
                                 sx={{
@@ -338,6 +426,12 @@ export default function LandDetail({ user }) {
                                     border: '1px solid rgba(255,255,255,0.3)'
                                 }}
                             />
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, x: -30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.8, delay: 0.6 }}
+                            >
                             <Typography
                                 variant="h1"
                                 sx={{
@@ -351,6 +445,12 @@ export default function LandDetail({ user }) {
                             >
                                 {getContent(land.name)}
                             </Typography>
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.8 }}
+                            >
                             <Typography
                                 variant="h5"
                                 sx={{
@@ -363,22 +463,19 @@ export default function LandDetail({ user }) {
                             >
                                 {getContent(land.description)}
                             </Typography>
+                            </motion.div>
                         </motion.div>
                     </Box>
                 </Container>
             </Box>
 
             {/* CONTENT SECTION */}
-            {/* CONTENT SECTION */}
             <Container maxWidth="xl" sx={{ mt: 6, mb: 12 }}>
                 <Grid container spacing={6}>
                     {/* Left Column: Narrative */}
                     <Grid item xs={12} md={8}>
+                        <ScrollReveal delay={0.2}>
                         <Paper
-                            component={motion.div}
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.5 }}
                             elevation={0}
                             sx={{
                                 p: { xs: 4, md: 6 },
@@ -389,6 +486,12 @@ export default function LandDetail({ user }) {
                             }}
                         >
                             <Box>
+                                <motion.div
+                                    initial={{ opacity: 0, x: -30 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.6 }}
+                                >
                                 <Typography variant="h2" sx={{
                                     fontSize: { xs: '2.5rem', md: '3rem' },
                                     fontWeight: 900,
@@ -398,6 +501,13 @@ export default function LandDetail({ user }) {
                                 }}>
                                     The Essence of {land.type}
                                 </Typography>
+                                </motion.div>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8, delay: 0.2 }}
+                                >
                                 <Typography variant="body1" sx={{
                                     fontSize: '1.35rem',
                                     lineHeight: 1.9,
@@ -407,8 +517,14 @@ export default function LandDetail({ user }) {
                                 }}>
                                     {getContent(land.description)}
                                 </Typography>
+                                </motion.div>
 
                                 {land.poetry && land.poetry.length > 0 && (
+                                    <ScrollReveal delay={0.3}>
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
                                     <Box sx={{
                                         my: 6,
                                         textAlign: 'center',
@@ -433,8 +549,14 @@ export default function LandDetail({ user }) {
                                             &ldquo;
                                         </Typography>
                                         {land.poetry.map((line, idx) => (
-                                            <Typography
+                                            <motion.div
                                                 key={idx}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                whileInView={{ opacity: 1, y: 0 }}
+                                                viewport={{ once: true }}
+                                                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                                            >
+                                            <Typography
                                                 variant="h5"
                                                 sx={{
                                                     fontFamily: '"Playfair Display", serif',
@@ -447,7 +569,14 @@ export default function LandDetail({ user }) {
                                                 }}
                                                 dangerouslySetInnerHTML={{ __html: line }}
                                             />
+                                            </motion.div>
                                         ))}
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            whileInView={{ opacity: 1 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.5, delay: 0.5 }}
+                                        >
                                         <Typography variant="caption" sx={{
                                             display: 'block',
                                             mt: 2,
@@ -458,29 +587,38 @@ export default function LandDetail({ user }) {
                                         }}>
                                             Classical Verse
                                         </Typography>
+                                        </motion.div>
                                     </Box>
+                                    </motion.div>
+                                    </ScrollReveal>
                                 )}
 
                                 <Divider sx={{ my: 5, borderColor: '#eee' }} />
 
                                 {/* Comments Section */}
+                                <ScrollReveal delay={0.1}>
                                 <Box sx={{ mt: 2 }}>
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Community Thoughts</Typography>
                                     <Comments user={user} relatedType="Land" relatedId={land._id} />
                                 </Box>
+                                </ScrollReveal>
                             </Box>
                         </Paper>
+                        </ScrollReveal>
                     </Grid>
 
                     {/* Right Column: Attributes */}
                     <Grid item xs={12} md={4}>
                         <Box sx={{ position: 'sticky', top: 40, display: 'flex', flexDirection: 'column', gap: 3 }}>
                             {/* Stats Card */}
+                            <ScrollReveal delay={0.4}>
                             <Paper
                                 component={motion.div}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.6, delay: 0.7 }}
+                                whileHover={{ 
+                                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                                    y: -4
+                                }}
+                                transition={{ duration: 0.3 }}
                                 elevation={0}
                                 sx={{
                                     p: 4,
@@ -496,29 +634,31 @@ export default function LandDetail({ user }) {
                                 <AttributeCard
                                     label={land.type === 'Kurinji' ? "Deity: Murugan" : "Deity"}
                                     items={land.gods}
-                                    delay={0.8}
+                                    delay={0.1}
                                 />
                                 <AttributeCard
                                     label="Sovereign Inhabitants"
                                     items={land.people}
-                                    delay={0.9}
+                                    delay={0.2}
                                 />
                                 <Divider sx={{ my: 3, opacity: 0.5 }} />
                                 <AttributeCard
                                     label="Native Flora"
                                     items={land.flora}
-                                    delay={1.0}
+                                    delay={0.3}
                                 />
                                 <AttributeCard
                                     label="Native Fauna"
                                     items={land.fauna}
-                                    delay={1.1}
+                                    delay={0.4}
                                 />
                             </Paper>
+                            </ScrollReveal>
                         </Box>
                     </Grid>
                 </Grid>
             </Container>
         </Box>
+        </motion.div>
     );
 }
