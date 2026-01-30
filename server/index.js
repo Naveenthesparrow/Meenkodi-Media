@@ -4,6 +4,7 @@ import session from "express-session";
 import passport from "passport";
 import dotenv from "dotenv";
 import cors from "cors";
+import axios from "axios";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "./models/User.js";
 import mongoose from "mongoose";
@@ -64,6 +65,25 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+// Keep-alive function to prevent Render free tier from spinning down
+const keepAlive = async () => {
+  try {
+    const backendUrl = process.env.BACKEND_URL || 'https://meenkodi-server.onrender.com';
+    await axios.get(`${backendUrl}/api/health`, {
+      timeout: 5000,
+    });
+    console.log('[Keep-Alive] 🔄 Server ping successful -', new Date().toLocaleTimeString());
+  } catch (err) {
+    console.error('[Keep-Alive] ❌ Ping failed:', err.message);
+  }
+};
+
+// Start keep-alive interval: ping every 30 seconds to keep server awake
+setInterval(keepAlive, 30 * 1000);
+
+// Initial ping after 10 seconds
+setTimeout(() => keepAlive(), 10 * 1000);
 
 // Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
 app.get('/robots.txt', (req, res) => {
