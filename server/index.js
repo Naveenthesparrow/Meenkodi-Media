@@ -62,7 +62,8 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    mongoConnected: mongoose.connection.readyState === 1
   });
 });
 
@@ -80,10 +81,17 @@ const keepAlive = async () => {
 };
 
 // Start keep-alive interval: ping every 30 seconds to keep server awake
-setInterval(keepAlive, 30 * 1000);
+// Only start after server is listening
+let keepAliveInterval = null;
 
-// Initial ping after 10 seconds
-setTimeout(() => keepAlive(), 10 * 1000);
+const startKeepAlive = () => {
+  if (!keepAliveInterval) {
+    keepAliveInterval = setInterval(keepAlive, 30 * 1000);
+    // Initial ping after 5 seconds to verify connection
+    setTimeout(() => keepAlive(), 5 * 1000);
+    console.log('[Keep-Alive] ✅ Keep-alive service started');
+  }
+};
 
 // Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
 app.get('/robots.txt', (req, res) => {
@@ -3319,6 +3327,9 @@ const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server accessible at http://0.0.0.0:${PORT}`);
   console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ MongoDB URI configured: ${!!(process.env.MONGO_URI || process.env.MONGODB_URI)}`);
+  
+  // Start keep-alive service after server is listening
+  startKeepAlive();
 });
 
 // Handle server errors
