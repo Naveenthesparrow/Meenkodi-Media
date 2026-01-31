@@ -4,7 +4,6 @@ import session from "express-session";
 import passport from "passport";
 import dotenv from "dotenv";
 import cors from "cors";
-import axios from "axios";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "./models/User.js";
 import mongoose from "mongoose";
@@ -66,32 +65,6 @@ app.get('/api/health', (req, res) => {
     mongoConnected: mongoose.connection.readyState === 1
   });
 });
-
-// Keep-alive function to prevent Render free tier from spinning down
-const keepAlive = async () => {
-  try {
-    const backendUrl = process.env.BACKEND_URL || 'https://meenkodi-server.onrender.com';
-    await axios.get(`${backendUrl}/api/health`, {
-      timeout: 5000,
-    });
-    console.log('[Keep-Alive] 🔄 Server ping successful -', new Date().toLocaleTimeString());
-  } catch (err) {
-    console.error('[Keep-Alive] ❌ Ping failed:', err.message);
-  }
-};
-
-// Start keep-alive interval: ping every 30 seconds to keep server awake
-// Only start after server is listening
-let keepAliveInterval = null;
-
-const startKeepAlive = () => {
-  if (!keepAliveInterval) {
-    keepAliveInterval = setInterval(keepAlive, 30 * 1000);
-    // Initial ping after 5 seconds to verify connection
-    setTimeout(() => keepAlive(), 5 * 1000);
-    console.log('[Keep-Alive] ✅ Keep-alive service started');
-  }
-};
 
 // Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
 app.get('/robots.txt', (req, res) => {
@@ -3327,9 +3300,6 @@ const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server accessible at http://0.0.0.0:${PORT}`);
   console.log(`✅ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ MongoDB URI configured: ${!!(process.env.MONGO_URI || process.env.MONGODB_URI)}`);
-  
-  // Start keep-alive service after server is listening
-  startKeepAlive();
 });
 
 // Handle server errors
