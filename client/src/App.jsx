@@ -8,6 +8,8 @@ const LiteratureDetail = React.lazy(() => import("./components/details/Literatur
 const DanceDetail = React.lazy(() => import("./components/details/DanceDetail"));
 const FoodDetail = React.lazy(() => import("./components/details/FoodDetail"));
 const FestivalDetail = React.lazy(() => import("./components/details/FestivalDetail"));
+const DynastyDetail = React.lazy(() => import("./components/details/DynastyDetail"));
+const PoetDetail = React.lazy(() => import("./components/details/PoetDetail"));
 const EventDetail = React.lazy(() => import("./components/EventDetail"));
 import {
   BrowserRouter as Router,
@@ -18,6 +20,7 @@ import {
 } from "react-router-dom";
 const AdminPortal = React.lazy(() => import("./components/AdminPortal"));
 const UserPortal = React.lazy(() => import("./components/UserPortal"));
+const MyArticles = React.lazy(() => import("./components/MyArticles"));
 import Home from "./components/Home";
 const Articles = React.lazy(() => import("./components/Articles"));
 const Gallery = React.lazy(() => import("./components/Gallery"));
@@ -662,6 +665,7 @@ function App() {
             <Route path="/auth/google/callback" element={<AuthCallback />} />
             <Route path="/auth/failure" element={<AuthFailure />} />
             <Route path="/articles" element={<Articles user={user} />} />
+            <Route path="/my-articles" element={<MyArticles user={user} />} />
             <Route path="/gallery" element={<Gallery user={user} />} />
             <Route path="/events" element={<Events user={user} />} />
             <Route path="/resources" element={<Resources user={user} />} />
@@ -691,6 +695,9 @@ function App() {
             />
             <Route path="/explore/temples/:id" element={<TempleDetail user={user} />} />
             <Route path="/explore/kings/:id" element={<KingDetail user={user} />} />
+            <Route path="/dynasties/:slug" element={<DynastyDetail user={user} />} />
+            <Route path="/dynasties/id/:id" element={<DynastyDetail user={user} />} />
+            <Route path="/poets/:slug" element={<PoetDetail user={user} />} />
             <Route
               path="/explore/literature/:id"
               element={<LiteratureDetail user={user} />}

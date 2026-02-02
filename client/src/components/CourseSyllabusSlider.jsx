@@ -8,7 +8,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 
 const AUTO_INTERVAL = 4500;
 
-export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }) {
+export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute, onNavigate }) {
   const getContent = useBilingualContent();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -75,12 +75,14 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute }
 
   const handleCourseClick = (route) => {
     if (route) {
+      if (onNavigate) onNavigate();
       navigate(route);
     }
   };
 
   const handleCTA = () => {
     if (ctaRoute) {
+      if (onNavigate) onNavigate();
       navigate(ctaRoute);
     }
   };

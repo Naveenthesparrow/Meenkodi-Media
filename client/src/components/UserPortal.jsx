@@ -1,7 +1,12 @@
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Article as ArticleIcon } from "@mui/icons-material";
 
 export default function UserPortal({ user, logout }) {
+  const navigate = useNavigate();
+  const { i18n } = useTranslation();
   return (
     <Box sx={{
       minHeight: '60vh',
@@ -47,8 +52,26 @@ export default function UserPortal({ user, logout }) {
         <Typography variant="h6" sx={{ mb: 2 }}>
           Welcome, {user.displayName}
         </Typography>
-        <Button variant="contained" color="primary" onClick={logout}>
-          Logout
+        <Typography variant="body2" sx={{ mb: 3, color: '#666' }}>
+          {user.email}
+        </Typography>
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
+          <Button 
+            variant="contained" 
+            startIcon={<ArticleIcon />}
+            onClick={() => navigate('/my-articles')}
+            sx={{
+              bgcolor: '#8B0000',
+              '&:hover': { bgcolor: '#6B0000' }
+            }}
+          >
+            {i18n.language === 'ta' ? 'என் கட்டுரைகள்' : 'My Articles'}
+          </Button>
+        </Box>
+
+        <Button variant="outlined" color="error" onClick={logout}>
+          {i18n.language === 'ta' ? 'வெளியேறு' : 'Logout'}
         </Button>
       </Box>
     </Box>

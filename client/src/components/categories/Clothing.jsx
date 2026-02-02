@@ -606,7 +606,7 @@ export default function Clothing({ user }) {
         >
           {editItem ? t('clothing.edit', 'Edit Clothing Item') : t('clothing.addNew', 'Add New Clothing Item')}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
+        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
           <TextField
             fullWidth
             label={t('form.name', 'Name')}
@@ -656,7 +656,7 @@ export default function Clothing({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            {t('actions.cancel', 'Cancel')}
+            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
           </Button>
           <Button
             onClick={handleSave}
@@ -668,7 +668,7 @@ export default function Clothing({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
+            {editItem ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`}
           </Button>
         </DialogActions>
       </Dialog>

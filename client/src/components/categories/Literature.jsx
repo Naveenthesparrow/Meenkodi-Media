@@ -21,6 +21,8 @@ import {
   IconButton,
   Paper,
   Fade,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import {
   MenuBook,
@@ -45,6 +47,7 @@ export default function Literature({ user }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [editLanguage, setEditLanguage] = useState('en');
   const [formData, setFormData] = useState({
     title_en: "",
     title_ta: "",
@@ -599,47 +602,52 @@ export default function Literature({ user }) {
         >
           {editItem ? t('literature.edit', 'Edit Literature Work') : t('literature.addNew', 'Add New Literature Work')}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
+        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 3,
+                  py: 1,
+                  border: '2px solid #000',
+                  color: '#000',
+                  fontWeight: 600,
+                  '&.Mui-selected': {
+                    bgcolor: '#000',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: '#333',
+                    }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
           <TextField
             fullWidth
-            label={`${t('form.name', 'Name')} / ${t('form.name', 'Name')} - ${t('literature.title', 'Title') || 'Title'} (EN)`}
-            value={formData.title_en}
-            onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
+            label={t('literature.title', 'Title')}
+            value={editLanguage === 'en' ? formData.title_en : formData.title_ta}
+            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'title_en' : 'title_ta']: e.target.value })}
             sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
-            label={`${t('literature.title', 'Title') || 'Title'} (TA)`}
-            value={formData.title_ta}
-            onChange={(e) => setFormData({ ...formData, title_ta: e.target.value })}
+            label={t('form.author', 'Author')}
+            value={editLanguage === 'en' ? formData.author_en : formData.author_ta}
+            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'author_en' : 'author_ta']: e.target.value })}
             sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
-            label={`${t('form.author', 'Author')} (EN)`}
-            value={formData.author_en}
-            onChange={(e) => setFormData({ ...formData, author_en: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={`${t('form.author', 'Author')} (TA)`}
-            value={formData.author_ta}
-            onChange={(e) => setFormData({ ...formData, author_ta: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={`${t('form.period', 'Period')} (EN)`}
-            value={formData.period_en}
-            onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={`${t('form.period', 'Period')} (TA)`}
-            value={formData.period_ta}
-            onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
+            label={t('form.period', 'Period')}
+            value={editLanguage === 'en' ? formData.period_en : formData.period_ta}
+            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'period_en' : 'period_ta']: e.target.value })}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -664,7 +672,7 @@ export default function Literature({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            {t('actions.cancel', 'Cancel')}
+            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
           </Button>
           <Button
             onClick={handleSave}
@@ -676,7 +684,7 @@ export default function Literature({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
+            {editItem ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`}
           </Button>
         </DialogActions>
       </Dialog>

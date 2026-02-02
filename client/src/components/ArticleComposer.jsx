@@ -9,19 +9,23 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
-import { Image as ImageIcon, VideoLibrary as VideoIcon, Close as CloseIcon } from '@mui/icons-material';
+import { Image as ImageIcon, VideoLibrary as VideoIcon, Close as CloseIcon, Share as ShareIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
 
 export default function ArticleComposer({ user, onPostCreated }) {
   const { t, i18n } = useTranslation();
+  const [composerLanguage, setComposerLanguage] = useState('en'); // 'en' or 'ta'
   const [titleEn, setTitleEn] = useState('');
   const [titleTa, setTitleTa] = useState('');
   const [contentEn, setContentEn] = useState('');
   const [contentTa, setContentTa] = useState('');
   const [image, setImage] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [socialMediaLink, setSocialMediaLink] = useState('');
   const [imagePreview, setImagePreview] = useState('');
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -31,11 +35,6 @@ export default function ArticleComposer({ user, onPostCreated }) {
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
-      return;
-    }
 
     setUploading(true);
     setError(null);
@@ -68,12 +67,15 @@ export default function ArticleComposer({ user, onPostCreated }) {
   };
 
   const handleSubmit = async () => {
-    if (!titleEn.trim() && !titleTa.trim()) {
+    const currentTitle = composerLanguage === 'en' ? titleEn : titleTa;
+    const currentContent = composerLanguage === 'en' ? contentEn : contentTa;
+
+    if (!currentTitle.trim()) {
       setError(t('articles.error.titleRequired', 'Title is required'));
       return;
     }
 
-    if (!contentEn.trim() && !contentTa.trim()) {
+    if (!currentContent.trim()) {
       setError(t('articles.error.contentRequired', 'Content is required'));
       return;
     }
@@ -87,10 +89,17 @@ export default function ArticleComposer({ user, onPostCreated }) {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          title: { en: titleEn, ta: titleTa },
-          content: { en: contentEn, ta: contentTa },
+          title: { 
+            en: composerLanguage === 'en' ? titleEn : '', 
+            ta: composerLanguage === 'ta' ? titleTa : '' 
+          },
+          content: { 
+            en: composerLanguage === 'en' ? contentEn : '', 
+            ta: composerLanguage === 'ta' ? contentTa : '' 
+          },
           image,
           videoUrl,
+          socialMediaLink,
         }),
       });
 
@@ -104,6 +113,7 @@ export default function ArticleComposer({ user, onPostCreated }) {
       setContentTa('');
       setImage('');
       setVideoUrl('');
+      setSocialMediaLink('');
       setImagePreview('');
 
       setTimeout(() => setSuccess(false), 3000);
@@ -145,20 +155,50 @@ export default function ArticleComposer({ user, onPostCreated }) {
         </Alert>
       )}
 
-      <TextField
-        fullWidth
-        placeholder={t('articles.composer.titlePlaceholder', 'Add a title (English)...')}
-        value={titleEn}
-        onChange={(e) => setTitleEn(e.target.value)}
-        variant="outlined"
-        sx={{ mb: 2 }}
-      />
+      {/* Language Toggle */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+        <Typography 
+          variant="subtitle2" 
+          sx={{ 
+            mb: 1.5, 
+            fontWeight: 600, 
+            color: '#333',
+            fontSize: '0.9rem'
+          }}
+        >
+          {i18n.language === 'ta' ? 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:' : 'Select Language to Write:'}
+        </Typography>
+        <ToggleButtonGroup
+          value={composerLanguage}
+          exclusive
+          onChange={(e, newLang) => newLang && setComposerLanguage(newLang)}
+          sx={{
+            '& .MuiToggleButton-root': {
+              px: 3,
+              py: 1,
+              border: '1px solid #8B0000',
+              color: '#8B0000',
+              fontWeight: 600,
+              '&.Mui-selected': {
+                bgcolor: '#8B0000',
+                color: '#fff',
+                '&:hover': {
+                  bgcolor: '#6B0000',
+                },
+              },
+            },
+          }}
+        >
+          <ToggleButton value="en">ENGLISH</ToggleButton>
+          <ToggleButton value="ta">தமிழ்</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
       <TextField
         fullWidth
-        placeholder={t('articles.composer.titlePlaceholderTa', 'தலைப்பு (தமிழ்)...')}
-        value={titleTa}
-        onChange={(e) => setTitleTa(e.target.value)}
+        placeholder={composerLanguage === 'en' ? 'Add a title (English)...' : 'தலைப்பு (தமிழ்)...'}
+        value={composerLanguage === 'en' ? titleEn : titleTa}
+        onChange={(e) => composerLanguage === 'en' ? setTitleEn(e.target.value) : setTitleTa(e.target.value)}
         variant="outlined"
         sx={{ mb: 2 }}
       />
@@ -167,20 +207,9 @@ export default function ArticleComposer({ user, onPostCreated }) {
         fullWidth
         multiline
         minRows={4}
-        placeholder={t('articles.composer.contentPlaceholder', 'What do you want to share? (English)')}
-        value={contentEn}
-        onChange={(e) => setContentEn(e.target.value)}
-        variant="outlined"
-        sx={{ mb: 2 }}
-      />
-
-      <TextField
-        fullWidth
-        multiline
-        minRows={4}
-        placeholder={t('articles.composer.contentPlaceholderTa', 'உங்கள் கருத்துக்களை பகிருங்கள் (தமிழ்)')}
-        value={contentTa}
-        onChange={(e) => setContentTa(e.target.value)}
+        placeholder={composerLanguage === 'en' ? 'What do you want to share? (English)' : 'உங்கள் கருத்துக்களை பகிருங்கள் (தமிழ்)'}
+        value={composerLanguage === 'en' ? contentEn : contentTa}
+        onChange={(e) => composerLanguage === 'en' ? setContentEn(e.target.value) : setContentTa(e.target.value)}
         variant="outlined"
         sx={{ mb: 2 }}
       />
@@ -255,6 +284,17 @@ export default function ArticleComposer({ user, onPostCreated }) {
           sx={{ flex: 1, minWidth: 200 }}
           InputProps={{
             startAdornment: <VideoIcon sx={{ mr: 1, color: '#666' }} />,
+          }}
+        />
+
+        <TextField
+          placeholder={composerLanguage === 'en' ? 'Social media link (optional)...' : 'சமூக ஊடக இணைப்பு (விருப்பமானது)...'}
+          value={socialMediaLink}
+          onChange={(e) => setSocialMediaLink(e.target.value)}
+          size="small"
+          sx={{ flex: 1, minWidth: 200 }}
+          InputProps={{
+            startAdornment: <ShareIcon sx={{ mr: 1, color: '#666' }} />,
           }}
         />
 

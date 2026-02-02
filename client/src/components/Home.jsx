@@ -70,30 +70,35 @@ import MeenkodiImage from "../assests/meenkodi.png";
 
 const TEAM_DIRECTORS = [
   {
+    slug: "subramania-bharathi",
     name: { en: "Subramania Bharathi", ta: "சுப்பிரமணிய பாரதியார்" },
     title: { en: "National Poet of Tamil Nadu", ta: "தமிழ்நாட்டின் தேசிய கவிஞர்" },
     image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Subramanya_Bharathi.jpg/250px-Subramanya_Bharathi.jpg",
     imagePosition: "center 20%"
   },
   {
+    slug: "kambar",
     name: { en: "Kambar", ta: "கம்பர்" },
     title: { en: "Epic Poet • Kambaramayanam", ta: "காவிய கவிஞர் • கம்பராமாயணம்" },
     image: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Kambar.jpg?20120807204334",
     imagePosition: "center top"
   },
   {
+    slug: "thiruvalluvar",
     name: { en: "Thiruvalluvar", ta: "திருவள்ளுவர்" },
     title: { en: "Author of Thirukkural", ta: "திருக்குறள் ஆசிரியர்" },
     image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiXR0EU2W1grbcin5-yghbPrNHdMq0wFccGwR71QRc0WB6ZXEzRbsbPeMdhDWQKgsVfTiGP-9ivpM27-cBXd8_vzzmuZ4JdQbsaWkBS6Dk6swOzSAQhIJ64V_QKG5drXTMrJB1wUgwssyQ/s1600/thiruvalluvar-779961.jpg",
     imagePosition: "50% 15%"
   },
   {
+    slug: "devaneyapavanar",
     name: { en: "Devaneyapavanar", ta: "தேவநேயப் பாவாணர்" },
     title: { en: "Tamil Scholar • Linguist", ta: "தமிழ் அறிஞர் • மொழியியலாளர்" },
     image: "https://static.hindutamil.in/hindu/uploads/news/2023/02/07/xlarge/940197.jpg",
     imagePosition: "center top"
   },
   {
+    slug: "avvaiyar",
     name: { en: "Avvaiyar", ta: "ஔவையார்" },
     title: { en: "Poet • Philosopher", ta: "கவிஞர் • தத்துவஞானி" },
     image: "https://upload.wikimedia.org/wikipedia/commons/b/b6/Statue_of_Avvaiyar_%28cropped%29.jpg",
@@ -105,27 +110,32 @@ const TEAM_MUSEUM = [
   {
     name: { en: "Pandiya Dynasty", ta: "பாண்டிய வம்சம்" },
     title: { en: "Ancient Tamil Kingdom (600 BCE - 1650 CE)", ta: "பண்டைய தமிழ் அரசு (கி.மு. 600 - கி.பி. 1650)" },
-    flag: "https://yt3.googleusercontent.com/ICLjJKZ0_mSIvsO-G00WfgpMWw6NWiNifNAFFW9jf7QhboKOaczaqyuFEVntaoWr7oQvFkf97A=s160-c-k-c0x00ffffff-no-rj"
+    flag: "https://yt3.googleusercontent.com/ICLjJKZ0_mSIvsO-G00WfgpMWw6NWiNifNAFFW9jf7QhboKOaczaqyuFEVntaoWr7oQvFkf97A=s160-c-k-c0x00ffffff-no-rj",
+    slug: "pandiya"
   },
   {
     name: { en: "Chera Dynasty", ta: "சேர வம்சம்" },
     title: { en: "Western Tamil Kingdom (300 BCE - 1102 CE)", ta: "மேற்கு தமிழ் அரசு (கி.மு. 300 - கி.பி. 1102)" },
-    flag: "https://m.media-amazon.com/images/I/616C23TXJZL.jpg"
+    flag: "https://m.media-amazon.com/images/I/616C23TXJZL.jpg",
+    slug: "chera"
   },
   {
     name: { en: "Chola Dynasty", ta: "சோழ வம்சம்" },
     title: { en: "Great Tamil Empire (300 BCE - 1279 CE)", ta: "மாபெரும் தமிழ் பேரரசு (கி.மு. 300 - கி.பி. 1279)" },
-    flag: "https://ae01.alicdn.com/kf/H6f548d445be04d79a1b534aa2467d1e6u.jpg"
+    flag: "https://ae01.alicdn.com/kf/H6f548d445be04d79a1b534aa2467d1e6u.jpg",
+    slug: "chola"
   },
   {
     name: { en: "Pallava Dynasty", ta: "பல்லவ வம்சம்" },
     title: { en: "Northern Tamil Kingdom (275 - 897 CE)", ta: "வடக்கு தமிழ் அரசு (கி.பி. 275 - 897)" },
-    flag: "https://upload.wikimedia.org/wikipedia/commons/c/c2/Simha_flag_of_Pallava_Kingdom.png"
+    flag: "https://upload.wikimedia.org/wikipedia/commons/c/c2/Simha_flag_of_Pallava_Kingdom.png",
+    slug: "pallava"
   },
   {
     name: { en: "LTTE", ta: "தமிழீழ விடுதலைப் புலிகள்" },
     title: { en: "Liberation Tigers of Tamil Eelam", ta: "தமிழீழ விடுதலைப் புலிகள்" },
-    flag: "https://upload.wikimedia.org/wikipedia/en/a/a6/Ltte_emblem.jpg"
+    flag: "https://upload.wikimedia.org/wikipedia/en/a/a6/Ltte_emblem.jpg",
+    slug: "ltte"
   }
 ];
 
@@ -658,6 +668,12 @@ function getRandomFactIndex() {
 
 export default function Home() {
   const getContent = useBilingualContent();
+
+  // Save scroll position before navigating to detail pages
+  const saveScrollPosition = () => {
+    sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+  };
+
   const { t, i18n } = useTranslation();
   const { state } = useLocation();
 
@@ -2645,6 +2661,7 @@ export default function Home() {
                 <Grid item xs={12} sm={6} md={3} key={TEAM_MUSEUM[idx].name.en} sx={{ display: 'flex', justifyContent: 'center' }}>
                   <Card
                     elevation={0}
+                    onClick={() => { saveScrollPosition(); navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}`); }}
                     sx={{
                       justifyContent: 'center',
                       alignItems: 'center',
@@ -2655,6 +2672,7 @@ export default function Home() {
                       borderRadius: 3,
                       p: 2.5,
                       textAlign: 'center',
+                      cursor: 'pointer',
                       "&::before": {
                         content: '""',
                         position: "absolute",
@@ -2723,6 +2741,7 @@ export default function Home() {
               <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 0.5, md: -1 } }}>
                 <Card
                   elevation={0}
+                  onClick={() => { saveScrollPosition(); navigate(`/dynasties/${TEAM_MUSEUM[4].slug}`); }}
                   sx={{
                     justifyContent: 'center',
                     alignItems: 'center',
@@ -2733,6 +2752,7 @@ export default function Home() {
                     borderRadius: 3,
                     p: 2.5,
                     textAlign: 'center',
+                    cursor: 'pointer',
                     "&:hover": {
                       transform: "translateY(-12px)",
                       boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
@@ -2816,7 +2836,7 @@ export default function Home() {
             </Typography>
             <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 6, borderRadius: 2 }} />
 
-            <DirectorsSlider directors={TEAM_DIRECTORS} />
+            <DirectorsSlider directors={TEAM_DIRECTORS} onNavigate={saveScrollPosition} />
           </Container>
         </Box>
       </DeferredSection>

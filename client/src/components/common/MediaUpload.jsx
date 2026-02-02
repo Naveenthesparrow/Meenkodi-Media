@@ -75,13 +75,6 @@ const MediaUpload = ({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      const errorMsg = "Image size must be less than 5MB";
-      console.error(errorMsg);
-      setError(errorMsg);
-      return;
-    }
-
     setUploading(true);
     setError(null);
 

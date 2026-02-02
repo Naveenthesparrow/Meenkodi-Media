@@ -9,6 +9,16 @@
  * - sitemap-resources.xml (all resources)
  * - sitemap-lands.xml (all lands/explore pages)
  * - sitemap-images.xml (gallery images)
+ * - sitemap-kings.xml (Tamil kings and rulers)
+ * - sitemap-poets.xml (Tamil poets and authors)
+ * - sitemap-literature.xml (Tamil literature works)
+ * - sitemap-dance.xml (Tamil dance forms)
+ * - sitemap-temples.xml (Tamil temples)
+ * - sitemap-foods.xml (Tamil cuisine)
+ * - sitemap-festivals.xml (Tamil festivals)
+ * - sitemap-clothing.xml (Tamil traditional clothing)
+ * - sitemap-science.xml (Ancient Tamil science)
+ * - sitemap-dynasties.xml (Tamil dynasties)
  * 
  * Run this script after adding new content to update all sitemaps:
  * node server/scripts/generate-sitemap.js
@@ -33,31 +43,45 @@ import Article from '../models/Article.js';
 import Event from '../models/Event.js';
 import Resource from '../models/Resource.js';
 import Land from '../models/Land.js';
+import King from '../models/King.js';
+import Poet from '../models/Poet.js';
+import Literature from '../models/Literature.js';
+import Dance from '../models/Dance.js';
+import Temple from '../models/Temple.js';
+import Food from '../models/Food.js';
+import Festival from '../models/Festival.js';
+import Clothing from '../models/Clothing.js';
+import AncientScience from '../models/AncientScience.js';
+import Dynasty from '../models/Dynasty.js';
 
 const BASE_URL = 'https://www.meenkodi.com';
 
 // Static pages with their priorities and change frequencies
 const staticPages = [
   { url: '/', priority: 1.0, changefreq: 'weekly' },
-  { url: '/explore', priority: 0.8, changefreq: 'weekly' },
-  { url: '/gallery', priority: 0.8, changefreq: 'daily' },
-  { url: '/articles', priority: 0.8, changefreq: 'daily' },
-  { url: '/events', priority: 0.7, changefreq: 'weekly' },
-  { url: '/resources', priority: 0.7, changefreq: 'weekly' },
+  { url: '/explore', priority: 0.9, changefreq: 'weekly' },
+  { url: '/gallery', priority: 0.85, changefreq: 'daily' },
+  { url: '/articles', priority: 0.85, changefreq: 'daily' },
+  { url: '/events', priority: 0.8, changefreq: 'weekly' },
+  { url: '/resources', priority: 0.75, changefreq: 'weekly' },
   { url: '/faq', priority: 0.5, changefreq: 'monthly' },
-  { url: '/explore/kings', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/literature', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/dance', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/temples', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/foods', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/festivals', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/clothing', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/ancientscience', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/lands/kurinji', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/lands/mullai', priority: 0.64, changefreq: 'monthly' },
+  { url: '/about', priority: 0.6, changefreq: 'monthly' },
+  { url: '/contact', priority: 0.6, changefreq: 'monthly' },
+  { url: '/explore/kings', priority: 0.8, changefreq: 'monthly' },
+  { url: '/explore/poets', priority: 0.8, changefreq: 'monthly' },
+  { url: '/explore/literature', priority: 0.8, changefreq: 'monthly' },
+  { url: '/explore/dance', priority: 0.75, changefreq: 'monthly' },
+  { url: '/explore/temples', priority: 0.8, changefreq: 'monthly' },
+  { url: '/explore/foods', priority: 0.75, changefreq: 'monthly' },
+  { url: '/explore/festivals', priority: 0.75, changefreq: 'monthly' },
+  { url: '/explore/clothing', priority: 0.7, changefreq: 'monthly' },
+  { url: '/explore/ancientscience', priority: 0.75, changefreq: 'monthly' },
+  { url: '/explore/dynasties', priority: 0.8, changefreq: 'monthly' },
+  { url: '/explore/lands/kurinji', priority: 0.85, changefreq: 'monthly' },
+  { url: '/explore/lands/mullai', priority: 0.85, changefreq: 'monthly' },
   { url: '/explore/lands/marutham', priority: 0.9, changefreq: 'monthly' },
-  { url: '/explore/lands/neithal', priority: 0.64, changefreq: 'monthly' },
-  { url: '/explore/lands/palai', priority: 0.64, changefreq: 'monthly' },
+  { url: '/explore/lands/neithal', priority: 0.85, changefreq: 'monthly' },
+  { url: '/explore/lands/palai', priority: 0.85, changefreq: 'monthly' },
 ];
 
 function formatDate(date) {
@@ -219,6 +243,196 @@ function generateLandsSitemap() {
   return xml;
 }
 
+function generateKingsSitemap(kings) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  kings.forEach(king => {
+    const slug = king.slug || king._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/kings/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(king.updatedAt || king.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.75</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generatePoetsSitemap(poets) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  poets.forEach(poet => {
+    const slug = poet.slug || poet._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/poets/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(poet.updatedAt || poet.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.75</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateLiteratureSitemap(literature) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  literature.forEach(work => {
+    const slug = work.slug || work._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/literature/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(work.updatedAt || work.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.75</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateDanceSitemap(dances) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  dances.forEach(dance => {
+    const slug = dance.slug || dance._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/dance/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(dance.updatedAt || dance.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateTemplesSitemap(temples) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  temples.forEach(temple => {
+    const slug = temple.slug || temple._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/temples/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(temple.updatedAt || temple.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.75</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateFoodsSitemap(foods) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  foods.forEach(food => {
+    const slug = food.slug || food._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/foods/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(food.updatedAt || food.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateFestivalsSitemap(festivals) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  festivals.forEach(festival => {
+    const slug = festival.slug || festival._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/festivals/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(festival.updatedAt || festival.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateClothingSitemap(clothing) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  clothing.forEach(item => {
+    const slug = item.slug || item._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/clothing/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(item.updatedAt || item.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.65</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateScienceSitemap(sciences) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  sciences.forEach(science => {
+    const slug = science.slug || science._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/ancientscience/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(science.updatedAt || science.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
+function generateDynastiesSitemap(dynasties) {
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+  dynasties.forEach(dynasty => {
+    const slug = dynasty.slug || dynasty._id;
+    
+    xml += '  <url>\n';
+    xml += `    <loc>${BASE_URL}/explore/dynasties/${slug}</loc>\n`;
+    xml += `    <lastmod>${formatDate(dynasty.updatedAt || dynasty.createdAt)}</lastmod>\n`;
+    xml += '    <changefreq>monthly</changefreq>\n';
+    xml += '    <priority>0.75</priority>\n';
+    xml += '  </url>\n';
+  });
+
+  xml += '</urlset>';
+  return xml;
+}
+
 function generateSitemapIndex() {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -230,6 +444,16 @@ function generateSitemapIndex() {
     { file: 'sitemap-resources.xml', name: 'Resources' },
     { file: 'sitemap-lands.xml', name: 'Lands & Explore' },
     { file: 'sitemap-images.xml', name: 'Images' },
+    { file: 'sitemap-kings.xml', name: 'Kings' },
+    { file: 'sitemap-poets.xml', name: 'Poets' },
+    { file: 'sitemap-literature.xml', name: 'Literature' },
+    { file: 'sitemap-dance.xml', name: 'Dance' },
+    { file: 'sitemap-temples.xml', name: 'Temples' },
+    { file: 'sitemap-foods.xml', name: 'Foods' },
+    { file: 'sitemap-festivals.xml', name: 'Festivals' },
+    { file: 'sitemap-clothing.xml', name: 'Clothing' },
+    { file: 'sitemap-science.xml', name: 'Ancient Science' },
+    { file: 'sitemap-dynasties.xml', name: 'Dynasties' },
   ];
 
   sitemaps.forEach(sitemap => {
@@ -257,12 +481,32 @@ async function generateSitemap() {
     const articles = await Article.find({ status: 'published' }).select('_id slug title_en title category_en category createdAt updatedAt').lean();
     const events = await Event.find({}).select('_id slug title_en title createdAt updatedAt').lean();
     const resources = await Resource.find({}).select('_id slug title_en title createdAt updatedAt').lean();
+    const kings = await King.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const poets = await Poet.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const literature = await Literature.find({}).select('_id slug title_en title createdAt updatedAt').lean();
+    const dances = await Dance.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const temples = await Temple.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const foods = await Food.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const festivals = await Festival.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const clothing = await Clothing.find({}).select('_id slug name_en name createdAt updatedAt').lean();
+    const sciences = await AncientScience.find({}).select('_id slug title_en title createdAt updatedAt').lean();
+    const dynasties = await Dynasty.find({}).select('_id slug name_en name createdAt updatedAt').lean();
 
     console.log(`\n📊 Content Summary:`);
     console.log(`   - ${galleryItems.length} gallery items`);
     console.log(`   - ${articles.length} published articles`);
     console.log(`   - ${events.length} events`);
-    console.log(`   - ${resources.length} resources\n`);
+    console.log(`   - ${resources.length} resources`);
+    console.log(`   - ${kings.length} kings`);
+    console.log(`   - ${poets.length} poets`);
+    console.log(`   - ${literature.length} literature works`);
+    console.log(`   - ${dances.length} dance forms`);
+    console.log(`   - ${temples.length} temples`);
+    console.log(`   - ${foods.length} foods`);
+    console.log(`   - ${festivals.length} festivals`);
+    console.log(`   - ${clothing.length} clothing items`);
+    console.log(`   - ${sciences.length} ancient sciences`);
+    console.log(`   - ${dynasties.length} dynasties\n`);
 
     // Start building main sitemap (static pages only)
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -321,6 +565,86 @@ async function generateSitemap() {
     fs.writeFileSync(imageSitemapPath, imageSitemap, 'utf8');
     console.log(`✅ Image sitemap generated: sitemap-images.xml (${galleryItems.length} images)`);
 
+    // Generate and write kings sitemap
+    if (kings.length > 0) {
+      const kingsSitemap = generateKingsSitemap(kings);
+      const kingsSitemapPath = path.join(__dirname, '../../client/public/sitemap-kings.xml');
+      fs.writeFileSync(kingsSitemapPath, kingsSitemap, 'utf8');
+      console.log(`✅ Kings sitemap generated: sitemap-kings.xml (${kings.length} kings)`);
+    }
+
+    // Generate and write poets sitemap
+    if (poets.length > 0) {
+      const poetsSitemap = generatePoetsSitemap(poets);
+      const poetsSitemapPath = path.join(__dirname, '../../client/public/sitemap-poets.xml');
+      fs.writeFileSync(poetsSitemapPath, poetsSitemap, 'utf8');
+      console.log(`✅ Poets sitemap generated: sitemap-poets.xml (${poets.length} poets)`);
+    }
+
+    // Generate and write literature sitemap
+    if (literature.length > 0) {
+      const literatureSitemap = generateLiteratureSitemap(literature);
+      const literatureSitemapPath = path.join(__dirname, '../../client/public/sitemap-literature.xml');
+      fs.writeFileSync(literatureSitemapPath, literatureSitemap, 'utf8');
+      console.log(`✅ Literature sitemap generated: sitemap-literature.xml (${literature.length} works)`);
+    }
+
+    // Generate and write dance sitemap
+    if (dances.length > 0) {
+      const danceSitemap = generateDanceSitemap(dances);
+      const danceSitemapPath = path.join(__dirname, '../../client/public/sitemap-dance.xml');
+      fs.writeFileSync(danceSitemapPath, danceSitemap, 'utf8');
+      console.log(`✅ Dance sitemap generated: sitemap-dance.xml (${dances.length} dances)`);
+    }
+
+    // Generate and write temples sitemap
+    if (temples.length > 0) {
+      const templesSitemap = generateTemplesSitemap(temples);
+      const templesSitemapPath = path.join(__dirname, '../../client/public/sitemap-temples.xml');
+      fs.writeFileSync(templesSitemapPath, templesSitemap, 'utf8');
+      console.log(`✅ Temples sitemap generated: sitemap-temples.xml (${temples.length} temples)`);
+    }
+
+    // Generate and write foods sitemap
+    if (foods.length > 0) {
+      const foodsSitemap = generateFoodsSitemap(foods);
+      const foodsSitemapPath = path.join(__dirname, '../../client/public/sitemap-foods.xml');
+      fs.writeFileSync(foodsSitemapPath, foodsSitemap, 'utf8');
+      console.log(`✅ Foods sitemap generated: sitemap-foods.xml (${foods.length} foods)`);
+    }
+
+    // Generate and write festivals sitemap
+    if (festivals.length > 0) {
+      const festivalsSitemap = generateFestivalsSitemap(festivals);
+      const festivalsSitemapPath = path.join(__dirname, '../../client/public/sitemap-festivals.xml');
+      fs.writeFileSync(festivalsSitemapPath, festivalsSitemap, 'utf8');
+      console.log(`✅ Festivals sitemap generated: sitemap-festivals.xml (${festivals.length} festivals)`);
+    }
+
+    // Generate and write clothing sitemap
+    if (clothing.length > 0) {
+      const clothingSitemap = generateClothingSitemap(clothing);
+      const clothingSitemapPath = path.join(__dirname, '../../client/public/sitemap-clothing.xml');
+      fs.writeFileSync(clothingSitemapPath, clothingSitemap, 'utf8');
+      console.log(`✅ Clothing sitemap generated: sitemap-clothing.xml (${clothing.length} items)`);
+    }
+
+    // Generate and write science sitemap
+    if (sciences.length > 0) {
+      const scienceSitemap = generateScienceSitemap(sciences);
+      const scienceSitemapPath = path.join(__dirname, '../../client/public/sitemap-science.xml');
+      fs.writeFileSync(scienceSitemapPath, scienceSitemap, 'utf8');
+      console.log(`✅ Science sitemap generated: sitemap-science.xml (${sciences.length} topics)`);
+    }
+
+    // Generate and write dynasties sitemap
+    if (dynasties.length > 0) {
+      const dynastiesSitemap = generateDynastiesSitemap(dynasties);
+      const dynastiesSitemapPath = path.join(__dirname, '../../client/public/sitemap-dynasties.xml');
+      fs.writeFileSync(dynastiesSitemapPath, dynastiesSitemap, 'utf8');
+      console.log(`✅ Dynasties sitemap generated: sitemap-dynasties.xml (${dynasties.length} dynasties)`);
+    }
+
     // Generate sitemap index
     const sitemapIndex = generateSitemapIndex();
     const sitemapIndexPath = path.join(__dirname, '../../client/public/sitemap-index.xml');
@@ -339,6 +663,16 @@ async function generateSitemap() {
     robotsTxt += `Sitemap: ${BASE_URL}/sitemap-resources.xml\n`;
     robotsTxt += `Sitemap: ${BASE_URL}/sitemap-lands.xml\n`;
     robotsTxt += `Sitemap: ${BASE_URL}/sitemap-images.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-kings.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-poets.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-literature.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-dance.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-temples.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-foods.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-festivals.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-clothing.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-science.xml\n`;
+    robotsTxt += `Sitemap: ${BASE_URL}/sitemap-dynasties.xml\n`;
     
     fs.writeFileSync(robotsPath, robotsTxt, 'utf8');
     console.log(`✅ Updated robots.txt with all sitemaps\n`);

@@ -28,6 +28,8 @@ import {
   List,
   ListItem,
   ListItemIcon,
+  ToggleButton,
+  ToggleButtonGroup,
   ListItemText,
   Tooltip,
 } from "@mui/material";
@@ -59,6 +61,7 @@ export default function Dance({ user }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [editLanguage, setEditLanguage] = useState('en');
   // Removed filter-related state and methods
   const [formData, setFormData] = useState({
     name_en: "",
@@ -664,17 +667,56 @@ export default function Dance({ user }) {
         >
           {editItem ? t('dance.edit', 'Edit Dance Form') : t('dance.addNew', 'Add New Dance Form')}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField fullWidth label={t('form.name') + " (EN)"} value={formData.name_en} onChange={(e) => setFormData({ ...formData, name_en: e.target.value })} sx={{ mb: 2, flex: 1 }} />
-            <TextField fullWidth label={t('form.name') + " (TA)"} value={formData.name_ta} onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })} sx={{ mb: 2, flex: 1 }} />
+        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 3,
+                  py: 1,
+                  border: '2px solid #000',
+                  color: '#000',
+                  fontWeight: 600,
+                  '&.Mui-selected': {
+                    bgcolor: '#000',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: '#333',
+                    }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <TextField fullWidth label={t('form.type') + " (EN)"} value={formData.type_en} onChange={(e) => setFormData({ ...formData, type_en: e.target.value })} sx={{ mb: 2, flex: 1 }} />
-            <TextField fullWidth label={t('form.type') + " (TA)"} value={formData.type_ta} onChange={(e) => setFormData({ ...formData, type_ta: e.target.value })} sx={{ mb: 2, flex: 1 }} />
-          </Box>
-          <TextField fullWidth label={t('form.description') + " (EN)"} value={formData.description_en} onChange={(e) => setFormData({ ...formData, description_en: e.target.value })} multiline minRows={3} sx={{ mb: 2 }} />
-          <TextField fullWidth label={t('form.description') + " (TA)"} value={formData.description_ta} onChange={(e) => setFormData({ ...formData, description_ta: e.target.value })} multiline minRows={3} sx={{ mb: 2 }} />
+          <TextField 
+            fullWidth 
+            label={t('form.name', 'Name')} 
+            value={editLanguage === 'en' ? formData.name_en : formData.name_ta} 
+            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'name_en' : 'name_ta']: e.target.value })} 
+            sx={{ mb: 2 }} 
+          />
+          <TextField 
+            fullWidth 
+            label={t('form.type', 'Type')} 
+            value={editLanguage === 'en' ? formData.type_en : formData.type_ta} 
+            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'type_en' : 'type_ta']: e.target.value })} 
+            sx={{ mb: 2 }} 
+          />
+          <TextField 
+            fullWidth 
+            label={t('form.description', 'Description')} 
+            value={editLanguage === 'en' ? formData.description_en : formData.description_ta} 
+            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'description_en' : 'description_ta']: e.target.value })} 
+            multiline 
+            minRows={3} 
+            sx={{ mb: 2 }} 
+          />
           <TextField
             fullWidth
             label={t('form.imageUrl', 'Image URL')}
@@ -699,7 +741,7 @@ export default function Dance({ user }) {
             }}
             sx={{ color: "#000" }}
           >
-            {t('actions.cancel', 'Cancel')}
+            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
           </Button>
           <Button
             onClick={handleSave}
@@ -711,7 +753,7 @@ export default function Dance({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
+            {editItem ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`}
           </Button>
         </DialogActions>
       </Dialog>

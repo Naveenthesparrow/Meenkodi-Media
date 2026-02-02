@@ -16,7 +16,9 @@ import {
   TextField,
   DialogActions,
   CircularProgress,
-  Alert
+  Alert,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
@@ -34,11 +36,12 @@ export default function Events({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [editLanguage, setEditLanguage] = useState('en');
   const [currentEvent, setCurrentEvent] = useState({
-    title: '',
-    description: '',
+    title: { en: '', ta: '' },
+    description: { en: '', ta: '' },
     date: '',
-    location: '',
+    location: { en: '', ta: '' },
     imageLink: '',
     imageUrl: '',
     videoLink: '',
@@ -97,10 +100,10 @@ export default function Events({ user }) {
 
   const handleAdd = () => {
     setCurrentEvent({
-      title: '',
-      description: '',
+      title: { en: '', ta: '' },
+      description: { en: '', ta: '' },
       date: '',
-      location: '',
+      location: { en: '', ta: '' },
       imageLink: '',
       imageUrl: '',
       videoLink: '',
@@ -392,20 +395,65 @@ export default function Events({ user }) {
         onClose={() => setOpenDialog(false)}
         maxWidth="md"
         fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 0,
+            border: '3px solid #000',
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: '#000',
+            color: '#fff',
+            textAlign: 'center',
+            fontWeight: 700
+          }}
+        >
           {currentEvent._id ? t('events.edit', 'Edit Event') : t('events.addNew', 'Add New Event')}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 3,
+                  py: 1,
+                  border: '2px solid #000',
+                  color: '#000',
+                  fontWeight: 600,
+                  '&.Mui-selected': {
+                    bgcolor: '#000',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: '#333',
+                    }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
           <TextField
-            label="Title"
+            label={t('form.title', 'Title')}
             fullWidth
             sx={{ mb: 2 }}
-            value={currentEvent.title}
-            onChange={(e) => setCurrentEvent({ ...currentEvent, title: e.target.value })}
+            value={editLanguage === 'en' ? currentEvent.title?.en : currentEvent.title?.ta}
+            onChange={(e) => setCurrentEvent({ 
+              ...currentEvent, 
+              title: { 
+                ...currentEvent.title, 
+                [editLanguage]: e.target.value 
+              } 
+            })}
           />
           <TextField
-            label="Date"
+            label={t('form.date', 'Date')}
             type="date"
             fullWidth
             sx={{ mb: 2 }}
@@ -414,20 +462,32 @@ export default function Events({ user }) {
             InputLabelProps={{ shrink: true }}
           />
           <TextField
-            label="Location"
+            label={t('form.location', 'Location')}
             fullWidth
             sx={{ mb: 2 }}
-            value={currentEvent.location}
-            onChange={(e) => setCurrentEvent({ ...currentEvent, location: e.target.value })}
+            value={editLanguage === 'en' ? currentEvent.location?.en : currentEvent.location?.ta}
+            onChange={(e) => setCurrentEvent({ 
+              ...currentEvent, 
+              location: { 
+                ...currentEvent.location, 
+                [editLanguage]: e.target.value 
+              } 
+            })}
           />
           <TextField
-            label="Description"
+            label={t('form.description', 'Description')}
             fullWidth
             multiline
             minRows={3}
             sx={{ mb: 2 }}
-            value={currentEvent.description}
-            onChange={(e) => setCurrentEvent({ ...currentEvent, description: e.target.value })}
+            value={editLanguage === 'en' ? currentEvent.description?.en : currentEvent.description?.ta}
+            onChange={(e) => setCurrentEvent({ 
+              ...currentEvent, 
+              description: { 
+                ...currentEvent.description, 
+                [editLanguage]: e.target.value 
+              } 
+            })}
           />
           <MediaUpload
             onImageLinkChange={(link) => setCurrentEvent({ ...currentEvent, imageLink: link })}
@@ -442,9 +502,34 @@ export default function Events({ user }) {
             showInputsOnly={true}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+        <DialogActions
+          sx={{
+            p: 2,
+            justifyContent: 'space-between',
+            bgcolor: '#f0f0f0'
+          }}
+        >
+          <Button 
+            onClick={() => setOpenDialog(false)}
+            sx={{ color: '#000' }}
+          >
+            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            variant="contained"
+            sx={{
+              bgcolor: '#000',
+              color: '#fff',
+              '&:hover': { bgcolor: '#333' },
+              borderRadius: 0,
+            }}
+          >
+            {currentEvent._id 
+              ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` 
+              : `${t('actions.save', 'Save')} / ${t('actions.save_ta', 'சேமி')}`
+            }
+          </Button>
         </DialogActions>
       </Dialog>
 

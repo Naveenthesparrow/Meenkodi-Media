@@ -16,7 +16,9 @@ import {
   TextField,
   DialogActions,
   CircularProgress,
-  Alert
+  Alert,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete, GetApp, Favorite } from '@mui/icons-material';
@@ -28,11 +30,12 @@ import { useTranslation } from 'react-i18next';
 
 export default function Resources({ user }) {
   const getContent = useBilingualContent();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [editLanguage, setEditLanguage] = useState('en');
   const [currentResource, setCurrentResource] = useState({
     title_en: '', title_ta: '',
     description_en: '', description_ta: '',
@@ -737,19 +740,106 @@ export default function Resources({ user }) {
         onClose={() => setOpenDialog(false)}
         maxWidth="md"
         fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 0,
+            border: '3px solid #000',
+            maxHeight: '90vh',
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: '#000',
+            color: '#fff',
+            textAlign: 'center',
+            fontWeight: 700
+          }}
+        >
           {currentResource._id ? t('resources.edit', 'Edit Resource') : t('resources.addNew', 'Add New Resource')}
         </DialogTitle>
-        <DialogContent>
-          <TextField label="Title (EN)" fullWidth sx={{ mb: 2 }} value={currentResource.title_en} onChange={(e) => setCurrentResource({ ...currentResource, title_en: e.target.value })} />
-          <TextField label="Title (TA)" fullWidth sx={{ mb: 2 }} value={currentResource.title_ta} onChange={(e) => setCurrentResource({ ...currentResource, title_ta: e.target.value })} />
-          <TextField label="Author (EN)" fullWidth sx={{ mb: 2 }} value={currentResource.author_en} onChange={(e) => setCurrentResource({ ...currentResource, author_en: e.target.value })} />
-          <TextField label="Author (TA)" fullWidth sx={{ mb: 2 }} value={currentResource.author_ta} onChange={(e) => setCurrentResource({ ...currentResource, author_ta: e.target.value })} />
-          <TextField label="Category (EN)" fullWidth sx={{ mb: 2 }} value={currentResource.category_en} onChange={(e) => setCurrentResource({ ...currentResource, category_en: e.target.value })} />
-          <TextField label="Category (TA)" fullWidth sx={{ mb: 2 }} value={currentResource.category_ta} onChange={(e) => setCurrentResource({ ...currentResource, category_ta: e.target.value })} />
-          <TextField label="Description (EN)" fullWidth multiline minRows={5} sx={{ mb: 2 }} value={currentResource.description_en} onChange={(e) => setCurrentResource({ ...currentResource, description_en: e.target.value })} />
-          <TextField label="Description (TA)" fullWidth multiline minRows={5} sx={{ mb: 2 }} value={currentResource.description_ta} onChange={(e) => setCurrentResource({ ...currentResource, description_ta: e.target.value })} />
+        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+          {/* Language Toggle */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                mb: 1.5, 
+                fontWeight: 600, 
+                color: '#333',
+                fontSize: '0.9rem'
+              }}
+            >
+              {i18n.language === 'ta' ? 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:' : 'Select Language to Edit:'}
+            </Typography>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 3,
+                  py: 1,
+                  border: '1px solid #8B0000',
+                  color: '#8B0000',
+                  fontWeight: 600,
+                  '&.Mui-selected': {
+                    bgcolor: '#8B0000',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: '#6B0000',
+                    },
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          <TextField 
+            label={editLanguage === 'en' ? "Title (English)" : "தலைப்பு (தமிழ்)"} 
+            fullWidth 
+            sx={{ mb: 2 }} 
+            value={editLanguage === 'en' ? currentResource.title_en : currentResource.title_ta} 
+            onChange={(e) => setCurrentResource({ 
+              ...currentResource, 
+              [editLanguage === 'en' ? 'title_en' : 'title_ta']: e.target.value 
+            })} 
+          />
+          <TextField 
+            label={editLanguage === 'en' ? "Author (English)" : "ஆசிரியர் (தமிழ்)"} 
+            fullWidth 
+            sx={{ mb: 2 }} 
+            value={editLanguage === 'en' ? currentResource.author_en : currentResource.author_ta} 
+            onChange={(e) => setCurrentResource({ 
+              ...currentResource, 
+              [editLanguage === 'en' ? 'author_en' : 'author_ta']: e.target.value 
+            })} 
+          />
+          <TextField 
+            label={editLanguage === 'en' ? "Category (English)" : "வகை (தமிழ்)"} 
+            fullWidth 
+            sx={{ mb: 2 }} 
+            value={editLanguage === 'en' ? currentResource.category_en : currentResource.category_ta} 
+            onChange={(e) => setCurrentResource({ 
+              ...currentResource, 
+              [editLanguage === 'en' ? 'category_en' : 'category_ta']: e.target.value 
+            })} 
+          />
+          <TextField 
+            label={editLanguage === 'en' ? "Description (English)" : "விளக்கம் (தமிழ்)"} 
+            fullWidth 
+            multiline 
+            minRows={5} 
+            sx={{ mb: 2 }} 
+            value={editLanguage === 'en' ? currentResource.description_en : currentResource.description_ta} 
+            onChange={(e) => setCurrentResource({ 
+              ...currentResource, 
+              [editLanguage === 'en' ? 'description_en' : 'description_ta']: e.target.value 
+            })} 
+          />
           <TextField
             label="Download Link"
             fullWidth
@@ -777,9 +867,34 @@ export default function Resources({ user }) {
             showInputsOnly={true}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">Save</Button>
+        <DialogActions 
+          sx={{ 
+            p: 2,
+            justifyContent: 'space-between',
+            bgcolor: '#f0f0f0'
+          }}
+        >
+          <Button 
+            onClick={() => setOpenDialog(false)} 
+            sx={{ color: '#000' }}
+          >
+            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            variant="contained"
+            sx={{
+              bgcolor: '#000',
+              color: '#fff',
+              '&:hover': { bgcolor: '#333' },
+              borderRadius: 0,
+            }}
+          >
+            {currentResource._id 
+              ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` 
+              : `${t('actions.save', 'Save')} / ${t('actions.save_ta', 'சேமி')}`
+            }
+          </Button>
         </DialogActions>
       </Dialog>
 

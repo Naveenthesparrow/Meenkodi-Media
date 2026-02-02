@@ -3,17 +3,30 @@ import styled, { keyframes } from 'styled-components';
 import { Box, Typography, Avatar, IconButton, Divider } from '@mui/material';
 import { Twitter } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
-const DirectorsSlider = ({ directors }) => {
+const DirectorsSlider = ({ directors, onNavigate }) => {
   const { i18n } = useTranslation();
+  const navigate = useNavigate();
   const quantity = directors.length;
+
+  const handleCardClick = (slug) => {
+    if (slug) {
+      if (onNavigate) onNavigate();
+      navigate(`/poets/${slug}`);
+    }
+  };
 
   return (
     <SliderContainer style={{ '--width': '280px', '--height': '340px', '--quantity': quantity }}>
       <div className="list">
         {directors.map((member, index) => (
           <div className="item" style={{ '--position': index + 1 }} key={index}>
-            <div className="card">
+            <div 
+              className="card" 
+              onClick={() => handleCardClick(member.slug)}
+              style={{ cursor: member.slug ? 'pointer' : 'default' }}
+            >
               <Box
                 sx={{
                   position: "relative",

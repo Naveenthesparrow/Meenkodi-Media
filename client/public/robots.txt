@@ -11,3 +11,13 @@ Sitemap: https://www.meenkodi.com/sitemap-events.xml
 Sitemap: https://www.meenkodi.com/sitemap-resources.xml
 Sitemap: https://www.meenkodi.com/sitemap-lands.xml
 Sitemap: https://www.meenkodi.com/sitemap-images.xml
+Sitemap: https://www.meenkodi.com/sitemap-kings.xml
+Sitemap: https://www.meenkodi.com/sitemap-poets.xml
+Sitemap: https://www.meenkodi.com/sitemap-literature.xml
+Sitemap: https://www.meenkodi.com/sitemap-dance.xml
+Sitemap: https://www.meenkodi.com/sitemap-temples.xml
+Sitemap: https://www.meenkodi.com/sitemap-foods.xml
+Sitemap: https://www.meenkodi.com/sitemap-festivals.xml
+Sitemap: https://www.meenkodi.com/sitemap-clothing.xml
+Sitemap: https://www.meenkodi.com/sitemap-science.xml
+Sitemap: https://www.meenkodi.com/sitemap-dynasties.xml

@@ -21,6 +21,8 @@ import {
   IconButton,
   Paper,
   Fade,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import {
   AccountBalance,
@@ -45,6 +47,7 @@ export default function Temples({ user }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [editLanguage, setEditLanguage] = useState('en');
   const [formData, setFormData] = useState({
     name_en: "",
     name_ta: "",
@@ -659,52 +662,63 @@ export default function Temples({ user }) {
         >
           {editItem ? t('temples.edit', 'Edit Temple') : t('temples.addNew', 'Add New Temple')}
         </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
+        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 3,
+                  py: 1,
+                  border: '2px solid #000',
+                  color: '#000',
+                  fontWeight: 600,
+                  '&.Mui-selected': {
+                    bgcolor: '#000',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: '#333',
+                    }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
           <TextField
             fullWidth
-            label={`${t('form.name', 'Name')} (EN)`}
-            value={formData.name_en}
-            onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-            sx={{ mb: 2, mt: 3 }}
+            label={t('form.name', 'Name')}
+            value={editLanguage === 'en' ? formData.name_en : formData.name_ta}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              [editLanguage === 'en' ? 'name_en' : 'name_ta']: e.target.value 
+            })}
+            sx={{ mb: 2, mt: 1 }}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
             fullWidth
-            label={`${t('form.name', 'Name')} (TA)`}
-            value={formData.name_ta}
-            onChange={(e) => setFormData({ ...formData, name_ta: e.target.value })}
+            label={t('form.location', 'Location')}
+            value={editLanguage === 'en' ? formData.location_en : formData.location_ta}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              [editLanguage === 'en' ? 'location_en' : 'location_ta']: e.target.value 
+            })}
             sx={{ mb: 2 }}
             InputLabelProps={{ shrink: true }}
           />
           <TextField
             fullWidth
-            label={`${t('form.location', 'Location')} (EN)`}
-            value={formData.location_en}
-            onChange={(e) => setFormData({ ...formData, location_en: e.target.value })}
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label={`${t('form.location', 'Location')} (TA)`}
-            value={formData.location_ta}
-            onChange={(e) => setFormData({ ...formData, location_ta: e.target.value })}
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label={`${t('form.period', 'Period')} (EN)`}
-            value={formData.period_en}
-            onChange={(e) => setFormData({ ...formData, period_en: e.target.value })}
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label={`${t('form.period', 'Period')} (TA)`}
-            value={formData.period_ta}
-            onChange={(e) => setFormData({ ...formData, period_ta: e.target.value })}
+            label={t('form.period', 'Period')}
+            value={editLanguage === 'en' ? formData.period_en : formData.period_ta}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              [editLanguage === 'en' ? 'period_en' : 'period_ta']: e.target.value 
+            })}
             sx={{ mb: 2 }}
             InputLabelProps={{ shrink: true }}
           />
@@ -731,7 +745,7 @@ export default function Temples({ user }) {
             }}
             sx={{ color: '#000' }}
           >
-            {t('actions.cancel', 'Cancel')}
+            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
           </Button>
           <Button
             onClick={handleSave}
@@ -743,7 +757,10 @@ export default function Temples({ user }) {
               borderRadius: 0,
             }}
           >
-            {editItem ? t('actions.update', 'Update') : t('actions.add', 'Add')}
+            {editItem 
+              ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` 
+              : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`
+            }
           </Button>
         </DialogActions>
       </Dialog>

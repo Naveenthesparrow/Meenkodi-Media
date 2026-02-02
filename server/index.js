@@ -27,6 +27,8 @@ const __dirname = path.dirname(__filename);
 import fs from "fs";
 import AncientScience from "./models/AncientScience.js";
 import Clothing from "./models/Clothing.js";
+import Dynasty from "./models/Dynasty.js";
+import Poet from "./models/Poet.js";
 import { localizeCollection, localizeSingle, resolveLang } from './translationMap.js';
 
 dotenv.config();
@@ -412,6 +414,19 @@ app.get("/api/user/profile", ensureAuthenticated, (req, res) => {
 });
 
 // Article routes
+app.get("/api/articles/my-articles", ensureAuthenticated, async (req, res) => {
+  try {
+    const articles = await Article.find({ 
+      authorId: req.user._id 
+    }).sort({ submittedAt: -1 });
+    
+    res.json(articles);
+  } catch (error) {
+    console.error('Error fetching user articles:', error);
+    res.status(500).json({ error: 'Failed to fetch articles' });
+  }
+});
+
 app.get("/api/articles", async (req, res) => {
   const lang = resolveLang(req);
   const { status } = req.query;
@@ -889,9 +904,6 @@ const imageUpload = multer({
       );
     }
   },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
 });
 
 // General image upload endpoint
@@ -1018,7 +1030,6 @@ const videoUpload = multer({
   },
   limits: {
     fileSize: 100 * 1024 * 1024, // 100MB limit for videos
-    files: 1, // Limit to single file upload
   },
 });
 
@@ -1549,6 +1560,583 @@ app.delete(
     }
   }
 );
+
+// ================== DYNASTIES API ROUTES ==================
+// Get all dynasties
+app.get("/api/dynasties", async (req, res) => {
+  try {
+    const lang = resolveLang(req);
+    const dynasties = await Dynasty.find().sort({ createdAt: -1 });
+    res.json(localizeCollection(dynasties, 'dynasties', lang));
+  } catch (err) {
+    console.error("Get dynasties error:", err);
+    res.status(500).json({ error: "Failed to fetch dynasties" });
+  }
+});
+
+// Get single dynasty by ID or slug
+app.get("/api/dynasties/:idOrSlug", async (req, res) => {
+  try {
+    console.log("=== DYNASTY REQUEST ===");
+    console.log("Requested ID/Slug:", req.params.idOrSlug);
+    
+    let dynasty;
+    
+    // Try to find by MongoDB ID first
+    if (req.params.idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log("Searching by MongoDB ID");
+      dynasty = await Dynasty.findById(req.params.idOrSlug).populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+    }
+    
+    // If not found, try to find by slug
+    if (!dynasty) {
+      console.log("Searching by slug:", req.params.idOrSlug);
+      dynasty = await Dynasty.findOne({ slug: req.params.idOrSlug }).populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+      console.log("Found by slug:", dynasty ? dynasty.name.en : "Not found");
+    }
+
+    if (!dynasty) {
+      console.log("Dynasty not found for:", req.params.idOrSlug);
+      return res.status(404).json({ error: "Dynasty not found" });
+    }
+
+    console.log("Dynasty found:", dynasty.name.en);
+    
+    // Check if user liked
+    let userLiked = false;
+    if (req.user) {
+      userLiked = dynasty.likes.some(
+        (like) => like.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({ ...dynasty.toObject(), userLiked });
+  } catch (err) {
+    console.error("Get dynasty error:", err);
+    res.status(500).json({ error: "Failed to fetch dynasty" });
+  }
+});
+
+// Create new dynasty (admin only)
+app.post("/api/dynasties", ensureAdmin, async (req, res) => {
+  try {
+    const newDynasty = new Dynasty(req.body);
+    await newDynasty.save();
+    res.status(201).json(newDynasty);
+  } catch (err) {
+    console.error("Create dynasty error:", err);
+    res.status(500).json({ error: "Failed to create dynasty" });
+  }
+});
+
+// Update dynasty (admin only)
+app.put("/api/dynasties/:id", ensureAdmin, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!dynasty) return res.status(404).json({ error: "Dynasty not found" });
+    res.json(dynasty);
+  } catch (err) {
+    console.error("Update dynasty error:", err);
+    res.status(500).json({ error: "Failed to update dynasty" });
+  }
+});
+
+// Delete dynasty (admin only)
+app.delete("/api/dynasties/:id", ensureAdmin, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findByIdAndDelete(req.params.id);
+    if (!dynasty) return res.status(404).json({ error: "Dynasty not found" });
+    res.json({ message: "Dynasty deleted successfully" });
+  } catch (err) {
+    console.error("Delete dynasty error:", err);
+    res.status(500).json({ error: "Failed to delete dynasty" });
+  }
+});
+
+// Like/Unlike dynasty
+app.post("/api/dynasties/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findById(req.params.id);
+    if (!dynasty) {
+      return res.status(404).json({ error: "Dynasty not found" });
+    }
+
+    const userLikeIndex = dynasty.likes.indexOf(req.user._id);
+
+    if (userLikeIndex > -1) {
+      // User already liked, so unlike
+      dynasty.likes.splice(userLikeIndex, 1);
+    } else {
+      // User hasn't liked, so add like
+      dynasty.likes.push(req.user._id);
+    }
+
+    await dynasty.save();
+
+    res.json({
+      likes: dynasty.likes,
+      userLiked: dynasty.likes.includes(req.user._id),
+    });
+  } catch (err) {
+    console.error("Like dynasty error:", err);
+    res.status(500).json({ error: "Failed to like dynasty" });
+  }
+});
+
+// Add comment to dynasty
+app.post("/api/dynasties/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findById(req.params.id);
+    if (!dynasty) {
+      return res.status(404).json({ error: "Dynasty not found" });
+    }
+
+    dynasty.comments.push({
+      user: req.user._id,
+      content: req.body.content,
+    });
+
+    await dynasty.save();
+    await dynasty.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(dynasty);
+  } catch (err) {
+    console.error("Add comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+// Delete comment from dynasty
+app.delete("/api/dynasties/:id/comments/:commentId", ensureAuthenticated, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findById(req.params.id);
+    if (!dynasty) {
+      return res.status(404).json({ error: "Dynasty not found" });
+    }
+
+    const comment = dynasty.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    // Check if user owns the comment or is admin
+    if (comment.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    dynasty.comments.pull(req.params.commentId);
+    await dynasty.save();
+    await dynasty.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(dynasty);
+  } catch (err) {
+    console.error("Delete comment error:", err);
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+});
+
+// Add reply to comment
+app.post("/api/dynasties/:id/comments/:commentId/replies", ensureAuthenticated, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findById(req.params.id);
+    if (!dynasty) {
+      return res.status(404).json({ error: "Dynasty not found" });
+    }
+
+    const comment = dynasty.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    comment.replies.push({
+      user: req.user._id,
+      content: req.body.content,
+    });
+
+    await dynasty.save();
+    await dynasty.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(dynasty);
+  } catch (err) {
+    console.error("Add reply error:", err);
+    res.status(500).json({ error: "Failed to add reply" });
+  }
+});
+
+// Delete reply from comment
+app.delete("/api/dynasties/:id/comments/:commentId/replies/:replyId", ensureAuthenticated, async (req, res) => {
+  try {
+    const dynasty = await Dynasty.findById(req.params.id);
+    if (!dynasty) {
+      return res.status(404).json({ error: "Dynasty not found" });
+    }
+
+    const comment = dynasty.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+
+    // Check if user owns the reply or is admin
+    if (reply.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    comment.replies.pull(req.params.replyId);
+    await dynasty.save();
+    await dynasty.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(dynasty);
+  } catch (err) {
+    console.error("Delete reply error:", err);
+    res.status(500).json({ error: "Failed to delete reply" });
+  }
+});
+
+// ================== END DYNASTIES API ROUTES ==================
+
+// ================== POETS API ROUTES ==================
+// Get all poets
+app.get("/api/poets", async (req, res) => {
+  try {
+    const poets = await Poet.find().sort({ createdAt: -1 });
+    res.json(poets);
+  } catch (err) {
+    console.error("Get poets error:", err);
+    res.status(500).json({ error: "Failed to fetch poets" });
+  }
+});
+
+// Get single poet by ID or slug
+app.get("/api/poets/:idOrSlug", async (req, res) => {
+  try {
+    let poet;
+    
+    // Try to find by MongoDB ID first
+    if (req.params.idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+      poet = await Poet.findById(req.params.idOrSlug).populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+    }
+    
+    // If not found, try to find by slug
+    if (!poet) {
+      poet = await Poet.findOne({ slug: req.params.idOrSlug }).populate([
+        {
+          path: "comments.user",
+          select: "displayName",
+        },
+        {
+          path: "comments.replies.user",
+          select: "displayName",
+        },
+      ]);
+    }
+
+    if (!poet) {
+      return res.status(404).json({ error: "Poet not found" });
+    }
+
+    // Check if user liked
+    let userLiked = false;
+    if (req.user) {
+      userLiked = poet.likes.some(
+        (like) => like.toString() === req.user._id.toString()
+      );
+    }
+
+    res.json({ ...poet.toObject(), userLiked });
+  } catch (err) {
+    console.error("Get poet error:", err);
+    res.status(500).json({ error: "Failed to fetch poet" });
+  }
+});
+
+// Create new poet (admin only)
+app.post("/api/poets", ensureAdmin, async (req, res) => {
+  try {
+    const newPoet = new Poet(req.body);
+    await newPoet.save();
+    res.status(201).json(newPoet);
+  } catch (err) {
+    console.error("Create poet error:", err);
+    res.status(500).json({ error: "Failed to create poet" });
+  }
+});
+
+// Update poet (admin only)
+app.put("/api/poets/:id", ensureAdmin, async (req, res) => {
+  try {
+    const poet = await Poet.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!poet) return res.status(404).json({ error: "Poet not found" });
+    res.json(poet);
+  } catch (err) {
+    console.error("Update poet error:", err);
+    res.status(500).json({ error: "Failed to update poet" });
+  }
+});
+
+// Delete poet (admin only)
+app.delete("/api/poets/:id", ensureAdmin, async (req, res) => {
+  try {
+    const poet = await Poet.findByIdAndDelete(req.params.id);
+    if (!poet) return res.status(404).json({ error: "Poet not found" });
+    res.json({ message: "Poet deleted successfully" });
+  } catch (err) {
+    console.error("Delete poet error:", err);
+    res.status(500).json({ error: "Failed to delete poet" });
+  }
+});
+
+// Like/Unlike poet
+app.post("/api/poets/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const poet = await Poet.findById(req.params.id);
+    if (!poet) {
+      return res.status(404).json({ error: "Poet not found" });
+    }
+
+    const userLikeIndex = poet.likes.indexOf(req.user._id);
+
+    if (userLikeIndex > -1) {
+      // User already liked, so unlike
+      poet.likes.splice(userLikeIndex, 1);
+    } else {
+      // User hasn't liked, so add like
+      poet.likes.push(req.user._id);
+    }
+
+    await poet.save();
+
+    res.json({
+      likes: poet.likes,
+      userLiked: poet.likes.includes(req.user._id),
+    });
+  } catch (err) {
+    console.error("Like poet error:", err);
+    res.status(500).json({ error: "Failed to like poet" });
+  }
+});
+
+// Add comment to poet
+app.post("/api/poets/:id/comments", ensureAuthenticated, async (req, res) => {
+  try {
+    const poet = await Poet.findById(req.params.id);
+    if (!poet) {
+      return res.status(404).json({ error: "Poet not found" });
+    }
+
+    poet.comments.push({
+      user: req.user._id,
+      content: req.body.content,
+    });
+
+    await poet.save();
+    await poet.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(poet);
+  } catch (err) {
+    console.error("Add comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+// Delete comment from poet
+app.delete("/api/poets/:id/comments/:commentId", ensureAuthenticated, async (req, res) => {
+  try {
+    const poet = await Poet.findById(req.params.id);
+    if (!poet) {
+      return res.status(404).json({ error: "Poet not found" });
+    }
+
+    const comment = poet.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    // Check if user owns the comment or is admin
+    if (comment.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    poet.comments.pull(req.params.commentId);
+    await poet.save();
+    await poet.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(poet);
+  } catch (err) {
+    console.error("Delete comment error:", err);
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+});
+
+// Add reply to comment
+app.post("/api/poets/:id/comments/:commentId/replies", ensureAuthenticated, async (req, res) => {
+  try {
+    const poet = await Poet.findById(req.params.id);
+    if (!poet) {
+      return res.status(404).json({ error: "Poet not found" });
+    }
+
+    const comment = poet.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    comment.replies.push({
+      user: req.user._id,
+      content: req.body.content,
+    });
+
+    await poet.save();
+    await poet.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(poet);
+  } catch (err) {
+    console.error("Add reply error:", err);
+    res.status(500).json({ error: "Failed to add reply" });
+  }
+});
+
+// Delete reply from comment
+app.delete("/api/poets/:id/comments/:commentId/replies/:replyId", ensureAuthenticated, async (req, res) => {
+  try {
+    const poet = await Poet.findById(req.params.id);
+    if (!poet) {
+      return res.status(404).json({ error: "Poet not found" });
+    }
+
+    const comment = poet.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+
+    // Check if user owns the reply or is admin
+    if (reply.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    comment.replies.pull(req.params.replyId);
+    await poet.save();
+    await poet.populate([
+      {
+        path: "comments.user",
+        select: "displayName",
+      },
+      {
+        path: "comments.replies.user",
+        select: "displayName",
+      },
+    ]);
+
+    res.json(poet);
+  } catch (err) {
+    console.error("Delete reply error:", err);
+    res.status(500).json({ error: "Failed to delete reply" });
+  }
+});
+// ================== END POETS API ROUTES ==================
 
 // LITERATURE API ROUTES
 app.get("/api/literature", async (req, res) => {
