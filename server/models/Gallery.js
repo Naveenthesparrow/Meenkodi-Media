@@ -23,6 +23,8 @@ const gallerySchema = new mongoose.Schema({
   seoDescription: bilingual, // SEO-optimized description for search results
   tags: [String], // Additional search tags (e.g., "sport", "culture", "tradition")
   location: String, // Geographic location (e.g., "Madurai", "Tamil Nadu")
+  isFolder: { type: Boolean, default: false },
+  order: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

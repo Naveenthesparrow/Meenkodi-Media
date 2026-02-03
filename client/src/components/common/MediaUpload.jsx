@@ -28,6 +28,7 @@ const MediaUpload = ({
   currentVideoLink,
   label = "Media Upload",
   showInputsOnly = false,
+  isFolder = false,
 }) => {
   const reactId = useId();
   const inputId = `media-upload-${reactId.replace(/:/g, "")}`;
@@ -260,13 +261,6 @@ const MediaUpload = ({
   }
   return (
     <Box sx={{ mb: 3 }}>
-      <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 3, color: "#666" }}>
-        Upload files directly from your device (alternative to using links above)
-      </Typography>
-
       {error && (
         <Alert
           severity="error"
@@ -278,16 +272,16 @@ const MediaUpload = ({
 
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
-          Upload Image from Device
+          Upload Photo
         </Typography>
         <Typography variant="caption" sx={{ color: "#666", mb: 2, display: "block" }}>
-          Supported formats: JPG, PNG, GIF, WEBP (Max: 5MB)
+          Supported formats: JPG, PNG, GIF, WEBP
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
           <input accept="image/*" style={{ display: "none" }} id={inputId} type="file" onChange={handleImageUpload} />
           <label htmlFor={inputId}>
             <Button variant="outlined" component="span" startIcon={uploading ? <CircularProgress size={20} /> : <ImageIcon />} disabled={uploading} sx={{ borderColor: "#000", color: "#000", "&:hover": { borderColor: "#333", backgroundColor: "#f5f5f5" }, "&:disabled": { borderColor: "#ccc", color: "#ccc" } }}>
-              {uploading ? "Uploading..." : "Choose Image File"}
+              {uploading ? "Uploading..." : isFolder ? ((previewImage || imageLink) ? "Change Thumbnail" : "Add a Thumbnail") : "Choose Image File"}
             </Button>
           </label>
           {(previewImage || imageLink) && (
@@ -314,6 +308,7 @@ const MediaUpload = ({
         )}
 
         {/* Video link area (videos are links only) */}
+        {onVideoChange && (
         <Box>
           <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
             Add Video Link
@@ -344,6 +339,7 @@ const MediaUpload = ({
             </Card>
           )}
         </Box>
+        )}
       </Box>
     </Box>
   );

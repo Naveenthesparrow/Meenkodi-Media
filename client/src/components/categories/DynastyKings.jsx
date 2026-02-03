@@ -13,12 +13,14 @@ import {
   IconButton,
   Fade,
   CircularProgress,
+  TextField,
 } from "@mui/material";
 import {
   Edit,
   Delete,
   Favorite,
   ArrowBack,
+  Search,
 } from "@mui/icons-material";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
@@ -29,7 +31,9 @@ export default function DynastyKings({ user }) {
   const getContent = useBilingualContent();
   const { t } = useTranslation();
   const [kings, setKings] = useState([]);
+  const [filteredKings, setFilteredKings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const dynastyInfo = {
     pandiya: {
@@ -81,6 +85,21 @@ export default function DynastyKings({ user }) {
   useEffect(() => {
     fetchKingsByDynasty();
   }, [dynastyId]);
+
+  // Apply search filter to kings
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredKings(kings);
+    } else {
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = kings.filter(king => {
+        const nameMatch = getContent(king.name).toLowerCase().includes(searchLower);
+        const periodMatch = getContent(king.period).toLowerCase().includes(searchLower);
+        return nameMatch || periodMatch;
+      });
+      setFilteredKings(filtered);
+    }
+  }, [kings, searchTerm, getContent]);
 
   const handleEdit = (king) => {
     navigate(`/explore/kings/edit/${king._id}`);
@@ -156,16 +175,62 @@ export default function DynastyKings({ user }) {
             fontStyle: 'italic',
             color: '#666',
             fontSize: '1.1rem',
+            mb: 2,
           }}
         >
-          {kings.length} {t('kings.rulers', 'Rulers')}
+          {filteredKings.length} {t('kings.rulers', 'Rulers')}
         </Typography>
+
+        {/* Search Bar */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center',
+          px: { xs: 1, md: 0 },
+          maxWidth: '100%',
+        }}>
+          <TextField
+            placeholder={t('kings.searchPlaceholder', 'Search rulers by name or period...')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            variant="outlined"
+            size="small"
+            sx={{
+              maxWidth: '500px',
+              width: '100%',
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '8px',
+                backgroundColor: '#f5f5f5',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: '#fff',
+                  '& fieldset': {
+                    borderColor: currentDynasty.color,
+                  }
+                },
+                '&.Mui-focused': {
+                  backgroundColor: '#fff',
+                  '& fieldset': {
+                    borderColor: currentDynasty.color,
+                  }
+                },
+              },
+              '& .MuiOutlinedInput-input': {
+                fontFamily: 'Georgia, serif',
+                fontSize: '0.95rem',
+                '&::placeholder': {
+                  color: '#999',
+                  opacity: 1,
+                }
+              }
+            }}
+          />
+        </Box>
       </Box>
 
-      {kings.length === 0 ? (
+      {filteredKings.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" color="textSecondary">
-            {t('kings.noKings', 'No kings found for this dynasty')}
+            {searchTerm ? t('kings.noResults', 'No rulers found matching your search') : t('kings.noKings', 'No kings found for this dynasty')}
           </Typography>
         </Box>
       ) : (
@@ -178,7 +243,7 @@ export default function DynastyKings({ user }) {
             alignItems: 'stretch',
           }}
         >
-          {kings.map((king, index) => (
+          {filteredKings.map((king, index) => (
             <Fade 
               in={true} 
               timeout={500 + index * 200} 

@@ -1133,7 +1133,7 @@ function DanceDetail({ user: initialUser }) {
                         display: 'block'
                       }}
                     >
-                      Supported formats: JPG, PNG, GIF, WEBP (Max: 5MB)
+                      Supported formats: JPG, PNG, GIF, WEBP
                     </Typography>
 
                     <MediaUpload

@@ -593,6 +593,10 @@ app.get("/api/gallery/:id", async (req, res) => {
 });
 app.post("/api/gallery", ensureAdmin, async (req, res) => {
   try {
+    if (req.body?.isFolder && (req.body.order === undefined || req.body.order === null)) {
+      const maxFolder = await Gallery.findOne({ isFolder: true }).sort({ order: -1 }).select('order');
+      req.body.order = (maxFolder?.order ?? 0) + 1;
+    }
     const item = await Gallery.create(req.body);
     res.status(201).json(item);
   } catch (err) {
@@ -619,11 +623,114 @@ app.put("/api/gallery/:id", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+app.put("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
+  try {
+    console.log("PUT /api/gallery/folder/:id", req.params.id, req.body);
+    const folder = await Gallery.findById(req.params.id);
+    if (!folder || !folder.isFolder) {
+      return res.status(404).json({ error: "Folder not found" });
+    }
+
+    const oldEn = folder.customCategoryName?.en || '';
+    const oldTa = folder.customCategoryName?.ta || '';
+
+    const updated = await Gallery.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    const newEn = updated.customCategoryName?.en || '';
+    const newTa = updated.customCategoryName?.ta || '';
+
+    if (oldEn !== newEn || oldTa !== newTa) {
+      const orConditions = [];
+      if (oldEn) orConditions.push({ "customCategoryName.en": oldEn });
+      if (oldTa) orConditions.push({ "customCategoryName.ta": oldTa });
+
+      if (orConditions.length > 0) {
+        await Gallery.updateMany(
+          { $or: orConditions, isFolder: { $ne: true } },
+          { $set: { "customCategoryName.en": newEn, "customCategoryName.ta": newTa } }
+        );
+      }
+    }
+
+    res.json(updated);
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ error: err.message });
+    }
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.put("/api/gallery/folders/order", ensureAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: "orderedIds must be an array" });
+    }
+
+    const bulkOps = orderedIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id, isFolder: true },
+        update: { $set: { order: index + 1 } },
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await Gallery.bulkWrite(bulkOps);
+    }
+
+    res.json({ updated: bulkOps.length });
+  } catch (err) {
+    console.error("Folder order update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 app.delete("/api/gallery/:id", ensureAdmin, async (req, res) => {
   console.log("DELETE /api/gallery/:id", req.params.id);
   const result = await Gallery.findByIdAndDelete(req.params.id);
   if (!result) return res.status(404).json({ error: "Gallery item not found" });
   res.status(204).end();
+});
+
+app.delete("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
+  try {
+    console.log("DELETE /api/gallery/folder/:id", req.params.id);
+    const folder = await Gallery.findById(req.params.id);
+    if (!folder || !folder.isFolder) {
+      return res.status(404).json({ error: "Folder not found" });
+    }
+
+    const names = [];
+    if (folder.customCategoryName?.en) names.push(folder.customCategoryName.en);
+    if (folder.customCategoryName?.ta) names.push(folder.customCategoryName.ta);
+
+    if (names.length === 0) {
+      await folder.deleteOne();
+      return res.json({ deletedFolderId: folder._id, deletedItems: 0 });
+    }
+
+    const orConditions = names.flatMap((name) => ([
+      { "customCategoryName.en": name },
+      { "customCategoryName.ta": name }
+    ]));
+
+    const deleteResult = await Gallery.deleteMany({
+      $or: orConditions,
+      _id: { $ne: folder._id },
+      isFolder: { $ne: true }
+    });
+
+    await folder.deleteOne();
+
+    res.json({ deletedFolderId: folder._id, deletedItems: deleteResult.deletedCount });
+  } catch (err) {
+    console.error("Delete folder error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Event routes
