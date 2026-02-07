@@ -9,12 +9,17 @@ import {
   Grid,
   Container,
   Paper,
-  IconButton
+  IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
+  Divider
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
 import { useTranslation } from 'react-i18next';
 import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
@@ -23,13 +28,14 @@ import { useParams, useNavigate } from "react-router-dom";
 
 export default function ArticleDetail({ user }) {
   const getContent = useBilingualContent();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [editLanguage, setEditLanguage] = useState('en');
   const [title_en, setTitleEn] = useState("");
   const [title_ta, setTitleTa] = useState("");
   const [content_en, setContentEn] = useState("");
@@ -67,6 +73,26 @@ export default function ArticleDetail({ user }) {
         setLoading(false);
       });
   }, [id]);
+
+  const handleLike = async () => {
+    if (!user) {
+      setError(t('articles.loginToLike', 'Please login to like articles'));
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/articles/${id}/like`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to like article");
+
+      setArticle((prev) => prev ? { ...prev, likesCount: data.likesCount, userLiked: data.userLiked } : prev);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const handleSave = async () => {
     setSubmitting(true);
@@ -132,40 +158,262 @@ export default function ArticleDetail({ user }) {
   // --- ADMIN EDIT VIEW ---
   if (editMode) {
     return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
+      <Container maxWidth="md" sx={{ py: { xs: 3, md: 6 } }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: { xs: 2, sm: 3, md: 5 }, 
+            border: '1px solid #e0e0e0', 
+            borderRadius: 2, 
+            boxShadow: '0 8px 32px rgba(0,0,0,0.08)' 
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 3, 
+            pb: 2,
+            borderBottom: '2px solid #8B0000'
+          }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                fontFamily: 'Georgia, serif', 
+                color: '#8B0000',
+                fontSize: { xs: '1.5rem', md: '2rem' }
+              }}
+            >
               {t('articles.edit', 'Edit Article')}
             </Typography>
-            <IconButton onClick={() => setEditMode(false)}><CloseIcon /></IconButton>
+            <IconButton 
+              onClick={() => setEditMode(false)}
+              sx={{ 
+                '&:hover': { bgcolor: 'rgba(139,0,0,0.08)' }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
           </Box>
 
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label={t('articles.form.titleEn', 'Title (EN)')} value={title_en} onChange={(e) => setTitleEn(e.target.value)} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label={t('articles.form.titleTa', 'Title (TA)')} value={title_ta} onChange={(e) => setTitleTa(e.target.value)} fullWidth />
-            </Grid>
+          {/* Language Toggle */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            mb: 4,
+            py: 3,
+            bgcolor: '#fafafa',
+            borderRadius: 2
+          }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 600, 
+                color: '#333',
+                fontSize: { xs: '0.85rem', md: '0.9rem' }
+              }}
+            >
+              {i18n.language === 'ta' ? 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:' : 'Select Language to Edit:'}
+            </Typography>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: { xs: 2.5, md: 3.5 },
+                  py: { xs: 0.8, md: 1 },
+                  border: '2px solid #8B0000',
+                  color: '#8B0000',
+                  fontWeight: 700,
+                  fontSize: { xs: '0.85rem', md: '0.9rem' },
+                  letterSpacing: '0.5px',
+                  '&.Mui-selected': {
+                    bgcolor: '#8B0000',
+                    color: '#fff',
+                    '&:hover': {
+                      bgcolor: '#6B0000',
+                    },
+                  },
+                  '&:hover': {
+                    bgcolor: 'rgba(139,0,0,0.08)',
+                  }
+                },
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
-            <Grid item xs={12} md={6}>
-              <TextField label={t('articles.form.authorEn', 'Author (EN)')} value={author_en} onChange={(e) => setAuthorEn(e.target.value)} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label={t('articles.form.authorTa', 'Author (TA)')} value={author_ta} onChange={(e) => setAuthorTa(e.target.value)} fullWidth />
-            </Grid>
+          {/* Form Fields */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Title Section */}
+            <Box>
+              <Typography 
+                variant="overline" 
+                sx={{ 
+                  color: '#8B0000', 
+                  fontWeight: 700, 
+                  fontSize: '0.75rem',
+                  letterSpacing: '1px',
+                  mb: 1,
+                  display: 'block'
+                }}
+              >
+                {editLanguage === 'en' ? 'ARTICLE TITLE' : 'கட்டுரை தலைப்பு'}
+              </Typography>
+              <TextField 
+                label={editLanguage === 'en' ? 'Title (English)' : 'தலைப்பு (தமிழ்)'} 
+                value={editLanguage === 'en' ? title_en : title_ta} 
+                onChange={(e) => editLanguage === 'en' ? setTitleEn(e.target.value) : setTitleTa(e.target.value)} 
+                fullWidth
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#8B0000',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#8B0000',
+                      borderWidth: 2,
+                    }
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#8B0000',
+                  }
+                }}
+              />
+            </Box>
 
-            <Grid item xs={12}>
-              <TextField label={t('articles.form.contentEn', 'Content (EN)')} value={content_en} onChange={(e) => setContentEn(e.target.value)} fullWidth multiline rows={8} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label={t('articles.form.contentTa', 'Content (TA)')} value={content_ta} onChange={(e) => setContentTa(e.target.value)} fullWidth multiline rows={8} />
-            </Grid>
+            {/* Author Section */}
+            <Box>
+              <Typography 
+                variant="overline" 
+                sx={{ 
+                  color: '#8B0000', 
+                  fontWeight: 700, 
+                  fontSize: '0.75rem',
+                  letterSpacing: '1px',
+                  mb: 1,
+                  display: 'block'
+                }}
+              >
+                {editLanguage === 'en' ? 'AUTHOR NAME' : 'ஆசிரியர் பெயர்'}
+              </Typography>
+              <TextField 
+                label={editLanguage === 'en' ? 'Author (English)' : 'ஆசிரியர் (தமிழ்)'} 
+                value={editLanguage === 'en' ? author_en : author_ta} 
+                onChange={(e) => editLanguage === 'en' ? setAuthorEn(e.target.value) : setAuthorTa(e.target.value)} 
+                fullWidth
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#8B0000',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#8B0000',
+                      borderWidth: 2,
+                    }
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#8B0000',
+                  }
+                }}
+              />
+            </Box>
 
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media Settings</Typography>
+            <Divider sx={{ my: 1 }} />
+
+            {/* Content Section */}
+            <Box>
+              <Typography 
+                variant="overline" 
+                sx={{ 
+                  color: '#8B0000', 
+                  fontWeight: 700, 
+                  fontSize: '0.75rem',
+                  letterSpacing: '1px',
+                  mb: 1,
+                  display: 'block'
+                }}
+              >
+                {editLanguage === 'en' ? 'ARTICLE CONTENT' : 'கட்டுரை உள்ளடக்கம்'}
+              </Typography>
+              <TextField 
+                label={editLanguage === 'en' ? 'Content (English)' : 'உள்ளடக்கம் (தமிழ்)'} 
+                value={editLanguage === 'en' ? content_en : content_ta} 
+                onChange={(e) => editLanguage === 'en' ? setContentEn(e.target.value) : setContentTa(e.target.value)} 
+                fullWidth 
+                multiline 
+                rows={12}
+                variant="outlined"
+                placeholder={editLanguage === 'en' 
+                  ? 'Write your article content here...' 
+                  : 'உங்கள் கட்டுரை உள்ளடக்கத்தை இங்கே எழுதவும்...'
+                }
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontFamily: 'Georgia, serif',
+                    fontSize: '1rem',
+                    lineHeight: 1.8,
+                    '&:hover fieldset': {
+                      borderColor: '#8B0000',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#8B0000',
+                      borderWidth: 2,
+                    }
+                  },
+                  '& .MuiInputLabel-root.Mui-focused': {
+                    color: '#8B0000',
+                  }
+                }}
+              />
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#666', 
+                  mt: 1, 
+                  display: 'block',
+                  fontStyle: 'italic'
+                }}
+              >
+                {editLanguage === 'en' 
+                  ? 'Tip: Make sure to fill content in both languages for better accessibility' 
+                  : 'குறிப்பு: சிறந்த அணுகலுக்காக இரு மொழிகளிலும் உள்ளடக்கத்தை நிரப்புங்கள்'
+                }
+              </Typography>
+            </Box>
+
+            <Divider sx={{ my: 1 }} />
+
+            {/* Media Settings Section */}
+            <Box>
+              <Typography 
+                variant="overline" 
+                sx={{ 
+                  color: '#8B0000', 
+                  fontWeight: 700, 
+                  fontSize: '0.75rem',
+                  letterSpacing: '1px',
+                  mb: 2,
+                  display: 'block'
+                }}
+              >
+                MEDIA SETTINGS
+              </Typography>
+              <Box sx={{ 
+                p: { xs: 2, md: 3 }, 
+                bgcolor: '#f9f9f9', 
+                borderRadius: 2,
+                border: '1px dashed #ccc'
+              }}>
                 <MediaUpload
                   onImageLinkChange={setImageLink}
                   onVideoLinkChange={setVideoLink}
@@ -179,35 +427,86 @@ export default function ArticleDetail({ user }) {
                   showInputsOnly={true}
                 />
               </Box>
-            </Grid>
+            </Box>
 
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+            {/* Action Buttons */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mt: 3,
+              pt: 3,
+              borderTop: '1px solid #e0e0e0',
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}>
               <Button
                 variant="outlined"
                 color="error"
                 startIcon={<DeleteIcon />}
                 onClick={handleDelete}
+                sx={{
+                  borderWidth: 2,
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1.2,
+                  order: { xs: 2, sm: 1 },
+                  width: { xs: '100%', sm: 'auto' }
+                }}
               >
                 Delete Article
               </Button>
-              <Button
-                onClick={handleSave}
-                variant="contained"
-                disabled={submitting}
-                startIcon={<SaveIcon />}
-                sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#333' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                {submitting ? t('actions.saving', 'Saving...') : t('actions.save', 'Save Changes')}
-              </Button>
-            </Grid>
-          </Grid>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2,
+                order: { xs: 1, sm: 2 },
+                width: { xs: '100%', sm: 'auto' }
+              }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setEditMode(false)}
+                  sx={{
+                    borderColor: '#666',
+                    color: '#666',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1.2,
+                    flex: { xs: 1, sm: 'none' },
+                    '&:hover': {
+                      borderColor: '#333',
+                      bgcolor: 'rgba(0,0,0,0.04)'
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  variant="contained"
+                  disabled={submitting}
+                  startIcon={!submitting && <SaveIcon />}
+                  sx={{
+                    bgcolor: '#8B0000',
+                    color: '#fff',
+                    fontWeight: 700,
+                    px: 4,
+                    py: 1.2,
+                    flex: { xs: 1, sm: 'none' },
+                    '&:hover': { 
+                      bgcolor: '#6B0000',
+                      boxShadow: '0 4px 12px rgba(139,0,0,0.3)'
+                    },
+                    '&:disabled': {
+                      bgcolor: '#ccc',
+                      color: '#666'
+                    }
+                  }}
+                >
+                  {submitting ? t('actions.saving', 'Saving...') : t('actions.save', 'Save Changes')}
+                </Button>
+              </Box>
+            </Box>
+          </Box>
         </Paper>
       </Container>
     );
@@ -291,6 +590,27 @@ export default function ArticleDetail({ user }) {
             >
               {getContent(article.title)}
             </Typography>
+
+            {/* Likes */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <Button
+                onClick={handleLike}
+                startIcon={article.userLiked ? <Favorite /> : <FavoriteBorder />}
+                variant="text"
+                sx={{
+                  color: article.userLiked ? '#8B0000' : '#666',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  '&:hover': { bgcolor: 'rgba(139,0,0,0.08)' },
+                }}
+                disabled={!user}
+              >
+                {t('articles.like', 'Like')}
+              </Button>
+              <Typography variant="body2" sx={{ color: '#666', fontWeight: 600 }}>
+                {article.likesCount || 0} {t('articles.likes', 'likes')}
+              </Typography>
+            </Box>
 
             {/* Author & Date Info */}
             <Box sx={{

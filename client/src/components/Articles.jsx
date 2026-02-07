@@ -19,7 +19,7 @@ import {
   Avatar,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Cancel, Visibility } from '@mui/icons-material';
+import { CheckCircle, Cancel, Visibility, Favorite, FavoriteBorder } from '@mui/icons-material';
 import ArticleComposer from './ArticleComposer';
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
@@ -32,6 +32,7 @@ export default function Articles({ user }) {
   const [error, setError] = useState(null);
   const [currentTab, setCurrentTab] = useState('published');
   const [pendingCount, setPendingCount] = useState(0);
+    const [showComposer, setShowComposer] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,6 +108,30 @@ export default function Articles({ user }) {
     fetchArticles();
     if (user && user.role === 'admin') {
       fetchPendingCount();
+    }
+  };
+
+  const handleLike = async (id) => {
+    if (!user) {
+      setError(t('articles.loginToLike', 'Please login to like articles'));
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/articles/${id}/like`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to like article');
+
+      setArticles((prev) => prev.map((article) =>
+        article._id === id
+          ? { ...article, likesCount: data.likesCount, userLiked: data.userLiked }
+          : article
+      ));
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -224,75 +249,168 @@ export default function Articles({ user }) {
           mb: 5, 
           display: 'flex', 
           justifyContent: 'center',
-          borderBottom: '1px solid rgba(0,0,0,0.08)',
         }}>
-          <Tabs 
-            value={currentTab} 
-            onChange={(e, v) => setCurrentTab(v)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              minHeight: 56,
-              '& .MuiTabs-flexContainer': {
-                gap: { xs: 0, md: 1 },
-              },
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                color: '#666',
-                minHeight: 56,
-                px: { xs: 2.5, md: 3.5 },
-                position: 'relative',
-                transition: 'all 0.3s ease',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '3px',
-                  backgroundColor: '#8B0000',
-                  transform: 'scaleX(0)',
-                  transition: 'transform 0.3s ease',
+          <Box sx={{
+            bgcolor: 'rgba(139,0,0,0.04)',
+            border: '1px solid rgba(139,0,0,0.15)',
+            borderRadius: 999,
+            px: { xs: 0.5, md: 1 },
+            py: { xs: 0.5, md: 0.75 },
+          }}>
+            <Tabs 
+              value={currentTab} 
+              onChange={(e, v) => setCurrentTab(v)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                minHeight: 44,
+                '& .MuiTabs-flexContainer': {
+                  gap: { xs: 0.5, md: 1 },
                 },
-                '&:hover': {
-                  color: '#8B0000',
-                  backgroundColor: 'rgba(139,0,0,0.03)',
-                  '&::before': {
-                    transform: 'scaleX(1)',
-                  }
-                },
-                '&.Mui-selected': {
-                  color: '#8B0000',
+                '& .MuiTab-root': {
+                  textTransform: 'none',
                   fontWeight: 700,
-                  backgroundColor: 'rgba(139,0,0,0.05)',
-                  '&::before': {
-                    transform: 'scaleX(1)',
-                  }
+                  fontSize: { xs: '0.85rem', md: '0.95rem' },
+                  color: '#5a5a5a',
+                  minHeight: 40,
+                  px: { xs: 2, md: 3 },
+                  borderRadius: 999,
+                  transition: 'all 0.25s ease',
+                  '&:hover': {
+                    color: '#8B0000',
+                    bgcolor: 'rgba(139,0,0,0.08)',
+                  },
+                  '&.Mui-selected': {
+                    color: '#fff',
+                    bgcolor: '#8B0000',
+                    boxShadow: '0 6px 16px rgba(139,0,0,0.25)',
+                  },
                 },
-              },
-              '& .MuiTabs-indicator': {
-                display: 'none',
-              },
-            }}
-          >
+                '& .MuiTabs-indicator': {
+                  display: 'none',
+                },
+              }}
+            >
             <Tab label={t('articles.tabs.published', 'Published')} value="published" />
             <Tab 
               label={
-                <Badge badgeContent={pendingCount} color="error">
+                <Badge badgeContent={pendingCount} color="error" sx={{ '& .MuiBadge-badge': { right: -6, top: 6 } }}>
                   {t('articles.tabs.pending', 'Pending')}
                 </Badge>
               }
               value="pending"
             />
             <Tab label={t('articles.tabs.rejected', 'Rejected')} value="rejected" />
-          </Tabs>
+            </Tabs>
+          </Box>
+        </Box>
+      )}
+
+      {/* Write Article + My Articles Buttons */}
+      {user && !showComposer && (
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{
+            display: 'flex',
+            gap: 1,
+            p: 0.75,
+            borderRadius: 999,
+            bgcolor: 'rgba(139,0,0,0.06)',
+            border: '1px solid rgba(139,0,0,0.15)',
+            boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}>
+            <Button
+              variant="contained"
+              onClick={() => setShowComposer(true)}
+              sx={{
+                bgcolor: '#8B0000',
+                color: '#fff',
+                px: { xs: 3, md: 4 },
+                py: 1.2,
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: 999,
+                textTransform: 'none',
+                boxShadow: '0 8px 18px rgba(139,0,0,0.35)',
+                '&:hover': {
+                  bgcolor: '#6B0000',
+                  boxShadow: '0 10px 22px rgba(139,0,0,0.45)',
+                  transform: 'translateY(-1px)',
+                },
+                transition: 'all 0.2s ease',
+                minWidth: { xs: 160, md: 180 },
+              }}
+            >
+              ✍️ {t('articles.writeArticle', 'Write Article')}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/my-articles')}
+              sx={{
+                borderColor: 'rgba(139,0,0,0.4)',
+                color: '#8B0000',
+                px: { xs: 3, md: 4 },
+                py: 1.2,
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: 999,
+                textTransform: 'none',
+                bgcolor: '#fff',
+                '&:hover': {
+                  bgcolor: 'rgba(139,0,0,0.08)',
+                  borderColor: '#8B0000',
+                },
+                minWidth: { xs: 150, md: 170 },
+              }}
+            >
+              {t('articles.myArticles', 'My Articles')}
+            </Button>
+          </Box>
         </Box>
       )}
 
       {/* Post Composer */}
-      {user && <ArticleComposer user={user} onPostCreated={handlePostCreated} />}
+      {user && showComposer && (
+        <Box sx={{ position: 'relative', mb: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/my-articles')}
+              sx={{
+                borderColor: 'rgba(139,0,0,0.4)',
+                color: '#8B0000',
+                borderRadius: 999,
+                textTransform: 'none',
+                '&:hover': {
+                  bgcolor: 'rgba(139,0,0,0.08)',
+                  borderColor: '#8B0000',
+                },
+              }}
+            >
+              {t('articles.myArticles', 'My Articles')}
+            </Button>
+            <Button
+              onClick={() => setShowComposer(false)}
+              variant="outlined"
+              sx={{
+                borderColor: '#bbb',
+                color: '#666',
+                borderRadius: 999,
+                textTransform: 'none',
+                '&:hover': {
+                  borderColor: '#8B0000',
+                  color: '#8B0000',
+                  bgcolor: 'rgba(139,0,0,0.05)',
+                }
+              }}
+            >
+              {t('articles.closeEditor', 'Close Editor')}
+            </Button>
+          </Box>
+          <ArticleComposer user={user} onPostCreated={handlePostCreated} />
+        </Box>
+      )}
 
       {!user && (
         <Alert severity="info" sx={{ mb: 4 }}>
@@ -564,6 +682,31 @@ export default function Articles({ user }) {
                       </Button>
                     </Box>
                   )}
+
+                  {/* Likes */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleLike(article._id);
+                      }}
+                      startIcon={article.userLiked ? <Favorite /> : <FavoriteBorder />}
+                      variant="text"
+                      sx={{
+                        color: article.userLiked ? '#8B0000' : '#666',
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: 'rgba(139,0,0,0.08)' },
+                      }}
+                      disabled={!user}
+                    >
+                      {t('articles.like', 'Like')}
+                    </Button>
+                    <Typography variant="body2" sx={{ color: '#666', fontWeight: 600 }}>
+                      {article.likesCount || 0} {t('articles.likes', 'likes')}
+                    </Typography>
+                  </Box>
 
                   {/* Read More Button */}
                   <Button

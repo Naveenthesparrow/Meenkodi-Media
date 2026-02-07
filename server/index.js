@@ -420,7 +420,17 @@ app.get("/api/articles/my-articles", ensureAuthenticated, async (req, res) => {
       authorId: req.user._id 
     }).sort({ submittedAt: -1 });
     
-    res.json(articles);
+    const enriched = articles.map((article) => {
+      const obj = article.toObject();
+      const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
+      return {
+        ...obj,
+        likesCount,
+        userLiked: obj.likes ? obj.likes.some((id) => id.toString() === req.user._id.toString()) : false,
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     console.error('Error fetching user articles:', error);
     res.status(500).json({ error: 'Failed to fetch articles' });
@@ -440,8 +450,15 @@ app.get("/api/articles", async (req, res) => {
     query.status = 'published';
   }
 
-  const articles = await Article.find(query).sort({ createdAt: -1 });
-  res.json(localizeCollection(articles, 'articles', lang));
+  const articles = await Article.find(query).sort({ likesCount: -1, createdAt: -1 });
+  const enriched = articles.map((article) => {
+    const obj = article.toObject();
+    const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
+    const userLiked = req.user ? (obj.likes ? obj.likes.some((id) => id.toString() === req.user._id.toString()) : false) : false;
+    return { ...obj, likesCount, userLiked };
+  });
+
+  res.json(localizeCollection(enriched, 'articles', lang));
 });
 
 app.get("/api/articles/pending/count", ensureAdmin, async (req, res) => {
@@ -468,7 +485,42 @@ app.get("/api/articles/:id", async (req, res) => {
     await article.save();
   }
 
-  res.json(localizeSingle(article, 'articles', lang));
+  const obj = article.toObject();
+  const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
+  const userLiked = req.user ? (obj.likes ? obj.likes.some((id) => id.toString() === req.user._id.toString()) : false) : false;
+  res.json(localizeSingle({ ...obj, likesCount, userLiked }, 'articles', lang));
+});
+
+// Like/Unlike article
+app.post("/api/articles/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+
+    if (article.status !== 'published') {
+      return res.status(403).json({ error: 'Cannot like unpublished article' });
+    }
+
+    const likes = article.likes || [];
+    const userLikeIndex = likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      likes.splice(userLikeIndex, 1);
+    } else {
+      likes.push(req.user._id);
+    }
+
+    article.likes = likes;
+    article.likesCount = likes.length;
+    await article.save();
+
+    res.json({ likesCount: article.likesCount, userLiked: userLikeIndex === -1 });
+  } catch (err) {
+    console.error('Like error:', err);
+    res.status(500).json({ error: 'Failed to process like' });
+  }
 });
 
 app.post("/api/articles", ensureAuthenticated, async (req, res) => {

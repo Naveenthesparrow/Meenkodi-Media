@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Card,
@@ -28,11 +28,32 @@ export default function MyArticles({ user }) {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [serverReady, setServerReady] = useState(false);
+  const queued = useRef([]);
 
   useEffect(() => {
-    if (user) {
-      fetchMyArticles();
+    let cancelled = false;
+    async function check(attempt = 1) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/health`, { cache: 'no-cache', credentials: 'include' });
+        if (!cancelled && res.ok) {
+          setServerReady(true);
+          queued.current.forEach(fn => fn());
+          queued.current = [];
+          return;
+        }
+      } catch (e) {
+        // ignore and retry
+      }
+      if (!cancelled) {
+        const wait = Math.min(1000 * 2 ** (attempt - 1), 10000);
+        setTimeout(() => check(attempt + 1), wait);
+      }
     }
+
+    if (user) check();
+
+    return () => { cancelled = true; };
   }, [user]);
 
   const fetchMyArticles = async () => {
@@ -115,6 +136,19 @@ export default function MyArticles({ user }) {
         <Alert severity="info">
           {i18n.language === 'ta' ? 'உங்கள் கட்டுரைகளைக் காண உள்நுழைக.' : 'Please log in to see your articles.'}
         </Alert>
+      </Container>
+    );
+  }
+
+  if (user && !serverReady) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <Alert severity="info">
+          {i18n.language === 'ta' ? 'சேவையகம் விழிக்கிறது — சில நொடிகள் காத்திருங்கள்.' : 'Waking server — please wait a few seconds.'}
+        </Alert>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress sx={{ color: '#8B0000' }} />
+        </Box>
       </Container>
     );
   }
@@ -241,40 +275,22 @@ export default function MyArticles({ user }) {
             <Divider sx={{ my: 2 }} />
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" sx={{ color: '#999' }}>
-                {i18n.language === 'ta' ? 'சமர்ப்பிக்கப்பட்டது:' : 'Submitted:'} {new Date(article.submittedAt).toLocaleDateString()}
+              <Typography variant="caption" sx={{ color: '#888' }}>
+                {article.createdAt
+                  ? new Date(article.createdAt).toLocaleDateString()
+                  : ''}
               </Typography>
-
               <Box sx={{ display: 'flex', gap: 1 }}>
-                {article.status === 'published' && (
-                  <Tooltip title={i18n.language === 'ta' ? 'பார்க்க' : 'View'}>
-                    <IconButton 
-                      size="small"
-                      onClick={() => navigate(`/articles/${article._id}`)}
-                      sx={{ 
-                        color: '#8B0000',
-                        '&:hover': { bgcolor: 'rgba(139, 0, 0, 0.1)' }
-                      }}
-                    >
-                      <ViewIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-
-                {(article.status === 'pending' || article.status === 'rejected') && (
-                  <Tooltip title={i18n.language === 'ta' ? 'நீக்கு' : 'Delete'}>
-                    <IconButton 
-                      size="small"
-                      onClick={() => handleDelete(article._id)}
-                      sx={{ 
-                        color: '#d32f2f',
-                        '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.1)' }
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
+                <Tooltip title={i18n.language === 'ta' ? 'காண்க' : 'View'}>
+                  <IconButton onClick={() => navigate(`/articles/${article._id}`)}>
+                    <ViewIcon sx={{ color: '#8B0000' }} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={i18n.language === 'ta' ? 'நீக்கு' : 'Delete'}>
+                  <IconButton onClick={() => handleDelete(article._id)}>
+                    <DeleteIcon sx={{ color: '#666' }} />
+                  </IconButton>
+                </Tooltip>
               </Box>
             </Box>
           </Card>
@@ -283,3 +299,4 @@ export default function MyArticles({ user }) {
     </Container>
   );
 }
+
