@@ -1,5 +1,6 @@
 name: scheduled-ping
 on:
+  workflow_dispatch: {}
   schedule:
     - cron: '*/15 * * * *' # run every 15 minutes, but job will skip outside active window
 jobs:
