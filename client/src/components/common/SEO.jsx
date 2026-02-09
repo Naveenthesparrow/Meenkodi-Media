@@ -16,7 +16,7 @@ export default function SEO({
   schema
 }) {
   const location = useLocation();
-  const baseUrl = 'https://meenkodi.com';
+  const baseUrl = 'https://www.meenkodi.com';
   
   const fullUrl = url || `${baseUrl}${location.pathname}`;
   const fullTitle = title ? `${title} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
