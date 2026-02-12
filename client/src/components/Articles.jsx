@@ -18,6 +18,7 @@ import {
   Chip,
   Avatar,
 } from '@mui/material';
+import PageHeading from './common/PageHeading';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Cancel, Visibility, Favorite, FavoriteBorder } from '@mui/icons-material';
 import ArticleComposer from './ArticleComposer';
@@ -32,108 +33,24 @@ export default function Articles({ user }) {
   const [error, setError] = useState(null);
   const [currentTab, setCurrentTab] = useState('published');
   const [pendingCount, setPendingCount] = useState(0);
-    const [showComposer, setShowComposer] = useState(false);
-  const navigate = useNavigate();
-
+  const [showComposer, setShowComposer] = useState(false);
   useEffect(() => {
-    fetchArticles();
-    if (user && user.role === 'admin') {
-      fetchPendingCount();
-    }
-  }, [currentTab, user]);
-
-  const fetchArticles = async () => {
-    try {
-      const statusParam = currentTab === 'published' ? '' : `?status=${currentTab}`;
-      const response = await fetch(`/api/articles${statusParam}`, {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch articles');
+    const loadArticles = async () => {
+      try {
+        const res = await fetch('/api/articles');
+        if (!res.ok) throw new Error('Failed to fetch articles');
+        const data = await res.json();
+        setArticles(data);
+        const pending = Array.isArray(data) ? data.filter(a => a.status === 'pending').length : 0;
+        setPendingCount(pending);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message || String(err));
+        setLoading(false);
       }
-      const data = await response.json();
-      setArticles(data);
-      setLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-      setArticles([]);
-    }
-  };
-
-  const fetchPendingCount = async () => {
-    try {
-      const response = await fetch(`/api/articles/pending/count`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-      setPendingCount(data.count || 0);
-    } catch (err) {
-      console.error('Failed to fetch pending count:', err);
-    }
-  };
-
-  const handleApprove = async (id) => {
-    try {
-      const response = await fetch(`/api/articles/${id}/approve`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to approve article');
-      fetchArticles();
-      fetchPendingCount();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleReject = async (id) => {
-    const reason = prompt(t('articles.rejectReason', 'Reason for rejection (optional):'));
-    try {
-      const response = await fetch(`/api/articles/${id}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ reason }),
-      });
-      if (!response.ok) throw new Error('Failed to reject article');
-      fetchArticles();
-      fetchPendingCount();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handlePostCreated = () => {
-    fetchArticles();
-    if (user && user.role === 'admin') {
-      fetchPendingCount();
-    }
-  };
-
-  const handleLike = async (id) => {
-    if (!user) {
-      setError(t('articles.loginToLike', 'Please login to like articles'));
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/articles/${id}/like`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to like article');
-
-      setArticles((prev) => prev.map((article) =>
-        article._id === id
-          ? { ...article, likesCount: data.likesCount, userLiked: data.userLiked }
-          : article
-      ));
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+    };
+    loadArticles();
+  }, []);
 
   if (loading) {
     return (
@@ -177,71 +94,29 @@ export default function Articles({ user }) {
         backgroundSize: { xs: '18px 18px', md: '14px 14px' }
       }
     }}>
-      <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
-      {/* Heading */}
-      <Box 
-        sx={{ 
-          mb: 4, 
-          position: 'relative',
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 2, md: 0 },
-        }}
-      >
-        <Typography
-          variant="h2" 
-            sx={{
-            fontWeight: 500, 
-            color: "#8B0000", 
-            position: 'relative',
-            display: 'inline-block',
-            letterSpacing: -1,
-            padding: '0 10px',
+      <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 3 }, pb: 4, position: 'relative' }}>
+      <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }} actions={user && user.role === 'admin' ? (
+        <Button
+          onClick={() => setShowComposer(true)}
+          variant="contained"
+          startIcon={<CheckCircle />}
+          sx={{
+            bgcolor: '#000',
+            color: '#fff',
             transition: 'all 0.3s ease',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#8B0000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              right: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#8B0000',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&:hover': {
-              color: '#333',
-              transform: 'scale(1.02)',
-              '&::before': {
-                width: '60px',
-                left: '-70px',
-                backgroundColor: '#666',
-              },
-              '&::after': {
-                width: '60px',
-                right: '-70px',
-                backgroundColor: '#666',
-              },
-            },
+            '&:hover': { bgcolor: '#333' },
+            borderRadius: 0,
+            px: 3,
+            py: 1,
+            textTransform: 'uppercase',
+            fontWeight: 600,
           }}
         >
-          {t('articles.title', 'Articles')}
-        </Typography>
-      </Box>
+          {t('articles.create', 'Create Article')}
+        </Button>
+      ) : null}>
+        {t('articles.title', 'Articles')}
+      </PageHeading>
 
       {/* Admin Tabs */}
       {user && user.role === 'admin' && (

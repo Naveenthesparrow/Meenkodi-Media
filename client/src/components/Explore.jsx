@@ -3,6 +3,7 @@ import { Box, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from "./common/SEO";
+import PageHeading from './common/PageHeading';
 import {
   Home,
   AccountBalance,
@@ -265,7 +266,7 @@ function Explore() {
     };
   };
 
-  return (
+    return (
     <Box
       ref={rootRef}
       sx={{
@@ -295,28 +296,15 @@ function Explore() {
         alignContent: "start",
         rowGap: { xs: 1.5, sm: 2 },
         px: 0,
-        // Slightly reduced top padding to move section up a bit
-        pt: { xs: 5, sm: 7 },
+        // Reduce top padding significantly so content moves higher on the page
+        pt: { xs: 2, sm: 3, md: 3 },
         pb: { xs: 3, sm: 4 },
       }}
     >
       <SEO {...pageSEO.explore} />
-      <Typography
-        variant="h3"
-        component="h1"
-        sx={{
-          fontWeight: 500,
-          color: "#8B0000",
-          textAlign: "center",
-          fontSize: { xs: "1.8rem", sm: "3rem" },
-            // slightly less push so heading sits a bit higher
-          // move heading further up on md+ screens
-          mt: { xs: 2, sm: 3, md: -3 },
-          mb: { xs: 1, sm: 1.5, md: 1 }
-        }}
-      >
+      <PageHeading>
         {t('explore.title')}
-      </Typography>
+      </PageHeading>
 
       <Box
         sx={{

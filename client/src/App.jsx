@@ -11,6 +11,8 @@ const FestivalDetail = React.lazy(() => import("./components/details/FestivalDet
 const DynastyDetail = React.lazy(() => import("./components/details/DynastyDetail"));
 const PoetDetail = React.lazy(() => import("./components/details/PoetDetail"));
 const EventDetail = React.lazy(() => import("./components/EventDetail"));
+const Research = React.lazy(() => import("./components/Research"));
+const ResearchFolderDetail = React.lazy(() => import("./components/ResearchFolderDetail.jsx"));
 import {
   BrowserRouter as Router,
   Routes,
@@ -263,6 +265,7 @@ function App() {
 
   const navItems = [
     { key: 'nav.explore', path: '/explore' },
+    { key: 'nav.research', path: '/research' },
     { key: 'nav.events', path: '/events' },
     { key: 'nav.gallery', path: '/gallery' },
     { key: 'nav.articles', path: '/articles' },
@@ -358,10 +361,13 @@ function App() {
               sx={{
                 display: { xs: 'none', md: 'flex' },
                 alignItems: 'center',
-                gap: 2.6,
+                gap: i18n.language === 'ta' ? 1.5 : 2.6, // Reduce gap for Tamil
                 flex: '1 1 auto',
                 justifyContent: 'center',
-                ml: 2
+                ml: 2,
+                flexWrap: 'nowrap',
+                overflow: 'hidden',
+                maxWidth: '100%'
               }}
             >
               <Link
@@ -370,11 +376,12 @@ function App() {
                 underline="none"
                 sx={{
                   color: '#000',
-                  fontSize: 15.5,
+                  fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
                   fontWeight: 500,
                   fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
                   letterSpacing: '0.3px',
                   transition: 'color 0.2s ease',
+                  whiteSpace: 'nowrap', // Prevent text wrapping
                   '&:hover': {
                     color: '#ba1d16'
                   }
@@ -390,11 +397,12 @@ function App() {
                   underline="none"
                   sx={{
                     color: '#000',
-                    fontSize: 15.5,
+                    fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
                     fontWeight: 500,
                     fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
                     letterSpacing: '0.3px',
                     transition: 'color 0.2s ease',
+                    whiteSpace: 'nowrap', // Prevent text wrapping
                     '&:hover': {
                       color: '#ba1d16'
                     }
@@ -410,11 +418,12 @@ function App() {
                   underline="none"
                   sx={{
                     color: '#000',
-                    fontSize: 15.5,
+                    fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
                     fontWeight: 500,
                     fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
                     letterSpacing: '0.3px',
                     transition: 'color 0.2s ease',
+                    whiteSpace: 'nowrap', // Prevent text wrapping
                     '&:hover': {
                       color: '#ba1d16'
                     }
@@ -669,6 +678,8 @@ function App() {
             <Route path="/gallery" element={<Gallery user={user} />} />
             <Route path="/events" element={<Events user={user} />} />
             <Route path="/resources" element={<Resources user={user} />} />
+            <Route path="/research" element={<Research user={user} />} />
+            <Route path="/research/folders/:id" element={<ResearchFolderDetail user={user} />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/explore" element={<Explore user={user} />} />
             {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}

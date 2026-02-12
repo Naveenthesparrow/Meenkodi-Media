@@ -1,5 +1,28 @@
 User-agent: *
 Allow: /
+Allow: /events
+Allow: /faq
+Allow: /home
+Allow: /explore
+Allow: /gallery
+Allow: /articles
+Allow: /resources
+Allow: /heritage-photos
+Allow: /tamil-lands
+Allow: /tamil-kings
+Allow: /tamil-poets
+Allow: /tamil-literature
+Allow: /tamil-dance
+Allow: /tamil-temples
+Allow: /tamil-foods
+Allow: /tamil-festivals
+Allow: /tamil-clothing
+Allow: /ancient-science
+Allow: /dynasties
+
+# Block admin and development paths
+Disallow: /admin
+Disallow: /dev
 
 # Main Sitemap Index
 Sitemap: https://www.meenkodi.com/sitemap-index.xml

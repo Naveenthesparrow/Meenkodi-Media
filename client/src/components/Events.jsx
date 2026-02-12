@@ -24,6 +24,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
 import SEO, { pageSEO } from './common/SEO';
+import PageHeading from './common/PageHeading';
 import { useBilingualContent } from '../utils/bilingualContent';
 import { useTranslation } from 'react-i18next';
 
@@ -212,116 +213,31 @@ export default function Events({ user }) {
         backgroundSize: { xs: '18px 18px', md: '14px 14px' }
       }
     }}>
-      <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 3 }, pb: 4, position: 'relative' }}>
 
       <SEO {...pageSEO.events} />
-      {/* Unique Heading Section */}
-      <Box
-        sx={{
-          mb: { xs: 6, md: 5 },
-          mt: { xs: 2, md: 2 }, // nudge heading slightly down on all screens
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Typography
-          variant="h2"
+      <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }} actions={user && user.role === 'admin' ? (
+        <Button
+          onClick={handleAdd}
+          variant="contained"
+          startIcon={<Add />}
           sx={{
-            fontWeight: 700,
-            color: '#8B0000',
-            position: 'relative',
-            display: 'inline-block',
-            letterSpacing: -1,
-            padding: '0 10px',
+            bgcolor: "#000",
+            color: "#fff",
             transition: 'all 0.3s ease',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              left: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#DAA520',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: '50%',
-              right: '-50px',
-              width: '40px',
-              height: '3px',
-              backgroundColor: '#DAA520',
-              transform: 'translateY(-50%)',
-              transition: 'all 0.3s ease',
-            },
-            '&:hover': {
-              transform: 'scale(1.05)',
-              '&::before': {
-                width: '60px',
-                left: '-70px',
-              },
-              '&::after': {
-                width: '60px',
-                right: '-70px',
-              },
-            },
+            '&:hover': { bgcolor: '#333', boxShadow: '0 8px 15px rgba(0,0,0,0.2)', transform: 'translateY(-3px)' },
+            borderRadius: 0,
+            px: 3,
+            py: 1,
+            textTransform: 'uppercase',
+            fontWeight: 600,
           }}
         >
-          {t('events.title', 'Events')}
-        </Typography>
-
-        {user && user.role === "admin" && (
-          <Box
-            sx={{
-              // On mobile stack under the title (static flow). On md+ keep absolute at right center
-              position: { xs: 'static', md: 'absolute' },
-              right: { md: 0 },
-              top: { md: '50%' },
-              transform: { xs: 'none', md: 'translateY(-50%)' },
-              transition: 'all 0.3s ease',
-              mt: { xs: 2, md: 0 },
-              display: 'flex',
-              justifyContent: { xs: 'flex-start', md: 'flex-end' },
-              width: { xs: '100%', md: 'auto' },
-              // Keep hover effect only on larger screens
-              '&:hover': {
-                '@media (min-width:900px)': {
-                  transform: 'translateY(-50%) scale(1.05)',
-                },
-                '& button': {
-                  '@media (min-width:900px)': {
-                    boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                    transform: 'translateY(-3px)',
-                  }
-                }
-              }
-            }}
-          >
-            <Button
-              onClick={handleAdd}
-              variant="contained"
-              startIcon={<Add />}
-              sx={{
-                bgcolor: "#000",
-                color: "#fff",
-                transition: 'all 0.3s ease',
-                "&:hover": {
-                  bgcolor: "#333",
-                  boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                  transform: 'translateY(-3px)',
-                },
-                borderRadius: 0,
-                px: 3,
-              }}
-            >
-              {t('events.add', 'Add Event')}
-            </Button>
-          </Box>
-        )}
-      </Box>
+          {t('events.add', 'Add Event')}
+        </Button>
+      ) : null}>
+        {t('events.title', 'Events')}
+      </PageHeading>
 
       <Grid
         container

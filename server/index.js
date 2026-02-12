@@ -9,6 +9,7 @@ import User from "./models/User.js";
 import mongoose from "mongoose";
 import Article from "./models/Article.js";
 import Gallery from "./models/Gallery.js";
+import ResearchFolder from "./models/ResearchFolder.js";
 import Event from "./models/Event.js";
 import Resource from "./models/Resource.js";
 import Comment from "./models/Comment.js";
@@ -30,6 +31,9 @@ import Clothing from "./models/Clothing.js";
 import Dynasty from "./models/Dynasty.js";
 import Poet from "./models/Poet.js";
 import { localizeCollection, localizeSingle, resolveLang } from './translationMap.js';
+import researchRoutes from './routes/research.js';
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 dotenv.config();
 
@@ -398,6 +402,58 @@ function ensureAuthenticated(req, res, next) {
   console.log("User is NOT authenticated, sending 401");
   res.status(401).send("Not authenticated");
 }
+
+// Cloudinary and Multer setup for research folder covers
+
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+console.log('Cloudinary configured:', {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'Set' : 'Missing',
+  api_key: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Missing', 
+  api_secret: process.env.CLOUDINARY_API_SECRET ? 'Set' : 'Missing'
+});
+
+// Research folder cover photo storage
+const researchStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "meenkodi_research_covers", // Folder in Cloudinary for research covers
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp"],
+    transformation: [{ width: 800, height: 600, crop: "fill" }], // Cover photo size
+  },
+});
+
+const researchUpload = multer({
+  storage: researchStorage,
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/bmp",
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          `Unsupported file type: ${file.mimetype}. Allowed types: JPEG, PNG, GIF, WEBP, BMP`
+        ),
+        false
+      );
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max
+  },
+});
 
 function ensureAdmin(req, res, next) {
   if (req.isAuthenticated() && req.user.role === "admin") return next();
@@ -785,6 +841,329 @@ app.delete("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
   }
 });
 
+// Research folders endpoints
+app.get("/api/research/folders", async (req, res) => {
+  try {
+    const lang = resolveLang(req);
+    const folders = await ResearchFolder.find().sort({ order: 1, createdAt: -1 });
+    res.json(folders.map(f => ({
+      _id: f._id,
+      name: (lang === 'ta' ? f.name.ta : f.name.en) || f.name.en,
+      nameRaw: f.name,
+      description: (lang === 'ta' ? f.description.ta : f.description.en) || f.description.en,
+      coverPhoto: f.coverPhoto || null,
+      photos: f.photos || [],
+      order: f.order,
+      createdAt: f.createdAt
+    })));
+  } catch (err) {
+    console.error("Error fetching research folders:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get('/api/research/folders/:id', async (req, res) => {
+  try {
+    console.log('Fetching research folder with ID:', req.params.id);
+    const lang = resolveLang(req);
+    
+    if (!req.params.id || req.params.id === 'undefined') {
+      console.log('Invalid folder ID provided');
+      return res.status(400).json({ error: 'Invalid folder ID' });
+    }
+    
+    const folder = await ResearchFolder.findById(req.params.id);
+    if (!folder) {
+      console.log('Folder not found:', req.params.id);
+      return res.status(404).json({ error: 'Folder not found' });
+    }
+    
+    console.log('Found folder:', folder.name, 'photos count:', folder.photos?.length || 0);
+    
+    const response = {
+      _id: folder._id,
+      name: (lang === 'ta' ? folder.name?.ta : folder.name?.en) || folder.name?.en || 'Untitled',
+      nameRaw: folder.name,
+      description: (lang === 'ta' ? folder.description?.ta : folder.description?.en) || folder.description?.en || '',
+      coverPhoto: folder.coverPhoto || null,
+      order: folder.order,
+      createdAt: folder.createdAt,
+      photos: (folder.photos || []).map((p) => ({
+        _id: p._id,
+        url: p.url,
+        caption: {
+          en: p.caption?.en || '',
+          ta: p.caption?.ta || ''
+        },
+        credit: p.credit || '',
+        name: p.name || undefined,
+        keywords: p.keywords || [],
+        sourceLink: p.sourceLink || '',
+        order: p.order ?? 0,
+        createdAt: p.createdAt
+      }))
+    };
+    
+    console.log('Sending response with photos:', response.photos.length);
+    res.json(response);
+  } catch (err) {
+    console.error('Error fetching research folder:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+// Attach a photo to a specific heritage collection (research folder)
+// Image is optional to support metadata-only entries (caption, credit, name, keywords, sourceLink)
+app.post('/api/research/folders/:id/photos', ensureAdmin, async (req, res) => {
+  try {
+    console.log('Photo attachment request:', {
+      folderId: req.params.id,
+      body: req.body,
+      user: req.user ? { id: req.user._id, role: req.user.role } : 'No user'
+    });
+
+    const { imageUrl, caption, credit, name, keywords, sourceLink } = req.body || {};
+
+    const folder = await ResearchFolder.findById(req.params.id);
+    if (!folder) {
+      console.log('Folder not found:', req.params.id);
+      return res.status(404).json({ error: 'Folder not found' });
+    }
+
+    console.log('Found folder:', folder.name, 'existing photos:', folder.photos?.length || 0);
+
+    const nextOrder = (folder.photos || []).length
+      ? Math.max(...folder.photos.map((p) => p.order || 0)) + 1
+      : 1;
+
+    const photo = {
+      url: imageUrl || '',
+      caption: {
+        en: caption?.en || '',
+        ta: caption?.ta || ''
+      },
+      credit: credit || '',
+      name: name || undefined,
+      keywords: Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k=>k.trim()).filter(Boolean) : []),
+      sourceLink: sourceLink || '',
+      order: nextOrder
+    };
+
+    console.log('Adding photo with data:', photo);
+
+    folder.photos.push(photo);
+    folder.updatedAt = new Date();
+    await folder.save();
+
+    console.log('Folder saved successfully, total photos now:', folder.photos.length);
+
+    // Return the newly added photo plus a simple success flag
+    const savedPhoto = folder.photos[folder.photos.length - 1];
+
+    console.log('Returning saved photo:', savedPhoto);
+
+    res.status(201).json({
+      success: true,
+      photo: {
+        _id: savedPhoto._id,
+        url: savedPhoto.url,
+        caption: savedPhoto.caption,
+        credit: savedPhoto.credit,
+        name: savedPhoto.name,
+        keywords: savedPhoto.keywords,
+        sourceLink: savedPhoto.sourceLink,
+        order: savedPhoto.order,
+        createdAt: savedPhoto.createdAt
+      }
+    });
+  } catch (err) {
+    console.error('Error adding photo to research folder:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update a photo's metadata or replace its image (admin only)
+app.put('/api/research/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
+  try {
+    const { folderId, photoId } = req.params;
+    const { imageUrl, caption, credit, name, keywords, sourceLink } = req.body || {};
+
+    const folder = await ResearchFolder.findById(folderId);
+    if (!folder) return res.status(404).json({ error: 'Folder not found' });
+
+    const photo = folder.photos.id(photoId) || folder.photos.find(p => p._id?.toString() === photoId);
+    if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+    // Update fields only if provided
+    if (typeof imageUrl === 'string') photo.url = imageUrl;
+    if (caption) {
+      photo.caption = {
+        en: caption.en || photo.caption?.en || '',
+        ta: caption.ta || photo.caption?.ta || ''
+      };
+    }
+    if (typeof credit !== 'undefined') photo.credit = credit || '';
+    if (typeof name !== 'undefined') photo.name = name;
+    if (typeof keywords !== 'undefined') {
+      photo.keywords = Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k=>k.trim()).filter(Boolean) : []);
+    }
+    if (typeof sourceLink !== 'undefined') photo.sourceLink = sourceLink || '';
+
+    folder.updatedAt = new Date();
+    await folder.save();
+
+    return res.json({ success: true, photo });
+  } catch (err) {
+    console.error('Error updating research photo:', err);
+    res.status(500).json({ error: 'Failed to update photo' });
+  }
+});
+
+// Delete a photo from a research folder (admin only)
+app.delete('/api/research/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
+  try {
+    const { folderId, photoId } = req.params;
+    const folder = await ResearchFolder.findById(folderId);
+    if (!folder) return res.status(404).json({ error: 'Folder not found' });
+    const photo = folder.photos.id(photoId) || folder.photos.find(p => p._id?.toString() === photoId);
+    if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+    // Optionally delete the file from disk if stored locally under /uploads
+    if (photo.url && photo.url.startsWith('/uploads/')) {
+      try {
+        const filePath = path.join(process.cwd(), photo.url.replace(/^\//, ''));
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (e) {
+        console.warn('Failed to delete file from disk:', e.message);
+      }
+    }
+
+    // Remove photo and save
+    folder.photos = folder.photos.filter(p => p._id?.toString() !== photoId);
+    folder.updatedAt = new Date();
+    await folder.save();
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error deleting research photo:', err);
+    res.status(500).json({ error: 'Failed to delete photo' });
+  }
+});
+
+app.post("/api/research/folders", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
+  try {
+    console.log('=== CREATE RESEARCH FOLDER REQUEST ===');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
+    console.log('Headers:', req.headers);
+    
+    const { nameEn, nameTa, descriptionEn, descriptionTa } = req.body;
+    
+    if (!nameEn && !nameTa) {
+      console.log('Validation failed: No name provided');
+      return res.status(400).json({ error: "Folder name required in at least one language" });
+    }
+    
+    // Build the folder payload
+    const payload = {
+      name: {},
+      description: {}
+    };
+    
+    if (nameEn) payload.name.en = nameEn;
+    if (nameTa) payload.name.ta = nameTa;
+    if (descriptionEn) payload.description.en = descriptionEn;
+    if (descriptionTa) payload.description.ta = descriptionTa;
+    
+    // Add cover photo if uploaded
+    if (req.file) {
+      console.log('Cover photo uploaded:', req.file.path);
+      payload.coverPhoto = req.file.path; // Cloudinary URL
+    } else {
+      console.log('No cover photo uploaded');
+    }
+    
+    // Set order
+    if (payload.order === undefined || payload.order === null) {
+      const max = await ResearchFolder.findOne().sort({ order: -1 }).select('order');
+      payload.order = (max?.order ?? 0) + 1;
+    }
+    
+    console.log('Creating folder with payload:', payload);
+    const created = await ResearchFolder.create(payload);
+    console.log('Folder created successfully:', created._id);
+    res.status(201).json(created);
+  } catch (err) {
+    console.error("Error creating research folder:", err);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Update research folder
+app.put("/api/research/folders/:id", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
+  try {
+    console.log('=== UPDATE RESEARCH FOLDER REQUEST ===');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
+    
+    const { nameEn, nameTa, descriptionEn, descriptionTa, removeCoverPhoto } = req.body;
+    
+    // Build the update payload
+    const updatePayload = {};
+    
+    if (nameEn || nameTa) {
+      updatePayload.name = {};
+      if (nameEn) updatePayload.name.en = nameEn;
+      if (nameTa) updatePayload.name.ta = nameTa;
+    }
+    
+    if (descriptionEn || descriptionTa) {
+      updatePayload.description = {};
+      if (descriptionEn) updatePayload.description.en = descriptionEn;
+      if (descriptionTa) updatePayload.description.ta = descriptionTa;
+    }
+    
+    // Handle cover photo operations
+    if (req.file) {
+      // New cover photo uploaded
+      console.log('New cover photo uploaded:', req.file.path);
+      updatePayload.coverPhoto = req.file.path; // Cloudinary URL
+    } else if (removeCoverPhoto === 'true') {
+      // Remove existing cover photo
+      console.log('Removing existing cover photo');
+      updatePayload.coverPhoto = null;
+    }
+    
+    console.log('Update payload:', updatePayload);
+    
+    const updated = await ResearchFolder.findByIdAndUpdate(
+      req.params.id, 
+      updatePayload, 
+      { new: true, runValidators: true }
+    );
+    
+    if (!updated) return res.status(404).json({ error: "Folder not found" });
+    
+    console.log('Folder updated successfully');
+    res.json(updated);
+  } catch (err) {
+    console.error("Error updating research folder:", err);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.delete("/api/research/folders/:id", ensureAdmin, async (req, res) => {
+  try {
+    const result = await ResearchFolder.findByIdAndDelete(req.params.id);
+    if (!result) return res.status(404).json({ error: "Folder not found" });
+    res.status(204).end();
+  } catch (err) {
+    console.error("Error deleting research folder:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Event routes
 app.get("/api/events", async (req, res) => {
   const lang = resolveLang(req);
@@ -1019,16 +1398,6 @@ const createDirectories = () => {
 };
 
 createDirectories();
-
-import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-
-// Cloudinary Configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // Configure Cloudinary Storage
 const storage = new CloudinaryStorage({
@@ -1707,9 +2076,6 @@ app.delete(
         },
       ]);
 
-      // Find the updated comment to return
-      const updatedComment = king.comments.id(req.params.commentId);
-
       res.json({
         comment: updatedComment,
       });
@@ -2321,7 +2687,9 @@ app.get("/api/literature/:id", async (req, res) => {
     ]);
 
     if (!literature)
-      return res.status(404).json({ error: "Literature not found" });
+      return res
+        .status(404)
+        .json({ error: "Literature not found" });
 
     // If a user is logged in, check if they've liked the article
     let userLiked = false;
@@ -2359,7 +2727,9 @@ app.put("/api/literature/:id", ensureAdmin, async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!literature)
-      return res.status(404).json({ error: "Literature not found" });
+      return res
+        .status(404)
+        .json({ error: "Literature not found" });
     res.json(literature);
   } catch (err) {
     res.status(500).json({ error: "Failed to update literature" });
@@ -2370,7 +2740,9 @@ app.delete("/api/literature/:id", ensureAdmin, async (req, res) => {
   try {
     const literature = await Literature.findByIdAndDelete(req.params.id);
     if (!literature)
-      return res.status(404).json({ error: "Literature not found" });
+      return res
+        .status(404)
+        .json({ error: "Literature not found" });
     res.json({ message: "Literature deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete literature" });
@@ -2632,9 +3004,6 @@ app.delete(
           select: "displayName",
         },
       ]);
-
-      // Find the updated comment to return
-      const updatedComment = dance.comments.id(req.params.commentId);
 
       res.json({
         comment: updatedComment,
