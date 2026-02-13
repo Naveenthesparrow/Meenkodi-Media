@@ -23,9 +23,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import { ArrowBack, Add, Image as ImageIcon, Edit, DragIndicator, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SEO from './common/SEO';
+import SEO, { pageSEO } from './common/SEO';
 
-export default function ResearchFolderDetail({ user }) {
+export default function SeedsFootprintsDetail({ user }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -90,7 +90,7 @@ export default function ResearchFolderDetail({ user }) {
       return;
     }
     
-    fetch(`/api/research/folders/${id}`)
+    fetch(`/api/seedsandfootprints/folders/${id}`)
       .then((r) => {
         if (!r.ok) {
           return r.text().then(text => {
@@ -146,7 +146,7 @@ export default function ResearchFolderDetail({ user }) {
           </Typography>
           <Button
             component={RouterLink}
-            to="/research"
+            to="/seeds-and-footprints"
             variant="contained"
             startIcon={<ArrowBack />}
             sx={{
@@ -218,7 +218,7 @@ export default function ResearchFolderDetail({ user }) {
   const handleSaveOrder = async () => {
     try {
       const orderedIds = photoOrder.map(photo => photo._id);
-      const response = await fetch(`/api/research/folders/${id}/photos/order`, {
+      const response = await fetch(`/api/seedsandfootprints/folders/${id}/photos/order`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -230,7 +230,7 @@ export default function ResearchFolderDetail({ user }) {
       }
 
       // Reload folder data
-      const r = await fetch(`/api/research/folders/${id}`);
+      const r = await fetch(`/api/seedsandfootprints/folders/${id}`);
       if (r.ok) {
         const data = await r.json();
         const sortedPhotos = (data.photos || []).slice().sort((a, b) => {
@@ -306,7 +306,7 @@ export default function ResearchFolderDetail({ user }) {
         formData.append('coverPhoto', folderForm.coverPhoto);
       }
 
-      const response = await fetch(`/api/research/folders/${id}`, {
+      const response = await fetch(`/api/seedsandfootprints/folders/${id}`, {
         method: 'PUT',
         credentials: 'include',
         body: formData
@@ -334,7 +334,7 @@ export default function ResearchFolderDetail({ user }) {
   const refreshPhotos = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch(`/api/research/folders/${id}`);
+      const res = await fetch(`/api/seedsandfootprints/folders/${id}`);
       if (!res.ok) return;
       const data = await res.json();
       const sortedPhotos = (data.photos || []).slice().sort((a, b) => {
@@ -384,7 +384,7 @@ export default function ResearchFolderDetail({ user }) {
 
       // 2) Create or update photo on this collection
       const isEdit = !!editingPhotoId;
-      const url = isEdit ? `/api/research/folders/${id}/photos/${editingPhotoId}` : `/api/research/folders/${id}/photos`;
+      const url = isEdit ? `/api/seedsandfootprints/folders/${id}/photos/${editingPhotoId}` : `/api/seedsandfootprints/folders/${id}/photos`;
       const method = isEdit ? 'PUT' : 'POST';
 
       // prepare keywords array
@@ -419,7 +419,7 @@ export default function ResearchFolderDetail({ user }) {
       if (!photo) {
         console.warn('No photo object in response, trying to refresh folder data instead');
         // Fallback: refresh the entire folder data
-        const refreshRes = await fetch(`/api/research/folders/${id}`);
+        const refreshRes = await fetch(`/api/seedsandfootprints/folders/${id}`);
         if (refreshRes.ok) {
           const refreshedData = await refreshRes.json();
           const sortedPhotos = (refreshedData.photos || []).slice().sort((a, b) => {
@@ -468,7 +468,7 @@ export default function ResearchFolderDetail({ user }) {
     if (!user || user.role !== 'admin') return;
     if (!window.confirm(t('research.deletePhotoConfirm', 'Delete this photo?'))) return;
     try {
-      const res = await fetch(`/api/research/folders/${id}/photos/${photoId}`, {
+      const res = await fetch(`/api/seedsandfootprints/folders/${id}/photos/${photoId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -494,9 +494,11 @@ export default function ResearchFolderDetail({ user }) {
       }}
     >
       <SEO
-        title={`${folderName} - ${t('research.title', 'Heritage Photo Collections')}`}
-        description={folderDescription || `Photo evidence and heritage documentation for ${folderName}`}
-        keywords="Tamil Heritage, Heritage Photos, Ancient Proof, Tamil History"
+        title={folderName ? `${folderName} - Seeds & Footprints` : 'Discovery Collection - Seeds & Footprints'}
+        description={folderDescription || `Archaeological discoveries and Tamil heritage traces in ${folderName}. Documenting the footprints of our ancestors and seeds of Tamil civilization.`}
+        keywords={`Tamil Heritage, Archaeological Discoveries, ${folderName}, Heritage Evidence, Tamil History, Cultural Traces, Heritage Documentation`}
+        type="article"
+        tags={folderName ? [folderName, 'Seeds & Footprints', 'Tamil Heritage', 'Archaeological Discovery'] : ['Seeds & Footprints']}
       />
 
       <Box
@@ -544,7 +546,7 @@ export default function ResearchFolderDetail({ user }) {
           >
             <Button
               component={RouterLink}
-              to="/research"
+              to="/seeds-and-footprints"
               variant="outlined"
               startIcon={<ArrowBack />}
               sx={{

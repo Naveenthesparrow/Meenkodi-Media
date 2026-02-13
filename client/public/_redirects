@@ -1,1 +1,5 @@
+# Redirect non-www to www
+https://meenkodi.com/*   https://www.meenkodi.com/:splat  301!
+
+# SPA routing
 /*    /index.html   200

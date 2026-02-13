@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import SEO from '../common/SEO';
 import {
   Box,
   Typography,
@@ -696,12 +697,21 @@ function KingDetail({ user: initialUser }) {
   }
 
   return (
-    <Container
-      maxWidth="xl"
-      sx={{
-        py: 6,
-        position: 'relative',
-      }}
+    <>
+      <SEO 
+        title={king ? `${getContent(king.name)} - Tamil King` : 'King Details'}
+        description={king ? `Learn about ${getContent(king.name)}, ruler during ${getContent(king.period)}. ${getContent(king.description) || `Discover the legacy of this Tamil monarch.`}`.slice(0, 160) : 'Explore Tamil kings and dynasties.'}
+        keywords={king ? `${getContent(king.name)}, Tamil King, ${getContent(king.dynasty)}, ${getContent(king.period)}, Tamil Dynasty, South Indian History` : 'Tamil Kings, Tamil Dynasty'}
+        image={king?.image || king?.imageLink || undefined}
+        type="article"
+        tags={king ? [getContent(king.name), 'Tamil Kings', getContent(king.dynasty)] : []}
+      />
+      <Container
+        maxWidth="xl"
+        sx={{
+          py: 6,
+          position: 'relative',
+        }}
     >
       {/* Back Button */}
       <Button
@@ -2080,6 +2090,7 @@ function KingDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container>
+    </>
   );
 }
 

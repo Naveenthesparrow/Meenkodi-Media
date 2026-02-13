@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from "react-router-dom";
+import SEO, { pageSEO } from '../common/SEO';
 import {
   Box,
   Typography,
@@ -134,6 +135,7 @@ export default function DynastyKings({ user }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+      <SEO {...pageSEO.dynasties} />
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate('/explore/kings')}

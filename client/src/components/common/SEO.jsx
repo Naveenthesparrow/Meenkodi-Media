@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 
 /**
- * SEO Component - Dynamically updates meta tags for each page
- * Usage: <SEO title="Page Title" description="Page Description" />
+ * SEO Component - Dynamically updates meta tags for each page using react-helmet-async
+ * Usage: <SEO title="Page Title" description="Page Description" keywords="key1, key2" />
  */
 export default function SEO({ 
   title, 
@@ -12,90 +13,65 @@ export default function SEO({
   image, 
   url,
   type = 'website',
-  author,
-  schema
+  author = 'Meenkodi Tamil Heritage Foundation',
+  schema,
+  tags = []
 }) {
   const location = useLocation();
   const baseUrl = 'https://www.meenkodi.com';
   
   const fullUrl = url || `${baseUrl}${location.pathname}`;
   const fullTitle = title ? `${title} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
-  const defaultDescription = 'Explore 5000+ years of Tamil civilization from Attirampakkam stone tools to Sangam ports. Discover ancient temples, Chola art, Thirukkural wisdom, and living Tamil heritage.';
+  const defaultDescription = 'Meenkodi preserves and shares 5000+ years of Tamil civilization — history, temples, dynasties (Pandiya, Chola, Chera , Pallava), cultural traditions, and archaeological discoveries. Explore the stories of the Southerns (தென்புலத்தார் / தென்னவர்), Pandiyargal, temple architecture, Sangam literature, festivals, and living heritage across International and the Tamil diaspora.';
   const metaDescription = description || defaultDescription;
-  const metaImage = image || `${baseUrl}/src/assests/meenkodi.png`;
+  const metaImage = image || `${baseUrl}/logo.png`;
 
-  useEffect(() => {
-    // Update document title
-    document.title = fullTitle;
+  return (
+    <Helmet>
+      {/* Primary Meta Tags */}
+      <title>{fullTitle}</title>
+      <meta name="title" content={fullTitle} />
+      <meta name="description" content={metaDescription} />
+      {keywords && <meta name="keywords" content={keywords} />}
+      <meta name="author" content={author} />
 
-    // Update or create meta tags
-    const updateMetaTag = (property, content, isProperty = false) => {
-      const attribute = isProperty ? 'property' : 'name';
-      let element = document.querySelector(`meta[${attribute}="${property}"]`);
-      
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attribute, property);
-        document.head.appendChild(element);
-      }
-      
-      element.setAttribute('content', content);
-    };
+      {/* Open Graph / Facebook */}
+      <meta property="og:type" content={type} />
+      <meta property="og:url" content={fullUrl} />
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={metaDescription} />
+      <meta property="og:image" content={metaImage} />
+      <meta property="og:image:alt" content={fullTitle} />
+      <meta property="og:site_name" content="Meenkodi - Pandiya Heritage" />
+      <meta property="og:locale" content="en_US" />
+      <meta property="og:locale:alternate" content="ta_IN" />
 
-    // Primary meta tags
-    updateMetaTag('title', fullTitle);
-    updateMetaTag('description', metaDescription);
-    
-    if (keywords) {
-      updateMetaTag('keywords', keywords);
-    }
-    
-    if (author) {
-      updateMetaTag('author', author);
-    }
+      {/* Article Tags for content pages */}
+      {tags.length > 0 && tags.map((tag, index) => (
+        <meta key={`article-tag-${index}`} property="article:tag" content={tag} />
+      ))}
 
-    // Open Graph meta tags
-    updateMetaTag('og:type', type, true);
-    updateMetaTag('og:url', fullUrl, true);
-    updateMetaTag('og:title', fullTitle, true);
-    updateMetaTag('og:description', metaDescription, true);
-    updateMetaTag('og:image', metaImage, true);
-    updateMetaTag('og:site_name', 'Meenkodi Tamil Heritage', true);
+      {/* Twitter */}
+      <meta property="twitter:card" content="summary_large_image" />
+      <meta property="twitter:url" content={fullUrl} />
+      <meta property="twitter:title" content={fullTitle} />
+      <meta property="twitter:description" content={metaDescription} />
+      <meta property="twitter:image" content={metaImage} />
+      <meta property="twitter:image:alt" content={fullTitle} />
+      <meta name="twitter:site" content="@meenkodi" />
+      <meta name="twitter:creator" content="@meenkodi" />
 
-    // Twitter meta tags
-    updateMetaTag('twitter:card', 'summary_large_image', true);
-    updateMetaTag('twitter:url', fullUrl, true);
-    updateMetaTag('twitter:title', fullTitle, true);
-    updateMetaTag('twitter:description', metaDescription, true);
-    updateMetaTag('twitter:image', metaImage, true);
+      {/* Canonical URL */}
+      <link rel="canonical" href={fullUrl} />
 
-    // Update canonical link
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', fullUrl);
-
-    // Add custom JSON-LD schema if provided
-    if (schema) {
-      const scriptId = 'custom-schema-' + location.pathname.replace(/\//g, '-');
-      let schemaScript = document.getElementById(scriptId);
-      
-      if (!schemaScript) {
-        schemaScript = document.createElement('script');
-        schemaScript.id = scriptId;
-        schemaScript.type = 'application/ld+json';
-        document.head.appendChild(schemaScript);
-      }
-      
-      schemaScript.textContent = JSON.stringify(schema);
-    }
-
-  }, [fullTitle, metaDescription, fullUrl, metaImage, type, keywords, author, schema, location.pathname]);
-
-  return null; // This component doesn't render anything
+      {/* Custom JSON-LD Schema */}
+      {schema && (
+        <script type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      )}
+    </Helmet>
+  );
 }
 
 // Predefined SEO configurations for common pages
@@ -166,9 +142,39 @@ export const pageSEO = {
     keywords: 'Tamil Resources, Heritage Archives, Tamil Research, Educational Materials, Tamil Manuscripts'
   },
   
+  seedsandfootprints: {
+    title: 'Seeds & Footprints',
+    description: 'Archaeological discoveries, historical evidence, and Tamil heritage traces across different countries and continents. Documenting the seeds of Tamil civilization and footprints of our ancestors.',
+    keywords: 'Tamil Archaeology, Heritage Discoveries, Tamil History, Cultural Evidence, Archaeological Finds, Tamil Diaspora, Heritage Documentation'
+  },
+
   lands: {
     title: 'Five Tinai Lands of Tamil Heritage',
     description: 'Explore the five classical eco-cultural regions: Kurinji (mountains), Mullai (forests), Marutham (plains), Neithal (coast), and Palai (desert). Discover ancient Tamil geography.',
     keywords: 'Tamil Tinai, Kurinji, Mullai, Marutham, Neithal, Palai, Tamil Geography, Sangam Landscape'
+  },
+
+  ancientScience: {
+    title: 'Ancient Tamil Science & Technology',
+    description: 'Discover Tamil contributions to astronomy, mathematics, medicine, metallurgy, and engineering. Explore ancient scientific innovations and technological achievements.',
+    keywords: 'Tamil Science, Ancient Technology, Tamil Astronomy, Siddha Medicine, Tamil Mathematics, Ancient Engineering'
+  },
+
+  clothing: {
+    title: 'Traditional Tamil Clothing & Textiles',
+    description: 'Explore traditional Tamil attire, weaving techniques, and textile heritage. From silk sarees to cotton veshtis, discover the rich fabric traditions of Tamil Nadu.',
+    keywords: 'Tamil Clothing, Traditional Dress, Tamil Textiles, Kanchipuram Silk, Tamil Sarees, Traditional Attire'
+  },
+
+  articles: {
+    title: 'Tamil Heritage Articles & Stories',
+    description: 'Read in-depth articles, research papers, and stories about Tamil culture, history, traditions, and heritage. Educational content for learners and enthusiasts.',
+    keywords: 'Tamil Articles, Heritage Stories, Tamil History, Cultural Research, Tamil Education, Heritage Articles'
+  },
+
+  dynasties: {
+    title: 'Tamil Dynasties & Royal Lineages',
+    description: 'Explore the great Tamil dynasties, their rulers, achievements, and legacy. From ancient kingdoms to medieval empires that shaped South Indian history.',
+    keywords: 'Tamil Dynasties, Chola Kings, Pandya Kings, Pallava Dynasty, Tamil Rulers, Royal Lineages, Tamil Kingdoms'
   }
 };

@@ -19,6 +19,7 @@ Allow: /tamil-festivals
 Allow: /tamil-clothing
 Allow: /ancient-science
 Allow: /dynasties
+Allow: /seeds-and-footprints
 
 # Block admin and development paths
 Disallow: /admin
@@ -44,3 +45,4 @@ Sitemap: https://www.meenkodi.com/sitemap-festivals.xml
 Sitemap: https://www.meenkodi.com/sitemap-clothing.xml
 Sitemap: https://www.meenkodi.com/sitemap-science.xml
 Sitemap: https://www.meenkodi.com/sitemap-dynasties.xml
+Sitemap: https://www.meenkodi.com/sitemap-seeds.xml

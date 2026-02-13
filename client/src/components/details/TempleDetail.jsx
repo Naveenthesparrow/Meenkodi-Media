@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import SEO from '../common/SEO';
 import {
   Box,
   Typography,
@@ -659,15 +660,24 @@ function TempleDetail() {
   }
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{
-        py: 4,
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
+    <>
+      <SEO 
+        title={temple ? `${getContent(temple.name)} - Tamil Temple` : 'Temple Details'}
+        description={temple ? `Explore ${getContent(temple.name)} in ${getContent(temple.location)}. ${getContent(temple.description) || `Ancient temple from ${getContent(temple.period)}.`}`.slice(0, 160) : 'Discover ancient Tamil temple architecture and heritage.'}
+        keywords={temple ? `${getContent(temple.name)}, Tamil Temple, ${getContent(temple.location)}, ${getContent(temple.period)}, ${getContent(temple.deity)}, Dravidian Architecture` : 'Tamil Temple, Temple Architecture'}
+        image={temple?.image || temple?.imageLink || undefined}
+        type="article"
+        tags={temple ? [getContent(temple.name), 'Tamil Temples', getContent(temple.location), getContent(temple.deity)] : []}
+      />
+      <Container
+        maxWidth="lg"
+        sx={{
+          py: 4,
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
 
     >
       {/* Header */}
@@ -2230,6 +2240,7 @@ function TempleDetail() {
         </Button>
       </Box>
     </Container>
+    </>
   );
 }
 

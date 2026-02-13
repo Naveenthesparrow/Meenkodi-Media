@@ -331,7 +331,6 @@ export default function Literature({ user }) {
                   position: 'relative',
                   overflow: 'visible',
                   boxShadow: '0 8px 25px rgba(139,0,0,0.12)',
-                  border: 'none',
                   '&::after': {
                     content: '""',
                     position: 'absolute',

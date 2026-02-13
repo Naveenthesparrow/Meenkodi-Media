@@ -7,9 +7,9 @@ import FolderIcon from '@mui/icons-material/Folder';
 import AddIcon from '@mui/icons-material/Add';
 import { Edit, DragIndicator, ArrowUpward, ArrowDownward, Image as ImageIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import SEO from './common/SEO';
+import SEO, { pageSEO } from './common/SEO';
 
-export default function Research({ user }) {
+export default function SeedsFootprints({ user }) {
   const { t, i18n } = useTranslation();
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ export default function Research({ user }) {
   const loadFolders = () => {
     let mounted = true;
     setLoading(true);
-    fetch('/api/research/folders')
+    fetch('/api/seedsandfootprints/folders')
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -73,7 +73,7 @@ export default function Research({ user }) {
         formData.append('coverPhoto', form.coverPhoto);
       }
 
-      const res = await fetch('/api/research/folders', {
+      const res = await fetch('/api/seedsandfootprints/folders', {
         method: 'POST',
         credentials: 'include',
         body: formData
@@ -97,7 +97,7 @@ export default function Research({ user }) {
     if (!isAdmin) return;
     if (!confirm(t('research.deleteConfirm'))) return;
     try {
-      const res = await fetch(`/api/research/folders/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`/api/seedsandfootprints/folders/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok && res.status !== 204) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Server error');
@@ -148,7 +148,7 @@ export default function Research({ user }) {
         formData.append('removeCoverPhoto', 'true');
       }
 
-      const res = await fetch(`/api/research/folders/${editingFolder._id}`, {
+      const res = await fetch(`/api/seedsandfootprints/folders/${editingFolder._id}`, {
         method: 'PUT',
         credentials: 'include',
         body: formData
@@ -190,7 +190,7 @@ export default function Research({ user }) {
   const handleSaveOrder = async () => {
     try {
       const orderedIds = folderOrder.map(folder => folder._id);
-      const response = await fetch('/api/research/folders/order', {
+      const response = await fetch('/api/seedsandfootprints/folders/order', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -219,11 +219,7 @@ export default function Research({ user }) {
 
   return (
     <Box>
-      <SEO
-        title={t('research.title', 'Heritage Photo Collections')}
-        description={t('research.description', 'Photographic evidence of Tamil heritage and cultural presence across different countries and regions.')}
-        keywords="Tamil Heritage Photos, Tamil History Images, Tamil Cultural Evidence, Heritage Photography, Tamil Diaspora"
-      />
+      <SEO {...pageSEO.research} />
 
       {/* Header Section */}
       <Box

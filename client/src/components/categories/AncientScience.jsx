@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import SEO, { pageSEO } from '../common/SEO';
 import {
   Box,
   Typography,
@@ -233,6 +234,7 @@ export default function AncientScience({ user }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
+      <SEO {...pageSEO.ancientScience} />
       {/* Unique Heading Section */}
       <Box
         sx={{

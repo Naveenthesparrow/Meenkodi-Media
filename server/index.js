@@ -842,7 +842,7 @@ app.delete("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
 });
 
 // Research folders endpoints
-app.get("/api/research/folders", async (req, res) => {
+app.get("/api/seedsandfootprints/folders", async (req, res) => {
   try {
     const lang = resolveLang(req);
     const folders = await ResearchFolder.find().sort({ order: 1, createdAt: -1 });
@@ -862,7 +862,7 @@ app.get("/api/research/folders", async (req, res) => {
   }
 });
 
-app.get('/api/research/folders/:id', async (req, res) => {
+app.get('/api/seedsandfootprints/folders/:id', async (req, res) => {
   try {
     console.log('Fetching research folder with ID:', req.params.id);
     const lang = resolveLang(req);
@@ -914,7 +914,7 @@ app.get('/api/research/folders/:id', async (req, res) => {
 
 // Attach a photo to a specific heritage collection (research folder)
 // Image is optional to support metadata-only entries (caption, credit, name, keywords, sourceLink)
-app.post('/api/research/folders/:id/photos', ensureAdmin, async (req, res) => {
+app.post('/api/seedsandfootprints/folders/:id/photos', ensureAdmin, async (req, res) => {
   try {
     console.log('Photo attachment request:', {
       folderId: req.params.id,
@@ -983,7 +983,7 @@ app.post('/api/research/folders/:id/photos', ensureAdmin, async (req, res) => {
 });
 
 // Update a photo's metadata or replace its image (admin only)
-app.put('/api/research/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
+app.put('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
   try {
     const { folderId, photoId } = req.params;
     const { imageUrl, caption, credit, name, keywords, sourceLink } = req.body || {};
@@ -1020,7 +1020,7 @@ app.put('/api/research/folders/:folderId/photos/:photoId', ensureAdmin, async (r
 });
 
 // Delete a photo from a research folder (admin only)
-app.delete('/api/research/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
+app.delete('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
   try {
     const { folderId, photoId } = req.params;
     const folder = await ResearchFolder.findById(folderId);
@@ -1049,7 +1049,7 @@ app.delete('/api/research/folders/:folderId/photos/:photoId', ensureAdmin, async
   }
 });
 
-app.post("/api/research/folders", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
+app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
   try {
     console.log('=== CREATE RESEARCH FOLDER REQUEST ===');
     console.log('Body:', req.body);
@@ -1100,7 +1100,7 @@ app.post("/api/research/folders", ensureAdmin, researchUpload.single('coverPhoto
 });
 
 // Update research folder
-app.put("/api/research/folders/:id", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
+app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
   try {
     console.log('=== UPDATE RESEARCH FOLDER REQUEST ===');
     console.log('Body:', req.body);
@@ -1153,7 +1153,7 @@ app.put("/api/research/folders/:id", ensureAdmin, researchUpload.single('coverPh
   }
 });
 
-app.delete("/api/research/folders/:id", ensureAdmin, async (req, res) => {
+app.delete("/api/seedsandfootprints/folders/:id", ensureAdmin, async (req, res) => {
   try {
     const result = await ResearchFolder.findByIdAndDelete(req.params.id);
     if (!result) return res.status(404).json({ error: "Folder not found" });

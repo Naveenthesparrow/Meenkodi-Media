@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './i18n/i18n.js';
 import { useTranslation } from 'react-i18next';
+import { HelmetProvider } from 'react-helmet-async';
 // Route-split heavier pages and details
 const TempleDetail = React.lazy(() => import("./components/details/TempleDetail"));
 const KingDetail = React.lazy(() => import("./components/details/KingDetail"));
@@ -11,8 +12,8 @@ const FestivalDetail = React.lazy(() => import("./components/details/FestivalDet
 const DynastyDetail = React.lazy(() => import("./components/details/DynastyDetail"));
 const PoetDetail = React.lazy(() => import("./components/details/PoetDetail"));
 const EventDetail = React.lazy(() => import("./components/EventDetail"));
-const Research = React.lazy(() => import("./components/Research"));
-const ResearchFolderDetail = React.lazy(() => import("./components/ResearchFolderDetail.jsx"));
+const SeedsFootprints = React.lazy(() => import("./components/SeedsFootprints"));
+const SeedsFootprintsDetail = React.lazy(() => import("./components/SeedsFootprintsDetail.jsx"));
 import {
   BrowserRouter as Router,
   Routes,
@@ -265,7 +266,7 @@ function App() {
 
   const navItems = [
     { key: 'nav.explore', path: '/explore' },
-    { key: 'nav.research', path: '/research' },
+    { key: 'nav.research', path: '/seeds-and-footprints' },
     { key: 'nav.events', path: '/events' },
     { key: 'nav.gallery', path: '/gallery' },
     { key: 'nav.articles', path: '/articles' },
@@ -298,9 +299,10 @@ function App() {
   }
 
   return (
-    <Router>
-      <ScrollToTop />
-      <AppBar
+    <HelmetProvider>
+      <Router>
+        <ScrollToTop />
+        <AppBar
         key={i18n.language}
         position="fixed"
         elevation={0}
@@ -678,8 +680,8 @@ function App() {
             <Route path="/gallery" element={<Gallery user={user} />} />
             <Route path="/events" element={<Events user={user} />} />
             <Route path="/resources" element={<Resources user={user} />} />
-            <Route path="/research" element={<Research user={user} />} />
-            <Route path="/research/folders/:id" element={<ResearchFolderDetail user={user} />} />
+            <Route path="/seeds-and-footprints" element={<SeedsFootprints user={user} />} />
+            <Route path="/seeds-and-footprints/folders/:id" element={<SeedsFootprintsDetail user={user} />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/explore" element={<Explore user={user} />} />
             {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}
@@ -782,6 +784,7 @@ function App() {
         <FooterSelector />
       </Box>
     </Router>
+    </HelmetProvider>
   );
 }
 

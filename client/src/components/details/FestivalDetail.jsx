@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import SEO from '../common/SEO';
 import {
   Box,
   Typography,
@@ -637,15 +638,24 @@ function FestivalDetail({ user: initialUser }) {
   }
 
   return (
-    <Container
-      maxWidth="lg"
-      sx={{
-        py: 4,
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
+    <>
+      <SEO 
+        title={festival ? `${getContent(festival.name)} - Tamil Festival` : 'Festival Details'}
+        description={festival ? `Celebrate ${getContent(festival.name)} in ${getContent(festival.region)}. ${getContent(festival.description) || `Traditional Tamil festival during ${getContent(festival.season)}.`}`.slice(0, 160) : 'Discover Tamil festivals and celebrations.'}
+        keywords={festival ? `${getContent(festival.name)}, Tamil Festival, ${getContent(festival.region)}, ${getContent(festival.season)}, Tamil Celebrations, Cultural Events` : 'Tamil Festivals, Tamil Culture'}
+        image={festival?.image || festival?.imageLink || undefined}
+        type="article"
+        tags={festival ? [getContent(festival.name), 'Tamil Festivals', getContent(festival.region)] : []}
+      />
+      <Container
+        maxWidth="lg"
+        sx={{
+          py: 4,
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
     >
       {/* Header */}
       <Box
@@ -1864,6 +1874,7 @@ function FestivalDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container>
+    </>
   );
 }
 
