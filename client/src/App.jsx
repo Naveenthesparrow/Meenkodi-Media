@@ -303,487 +303,488 @@ function App() {
       <Router>
         <ScrollToTop />
         <AppBar
-        key={i18n.language}
-        position="fixed"
-        elevation={0}
-        sx={{
-          bgcolor: '#ffffff',
-          color: '#1f140e',
-          boxShadow: '0 1px 6px rgba(15,10,8,0.08)',
-          top: 0,
-          zIndex: 1100,
-          borderBottom: '2px solid rgba(186,29,22,0.08)',
-          // Always visible on mobile (xs, sm), auto-hide on desktop (md+)
-          transform: {
-            xs: 'translateY(0)',  // Always visible on mobile
-            sm: 'translateY(0)',  // Always visible on small tablets
-            md: navVisible ? 'translateY(0)' : 'translateY(-100%)'  // Auto-hide on desktop
-          },
-          transition: 'transform 0.3s ease-in-out',
-        }}
-      >
-        <Container maxWidth="xl">
-          <Toolbar
-            disableGutters
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              minHeight: { xs: "50px", md: "62px" },
-              py: { xs: 0.7, md: 1 },
-              px: { xs: 1.25, md: 2.2 }
-            }}
-          >
-            {/* Logo Section */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <SiteLogo height={{ xs: 34, md: 42 }} />
-              <Link
-                component={RouterLink}
-                to="/"
-                color="#1f140e"
-                underline="none"
-                sx={{
-                  fontWeight: 500,
-                  fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                  fontSize: { xs: 15.5, md: 18.5 },
-                  letterSpacing: '0.5px',
-                  transition: "color 0.2s ease",
-                  display: { xs: 'none', sm: 'block' },
-                  "&:hover": {
-                    color: "#ba1d16"
-                  }
-                }}
-              >
-                {t('app.title')}
-              </Link>
-            </Box>
-
-            {/* Desktop Navigation */}
-            <Box
-              sx={{
-                display: { xs: 'none', md: 'flex' },
-                alignItems: 'center',
-                gap: i18n.language === 'ta' ? 1.5 : 2.6, // Reduce gap for Tamil
-                flex: '1 1 auto',
-                justifyContent: 'center',
-                ml: 2,
-                flexWrap: 'nowrap',
-                overflow: 'hidden',
-                maxWidth: '100%'
-              }}
-            >
-              <Link
-                component={RouterLink}
-                to="/"
-                underline="none"
-                sx={{
-                  color: '#000',
-                  fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
-                  fontWeight: 500,
-                  fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                  letterSpacing: '0.3px',
-                  transition: 'color 0.2s ease',
-                  whiteSpace: 'nowrap', // Prevent text wrapping
-                  '&:hover': {
-                    color: '#ba1d16'
-                  }
-                }}
-              >
-                {t('nav.home')}
-              </Link>
-              {navItems.map((ni) => (
-                <Link
-                  key={ni.key}
-                  component={RouterLink}
-                  to={ni.path}
-                  underline="none"
-                  sx={{
-                    color: '#000',
-                    fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
-                    fontWeight: 500,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.3px',
-                    transition: 'color 0.2s ease',
-                    whiteSpace: 'nowrap', // Prevent text wrapping
-                    '&:hover': {
-                      color: '#ba1d16'
-                    }
-                  }}
-                >
-                  {t(ni.key)}
-                </Link>
-              ))}
-              {user && (
-                <Link
-                  component={RouterLink}
-                  to="/profile"
-                  underline="none"
-                  sx={{
-                    color: '#000',
-                    fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
-                    fontWeight: 500,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.3px',
-                    transition: 'color 0.2s ease',
-                    whiteSpace: 'nowrap', // Prevent text wrapping
-                    '&:hover': {
-                      color: '#ba1d16'
-                    }
-                  }}
-                >
-                  {t('nav.profile')}
-                </Link>
-              )}
-            </Box>
-
-            {/* Right Section - Language, Login */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1.25 }}>
-              <LanguageSwitcher />
-              {user ? (
-                <Button
-                  onClick={logout}
-                  sx={{
-                    color: '#000',
-                    fontSize: 14.5,
-                    fontWeight: 500,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.3px',
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    px: 1.5,
-                    '&:hover': {
-                      color: '#ba1d16',
-                      bgcolor: 'transparent'
-                    }
-                  }}
-                >
-                  {t('nav.logout')}
-                </Button>
-              ) : (
-                <Button
-                  onClick={login}
-                  sx={{
-                    color: '#000',
-                    fontSize: 14.5,
-                    fontWeight: 500,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.3px',
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    px: 1.5,
-                    '&:hover': {
-                      color: '#ba1d16',
-                      bgcolor: 'transparent'
-                    }
-                  }}
-                >
-                  {t('nav.login')}
-                </Button>
-              )}
-            </Box>
-
-            {/* Mobile Navigation Hamburger */}
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{
-                display: { md: 'none' },
-                color: '#1f140e',
-                ml: 'auto'
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-          </Toolbar>
-        </Container>
-
-        {/* Mobile Drawer */}
-        <Drawer
-          variant="temporary"
-          anchor="right"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
+          key={i18n.language}
+          position="fixed"
+          elevation={0}
           sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: 280,
-              bgcolor: '#ffffff',
-              color: '#1f140e'
+            bgcolor: '#ffffff',
+            color: '#1f140e',
+            boxShadow: '0 1px 6px rgba(15,10,8,0.08)',
+            top: 0,
+            zIndex: 1100,
+            borderBottom: '2px solid rgba(186,29,22,0.08)',
+            // Always visible on mobile (xs, sm), auto-hide on desktop (md+)
+            transform: {
+              xs: 'translateY(0)',  // Always visible on mobile
+              sm: 'translateY(0)',  // Always visible on small tablets
+              md: navVisible ? 'translateY(0)' : 'translateY(-100%)'  // Auto-hide on desktop
             },
+            transition: 'transform 0.3s ease-in-out',
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              p: 2,
-              borderBottom: '1px solid rgba(0,0,0,0.08)'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <SiteLogo height={32} />
-              <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 500, fontSize: 17, fontFamily: "'Poppins', 'Hind Madurai', sans-serif", letterSpacing: '0.3px' }}>
-                {t('app.title')}
-              </Typography>
-            </Box>
-            <IconButton onClick={handleDrawerToggle}>
-              <CloseIcon sx={{ color: '#1f140e' }} />
-            </IconButton>
-          </Box>
-          <List sx={{ pt: 2 }}>
-            <ListItem
-              component={RouterLink}
-              to="/"
-              onClick={handleDrawerToggle}
+          <Container maxWidth="xl">
+            <Toolbar
+              disableGutters
               sx={{
-                color: '#000',
-                py: 1.5,
-                '&:hover': {
-                  bgcolor: 'rgba(139,0,0,0.05)'
-                }
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                minHeight: { xs: "50px", md: "62px" },
+                py: { xs: 0.7, md: 1 },
+                px: { xs: 1.25, md: 2.2 }
               }}
             >
-              <ListItemText
-                primary={t('nav.home')}
-                primaryTypographyProps={{
-                  fontWeight: 400,
-                  fontSize: 15.5,
-                  fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                  letterSpacing: '0.2px',
-                  color: '#000'
+              {/* Logo Section */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SiteLogo height={{ xs: 34, md: 42 }} />
+                <Link
+                  component={RouterLink}
+                  to="/"
+                  color="#1f140e"
+                  underline="none"
+                  sx={{
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    fontSize: { xs: 15.5, md: 18.5 },
+                    letterSpacing: '0.5px',
+                    transition: "color 0.2s ease",
+                    display: { xs: 'none', sm: 'block' },
+                    "&:hover": {
+                      color: "#ba1d16"
+                    }
+                  }}
+                >
+                  {t('app.title')}
+                </Link>
+              </Box>
+
+              {/* Desktop Navigation */}
+              <Box
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  alignItems: 'center',
+                  gap: i18n.language === 'ta' ? 1.5 : 2.6, // Reduce gap for Tamil
+                  flex: '1 1 auto',
+                  justifyContent: 'center',
+                  ml: 2,
+                  flexWrap: 'nowrap',
+                  overflow: 'hidden',
+                  maxWidth: '100%'
                 }}
-              />
-            </ListItem>
-            {navItems.map((item) => (
-              <ListItem
-                key={item.key}
-                component={RouterLink}
-                to={item.path}
+              >
+                <Link
+                  component={RouterLink}
+                  to="/"
+                  underline="none"
+                  sx={{
+                    color: '#000',
+                    fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
+                    fontWeight: 500,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.3px',
+                    transition: 'color 0.2s ease',
+                    whiteSpace: 'nowrap', // Prevent text wrapping
+                    '&:hover': {
+                      color: '#ba1d16'
+                    }
+                  }}
+                >
+                  {t('nav.home')}
+                </Link>
+                {navItems.map((ni) => (
+                  <Link
+                    key={ni.key}
+                    component={RouterLink}
+                    to={ni.path}
+                    underline="none"
+                    sx={{
+                      color: '#000',
+                      fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
+                      fontWeight: 500,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.3px',
+                      transition: 'color 0.2s ease',
+                      whiteSpace: 'nowrap', // Prevent text wrapping
+                      '&:hover': {
+                        color: '#ba1d16'
+                      }
+                    }}
+                  >
+                    {t(ni.key)}
+                  </Link>
+                ))}
+                {user && (
+                  <Link
+                    component={RouterLink}
+                    to="/profile"
+                    underline="none"
+                    sx={{
+                      color: '#000',
+                      fontSize: i18n.language === 'ta' ? 14 : 15.5, // Smaller font for Tamil
+                      fontWeight: 500,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.3px',
+                      transition: 'color 0.2s ease',
+                      whiteSpace: 'nowrap', // Prevent text wrapping
+                      '&:hover': {
+                        color: '#ba1d16'
+                      }
+                    }}
+                  >
+                    {t('nav.profile')}
+                  </Link>
+                )}
+              </Box>
+
+              {/* Right Section - Language, Login */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1.25 }}>
+                <LanguageSwitcher />
+                {user ? (
+                  <Button
+                    onClick={logout}
+                    sx={{
+                      color: '#000',
+                      fontSize: 14.5,
+                      fontWeight: 500,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.3px',
+                      textTransform: 'none',
+                      minWidth: 'auto',
+                      px: 1.5,
+                      '&:hover': {
+                        color: '#ba1d16',
+                        bgcolor: 'transparent'
+                      }
+                    }}
+                  >
+                    {t('nav.logout')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={login}
+                    sx={{
+                      color: '#000',
+                      fontSize: 14.5,
+                      fontWeight: 500,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.3px',
+                      textTransform: 'none',
+                      minWidth: 'auto',
+                      px: 1.5,
+                      '&:hover': {
+                        color: '#ba1d16',
+                        bgcolor: 'transparent'
+                      }
+                    }}
+                  >
+                    {t('nav.login')}
+                  </Button>
+                )}
+              </Box>
+
+              {/* Mobile Navigation Hamburger */}
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
                 onClick={handleDrawerToggle}
                 sx={{
-                  color: '#000',
-                  py: 1.5,
-                  '&:hover': {
-                    bgcolor: 'rgba(139,0,0,0.05)'
-                  }
+                  display: { md: 'none' },
+                  color: '#1f140e',
+                  ml: 'auto'
                 }}
               >
-                <ListItemText
-                  primary={t(item.key)}
-                  primaryTypographyProps={{
-                    fontWeight: 400,
-                    fontSize: 15.5,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.2px',
-                    color: '#000'
-                  }}
-                />
-              </ListItem>
-            ))}
-            {user && (
-              <ListItem
-                component={RouterLink}
-                to="/profile"
-                onClick={handleDrawerToggle}
-                sx={{
-                  color: '#000',
-                  py: 1.5,
-                  '&:hover': {
-                    bgcolor: 'rgba(139,0,0,0.05)'
-                  }
-                }}
-              >
-                <ListItemText
-                  primary={t('nav.profile')}
-                  primaryTypographyProps={{
-                    fontWeight: 400,
-                    fontSize: 15.5,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.2px',
-                    color: '#000'
-                  }}
-                />
-              </ListItem>
-            )}
-            {user ? (
-              <ListItem
-                onClick={() => {
-                  logout();
-                  handleDrawerToggle();
-                }}
-                sx={{
-                  color: '#000',
-                  py: 1.5,
-                  '&:hover': {
-                    bgcolor: 'rgba(139,0,0,0.05)'
-                  }
-                }}
-              >
-                <ListItemText
-                  primary={t('nav.logout')}
-                  primaryTypographyProps={{
-                    fontWeight: 400,
-                    fontSize: 15.5,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.2px',
-                    color: '#000'
-                  }}
-                />
-              </ListItem>
-            ) : (
-              <ListItem
-                onClick={() => {
-                  login();
-                  handleDrawerToggle();
-                }}
-                sx={{
-                  color: '#000',
-                  py: 1.5,
-                  '&:hover': {
-                    bgcolor: 'rgba(139,0,0,0.05)'
-                  }
-                }}
-              >
-                <ListItemText
-                  primary={t('nav.login')}
-                  primaryTypographyProps={{
-                    fontWeight: 400,
-                    fontSize: 15.5,
-                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
-                    letterSpacing: '0.2px',
-                    color: '#000'
-                  }}
-                />
-              </ListItem>
-            )}
-            <Box sx={{ px: 2, pt: 3, pb: 2, mt: 2, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-              <LanguageSwitcher />
+                <MenuIcon />
+              </IconButton>
+            </Toolbar>
+          </Container>
+
+          {/* Mobile Drawer */}
+          <Drawer
+            variant="temporary"
+            anchor="right"
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true,
+            }}
+            sx={{
+              display: { xs: 'block', md: 'none' },
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
+                width: 280,
+                bgcolor: '#ffffff',
+                color: '#1f140e'
+              },
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: 2,
+                borderBottom: '1px solid rgba(0,0,0,0.08)'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <SiteLogo height={32} />
+                <Typography variant="h6" sx={{ color: '#1f140e', fontWeight: 500, fontSize: 17, fontFamily: "'Poppins', 'Hind Madurai', sans-serif", letterSpacing: '0.3px' }}>
+                  {t('app.title')}
+                </Typography>
+              </Box>
+              <IconButton onClick={handleDrawerToggle}>
+                <CloseIcon sx={{ color: '#1f140e' }} />
+              </IconButton>
             </Box>
-          </List>
-        </Drawer>
-      </AppBar>
-      <Box sx={{ pt: { xs: 7, md: 8 } }}>
-        <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/auth/google/callback" element={<AuthCallback />} />
-            <Route path="/auth/failure" element={<AuthFailure />} />
-            <Route path="/articles" element={<Articles user={user} />} />
-            <Route path="/my-articles" element={<MyArticles user={user} />} />
-            <Route path="/gallery" element={<Gallery user={user} />} />
-            <Route path="/events" element={<Events user={user} />} />
-            <Route path="/resources" element={<Resources user={user} />} />
-            <Route path="/seeds-and-footprints" element={<SeedsFootprints user={user} />} />
-            <Route path="/seeds-and-footprints/folders/:id" element={<SeedsFootprintsDetail user={user} />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/explore" element={<Explore user={user} />} />
-            {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}
-            <Route path="/explore/lands/:id" element={<LandDetailExpanded user={user} />} />
-            <Route path="/explore/lands/:id/classic" element={<LandDetail user={user} />} />
-            <Route path="/demo/scroll-expand" element={<ScrollExpandDemo />} />
-            <Route path="/explore/kings" element={<Kings user={user} />} />
-            <Route path="/explore/kings/dynasty/:dynastyId" element={<DynastyKings user={user} />} />
-            <Route
-              path="/explore/literature"
-              element={<Literature user={user} />}
-            />
-            <Route path="/explore/dance" element={<Dance user={user} />} />
-            <Route path="/explore/temples" element={<Temples user={user} />} />
-            <Route path="/explore/clothing" element={<Clothing user={user} />} />
-            <Route
-              path="/explore/festivals"
-              element={<Festivals user={user} />}
-            />
-            <Route path="/explore/foods" element={<Foods user={user} />} />
-            <Route
-              path="/explore/ancientscience"
-              element={<AncientScience user={user} />}
-            />
-            <Route path="/explore/temples/:id" element={<TempleDetail user={user} />} />
-            <Route path="/explore/kings/:id" element={<KingDetail user={user} />} />
-            <Route path="/dynasties/:slug" element={<DynastyDetail user={user} />} />
-            <Route path="/dynasties/id/:id" element={<DynastyDetail user={user} />} />
-            <Route path="/poets/:slug" element={<PoetDetail user={user} />} />
-            <Route
-              path="/explore/literature/:id"
-              element={<LiteratureDetail user={user} />}
-            />
-            <Route path="/explore/dance/:id" element={<DanceDetail user={user} />} />
-            <Route path="/explore/foods/:id" element={<FoodDetail user={user} />} />
-            <Route path="/explore/festivals/:id" element={<FestivalDetail user={user} />} />
-            <Route path="/events/:id" element={<EventDetail user={user} />} />
-            <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
-            <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
-            <Route
-              path="/resources/:id"
-              element={<ResourceDetail user={user} />}
-            />
-            <Route
-              path="/profile"
-              element={
-                <Box sx={{
-                  width: '100%',
-                  backgroundColor: '#fff',
-                  backgroundImage: {
-                    xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
-                    md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
-                  },
-                  backgroundSize: { xs: '8px 8px', md: '6px 6px' },
-                  backgroundRepeat: 'repeat',
-                  backgroundPosition: 'center top',
-                  '@media (min-resolution: 1.5dppx)': {
-                    backgroundImage: {
-                      xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
-                      md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
-                    },
-                    backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+            <List sx={{ pt: 2 }}>
+              <ListItem
+                component={RouterLink}
+                to="/"
+                onClick={handleDrawerToggle}
+                sx={{
+                  color: '#000',
+                  py: 1.5,
+                  '&:hover': {
+                    bgcolor: 'rgba(139,0,0,0.05)'
                   }
-                }}>
-                  {user ? (
-                    user.role === "admin" ? (
-                      <AdminPortal user={user} logout={logout} />
+                }}
+              >
+                <ListItemText
+                  primary={t('nav.home')}
+                  primaryTypographyProps={{
+                    fontWeight: 400,
+                    fontSize: 15.5,
+                    fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                    letterSpacing: '0.2px',
+                    color: '#000'
+                  }}
+                />
+              </ListItem>
+              {navItems.map((item) => (
+                <ListItem
+                  key={item.key}
+                  component={RouterLink}
+                  to={item.path}
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    color: '#000',
+                    py: 1.5,
+                    '&:hover': {
+                      bgcolor: 'rgba(139,0,0,0.05)'
+                    }
+                  }}
+                >
+                  <ListItemText
+                    primary={t(item.key)}
+                    primaryTypographyProps={{
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
+                      color: '#000'
+                    }}
+                  />
+                </ListItem>
+              ))}
+              {user && (
+                <ListItem
+                  component={RouterLink}
+                  to="/profile"
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    color: '#000',
+                    py: 1.5,
+                    '&:hover': {
+                      bgcolor: 'rgba(139,0,0,0.05)'
+                    }
+                  }}
+                >
+                  <ListItemText
+                    primary={t('nav.profile')}
+                    primaryTypographyProps={{
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
+                      color: '#000'
+                    }}
+                  />
+                </ListItem>
+              )}
+              {user ? (
+                <ListItem
+                  onClick={() => {
+                    logout();
+                    handleDrawerToggle();
+                  }}
+                  sx={{
+                    color: '#000',
+                    py: 1.5,
+                    '&:hover': {
+                      bgcolor: 'rgba(139,0,0,0.05)'
+                    }
+                  }}
+                >
+                  <ListItemText
+                    primary={t('nav.logout')}
+                    primaryTypographyProps={{
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
+                      color: '#000'
+                    }}
+                  />
+                </ListItem>
+              ) : (
+                <ListItem
+                  onClick={() => {
+                    login();
+                    handleDrawerToggle();
+                  }}
+                  sx={{
+                    color: '#000',
+                    py: 1.5,
+                    '&:hover': {
+                      bgcolor: 'rgba(139,0,0,0.05)'
+                    }
+                  }}
+                >
+                  <ListItemText
+                    primary={t('nav.login')}
+                    primaryTypographyProps={{
+                      fontWeight: 400,
+                      fontSize: 15.5,
+                      fontFamily: "'Poppins', 'Hind Madurai', sans-serif",
+                      letterSpacing: '0.2px',
+                      color: '#000'
+                    }}
+                  />
+                </ListItem>
+              )}
+              <Box sx={{ px: 2, pt: 3, pb: 2, mt: 2, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                <LanguageSwitcher />
+              </Box>
+            </List>
+          </Drawer>
+        </AppBar>
+        <Box sx={{ pt: { xs: 7, md: 8 } }}>
+          <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/auth/google/callback" element={<AuthCallback />} />
+              <Route path="/auth/failure" element={<AuthFailure />} />
+              <Route path="/articles" element={<Articles user={user} />} />
+              <Route path="/my-articles" element={<MyArticles user={user} />} />
+              <Route path="/gallery" element={<Gallery user={user} />} />
+              <Route path="/events" element={<Events user={user} />} />
+              <Route path="/resources" element={<Resources user={user} />} />
+              <Route path="/resources/:id" element={<ResourceDetail user={user} />} />
+              <Route path="/seeds-and-footprints" element={<SeedsFootprints user={user} />} />
+              <Route path="/seeds-and-footprints/folders/:id" element={<SeedsFootprintsDetail user={user} />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/explore" element={<Explore user={user} />} />
+              {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}
+              <Route path="/explore/lands/:id" element={<LandDetailExpanded user={user} />} />
+              <Route path="/explore/lands/:id/classic" element={<LandDetail user={user} />} />
+              <Route path="/demo/scroll-expand" element={<ScrollExpandDemo />} />
+              <Route path="/explore/kings" element={<Kings user={user} />} />
+              <Route path="/explore/kings/dynasty/:dynastyId" element={<DynastyKings user={user} />} />
+              <Route
+                path="/explore/literature"
+                element={<Literature user={user} />}
+              />
+              <Route path="/explore/dance" element={<Dance user={user} />} />
+              <Route path="/explore/temples" element={<Temples user={user} />} />
+              <Route path="/explore/clothing" element={<Clothing user={user} />} />
+              <Route
+                path="/explore/festivals"
+                element={<Festivals user={user} />}
+              />
+              <Route path="/explore/foods" element={<Foods user={user} />} />
+              <Route
+                path="/explore/ancientscience"
+                element={<AncientScience user={user} />}
+              />
+              <Route path="/explore/temples/:id" element={<TempleDetail user={user} />} />
+              <Route path="/explore/kings/:id" element={<KingDetail user={user} />} />
+              <Route path="/dynasties/:slug" element={<DynastyDetail user={user} />} />
+              <Route path="/dynasties/id/:id" element={<DynastyDetail user={user} />} />
+              <Route path="/poets/:slug" element={<PoetDetail user={user} />} />
+              <Route
+                path="/explore/literature/:id"
+                element={<LiteratureDetail user={user} />}
+              />
+              <Route path="/explore/dance/:id" element={<DanceDetail user={user} />} />
+              <Route path="/explore/foods/:id" element={<FoodDetail user={user} />} />
+              <Route path="/explore/festivals/:id" element={<FestivalDetail user={user} />} />
+              <Route path="/events/:id" element={<EventDetail user={user} />} />
+              <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
+              <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
+              <Route
+                path="/resources/:id"
+                element={<ResourceDetail user={user} />}
+              />
+              <Route
+                path="/profile"
+                element={
+                  <Box sx={{
+                    width: '100%',
+                    backgroundColor: '#fff',
+                    backgroundImage: {
+                      xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.02' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+                      md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.03' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+                    },
+                    backgroundSize: { xs: '8px 8px', md: '6px 6px' },
+                    backgroundRepeat: 'repeat',
+                    backgroundPosition: 'center top',
+                    '@media (min-resolution: 1.5dppx)': {
+                      backgroundImage: {
+                        xs: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.12' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`,
+                        md: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000000' fill-opacity='0.14' d='M2 12c1-3 6-7 12-5 4 1.5 7 5 8.5 7.5-1.5 2.5-4.5 5-8.5 5-6 0-11-4-12-7zM6 8L2 6v12l4-2V8z'/></svg>")`
+                      },
+                      backgroundSize: { xs: '18px 18px', md: '14px 14px' }
+                    }
+                  }}>
+                    {user ? (
+                      user.role === "admin" ? (
+                        <AdminPortal user={user} logout={logout} />
+                      ) : (
+                        <UserPortal user={user} logout={logout} />
+                      )
                     ) : (
-                      <UserPortal user={user} logout={logout} />
-                    )
-                  ) : (
-                    <Box sx={{ textAlign: "center", mt: 4 }}>
-                      <Typography variant="h4" sx={{ mb: 2 }}>
-                        Please log in to view your profile
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        onClick={login}
-                        sx={{
-                          bgcolor: "#000",
-                          color: "#fff",
-                          "&:hover": { bgcolor: "#333" },
-                        }}
-                      >
-                        Login with Google
-                      </Button>
-                    </Box>
-                  )}
-                </Box>
-              }
-            />
-            <Route
-              path="/explore/ancientscience/:id"
-              element={<AncientScienceDetail user={user} />}
-            />
-            <Route path="/explore/clothing/:id" element={<ClothingDetail user={user} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </React.Suspense>
-        <FooterSelector />
-      </Box>
-    </Router>
+                      <Box sx={{ textAlign: "center", mt: 4 }}>
+                        <Typography variant="h4" sx={{ mb: 2 }}>
+                          Please log in to view your profile
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          onClick={login}
+                          sx={{
+                            bgcolor: "#000",
+                            color: "#fff",
+                            "&:hover": { bgcolor: "#333" },
+                          }}
+                        >
+                          Login with Google
+                        </Button>
+                      </Box>
+                    )}
+                  </Box>
+                }
+              />
+              <Route
+                path="/explore/ancientscience/:id"
+                element={<AncientScienceDetail user={user} />}
+              />
+              <Route path="/explore/clothing/:id" element={<ClothingDetail user={user} />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </React.Suspense>
+          <FooterSelector />
+        </Box>
+      </Router>
     </HelmetProvider>
   );
 }

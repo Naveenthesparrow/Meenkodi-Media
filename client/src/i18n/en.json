@@ -12,10 +12,10 @@
 	"nav.logout": "Logout",
 	"nav.menu": "Menu",
 	"nav.faq": "FAQ",
-
 	"research.title": "Seeds & Footprints",
 	"research.description": "Archaeological discoveries, historical evidence, and Tamil heritage traces across different countries and continents.",
-
+	"research.editOrder": "Edit Order",
+	"research.addDiscovery": "Add Discovery",
 	"research.folders.title": "Discovery Collections by Region",
 	"research.folders.add": "Add New Discovery",
 	"research.folders.nameEn": "Region/Location Name (English)",

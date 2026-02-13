@@ -230,38 +230,41 @@ export default function SeedsFootprints({ user }) {
         }}
       >
         <Container maxWidth="lg">
-          {/* Action Bar */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            {/* Edit Order Button (Admin Only) */}
-            {isAdmin ? (
+          <PageHeading
+            leftActions={isAdmin ? (
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'row', md: 'column' }, alignItems: 'center', gap: 0.5 }}>
+                <Button
+                  onClick={openReorderDialog}
+                  variant="outlined"
+                  startIcon={<Edit />}
+                  size="small"
+                  sx={{
+                    borderColor: '#8B0000',
+                    color: '#8B0000',
+                    '&:hover': {
+                      bgcolor: 'rgba(139,0,0,0.08)',
+                      borderColor: '#8B0000',
+                    },
+                    borderRadius: 0,
+                    fontSize: i18n.language === 'ta' 
+                      ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
+                      : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+                  }}
+                >
+                  {t('research.editOrder', 'Edit Order')}
+                </Button>
+              </Box>
+            ) : null}
+            typographySx={{ 
+              fontSize: i18n.language === 'ta' 
+                ? { xs: '1.8rem', sm: '2.2rem', md: '2.8rem' }
+                : { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' }
+            }}
+            actions={isAdmin ? (
               <Button
-                onClick={openReorderDialog}
-                variant="outlined"
-                startIcon={<Edit />}
-                sx={{
-                  color: '#8B0000',
-                  borderColor: '#8B0000',
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  px: 3,
-                  '&:hover': {
-                    borderColor: '#6B0000',
-                    bgcolor: 'rgba(139, 0, 0, 0.08)'
-                  }
-                }}
-              >
-                {t('actions.editOrder', 'EDIT ORDER')}
-              </Button>
-            ) : (
-              <Box />
-            )}
-
-            {/* Add Folder Button (Admin Only) */}
-            {isAdmin && (
-              <Button
+                onClick={() => setOpenCreateDialog(true)}
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => setOpenCreateDialog(true)}
                 sx={{
                   bgcolor: "#000",
                   color: "#fff",
@@ -269,22 +272,21 @@ export default function SeedsFootprints({ user }) {
                   "&:hover": {
                     bgcolor: "#333",
                     boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                    transform: 'translateY(-3px)'
+                    transform: { xs: 'none', md: 'translateY(-3px)' },
                   },
                   borderRadius: 0,
-                  px: 3,
-                  py: 1.2,
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
+                  px: { xs: 2, md: 3 },
+                  py: { xs: 0.5, md: 1 },
+                  fontSize: i18n.language === 'ta'
+                    ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
+                    : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
                 }}
               >
-                {t('research.folders.add', 'ADD FOLDER')}
+                {t('research.addDiscovery', 'Add Discovery')}
               </Button>
-            )}
-          </Box>
-
-          <PageHeading>
-            {t('research.title', 'Gallery')}
+            ) : null}
+          >
+            {t('research.title', 'Seeds & Footprints')}
           </PageHeading>
         </Container>
       </Box>
@@ -587,49 +589,165 @@ export default function SeedsFootprints({ user }) {
             </Box>
           </Paper>
         ) : (
-          <Grid container spacing={3}>
-            {folders.map((f) => (
+          <Grid container spacing={4}>
+            {folders.map((f, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={f._id}>
-                <Box
-                  sx={{
-                    position: 'relative',
-                    '&:hover .admin-buttons': {
-                      opacity: 1
-                    }
-                  }}
-                >
-                  <Paper
-                    component={RouterLink}
-                    to={`/research/folders/${f._id}`}
+                <Fade in={true} timeout={600 + index * 100}>
+                  <Box
                     sx={{
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      display: 'block',
-                      overflow: 'hidden',
-                      borderRadius: 2,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
-                        transform: 'translateY(-4px)'
+                      position: 'relative',
+                      height: '100%',
+                      '&:hover .admin-buttons': {
+                        opacity: 1,
+                        transform: 'translateY(0)'
                       }
                     }}
                   >
-                    {/* Cover Image */}
-                    <Box
+                    <Paper
+                      component={RouterLink}
+                      to={`/seeds-and-footprints/folders/${f._id}`}
+                      elevation={0}
                       sx={{
-                        width: '100%',
-                        paddingTop: '75%',
-                        bgcolor: '#d3d3d3',
-                        position: 'relative',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        height: '100%',
                         overflow: 'hidden',
-                        backgroundImage: f.coverPhoto ? `url(${f.coverPhoto})` : 'none',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
+                        borderRadius: '16px',
+                        bgcolor: '#fff',
+                        transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        position: 'relative',
+                        background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.8)',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: 'linear-gradient(135deg, rgba(139, 0, 0, 0.08) 0%, rgba(218, 165, 32, 0.08) 100%)',
+                          opacity: 0,
+                          transition: 'opacity 0.6s ease',
+                          zIndex: 0,
+                          borderRadius: '16px'
+                        },
+                        '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          top: -2,
+                          left: -2,
+                          right: -2,
+                          bottom: -2,
+                          background: 'linear-gradient(45deg, #8B0000, #DAA520, #C19A6B, #8B0000)',
+                          borderRadius: '16px',
+                          opacity: 0,
+                          zIndex: -1,
+                          transition: 'opacity 0.6s ease',
+                          backgroundSize: '300% 300%',
+                          animation: 'gradient-shift 3s ease infinite'
+                        },
+                        '@keyframes gradient-shift': {
+                          '0%': { backgroundPosition: '0% 50%' },
+                          '50%': { backgroundPosition: '100% 50%' },
+                          '100%': { backgroundPosition: '0% 50%' }
+                        },
+                        '&:hover': {
+                          transform: 'translateY(-12px) scale(1.03)',
+                          boxShadow: '0 24px 64px rgba(139, 0, 0, 0.25), 0 0 0 1px rgba(139, 0, 0, 0.15)',
+                          '&::before': {
+                            opacity: 0.05
+                          },
+                          '&::after': {
+                            opacity: 1
+                          },
+                          '& .folder-image': {
+                            transform: 'scale(1.15) rotate(2deg)'
+                          },
+                          '& .image-overlay': {
+                            opacity: 0.4
+                          },
+                          '& .photo-badge': {
+                            transform: 'translateY(0) scale(1.05)',
+                            bgcolor: 'rgba(139, 0, 0, 0.95)',
+                            color: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                            '& .MuiSvgIcon-root': {
+                              color: '#DAA520'
+                            }
+                          },
+                          '& .folder-title': {
+                            background: 'linear-gradient(135deg, #8B0000 0%, #DAA520 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text',
+                            transform: 'translateY(-3px)'
+                          },
+                          '& .shine-effect': {
+                            left: '150%'
+                          },
+                          '& .decorative-dots': {
+                            '& .dot-1': { bgcolor: '#8B0000', transform: 'scale(1.3)' },
+                            '& .dot-2': { bgcolor: '#DAA520', transform: 'scale(1.3)' },
+                            '& .dot-3': { bgcolor: '#C19A6B', transform: 'scale(1.3)' }
+                          }
+                        }
                       }}
                     >
-                      {!f.coverPhoto && (
+                      {/* Cover Image Container */}
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: 300,
+                          position: 'relative',
+                          overflow: 'hidden',
+                          bgcolor: '#f8f9fa',
+                          zIndex: 1
+                        }}
+                      >
+                        {/* Shine effect */}
+                        <Box
+                          className="shine-effect"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: '-100%',
+                            width: '50%',
+                            height: '100%',
+                            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+                            transform: 'skewX(-20deg)',
+                            transition: 'left 0.8s ease',
+                            zIndex: 3,
+                            pointerEvents: 'none'
+                          }}
+                        />
+
+                        {/* Cover Image */}
+                        {f.coverPhoto ? (
+                          <Box
+                            component="img"
+                            src={f.coverPhoto}
+                            alt={getContent(f.name)}
+                            className="folder-image"
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                              display: 'block',
+                              filter: 'brightness(0.95) contrast(1.05)'
+                            }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        
+                        {/* Fallback when no image */}
                         <Box
                           sx={{
                             position: 'absolute',
@@ -637,122 +755,255 @@ export default function SeedsFootprints({ user }) {
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            display: 'flex',
+                            display: f.coverPhoto ? 'none' : 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            background: 'linear-gradient(135deg, #8B0000 0%, #C19A6B 100%)',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              width: '100%',
+                              height: '100%',
+                              backgroundImage: `
+                                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)
+                              `,
+                              opacity: 0.8
+                            }
                           }}
                         >
+                          <Box sx={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+                            <FolderIcon sx={{ fontSize: 72, color: 'rgba(255, 255, 255, 0.9)', mb: 1, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} />
+                            <Typography
+                              sx={{
+                                color: 'rgba(255, 255, 255, 0.95)',
+                                fontSize: '1rem',
+                                fontWeight: 700,
+                                letterSpacing: '1px',
+                                textTransform: 'uppercase',
+                                textShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                              }}
+                            >
+                              No Image
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Gradient overlay */}
+                        <Box
+                          className="image-overlay"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(135deg, rgba(139, 0, 0, 0.3) 0%, rgba(218, 165, 32, 0.3) 100%)',
+                            opacity: 0,
+                            transition: 'opacity 0.6s ease',
+                            zIndex: 2
+                          }}
+                        />
+
+                        {/* Photo Count Badge */}
+                        <Box
+                          className="photo-badge"
+                          sx={{
+                            position: 'absolute',
+                            bottom: 20,
+                            right: 20,
+                            bgcolor: 'rgba(255, 255, 255, 0.98)',
+                            backdropFilter: 'blur(20px) saturate(180%)',
+                            px: 2.5,
+                            py: 1.25,
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(139, 0, 0, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            zIndex: 3,
+                            border: '1.5px solid rgba(139, 0, 0, 0.2)',
+                            transform: 'translateY(8px)',
+                            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                          }}
+                        >
+                          <ImageIcon sx={{ fontSize: 20, color: '#8B0000' }} />
                           <Typography
                             sx={{
-                              color: '#888',
-                              fontSize: '1rem',
-                              fontWeight: 500
+                              fontSize: '0.95rem',
+                              color: '#8B0000',
+                              fontWeight: 800,
+                              letterSpacing: '0.3px',
+                              lineHeight: 1
                             }}
                           >
-                            No Image
+                            {(f.photos?.length || 0)}
                           </Typography>
                         </Box>
-                      )}
+                      </Box>
 
-                      {/* Photo Count Badge */}
+                      {/* Folder Info Section */}
+                      <Box 
+                        sx={{ 
+                          p: 3.5,
+                          bgcolor: '#fff',
+                          position: 'relative',
+                          zIndex: 2,
+                          flexGrow: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {/* Decorative top accent */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '60px',
+                            height: '4px',
+                            background: 'linear-gradient(90deg, #8B0000 0%, #DAA520 50%, #C19A6B 100%)',
+                            borderRadius: '0 0 4px 4px'
+                          }}
+                        />
+
+                        {/* Folder Title */}
+                        <Typography
+                          className="folder-title"
+                          sx={{
+                            fontWeight: 800,
+                            fontSize: '1.35rem',
+                            color: '#1a1a2e',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            lineHeight: 1.3,
+                            mb: 1.5,
+                            fontFamily: '"Poppins", sans-serif',
+                            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textAlign: 'center',
+                            minHeight: '2.6em',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                          }}
+                        >
+                          {getContent(f.name) || f.name}
+                        </Typography>
+
+                        {/* Description if available */}
+                        {f.description && getContent(f.description) && (
+                          <Typography
+                            sx={{
+                              fontSize: '0.875rem',
+                              color: '#6b7280',
+                              lineHeight: 1.6,
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              textAlign: 'center',
+                              fontWeight: 400,
+                              mb: 1
+                            }}
+                          >
+                            {getContent(f.description)}
+                          </Typography>
+                        )}
+
+                        {/* Decorative bottom dots */}
+                        <Box
+                          className="decorative-dots"
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: 0.75,
+                            mt: 2
+                          }}
+                        >
+                          <Box className="dot-1" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#8B0000', transition: 'all 0.3s ease' }} />
+                          <Box className="dot-2" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#DAA520', transition: 'all 0.3s ease' }} />
+                          <Box className="dot-3" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#C19A6B', transition: 'all 0.3s ease' }} />
+                        </Box>
+                      </Box>
+                    </Paper>
+
+                    {/* Admin Action Buttons */}
+                    {isAdmin && (
                       <Box
                         sx={{
                           position: 'absolute',
-                          bottom: 12,
-                          left: 12,
-                          bgcolor: 'rgba(255,255,255,0.9)',
-                          px: 1.5,
-                          py: 0.5,
-                          borderRadius: 1,
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                          top: 16,
+                          right: 16,
+                          display: 'flex',
+                          gap: 1,
+                          opacity: 0,
+                          transform: 'translateY(-8px)',
+                          transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          zIndex: 10
                         }}
+                        className="admin-buttons"
                       >
-                        <Typography
+                        {/* Edit Button */}
+                        <IconButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            editFolder(f);
+                          }}
+                          size="small"
                           sx={{
-                            fontSize: '0.875rem',
-                            color: '#666',
-                            fontWeight: 500
+                            bgcolor: 'rgba(255, 255, 255, 0.98)',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 8px 24px rgba(139, 0, 0, 0.25)',
+                            border: '1.5px solid rgba(139, 0, 0, 0.2)',
+                            width: 40,
+                            height: 40,
+                            '&:hover': {
+                              bgcolor: '#8B0000',
+                              color: 'white',
+                              transform: 'scale(1.15) rotate(8deg)',
+                              boxShadow: '0 12px 32px rgba(139, 0, 0, 0.4)',
+                              borderColor: '#8B0000'
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
                           }}
                         >
-                          {(f.photos?.length || 0)} photo{(f.photos?.length || 0) !== 1 ? 's' : ''}
-                        </Typography>
+                          <Edit sx={{ fontSize: 20 }} />
+                        </IconButton>
+                        
+                        {/* Delete Button */}
+                        <IconButton
+                          onClick={(e) => {
+                            e.preventDefault();
+                            deleteFolder(f._id);
+                          }}
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.98)',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 8px 24px rgba(239, 68, 68, 0.25)',
+                            border: '1.5px solid rgba(239, 68, 68, 0.2)',
+                            width: 40,
+                            height: 40,
+                            '&:hover': {
+                              bgcolor: '#ef4444',
+                              color: 'white',
+                              transform: 'scale(1.15) rotate(-8deg)',
+                              boxShadow: '0 12px 32px rgba(239, 68, 68, 0.4)',
+                              borderColor: '#ef4444'
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                          }}
+                        >
+                          <DeleteIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
                       </Box>
-                    </Box>
-
-                    {/* Folder Name */}
-                    <Box sx={{ p: 2, textAlign: 'center', bgcolor: '#fff' }}>
-                      <Typography
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: '1rem',
-                          color: '#8B0000',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          lineHeight: 1.3
-                        }}
-                      >
-                        {getContent(f.name) || f.name}
-                      </Typography>
-                    </Box>
-                  </Paper>
-
-                  {/* Admin Action Buttons */}
-                  {isAdmin && (
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        display: 'flex',
-                        gap: 0.5,
-                        opacity: 0,
-                        transition: 'opacity 0.3s ease',
-                        zIndex: 10
-                      }}
-                      className="admin-buttons"
-                    >
-                      {/* Edit Button */}
-                      <IconButton
-                        onClick={(e) => {
-                          e.preventDefault();
-                          editFolder(f);
-                        }}
-                        size="small"
-                        sx={{
-                          bgcolor: 'white',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                          zIndex: 10,
-                          '&:hover': {
-                            bgcolor: '#8B0000',
-                            color: 'white'
-                          }
-                        }}
-                      >
-                        <Edit sx={{ fontSize: 18 }} />
-                      </IconButton>
-                      
-                      {/* Delete Button */}
-                      <IconButton
-                        onClick={(e) => {
-                          e.preventDefault();
-                          deleteFolder(f._id);
-                        }}
-                        size="small"
-                        sx={{
-                          bgcolor: 'white',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                          zIndex: 10,
-                          '&:hover': {
-                            bgcolor: '#d32f2f',
-                            color: 'white'
-                          }
-                        }}
-                      >
-                        <DeleteIcon sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Box>
-                  )}
-                </Box>
+                    )}
+                  </Box>
+                </Fade>
               </Grid>
             ))}
           </Grid>

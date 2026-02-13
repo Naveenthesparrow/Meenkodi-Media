@@ -2,117 +2,126 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Button,
-  Card,
-  CardContent,
-  Container,
-  IconButton,
   TextField,
-  Alert,
+  Button,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Alert,
   Grid,
+  Container,
   Paper,
-  Chip,
-  Divider
+  IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
+  Divider,
+  Chip
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Close as CloseIcon,
-  Save as SaveIcon,
-  Download,
-  MenuBook
-} from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import GetAppIcon from "@mui/icons-material/GetApp";
+import { useTranslation } from 'react-i18next';
 import MediaUpload from "./common/MediaUpload";
-import { useParams, useNavigate } from "react-router-dom";
+import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
+import { useParams, useNavigate } from "react-router-dom";
 
 export default function ResourceDetail({ user }) {
+  const getContent = useBilingualContent();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const getContent = useBilingualContent();
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  // Form State
-  const [title_en, setTitle_en] = useState("");
-  const [title_ta, setTitle_ta] = useState("");
-  const [description_en, setDescription_en] = useState("");
-  const [description_ta, setDescription_ta] = useState("");
-  const [category_en, setCategory_en] = useState("");
-  const [category_ta, setCategory_ta] = useState("");
-  const [author_en, setAuthor_en] = useState("");
-  const [author_ta, setAuthor_ta] = useState("");
+  const [editLanguage, setEditLanguage] = useState('en');
+  const [title_en, setTitleEn] = useState("");
+  const [title_ta, setTitleTa] = useState("");
+  const [description_en, setDescriptionEn] = useState("");
+  const [description_ta, setDescriptionTa] = useState("");
+  const [category_en, setCategoryEn] = useState("");
+  const [category_ta, setCategoryTa] = useState("");
+  const [author_en, setAuthorEn] = useState("");
+  const [author_ta, setAuthorTa] = useState("");
   const [image, setImage] = useState("");
   const [downloadLink, setDownloadLink] = useState("");
-
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch(`/api/resources/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch resource");
+        return res.json();
+      })
       .then((data) => {
         setResource(data);
-        const part = (val, lang) => {
-          if (!val) return '';
-          if (typeof val === 'string') return lang === 'en' ? val : '';
-          return val[lang] || '';
-        };
-        setTitle_en(part(data.title, 'en'));
-        setTitle_ta(part(data.title, 'ta'));
-        setDescription_en(part(data.description, 'en'));
-        setDescription_ta(part(data.description, 'ta'));
-        setCategory_en(part(data.category, 'en'));
-        setCategory_ta(part(data.category, 'ta'));
-        setAuthor_en(part(data.author, 'en'));
-        setAuthor_ta(part(data.author, 'ta'));
+        setTitleEn(data.title?.en || "");
+        setTitleTa(data.title?.ta || "");
+        setDescriptionEn(data.description?.en || "");
+        setDescriptionTa(data.description?.ta || "");
+        setCategoryEn(data.category?.en || "");
+        setCategoryTa(data.category?.ta || "");
+        setAuthorEn(data.author?.en || "");
+        setAuthorTa(data.author?.ta || "");
         setImage(data.image || "");
         setDownloadLink(data.downloadLink || "");
         setLoading(false);
       })
-      .catch(() => {
-        setError("Failed to load resource details");
+      .catch((err) => {
+        setError(err.message);
         setLoading(false);
       });
   }, [id]);
 
-  const handleSave = async () => {
-    setSubmitting(true);
-    setError(null);
-    if (!title_en.trim()) {
-      setError("Title (English) is required");
-      setSubmitting(false);
+  const handleLike = async () => {
+    if (!user) {
+      setError(t('resources.loginToLike', 'Please login to like resources'));
       return;
     }
+
     try {
+      const response = await fetch(`/api/resources/${id}/like`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to like resource");
+
+      setResource((prev) => prev ? { ...prev, likesCount: data.likesCount, userLiked: data.userLiked } : prev);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleSave = async () => {
+    setSubmitting(true);
+    try {
+      const updatedResource = {
+        title: { en: title_en, ta: title_ta },
+        description: { en: description_en, ta: description_ta },
+        category: { en: category_en, ta: category_ta },
+        author: { en: author_en, ta: author_ta },
+        image,
+        downloadLink,
+      };
+
       const res = await fetch(`/api/resources/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          title: { en: title_en, ta: title_ta },
-          description: { en: description_en, ta: description_ta },
-          category: { en: category_en, ta: category_ta },
-          author: { en: author_en, ta: author_ta },
-          image,
-          downloadLink,
-        }),
+        body: JSON.stringify(updatedResource),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update resource");
-      }
+
+      if (!res.ok) throw new Error("Failed to update resource");
+
+      const data = await res.json();
+      setResource(data);
       setEditMode(false);
-      window.location.reload();
     } catch (err) {
-      setError(err.message || "Failed to update resource");
+      setError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -136,248 +145,269 @@ export default function ResourceDetail({ user }) {
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!resource) {
     return (
-      <Container maxWidth="md" sx={{ py: 6 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+      <Box sx={{ maxWidth: 800, mx: "auto", p: 2 }}>
+        <Typography variant="h4" gutterBottom>
           Resource Not Found
         </Typography>
-        <Typography variant="body1">
-          The resource you are looking for does not exist or has been removed.
-        </Typography>
-        <Button onClick={() => navigate('/resources')} sx={{ mt: 2 }}>Back to Resources</Button>
-      </Container>
-    );
-  }
-
-  // --- ADMIN EDIT VIEW ---
-  if (editMode) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-              Edit Resource
-            </Typography>
-            <IconButton onClick={() => setEditMode(false)}><CloseIcon /></IconButton>
-          </Box>
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Title (EN)" value={title_en} onChange={(e) => setTitle_en(e.target.value)} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Title (TA)" value={title_ta} onChange={(e) => setTitle_ta(e.target.value)} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Author (EN)" value={author_en} onChange={(e) => setAuthor_en(e.target.value)} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Author (TA)" value={author_ta} onChange={(e) => setAuthor_ta(e.target.value)} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Category (EN)" value={category_en} onChange={(e) => setCategory_en(e.target.value)} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Category (TA)" value={category_ta} onChange={(e) => setCategory_ta(e.target.value)} fullWidth />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Description (EN)" value={description_en} onChange={(e) => setDescription_en(e.target.value)} fullWidth multiline rows={6} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Description (TA)" value={description_ta} onChange={(e) => setDescription_ta(e.target.value)} fullWidth multiline rows={6} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Download Link (PDF URL)" value={downloadLink} onChange={(e) => setDownloadLink(e.target.value)} fullWidth placeholder="https://example.com/book.pdf" />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Cover Image</Typography>
-                <MediaUpload
-                  onImageChange={setImage}
-                  currentImage={image}
-                  label="Book Cover Image"
-                  showInputsOnly={true}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleDelete}
-              >
-                Delete Resource
-              </Button>
-              <Button
-                onClick={handleSave}
-                variant="contained"
-                disabled={submitting}
-                startIcon={<SaveIcon />}
-                sx={{
-                  bgcolor: '#8B0000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#6B0000' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                {submitting ? "Saving..." : "Save Changes"}
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 6 }}>
-      <Box>
-        {/* Header Section */}
-        <Box sx={{ mb: 4, pb: 3, borderBottom: '2px solid rgba(139,0,0,0.2)' }}>
-          <Typography variant="h3" sx={{ fontWeight: 700, color: '#1a1a1a', mb: 2, fontFamily: 'Georgia, serif' }}>
-            {getContent(resource.title)}
-          </Typography>
-          {getContent(resource.author) && (
-            <Typography variant="h6" sx={{ color: '#8B0000', fontFamily: 'Georgia, serif', fontWeight: 500 }}>
-              by {getContent(resource.author)}
-            </Typography>
-          )}
-          {getContent(resource.category) && (
-            <Chip label={getContent(resource.category)} sx={{ mt: 2, bgcolor: 'rgba(139,0,0,0.1)', color: '#8B0000', fontWeight: 600 }} />
-          )}
-        </Box>
-
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 5 }}>
-          {/* Book Cover */}
-          <Box sx={{ flex: { xs: '1', md: '0 0 350px' } }}>
-            {resource.image ? (
-              <Box
-                component="img"
-                src={resource.image}
-                alt={getContent(resource.title)}
-                sx={{
-                  width: '100%',
-                  height: 'auto',
-                  maxHeight: 500,
-                  objectFit: 'contain',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                }}
-              />
-            ) : (
-              <Box sx={{ width: '100%', height: 400, bgcolor: '#f8f7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,0,0,0.1)' }}>
-                <Typography variant="h4" sx={{ opacity: 0.5 }}>📚</Typography>
-              </Box>
-            )}
-
-            {/* Action Buttons */}
-            <Box sx={{ mt: 3 }}>
-              {resource.downloadLink && (
-                <Button
-                  href={resource.downloadLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="contained"
-                  fullWidth
-                  startIcon={<Download />}
-                  sx={{ mb: 2, bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' }, py: 1.5, fontWeight: 600 }}
-                >
-                  Download PDF
-                </Button>
+    <Box sx={{ bgcolor: "#f7f5f0", minHeight: "100vh" }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, bgcolor: "#fff" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+            <Box sx={{ flexGrow: 1 }}>
+              {resource.category && (
+                <Chip
+                  label={getContent(resource.category)}
+                  sx={{
+                    bgcolor: "#8B0000",
+                    color: "#fff",
+                    mb: 2,
+                    fontWeight: 600,
+                  }}
+                />
               )}
-              {resource.downloadLink && (
-                <Button
-                  href={resource.downloadLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="outlined"
-                  fullWidth
-                  startIcon={<MenuBook />}
-                  sx={{ borderColor: '#B8860B', color: '#B8860B', '&:hover': { borderColor: '#8B6508', bgcolor: 'rgba(184,134,11,0.05)' }, py: 1.5, fontWeight: 600 }}
-                >
-                  Read Online
-                </Button>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <IconButton onClick={() => navigate("/resources")} size="small">
+                <CloseIcon />
+              </IconButton>
+              {user && user.role === "admin" && (
+                <>
+                  {!editMode ? (
+                    <>
+                      <IconButton onClick={() => setEditMode(true)} size="small" color="primary">
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={handleDelete} size="small" color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </>
+                  ) : (
+                    <IconButton onClick={() => setEditMode(false)} size="small">
+                      <CloseIcon />
+                    </IconButton>
+                  )}
+                </>
               )}
             </Box>
           </Box>
 
-          {/* Content Section */}
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, fontFamily: 'Georgia, serif' }}>
-              About This Resource
-            </Typography>
-            <Typography variant="body1" sx={{ color: '#444', lineHeight: 1.8, fontSize: '1.05rem', mb: 4, whiteSpace: 'pre-wrap' }}>
-              {getContent(resource.description)}
-            </Typography>
-
-            {/* PDF Viewer */}
-            {resource.downloadLink && (
-              <Box sx={{ mt: 4 }}>
-                <Divider sx={{ mb: 3 }} />
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, fontFamily: 'Georgia, serif' }}>
-                  Preview
-                </Typography>
-                <Box
-                  component="iframe"
-                  src={`${resource.downloadLink}#toolbar=1&navpanes=1&scrollbar=1`}
-                  sx={{
-                    width: '100%',
-                    height: { xs: 500, md: 700 },
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    borderRadius: 1,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  }}
-                  title={getContent(resource.title)}
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={5}>
+              {editMode && user?.role === "admin" ? (
+                <MediaUpload
+                  currentImage={image}
+                  onImageChange={(newImage) => setImage(newImage)}
+                  uploadEndpoint="/api/upload/resources"
+                  type="image"
                 />
-              </Box>
-            )}
+              ) : (
+                <Box
+                  component="img"
+                  src={image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23f0f0f0' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-size='24'%3ENo Image%3C/text%3E%3C/svg%3E"}
+                  alt={getContent(resource.title)}
+                  sx={{
+                    width: "100%",
+                    height: "auto",
+                    borderRadius: 2,
+                    boxShadow: 2,
+                  }}
+                  onError={(e) => {
+                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23f0f0f0' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-size='24'%3ENo Image%3C/text%3E%3C/svg%3E";
+                  }}
+                />
+              )}
+            </Grid>
 
-            {/* Admin Actions */}
-            {user && user.role === "admin" && (
-              <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid rgba(0,0,0,0.1)' }}>
-                <Button onClick={() => setEditMode(true)} variant="contained" sx={{ mr: 2, bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' } }}>Edit</Button>
-                <Button onClick={handleDelete} variant="outlined" color="error">Delete</Button>
-              </Box>
-            )}
-          </Box>
-        </Box>
-      </Box>
+            <Grid item xs={12} md={7}>
+              {editMode && user?.role === "admin" ? (
+                <Box>
+                  <ToggleButtonGroup
+                    value={editLanguage}
+                    exclusive
+                    onChange={(e, val) => val && setEditLanguage(val)}
+                    sx={{ mb: 2 }}
+                  >
+                    <ToggleButton value="en">English</ToggleButton>
+                    <ToggleButton value="ta">தமிழ்</ToggleButton>
+                  </ToggleButtonGroup>
 
+                  {editLanguage === 'en' ? (
+                    <>
+                      <TextField
+                        fullWidth
+                        label="Title (English)"
+                        value={title_en}
+                        onChange={(e) => setTitleEn(e.target.value)}
+                        margin="normal"
+                      />
+                      <TextField
+                        fullWidth
+                        label="Description (English)"
+                        value={description_en}
+                        onChange={(e) => setDescriptionEn(e.target.value)}
+                        margin="normal"
+                        multiline
+                        rows={4}
+                      />
+                      <TextField
+                        fullWidth
+                        label="Category (English)"
+                        value={category_en}
+                        onChange={(e) => setCategoryEn(e.target.value)}
+                        margin="normal"
+                      />
+                      <TextField
+                        fullWidth
+                        label="Author (English)"
+                        value={author_en}
+                        onChange={(e) => setAuthorEn(e.target.value)}
+                        margin="normal"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <TextField
+                        fullWidth
+                        label="தலைப்பு (Tamil)"
+                        value={title_ta}
+                        onChange={(e) => setTitleTa(e.target.value)}
+                        margin="normal"
+                      />
+                      <TextField
+                        fullWidth
+                        label="விளக்கம் (Tamil)"
+                        value={description_ta}
+                        onChange={(e) => setDescriptionTa(e.target.value)}
+                        margin="normal"
+                        multiline
+                        rows={4}
+                      />
+                      <TextField
+                        fullWidth
+                        label="வகை (Tamil)"
+                        value={category_ta}
+                        onChange={(e) => setCategoryTa(e.target.value)}
+                        margin="normal"
+                      />
+                      <TextField
+                        fullWidth
+                        label="ஆசிரியர் (Tamil)"
+                        value={author_ta}
+                        onChange={(e) => setAuthorTa(e.target.value)}
+                        margin="normal"
+                      />
+                    </>
+                  )}
 
-      {/* Standardized Back Button */}
-      <Box sx={{ mt: 6, mb: 2, textAlign: 'center' }}>
-        <Button
-          onClick={() => navigate('/resources')}
-          variant="outlined"
-          sx={{
-            color: '#000',
-            borderColor: '#000',
-            borderWidth: 2,
-            borderRadius: 0,
-            px: 4,
-            py: 1.5,
-            fontWeight: 700,
-            fontFamily: 'Georgia, serif',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            '&:hover': {
-              bgcolor: '#000',
-              borderColor: '#000',
-              color: '#fff',
-            }
-          }}
-        >
-          ← Back to Resources
-        </Button>
-      </Box>
-    </Container >
+                  <TextField
+                    fullWidth
+                    label="Download Link"
+                    value={downloadLink}
+                    onChange={(e) => setDownloadLink(e.target.value)}
+                    margin="normal"
+                  />
+
+                  <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleSave}
+                      disabled={submitting}
+                      startIcon={<SaveIcon />}
+                      sx={{ bgcolor: "#8B0000", "&:hover": { bgcolor: "#700000" } }}
+                    >
+                      {submitting ? "Saving..." : "Save"}
+                    </Button>
+                    <Button variant="outlined" onClick={() => setEditMode(false)}>
+                      Cancel
+                    </Button>
+                  </Box>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      fontWeight: 700,
+                      color: "#8B0000",
+                      mb: 2,
+                      fontFamily: "Georgia, serif",
+                    }}
+                  >
+                    {getContent(resource.title)}
+                  </Typography>
+
+                  {resource.author && (
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        color: "#555",
+                        mb: 3,
+                        fontStyle: "italic",
+                        fontFamily: "Georgia, serif",
+                      }}
+                    >
+                      {t('resources.by', 'By')} {getContent(resource.author)}
+                    </Typography>
+                  )}
+
+                  <Divider sx={{ my: 3 }} />
+
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "#333",
+                      lineHeight: 1.8,
+                      mb: 4,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {getContent(resource.description)}
+                  </Typography>
+
+                  <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+                    {downloadLink && (
+                      <Button
+                        variant="contained"
+                        startIcon={<GetAppIcon />}
+                        href={downloadLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                          bgcolor: "#8B0000",
+                          "&:hover": { bgcolor: "#700000" },
+                          textTransform: "none",
+                          px: 3,
+                        }}
+                      >
+                        {t('resources.download', 'Download Resource')}
+                      </Button>
+                    )}
+
+                    <IconButton
+                      onClick={handleLike}
+                      sx={{
+                        border: "2px solid #8B0000",
+                        color: resource.userLiked ? "#8B0000" : "#999",
+                      }}
+                    >
+                      {resource.userLiked ? <Favorite /> : <FavoriteBorder />}
+                    </IconButton>
+
+                    <Typography variant="body2" sx={{ color: "#555" }}>
+                      {resource.likesCount || 0} {t('resources.likes', 'Likes')}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
