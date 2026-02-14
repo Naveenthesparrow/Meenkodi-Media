@@ -59,6 +59,9 @@ export default function SeedsFootprintsDetail({ user }) {
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
 
+    // Mobile viewer details visibility
+    const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
+
     // Folder editing states
     const [editingFolder, setEditingFolder] = useState(false);
     const [folderForm, setFolderForm] = useState({
@@ -276,6 +279,7 @@ export default function SeedsFootprintsDetail({ user }) {
 
     const closeViewer = () => {
         setViewerOpen(false);
+        setMobileDetailsOpen(false);
     };
 
     const goToNext = () => {
@@ -901,12 +905,15 @@ export default function SeedsFootprintsDetail({ user }) {
                                             exclusive
                                             onChange={(e, v) => v && setUploadForm(prev => ({ ...prev, editLanguage: v }))}
                                             sx={{
+                                                width: { xs: '100%', sm: 'auto' },
                                                 '& .MuiToggleButton-root': {
-                                                    px: 3,
-                                                    py: 1,
+                                                    px: { xs: 2, sm: 3 },
+                                                    py: { xs: 1.2, sm: 1 },
                                                     border: '1px solid #8B0000',
                                                     color: '#8B0000',
                                                     fontWeight: 600,
+                                                    flex: { xs: 1, sm: 'initial' },
+                                                    fontSize: { xs: '0.85rem', sm: '0.875rem' },
                                                     '&.Mui-selected': {
                                                         bgcolor: '#8B0000',
                                                         color: '#fff',
@@ -971,22 +978,72 @@ export default function SeedsFootprintsDetail({ user }) {
                                     />
 
                                     <Box sx={{ mb: 2 }}>
-                                        <Typography variant="h6" sx={{ mb: 1, color: '#333', fontWeight: 600 }}>{t('research.upload', 'Upload Photo')}</Typography>
-                                        <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>Supported formats: JPG, PNG, GIF, WEBP</Typography>
-                                        <Button component="label" variant="outlined" startIcon={<ImageIcon />} sx={{ borderRadius: 1.5, px: 3, py: 1 }}>
+                                        <Typography variant="h6" sx={{ mb: 1, color: '#333', fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>{t('research.upload', 'Upload Photo')}</Typography>
+                                        <Typography variant="body2" sx={{ mb: 1.5, color: '#666', fontSize: { xs: '0.85rem', sm: '0.875rem' } }}>Supported formats: JPG, PNG, GIF, WEBP</Typography>
+                                        <Button 
+                                            component="label" 
+                                            variant="outlined" 
+                                            startIcon={<ImageIcon />} 
+                                            sx={{ 
+                                                borderRadius: 1.5, 
+                                                px: { xs: 2, sm: 3 }, 
+                                                py: { xs: 1.5, sm: 1 },
+                                                width: { xs: '100%', sm: 'auto' },
+                                                fontSize: { xs: '0.9rem', sm: '0.875rem' },
+                                                borderColor: '#8B0000',
+                                                color: '#8B0000',
+                                                '&:hover': {
+                                                    borderColor: '#6B0000',
+                                                    bgcolor: 'rgba(139,0,0,0.05)'
+                                                }
+                                            }}
+                                        >
                                             {t('research.selectImage', 'Select Image')}
                                             <input type="file" accept="image/*" hidden onChange={handleUploadFieldChange('file')} />
                                         </Button>
-                                        {uploadForm.file && <Typography variant="body2" sx={{ mt: 1 }}>{t('research.selectedFile', 'Selected')}: {uploadForm.file.name}</Typography>}
+                                        {uploadForm.file && <Typography variant="body2" sx={{ mt: 1.5, fontSize: { xs: '0.85rem', sm: '0.875rem' }, color: '#666' }}>{t('research.selectedFile', 'Selected')}: {uploadForm.file.name}</Typography>}
                                     </Box>
 
                                     {uploadError && <Typography variant="body2" sx={{ color: '#d32f2f', textAlign: 'center', mb: 2 }}>{uploadError}</Typography>}
                                 </Box>
                             </DialogContent>
 
-                            <Box sx={{ px: { xs: 3, sm: 4 }, py: 2, borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                                <Button variant="text" onClick={() => { setUploadForm({ file: null, captionEn: '', captionTa: '', nameEn: '', nameTa: '', keywords: '', credit: '', sourceLink: '', videoLink: '', editLanguage: 'en' }); setEditingPhotoId(null); setIsFormVisible(false); }} sx={{ color: '#777' }}>Cancel</Button>
-                                <Button type="submit" form="upload-photo-form" variant="contained" disabled={uploading} sx={{ bgcolor: '#8B0000' }}>{uploading ? 'Saving...' : 'Save'}</Button>
+                            <Box sx={{ 
+                                px: { xs: 2, sm: 3, md: 4 }, 
+                                py: { xs: 1.5, sm: 2 }, 
+                                borderTop: '1px solid #eee', 
+                                display: 'flex', 
+                                flexDirection: { xs: 'column', sm: 'row' },
+                                justifyContent: 'flex-end', 
+                                gap: { xs: 1.5, sm: 2 }
+                            }}>
+                                <Button 
+                                    variant="text" 
+                                    onClick={() => { setUploadForm({ file: null, captionEn: '', captionTa: '', nameEn: '', nameTa: '', keywords: '', credit: '', sourceLink: '', videoLink: '', editLanguage: 'en' }); setEditingPhotoId(null); setIsFormVisible(false); }} 
+                                    sx={{ 
+                                        color: '#777',
+                                        width: { xs: '100%', sm: 'auto' },
+                                        py: { xs: 1.5, sm: 1 },
+                                        fontSize: { xs: '0.95rem', sm: '0.875rem' }
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    type="submit" 
+                                    form="upload-photo-form" 
+                                    variant="contained" 
+                                    disabled={uploading} 
+                                    sx={{ 
+                                        bgcolor: '#8B0000',
+                                        width: { xs: '100%', sm: 'auto' },
+                                        py: { xs: 1.5, sm: 1 },
+                                        fontSize: { xs: '0.95rem', sm: '0.875rem' },
+                                        '&:hover': { bgcolor: '#6B0000' }
+                                    }}
+                                >
+                                    {uploading ? 'Saving...' : 'Save'}
+                                </Button>
                             </Box>
                         </Dialog>
                     )}
@@ -1036,12 +1093,15 @@ export default function SeedsFootprintsDetail({ user }) {
                                                 exclusive
                                                 onChange={(e, v) => v && setFolderForm(prev => ({ ...prev, editLanguage: v }))}
                                                 sx={{
+                                                    width: { xs: '100%', sm: 'auto' },
                                                     '& .MuiToggleButton-root': {
-                                                        px: 3,
-                                                        py: 1,
+                                                        px: { xs: 2, sm: 3 },
+                                                        py: { xs: 1.2, sm: 1 },
                                                         border: '1px solid #8B0000',
                                                         color: '#8B0000',
                                                         fontWeight: 600,
+                                                        flex: { xs: 1, sm: 'initial' },
+                                                        fontSize: { xs: '0.85rem', sm: '0.875rem' },
                                                         '&.Mui-selected': {
                                                             bgcolor: '#8B0000',
                                                             color: '#fff',
@@ -1082,17 +1142,19 @@ export default function SeedsFootprintsDetail({ user }) {
 
                                         {/* Cover Photo Upload */}
                                         <Box>
-                                            <Typography variant="subtitle2" sx={{ mb: 1, color: '#555' }}>
+                                            <Typography variant="subtitle2" sx={{ mb: 1.5, color: '#555', fontSize: { xs: '0.9rem', sm: '0.875rem' } }}>
                                                 {t('research.folderCoverPhoto', 'Cover Photo (optional)')}
                                             </Typography>
                                             <Box
                                                 sx={{
                                                     border: '2px dashed #ddd',
                                                     borderRadius: 2,
-                                                    p: 3,
+                                                    p: { xs: 2.5, sm: 3 },
                                                     textAlign: 'center',
                                                     cursor: 'pointer',
-                                                    '&:hover': { borderColor: '#8B0000' }
+                                                    transition: 'all 0.2s ease',
+                                                    '&:hover': { borderColor: '#8B0000', bgcolor: 'rgba(139,0,0,0.02)' },
+                                                    '&:active': { bgcolor: 'rgba(139,0,0,0.05)' }
                                                 }}
                                                 onClick={() => document.getElementById('folder-cover-input').click()}
                                             >
@@ -1103,8 +1165,8 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     style={{ display: 'none' }}
                                                     onChange={(e) => setFolderForm({ ...folderForm, coverPhoto: e.target.files[0] || null })}
                                                 />
-                                                <ImageIcon sx={{ fontSize: 40, color: '#ccc', mb: 1 }} />
-                                                <Typography variant="body2" sx={{ color: '#666' }}>
+                                                <ImageIcon sx={{ fontSize: { xs: 35, sm: 40 }, color: '#ccc', mb: 1 }} />
+                                                <Typography variant="body2" sx={{ color: '#666', fontSize: { xs: '0.85rem', sm: '0.875rem' }, lineHeight: 1.5 }}>
                                                     {folderForm.coverPhoto ? folderForm.coverPhoto.name : t('research.selectCoverPhoto', 'Click to select cover photo')}
                                                 </Typography>
                                             </Box>
@@ -1113,11 +1175,40 @@ export default function SeedsFootprintsDetail({ user }) {
                                 </Box>
                             </DialogContent>
 
-                            <DialogActions sx={{ borderTop: '1px solid #e0e0e0', pt: 3, px: 3, pb: 2, gap: 2 }}>
-                                <Button onClick={() => setEditingFolder(false)} sx={{ color: '#666' }}>
+                            <DialogActions sx={{ 
+                                borderTop: '1px solid #e0e0e0', 
+                                pt: { xs: 2, sm: 3 }, 
+                                px: { xs: 2, sm: 3 }, 
+                                pb: { xs: 2, sm: 2 }, 
+                                gap: { xs: 1.5, sm: 2 },
+                                flexDirection: { xs: 'column', sm: 'row' }
+                            }}>
+                                <Button 
+                                    onClick={() => setEditingFolder(false)} 
+                                    sx={{ 
+                                        color: '#666',
+                                        width: { xs: '100%', sm: 'auto' },
+                                        py: { xs: 1.5, sm: 1 },
+                                        fontSize: { xs: '0.95rem', sm: '0.875rem' },
+                                        order: { xs: 2, sm: 1 }
+                                    }}
+                                >
                                     {t('actions.cancel', 'Cancel')}
                                 </Button>
-                                <Button type="submit" form="folder-edit-form" variant="contained" sx={{ bgcolor: '#8B0000', px: 4, '&:hover': { bgcolor: '#6B0000' } }}>
+                                <Button 
+                                    type="submit" 
+                                    form="folder-edit-form" 
+                                    variant="contained" 
+                                    sx={{ 
+                                        bgcolor: '#8B0000', 
+                                        px: { xs: 3, sm: 4 }, 
+                                        py: { xs: 1.5, sm: 1 },
+                                        width: { xs: '100%', sm: 'auto' },
+                                        fontSize: { xs: '0.95rem', sm: '0.875rem' },
+                                        order: { xs: 1, sm: 2 },
+                                        '&:hover': { bgcolor: '#6B0000' } 
+                                    }}
+                                >
                                     {t('actions.save', 'Save Changes')}
                                 </Button>
                             </DialogActions>
@@ -1367,36 +1458,40 @@ export default function SeedsFootprintsDetail({ user }) {
                                                                 onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo._id); }}
                                                                 sx={{
                                                                     position: 'absolute',
-                                                                    top: 8,
-                                                                    left: 8,
+                                                                    top: { xs: 6, sm: 8 },
+                                                                    left: { xs: 6, sm: 8 },
                                                                     zIndex: 6,
-                                                                    bgcolor: 'rgba(255,255,255,0.9)',
+                                                                    bgcolor: 'rgba(255,255,255,0.95)',
                                                                     color: '#c00000',
-                                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                                                                     '&:hover': { bgcolor: '#fff', color: '#8B0000' },
                                                                     borderRadius: '50%',
-                                                                    p: 0.5,
+                                                                    p: { xs: 0.6, sm: 0.75 },
+                                                                    width: { xs: 32, sm: 38 },
+                                                                    height: { xs: 32, sm: 38 },
                                                                 }}
                                                             >
-                                                                <DeleteIcon fontSize="small" />
+                                                                <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.2rem' } }} />
                                                             </IconButton>
 
                                                             <IconButton
                                                                 onClick={(e) => { e.stopPropagation(); handleEditPhoto(photo); }}
                                                                 sx={{
                                                                     position: 'absolute',
-                                                                    top: 8,
-                                                                    left: 56,
+                                                                    top: { xs: 6, sm: 8 },
+                                                                    left: { xs: 42, sm: 52 },
                                                                     zIndex: 6,
                                                                     bgcolor: 'rgba(255,255,255,0.95)',
                                                                     color: '#333',
-                                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                                                                     '&:hover': { bgcolor: '#fff', color: '#8B0000' },
                                                                     borderRadius: '50%',
-                                                                    p: 0.5,
+                                                                    p: { xs: 0.6, sm: 0.75 },
+                                                                    width: { xs: 32, sm: 38 },
+                                                                    height: { xs: 32, sm: 38 },
                                                                 }}
                                                             >
-                                                                <Edit fontSize="small" />
+                                                                <Edit sx={{ fontSize: { xs: '1rem', sm: '1.2rem' } }} />
                                                             </IconButton>
                                                         </>
                                                     )}
@@ -1406,17 +1501,19 @@ export default function SeedsFootprintsDetail({ user }) {
                                                         <Box
                                                             sx={{
                                                                 position: 'absolute',
-                                                                top: 8,
-                                                                right: 8,
+                                                                top: { xs: 6, sm: 8 },
+                                                                right: { xs: 6, sm: 8 },
                                                                 zIndex: 6,
-                                                                bgcolor: 'rgba(139, 0, 0, 0.9)',
+                                                                bgcolor: 'rgba(139, 0, 0, 0.95)',
                                                                 color: '#fff',
                                                                 borderRadius: '50%',
-                                                                p: 0.8,
+                                                                p: { xs: 0.6, sm: 0.8 },
                                                                 boxShadow: '0 2px 12px rgba(139,0,0,0.5)',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
+                                                                width: { xs: 32, sm: 38 },
+                                                                height: { xs: 32, sm: 38 },
                                                                 animation: 'pulse 2s ease-in-out infinite',
                                                                 '@keyframes pulse': {
                                                                     '0%, 100%': { transform: 'scale(1)', opacity: 0.9 },
@@ -1424,7 +1521,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                                                 }
                                                             }}
                                                         >
-                                                            <PlayCircleOutline fontSize="small" />
+                                                            <PlayCircleOutline sx={{ fontSize: { xs: '1rem', sm: '1.2rem' } }} />
                                                         </Box>
                                                     )}
 
@@ -1505,11 +1602,11 @@ export default function SeedsFootprintsDetail({ user }) {
                     <Box
                         sx={{
                             position: 'absolute',
-                            top: 20,
-                            right: 20,
+                            top: { xs: 10, sm: 20 },
+                            right: { xs: 10, sm: 20 },
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 2,
+                            gap: { xs: 1, sm: 2 },
                             zIndex: 10
                         }}
                     >
@@ -1517,10 +1614,11 @@ export default function SeedsFootprintsDetail({ user }) {
                             variant="body2"
                             sx={{
                                 color: '#D4AF37',
-                                fontSize: '1rem',
+                                fontSize: { xs: '0.8rem', sm: '1rem' },
                                 fontWeight: 500,
                                 fontFamily: '"Cinzel", serif',
-                                letterSpacing: '0.1em'
+                                letterSpacing: '0.1em',
+                                display: { xs: 'none', sm: 'block' }
                             }}
                         >
                             {displayPhotos.length > 0 ? `${activeIndex + 1} / ${displayPhotos.length}` : ''}
@@ -1530,14 +1628,16 @@ export default function SeedsFootprintsDetail({ user }) {
                             sx={{
                                 color: '#D4AF37',
                                 border: '1px solid rgba(212, 175, 55, 0.5)',
-                                bgcolor: 'rgba(0,0,0,0.6)',
+                                bgcolor: 'rgba(0,0,0,0.8)',
+                                width: { xs: 40, sm: 48 },
+                                height: { xs: 40, sm: 48 },
                                 '&:hover': {
                                     bgcolor: 'rgba(212, 175, 55, 0.2)',
                                     borderColor: '#D4AF37'
                                 }
                             }}
                         >
-                            <CloseIcon />
+                            <CloseIcon fontSize={window.innerWidth < 600 ? 'small' : 'medium'} />
                         </IconButton>
                     </Box>
 
@@ -2027,6 +2127,361 @@ export default function SeedsFootprintsDetail({ user }) {
                                     )}
                                 </Typography>
                             </Box>
+                        </Box>
+                    )}
+
+                    {/* Mobile-only details section at bottom */}
+                    {displayPhotos[activeIndex] && (
+                        <Box
+                            sx={{
+                                display: { xs: 'block', md: 'none' },
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                bgcolor: 'rgba(5, 3, 0, 0.98)',
+                                borderTop: '2px solid rgba(212, 175, 55, 0.5)',
+                                maxHeight: mobileDetailsOpen ? '70vh' : '60px',
+                                overflow: 'hidden',
+                                transition: 'max-height 0.3s ease-in-out',
+                                zIndex: 11
+                            }}
+                        >
+                            {/* Toggle button */}
+                            <Box
+                                onClick={() => setMobileDetailsOpen(!mobileDetailsOpen)}
+                                sx={{
+                                    p: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    cursor: 'pointer',
+                                    borderBottom: mobileDetailsOpen ? '1px solid rgba(212, 175, 55, 0.2)' : 'none',
+                                    '&:active': {
+                                        bgcolor: 'rgba(212, 175, 55, 0.1)'
+                                    }
+                                }}
+                            >
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        color: '#D4AF37',
+                                        fontWeight: 600,
+                                        fontSize: '1rem',
+                                        flex: 1
+                                    }}
+                                >
+                                    {mobileDetailsOpen ? 'Hide Details' : 'Show Details & Video'}
+                                </Typography>
+                                <Box
+                                    sx={{
+                                        transform: mobileDetailsOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.3s ease',
+                                        color: '#D4AF37'
+                                    }}
+                                >
+                                    ▲
+                                </Box>
+                            </Box>
+
+                            {/* Collapsible content */}
+                            {mobileDetailsOpen && (
+                                <Box
+                                    sx={{
+                                        p: 3,
+                                        overflowY: 'auto',
+                                        maxHeight: 'calc(70vh - 60px)'
+                                    }}
+                                >
+                                    {/* Photo counter */}
+                                    <Box sx={{ mb: 2 }}>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: '#8B7355',
+                                                fontSize: '0.875rem',
+                                                fontWeight: 500,
+                                                letterSpacing: '0.1em'
+                                            }}
+                                        >
+                                            {t('research.photo', 'Photo')} {activeIndex + 1} {t('research.of', 'of')} {displayPhotos.length}
+                                        </Typography>
+                                    </Box>
+
+                                    {/* Caption */}
+                                    {getCaption(displayPhotos[activeIndex].caption) && (
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                fontWeight: 600,
+                                                mb: 2,
+                                                color: '#D4AF37',
+                                                fontFamily: '"Cinzel", serif',
+                                                letterSpacing: '0.05em',
+                                                lineHeight: 1.6,
+                                                borderBottom: '2px solid rgba(212, 175, 55, 0.3)',
+                                                pb: 2,
+                                                fontSize: '1.1rem'
+                                            }}
+                                        >
+                                            {getCaption(displayPhotos[activeIndex].caption)}
+                                        </Typography>
+                                    )}
+
+                                    {/* Photo name if available */}
+                                    {displayPhotos[activeIndex].name && (
+                                        <Box sx={{ mb: 2 }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: '#8B7355',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 600,
+                                                    letterSpacing: '0.1em',
+                                                    textTransform: 'uppercase',
+                                                    mb: 0.5
+                                                }}
+                                            >
+                                                {t('research.photoName', 'Photo Name')}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: '#D4AF37',
+                                                    fontSize: '0.9rem',
+                                                    lineHeight: 1.6
+                                                }}
+                                            >
+                                                {getCaption(displayPhotos[activeIndex].name)}
+                                            </Typography>
+                                        </Box>
+                                    )}
+
+                                    {/* Source Link */}
+                                    {displayPhotos[activeIndex].sourceLink && (
+                                        <Box sx={{ mb: 2 }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: '#8B7355',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 600,
+                                                    letterSpacing: '0.1em',
+                                                    textTransform: 'uppercase',
+                                                    mb: 0.5
+                                                }}
+                                            >
+                                                {t('research.source', 'Source')}
+                                            </Typography>
+                                            <Box
+                                                component="a"
+                                                href={displayPhotos[activeIndex].sourceLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                sx={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 1,
+                                                    color: '#D4AF37',
+                                                    textDecoration: 'none',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 500,
+                                                    px: 2,
+                                                    py: 1,
+                                                    borderRadius: '4px',
+                                                    border: '1px solid #D4AF37',
+                                                    transition: 'all 0.2s ease',
+                                                    '&:active': {
+                                                        bgcolor: 'rgba(212, 175, 55, 0.2)',
+                                                        transform: 'scale(0.98)'
+                                                    }
+                                                }}
+                                            >
+                                                {t('research.viewSource', 'View Source')}
+                                            </Box>
+                                        </Box>
+                                    )}
+
+                                    {/* Video Player (Mobile version) */}
+                                    {(() => {
+                                        const currentPhoto = displayPhotos[activeIndex];
+                                        if (!currentPhoto?.videoLink) return null;
+                                        
+                                        const videoData = getVideoEmbedUrl(currentPhoto.videoLink);
+                                        const isFacebook = currentPhoto.videoLink.includes('facebook.com');
+                                        
+                                        if (!videoData) return null;
+                                        
+                                        return (
+                                            <Box sx={{ mb: 2 }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        color: '#D4AF37',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 700,
+                                                        letterSpacing: '0.15em',
+                                                        textTransform: 'uppercase',
+                                                        mb: 1.5,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 0.5
+                                                    }}
+                                                >
+                                                    <PlayCircleOutline sx={{ fontSize: '1rem' }} />
+                                                    {t('research.relatedVideo', 'Related Video')}
+                                                </Typography>
+                                                
+                                                {isFacebook ? (
+                                                    <Box
+                                                        sx={{
+                                                            p: 2.5,
+                                                            borderRadius: '6px',
+                                                            border: '2px solid #D4AF37',
+                                                            background: 'linear-gradient(135deg, rgba(10, 5, 0, 0.95) 0%, rgba(20, 10, 5, 0.95) 100%)',
+                                                            textAlign: 'center'
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: 60,
+                                                                height: 60,
+                                                                borderRadius: '50%',
+                                                                background: 'linear-gradient(135deg, #1877F2, #0866FF)',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                margin: '0 auto 15px'
+                                                            }}
+                                                        >
+                                                            <PlayCircleOutline sx={{ fontSize: 35, color: '#fff' }} />
+                                                        </Box>
+                                                        <Typography
+                                                            variant="subtitle1"
+                                                            sx={{
+                                                                color: '#D4AF37',
+                                                                fontWeight: 600,
+                                                                mb: 0.5,
+                                                                fontSize: '1rem'
+                                                            }}
+                                                        >
+                                                            Facebook Video
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                color: '#8B7355',
+                                                                mb: 2,
+                                                                display: 'block',
+                                                                lineHeight: 1.4,
+                                                                fontSize: '0.75rem'
+                                                            }}
+                                                        >
+                                                            Watch on Facebook
+                                                        </Typography>
+                                                        <Button
+                                                            variant="contained"
+                                                            component="a"
+                                                            href={currentPhoto.videoLink}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            startIcon={<PlayCircleOutline />}
+                                                            sx={{
+                                                                bgcolor: '#1877F2',
+                                                                color: '#fff',
+                                                                px: 3,
+                                                                py: 1,
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: 700,
+                                                                textTransform: 'none',
+                                                                borderRadius: '8px',
+                                                                '&:active': {
+                                                                    bgcolor: '#0866FF',
+                                                                    transform: 'scale(0.97)'
+                                                                }
+                                                            }}
+                                                        >
+                                                            Open Video
+                                                        </Button>
+                                                    </Box>
+                                                ) : (
+                                                    <Box
+                                                        sx={{
+                                                            position: 'relative',
+                                                            width: '100%',
+                                                            paddingBottom: videoData.type === 'direct' ? '0' : '56.25%',
+                                                            borderRadius: '6px',
+                                                            overflow: 'hidden',
+                                                            border: '2px solid #D4AF37',
+                                                            background: '#000'
+                                                        }}
+                                                    >
+                                                        {videoData.type === 'embed' ? (
+                                                            <Box
+                                                                component="iframe"
+                                                                src={videoData.url}
+                                                                title="Heritage Video"
+                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                allowFullScreen
+                                                                sx={{
+                                                                    position: 'absolute',
+                                                                    top: 0,
+                                                                    left: 0,
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    border: 'none'
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <Box
+                                                                component="video"
+                                                                src={videoData.url}
+                                                                controls
+                                                                sx={{
+                                                                    width: '100%',
+                                                                    maxHeight: '250px',
+                                                                    display: 'block'
+                                                                }}
+                                                            >
+                                                                Your browser does not support the video tag.
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        );
+                                    })()}
+
+                                    {/* Credit */}
+                                    {displayPhotos[activeIndex].credit && (
+                                        <Box sx={{ mb: 2 }}>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: '#8B7355',
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 600,
+                                                    letterSpacing: '0.1em',
+                                                    textTransform: 'uppercase',
+                                                    mb: 0.5
+                                                }}
+                                            >
+                                                {t('research.credit', 'Credit')}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: '#D4AF37',
+                                                    fontSize: '0.85rem',
+                                                    lineHeight: 1.6
+                                                }}
+                                            >
+                                                {displayPhotos[activeIndex].credit}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            )}
                         </Box>
                     )}
                 </DialogContent>

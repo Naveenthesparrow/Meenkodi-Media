@@ -13,6 +13,7 @@ const researchFolderSchema = new mongoose.Schema({
   photos: [
     {
       url: { type: String, trim: true, default: '' },
+      videoLink: { type: String, trim: true, default: '' }, // YouTube/Vimeo embed or direct video URL
       caption: bilingual,
       credit: { type: String, trim: true, default: '' },
       name: bilingual,

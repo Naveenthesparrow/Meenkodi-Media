@@ -64,8 +64,8 @@ app.use((req, res, next) => {
 
 // Health check endpoint for keep-alive services
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
+  res.status(200).json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     mongoConnected: mongoose.connection.readyState === 1
@@ -414,7 +414,7 @@ cloudinary.config({
 
 console.log('Cloudinary configured:', {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'Set' : 'Missing',
-  api_key: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Missing', 
+  api_key: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Missing',
   api_secret: process.env.CLOUDINARY_API_SECRET ? 'Set' : 'Missing'
 });
 
@@ -472,10 +472,10 @@ app.get("/api/user/profile", ensureAuthenticated, (req, res) => {
 // Article routes
 app.get("/api/articles/my-articles", ensureAuthenticated, async (req, res) => {
   try {
-    const articles = await Article.find({ 
-      authorId: req.user._id 
+    const articles = await Article.find({
+      authorId: req.user._id
     }).sort({ submittedAt: -1 });
-    
+
     const enriched = articles.map((article) => {
       const obj = article.toObject();
       const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
@@ -848,9 +848,9 @@ app.get("/api/seedsandfootprints/folders", async (req, res) => {
     const folders = await ResearchFolder.find().sort({ order: 1, createdAt: -1 });
     res.json(folders.map(f => ({
       _id: f._id,
-      name: (lang === 'ta' ? f.name.ta : f.name.en) || f.name.en,
+      name: f.name, // Return raw bilingual object
       nameRaw: f.name,
-      description: (lang === 'ta' ? f.description.ta : f.description.en) || f.description.en,
+      description: f.description, // Return raw bilingual object
       coverPhoto: f.coverPhoto || null,
       photos: f.photos || [],
       order: f.order,
@@ -866,25 +866,25 @@ app.get('/api/seedsandfootprints/folders/:id', async (req, res) => {
   try {
     console.log('Fetching research folder with ID:', req.params.id);
     const lang = resolveLang(req);
-    
+
     if (!req.params.id || req.params.id === 'undefined') {
       console.log('Invalid folder ID provided');
       return res.status(400).json({ error: 'Invalid folder ID' });
     }
-    
+
     const folder = await ResearchFolder.findById(req.params.id);
     if (!folder) {
       console.log('Folder not found:', req.params.id);
       return res.status(404).json({ error: 'Folder not found' });
     }
-    
+
     console.log('Found folder:', folder.name, 'photos count:', folder.photos?.length || 0);
-    
+
     const response = {
       _id: folder._id,
-      name: (lang === 'ta' ? folder.name?.ta : folder.name?.en) || folder.name?.en || 'Untitled',
+      name: folder.name, // Return raw bilingual object
       nameRaw: folder.name,
-      description: (lang === 'ta' ? folder.description?.ta : folder.description?.en) || folder.description?.en || '',
+      description: folder.description, // Return raw bilingual object
       coverPhoto: folder.coverPhoto || null,
       order: folder.order,
       createdAt: folder.createdAt,
@@ -903,7 +903,7 @@ app.get('/api/seedsandfootprints/folders/:id', async (req, res) => {
         createdAt: p.createdAt
       }))
     };
-    
+
     console.log('Sending response with photos:', response.photos.length);
     res.json(response);
   } catch (err) {
@@ -922,7 +922,7 @@ app.post('/api/seedsandfootprints/folders/:id/photos', ensureAdmin, async (req, 
       user: req.user ? { id: req.user._id, role: req.user.role } : 'No user'
     });
 
-    const { imageUrl, caption, credit, name, keywords, sourceLink } = req.body || {};
+    const { imageUrl, caption, credit, name, keywords, sourceLink, videoLink } = req.body || {};
 
     const folder = await ResearchFolder.findById(req.params.id);
     if (!folder) {
@@ -938,13 +938,14 @@ app.post('/api/seedsandfootprints/folders/:id/photos', ensureAdmin, async (req, 
 
     const photo = {
       url: imageUrl || '',
+      videoLink: videoLink || '',
       caption: {
         en: caption?.en || '',
         ta: caption?.ta || ''
       },
       credit: credit || '',
       name: name || undefined,
-      keywords: Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k=>k.trim()).filter(Boolean) : []),
+      keywords: Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k => k.trim()).filter(Boolean) : []),
       sourceLink: sourceLink || '',
       order: nextOrder
     };
@@ -967,6 +968,7 @@ app.post('/api/seedsandfootprints/folders/:id/photos', ensureAdmin, async (req, 
       photo: {
         _id: savedPhoto._id,
         url: savedPhoto.url,
+        videoLink: savedPhoto.videoLink,
         caption: savedPhoto.caption,
         credit: savedPhoto.credit,
         name: savedPhoto.name,
@@ -986,7 +988,7 @@ app.post('/api/seedsandfootprints/folders/:id/photos', ensureAdmin, async (req, 
 app.put('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
   try {
     const { folderId, photoId } = req.params;
-    const { imageUrl, caption, credit, name, keywords, sourceLink } = req.body || {};
+    const { imageUrl, caption, credit, name, keywords, sourceLink, videoLink } = req.body || {};
 
     const folder = await ResearchFolder.findById(folderId);
     if (!folder) return res.status(404).json({ error: 'Folder not found' });
@@ -996,18 +998,24 @@ app.put('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin
 
     // Update fields only if provided
     if (typeof imageUrl === 'string') photo.url = imageUrl;
+
     if (caption) {
-      photo.caption = {
-        en: caption.en || photo.caption?.en || '',
-        ta: caption.ta || photo.caption?.ta || ''
-      };
+      if (caption.en !== undefined) photo.caption.en = caption.en;
+      if (caption.ta !== undefined) photo.caption.ta = caption.ta;
     }
+
+    if (name) {
+      if (!photo.name) photo.name = { en: '', ta: '' };
+      if (name.en !== undefined) photo.name.en = name.en;
+      if (name.ta !== undefined) photo.name.ta = name.ta;
+    }
+
     if (typeof credit !== 'undefined') photo.credit = credit || '';
-    if (typeof name !== 'undefined') photo.name = name;
     if (typeof keywords !== 'undefined') {
-      photo.keywords = Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k=>k.trim()).filter(Boolean) : []);
+      photo.keywords = Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k => k.trim()).filter(Boolean) : []);
     }
     if (typeof sourceLink !== 'undefined') photo.sourceLink = sourceLink || '';
+    if (typeof videoLink !== 'undefined') photo.videoLink = videoLink || '';
 
     folder.updatedAt = new Date();
     await folder.save();
@@ -1055,25 +1063,25 @@ app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('
     console.log('Body:', req.body);
     console.log('File:', req.file);
     console.log('Headers:', req.headers);
-    
+
     const { nameEn, nameTa, descriptionEn, descriptionTa } = req.body;
-    
+
     if (!nameEn && !nameTa) {
       console.log('Validation failed: No name provided');
       return res.status(400).json({ error: "Folder name required in at least one language" });
     }
-    
+
     // Build the folder payload
     const payload = {
       name: {},
       description: {}
     };
-    
+
     if (nameEn) payload.name.en = nameEn;
     if (nameTa) payload.name.ta = nameTa;
     if (descriptionEn) payload.description.en = descriptionEn;
     if (descriptionTa) payload.description.ta = descriptionTa;
-    
+
     // Add cover photo if uploaded
     if (req.file) {
       console.log('Cover photo uploaded:', req.file.path);
@@ -1081,13 +1089,13 @@ app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('
     } else {
       console.log('No cover photo uploaded');
     }
-    
+
     // Set order
     if (payload.order === undefined || payload.order === null) {
       const max = await ResearchFolder.findOne().sort({ order: -1 }).select('order');
       payload.order = (max?.order ?? 0) + 1;
     }
-    
+
     console.log('Creating folder with payload:', payload);
     const created = await ResearchFolder.create(payload);
     console.log('Folder created successfully:', created._id);
@@ -1105,24 +1113,18 @@ app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.singl
     console.log('=== UPDATE RESEARCH FOLDER REQUEST ===');
     console.log('Body:', req.body);
     console.log('File:', req.file);
-    
+
     const { nameEn, nameTa, descriptionEn, descriptionTa, removeCoverPhoto } = req.body;
-    
-    // Build the update payload
+
+    // Build the update payload using dot notation for bilingual fields to support partial updates
     const updatePayload = {};
-    
-    if (nameEn || nameTa) {
-      updatePayload.name = {};
-      if (nameEn) updatePayload.name.en = nameEn;
-      if (nameTa) updatePayload.name.ta = nameTa;
-    }
-    
-    if (descriptionEn || descriptionTa) {
-      updatePayload.description = {};
-      if (descriptionEn) updatePayload.description.en = descriptionEn;
-      if (descriptionTa) updatePayload.description.ta = descriptionTa;
-    }
-    
+
+    if (nameEn !== undefined) updatePayload['name.en'] = nameEn;
+    if (nameTa !== undefined) updatePayload['name.ta'] = nameTa;
+
+    if (descriptionEn !== undefined) updatePayload['description.en'] = descriptionEn;
+    if (descriptionTa !== undefined) updatePayload['description.ta'] = descriptionTa;
+
     // Handle cover photo operations
     if (req.file) {
       // New cover photo uploaded
@@ -1133,17 +1135,17 @@ app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.singl
       console.log('Removing existing cover photo');
       updatePayload.coverPhoto = null;
     }
-    
+
     console.log('Update payload:', updatePayload);
-    
+
     const updated = await ResearchFolder.findByIdAndUpdate(
-      req.params.id, 
-      updatePayload, 
+      req.params.id,
+      { $set: updatePayload, updatedAt: new Date() },
       { new: true, runValidators: true }
     );
-    
+
     if (!updated) return res.status(404).json({ error: "Folder not found" });
-    
+
     console.log('Folder updated successfully');
     res.json(updated);
   } catch (err) {
@@ -1160,6 +1162,61 @@ app.delete("/api/seedsandfootprints/folders/:id", ensureAdmin, async (req, res) 
     res.status(204).end();
   } catch (err) {
     console.error("Error deleting research folder:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Reorder folders
+app.put("/api/seedsandfootprints/folders/order", ensureAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: "orderedIds must be an array" });
+    }
+
+    const bulkOps = orderedIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { $set: { order: index + 1 } },
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await ResearchFolder.bulkWrite(bulkOps);
+    }
+
+    res.json({ updated: bulkOps.length });
+  } catch (err) {
+    console.error("Folder order update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Reorder photos within a folder
+app.put("/api/seedsandfootprints/folders/:id/photos/order", ensureAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: "orderedIds must be an array" });
+    }
+
+    const folder = await ResearchFolder.findById(req.params.id);
+    if (!folder) {
+      return res.status(404).json({ error: "Folder not found" });
+    }
+
+    // Update the order of each photo in the photos array
+    orderedIds.forEach((photoId, index) => {
+      const photo = folder.photos.find(p => p._id.toString() === photoId);
+      if (photo) {
+        photo.order = index + 1;
+      }
+    });
+
+    await folder.save();
+    res.json({ updated: orderedIds.length });
+  } catch (err) {
+    console.error("Photo order update error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -2104,9 +2161,9 @@ app.get("/api/dynasties/:idOrSlug", async (req, res) => {
   try {
     console.log("=== DYNASTY REQUEST ===");
     console.log("Requested ID/Slug:", req.params.idOrSlug);
-    
+
     let dynasty;
-    
+
     // Try to find by MongoDB ID first
     if (req.params.idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
       console.log("Searching by MongoDB ID");
@@ -2121,7 +2178,7 @@ app.get("/api/dynasties/:idOrSlug", async (req, res) => {
         },
       ]);
     }
-    
+
     // If not found, try to find by slug
     if (!dynasty) {
       console.log("Searching by slug:", req.params.idOrSlug);
@@ -2144,7 +2201,7 @@ app.get("/api/dynasties/:idOrSlug", async (req, res) => {
     }
 
     console.log("Dynasty found:", dynasty.name.en);
-    
+
     // Check if user liked
     let userLiked = false;
     if (req.user) {
@@ -2396,7 +2453,7 @@ app.get("/api/poets", async (req, res) => {
 app.get("/api/poets/:idOrSlug", async (req, res) => {
   try {
     let poet;
-    
+
     // Try to find by MongoDB ID first
     if (req.params.idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
       poet = await Poet.findById(req.params.idOrSlug).populate([
@@ -2410,7 +2467,7 @@ app.get("/api/poets/:idOrSlug", async (req, res) => {
         },
       ]);
     }
-    
+
     // If not found, try to find by slug
     if (!poet) {
       poet = await Poet.findOne({ slug: req.params.idOrSlug }).populate([
