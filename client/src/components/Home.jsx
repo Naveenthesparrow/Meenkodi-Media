@@ -62,9 +62,13 @@ import {
   YouTube,
   Email,
   Phone,
+  Add,
+  Edit,
+  Delete,
 } from "@mui/icons-material";
 import CourseSyllabusSlider from "./CourseSyllabusSlider";
 import DirectorsSlider from "./DirectorsSlider";
+import DirectorsAdmin from "./DirectorsAdmin";
 import { useBilingualContent, createBilingualContent } from "../utils/bilingualContent";
 import MeenkodiImage from "../assests/meenkodi.png";
 
@@ -711,6 +715,13 @@ export default function Home() {
   const [libraryBooksVisible, setLibraryBooksVisible] = useState(false);
   const [meenkodiSrc, setMeenkodiSrc] = useState(MeenkodiImage);
   const libraryRef = useRef(null);
+  const directorsRef = useRef(null);
+  const [directors, setDirectors] = useState([]);
+  const [user, setUser] = useState(null);
+  const [directorsLoading, setDirectorsLoading] = useState(true);
+  const [editingDirector, setEditingDirector] = useState(null);
+  const [directorsSectionVisible, setDirectorsSectionVisible] = useState(false);
+  const [openDirectorAdd, setOpenDirectorAdd] = useState(false);
 
   const heritageSteps = [
     {
@@ -880,6 +891,70 @@ export default function Home() {
       setMeenkodiSrc(canvas.toDataURL('image/png'));
     };
     baseImage.onerror = () => setMeenkodiSrc(MeenkodiImage);
+  }, []);
+
+  // Fetch current user for admin functionality
+  useEffect(() => {
+    fetch('/auth/user', { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Home.jsx - User fetched:', data);
+        // API returns user object directly, not wrapped
+        if (data && data._id) {
+          setUser(data);
+          console.log('Home.jsx - User role:', data.role);
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching user:', err);
+        setUser(null);
+      });
+  }, []);
+
+  // Fetch directors from API
+  useEffect(() => {
+    setDirectorsLoading(true);
+    fetch('/api/directors', {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setDirectors(data);
+        } else {
+          console.error('Directors API response is not an array:', data);
+          setDirectors([]);
+        }
+        setDirectorsLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching directors:', err);
+        setDirectors([]);
+        setDirectorsLoading(false);
+      });
+  }, []);
+
+  // Track directors section visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setDirectorsSectionVisible(entry.isIntersecting);
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (directorsRef.current) {
+      observer.observe(directorsRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -2663,6 +2738,7 @@ export default function Home() {
                     elevation={0}
                     onClick={() => { saveScrollPosition(); navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}`); }}
                     sx={{
+                      position: 'relative',
                       justifyContent: 'center',
                       alignItems: 'center',
                       mt: 6,
@@ -2691,10 +2767,75 @@ export default function Home() {
                         borderColor: "#8B0000",
                         "&::before": {
                           transform: "scaleX(1)"
+                        },
+                        "& .admin-controls-dynasty": {
+                          opacity: 1,
+                          transform: "translateY(0)"
                         }
                       }
                     }}
                   >
+                    {/* Admin Controls Overlay */}
+                    {user && user.role === 'admin' && (
+                      <Box
+                        className="admin-controls-dynasty"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          display: 'flex',
+                          gap: 0.5,
+                          zIndex: 10,
+                          opacity: 0,
+                          transform: 'translateY(-8px)',
+                          transition: 'all 0.3s ease',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <IconButton
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.95)',
+                            color: '#000',
+                            width: 32,
+                            height: 32,
+                            '&:hover': {
+                              bgcolor: '#8B0000',
+                              color: '#fff',
+                            },
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            saveScrollPosition();
+                            navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}?edit=true`);
+                          }}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.95)',
+                            color: '#000',
+                            width: 32,
+                            height: 32,
+                            '&:hover': {
+                              bgcolor: '#8B0000',
+                              color: '#fff',
+                            },
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('Delete dynasty:', TEAM_MUSEUM[idx]);
+                            // TODO: Add delete functionality
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
                     <Box
                       sx={{
                         width: 80,
@@ -2743,6 +2884,7 @@ export default function Home() {
                   elevation={0}
                   onClick={() => { saveScrollPosition(); navigate(`/dynasties/${TEAM_MUSEUM[4].slug}`); }}
                   sx={{
+                    position: 'relative',
                     justifyContent: 'center',
                     alignItems: 'center',
                     mt: { xs: 1, md: -2 },
@@ -2757,10 +2899,75 @@ export default function Home() {
                       transform: "translateY(-12px)",
                       boxShadow: "0 20px 60px rgba(139,0,0,0.4)",
                       bgcolor: "#222",
-                      borderColor: "#8B0000"
+                      borderColor: "#8B0000",
+                      "& .admin-controls-dynasty": {
+                        opacity: 1,
+                        transform: "translateY(0)"
+                      }
                     }
                   }}
                 >
+                  {/* Admin Controls Overlay */}
+                  {user && user.role === 'admin' && (
+                    <Box
+                      className="admin-controls-dynasty"
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        display: 'flex',
+                        gap: 0.5,
+                        zIndex: 10,
+                        opacity: 0,
+                        transform: 'translateY(-8px)',
+                        transition: 'all 0.3s ease',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <IconButton
+                        size="small"
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.95)',
+                          color: '#000',
+                          width: 32,
+                          height: 32,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
+                            color: '#fff',
+                          },
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          saveScrollPosition();
+                          navigate(`/dynasties/${TEAM_MUSEUM[4].slug}?edit=true`);
+                        }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.95)',
+                          color: '#000',
+                          width: 32,
+                          height: 32,
+                          '&:hover': {
+                            bgcolor: '#8B0000',
+                            color: '#fff',
+                          },
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Delete dynasty:', TEAM_MUSEUM[4]);
+                          // TODO: Add delete functionality
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
                   <Box
                     sx={{
                       width: 80,
@@ -2819,24 +3026,163 @@ export default function Home() {
 
       {/* DIRECTORS & HERITAGE SPECIALISTS */}
       <DeferredSection fallback="skeleton" rootMargin="300px">
-        <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: "#fff" }}>
-          <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 5, lg: 6, xl: 8 } }}>
+        <Box 
+          ref={directorsRef}
+          sx={{ 
+          py: { xs: 10, md: 14 }, 
+          background: 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 50%, #fffaf0 100%)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '100%',
+            background: 'radial-gradient(circle at 20% 50%, rgba(139,0,0,0.03) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(218,165,32,0.03) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }
+        }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 5, lg: 6, xl: 8 }, position: 'relative' }}>
             <Typography
               variant="h2"
               align="center"
               sx={{
                 fontWeight: 800,
                 mb: 1.5,
-                fontSize: { xs: "1.8rem", sm: "2.2rem", md: "2.5rem", lg: "2.8rem" },
-                color: "#000",
+                fontSize: { xs: "1.9rem", sm: "2.3rem", md: "2.6rem", lg: "3rem" },
+                color: '#8B0000',
                 letterSpacing: "-0.02em"
               }}
             >
               {t('home.team.directors.title')}
             </Typography>
-            <Divider sx={{ width: 60, height: 3, bgcolor: "#8B0000", mx: "auto", mb: 6, borderRadius: 2 }} />
+            <Divider sx={{ 
+              width: 80, 
+              height: 4, 
+              background: 'linear-gradient(90deg, transparent, #8B0000, #DAA520, #8B0000, transparent)', 
+              mx: "auto", 
+              mb: 4, 
+              borderRadius: 2,
+              boxShadow: '0 2px 10px rgba(139,0,0,0.2)'
+            }} />
 
-            <DirectorsSlider directors={TEAM_DIRECTORS} onNavigate={saveScrollPosition} />
+            {/* Admin Add Card Button */}
+            {user && user.role === 'admin' && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                <Button
+                  startIcon={<Add />}
+                  onClick={() => setOpenDirectorAdd(true)}
+                  sx={{
+                    bgcolor: '#8B0000',
+                    color: '#fff',
+                    px: 4,
+                    py: 1.5,
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    borderRadius: '4px',
+                    boxShadow: '0 4px 12px rgba(139,0,0,0.3)',
+                    '&:hover': {
+                      bgcolor: '#6B0000',
+                      boxShadow: '0 6px 16px rgba(139,0,0,0.4)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Add Card
+                </Button>
+              </Box>
+            )}
+
+            {/* Show slider only if there are directors */}
+            {!directorsLoading && directors.length > 0 && (
+              <DirectorsSlider 
+                directors={directors} 
+                onNavigate={saveScrollPosition}
+                user={user}
+                onEdit={(director) => {
+                  setEditingDirector(director);
+                  const adminSection = document.getElementById('directors-admin');
+                  if (adminSection) {
+                    window.scrollTo({ 
+                      top: adminSection.offsetTop - 100, 
+                      behavior: 'smooth' 
+                    });
+                  }
+                }}
+                onDelete={async (directorId) => {
+                  if (!window.confirm('Are you sure you want to delete this director?')) return;
+                  try {
+                    const res = await fetch(`/api/directors/${directorId}`, {
+                      method: 'DELETE',
+                      credentials: 'include'
+                    });
+                    if (res.ok) {
+                      setDirectors(directors.filter(d => d._id !== directorId));
+                    }
+                  } catch (err) {
+                    console.error('Error deleting director:', err);
+                  }
+                }}
+              />
+            )}
+
+            {/* Empty state message */}
+            {!directorsLoading && directors.length === 0 && !(user && user.role === 'admin') && (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 6,
+                px: 3,
+                backgroundColor: 'rgba(139, 0, 0, 0.03)',
+                borderRadius: 3,
+                border: '2px dashed rgba(139, 0, 0, 0.2)'
+              }}>
+                <Typography variant="h6" sx={{ color: '#8B0000', mb: 1 }}>
+                  {t('home.team.directors.empty', { defaultValue: 'No directors available at the moment' })}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                  {t('home.team.directors.emptyDesc', { defaultValue: 'Please check back later' })}
+                </Typography>
+              </Box>
+            )}
+
+            {/* Loading state */}
+            {directorsLoading && (
+              <Box sx={{ textAlign: 'center', py: 6 }}>
+                <Typography variant="body1" sx={{ color: '#666' }}>
+                  Loading directors...
+                </Typography>
+              </Box>
+            )}
+
+            {/* Admin Controls - Hidden but available for dialog management */}
+            {user && user.role === 'admin' && (
+              <Box 
+                id="directors-admin" 
+                sx={{ 
+                  mt: 6 
+                }}
+              >
+                <DirectorsAdmin 
+                  user={user} 
+                  externalEditDirector={editingDirector}
+                  externalOpenAdd={openDirectorAdd}
+                  onUpdate={(updatedDirectors) => {
+                    setDirectors(updatedDirectors);
+                    setEditingDirector(null); // Clear after update
+                    setOpenDirectorAdd(false); // Reset add trigger
+                  }}
+                  onDialogClose={() => {
+                    setEditingDirector(null);
+                    setOpenDirectorAdd(false);
+                  }}
+                />
+              </Box>
+            )}
           </Container>
         </Box>
       </DeferredSection>

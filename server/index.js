@@ -30,8 +30,10 @@ import AncientScience from "./models/AncientScience.js";
 import Clothing from "./models/Clothing.js";
 import Dynasty from "./models/Dynasty.js";
 import Poet from "./models/Poet.js";
+import Director from "./models/Director.js";
 import { localizeCollection, localizeSingle, resolveLang } from './translationMap.js';
 import researchRoutes from './routes/research.js';
+import directorsRoutes from './routes/directors.js';
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 
@@ -1220,6 +1222,9 @@ app.put("/api/seedsandfootprints/folders/:id/photos/order", ensureAdmin, async (
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// Directors & Heritage Specialists API routes
+app.use('/api/directors', directorsRoutes);
 
 // Event routes
 app.get("/api/events", async (req, res) => {

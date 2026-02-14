@@ -29,12 +29,14 @@ import { useTranslation } from 'react-i18next';
 export default function Articles({ user }) {
   const getContent = useBilingualContent();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentTab, setCurrentTab] = useState('published');
   const [pendingCount, setPendingCount] = useState(0);
   const [showComposer, setShowComposer] = useState(false);
+  
   useEffect(() => {
     const loadArticles = async () => {
       try {
@@ -52,6 +54,19 @@ export default function Articles({ user }) {
     };
     loadArticles();
   }, []);
+
+  const handlePostCreated = (newArticle) => {
+    // Add the new article to the list
+    setArticles(prevArticles => [newArticle, ...prevArticles]);
+    
+    // Update pending count if the new article is pending
+    if (newArticle.status === 'pending') {
+      setPendingCount(prevCount => prevCount + 1);
+    }
+    
+    // Hide the composer
+    setShowComposer(false);
+  };
 
   if (loading) {
     return (
@@ -98,26 +113,7 @@ export default function Articles({ user }) {
       }
     }}>
       <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 3 }, pb: 4, position: 'relative' }}>
-      <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }} actions={user && user.role === 'admin' ? (
-        <Button
-          onClick={() => setShowComposer(true)}
-          variant="contained"
-          startIcon={<CheckCircle />}
-          sx={{
-            bgcolor: '#000',
-            color: '#fff',
-            transition: 'all 0.3s ease',
-            '&:hover': { bgcolor: '#333' },
-            borderRadius: 0,
-            px: 3,
-            py: 1,
-            textTransform: 'uppercase',
-            fontWeight: 600,
-          }}
-        >
-          {t('articles.create', 'Create Article')}
-        </Button>
-      ) : null}>
+      <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }}>
         {t('articles.title', 'Articles')}
       </PageHeading>
 

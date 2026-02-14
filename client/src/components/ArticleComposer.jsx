@@ -267,7 +267,7 @@ export default function ArticleComposer({ user, onPostCreated }) {
   const currentTitle = composerLanguage === 'en' ? titleEn : titleTa;
 
   return (
-    <Card sx={{ p: { xs: 2, md: 3 }, mb: 4, border: '2px solid #000', borderRadius: 0, boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}>
+    <Card sx={{ p: { xs: 2, md: 3 }, mb: 4, border: '2px solid #000', borderRadius: 0, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', overflow: 'visible' }}>
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
       {success && (
         <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
@@ -329,7 +329,19 @@ export default function ArticleComposer({ user, onPostCreated }) {
       />
 
       {/* Formatting Toolbar */}
-      <Paper elevation={0} sx={{ p: 1, mb: 2, bgcolor: '#f5f5f5', display: 'flex', gap: 0.5, flexWrap: 'wrap', border: '1px solid #e0e0e0' }}>
+      <Paper elevation={0} sx={{ 
+        p: 1, 
+        mb: 2, 
+        bgcolor: '#f5f5f5', 
+        display: 'flex', 
+        gap: 0.5, 
+        flexWrap: 'wrap', 
+        border: '1px solid #e0e0e0',
+        position: 'sticky',
+        top: { xs: 60, sm: 70 },
+        zIndex: 1100,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+      }}>
           <Tooltip title="Heading 1">
             <IconButton size="small" onClick={() => insertHeading(1)} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
               <Typography sx={{ fontSize: '1.2rem', fontWeight: 700 }}>H1</Typography>
@@ -437,7 +449,6 @@ export default function ArticleComposer({ user, onPostCreated }) {
               sx={{ 
                 p: 3, 
                 minHeight: 400,
-                maxHeight: 600,
                 overflowY: 'auto',
                 border: '2px solid #e0e0e0',
                 bgcolor: '#fafafa',

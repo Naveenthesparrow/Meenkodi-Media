@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -19,6 +19,8 @@ import {
   Chip,
   Divider,
   Avatar,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -55,6 +57,7 @@ function DynastyDetail({ user: initialUser }) {
   const user = initialUser;
   const { id, slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const getContent = useBilingualContent();
   const { t } = useTranslation();
   const [dynasty, setDynasty] = useState(null);
@@ -81,6 +84,7 @@ function DynastyDetail({ user: initialUser }) {
 
   // Edit mode states
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const [editableData, setEditableData] = useState({
     name_en: "",
     name_ta: "",
@@ -115,6 +119,26 @@ function DynastyDetail({ user: initialUser }) {
     contentSections: [],
   });
 
+  // Helper function to close edit mode and clean URL
+  const closeEditMode = () => {
+    setIsEditing(false);
+    // Remove ?edit=true from URL
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.delete('edit');
+    const newSearch = searchParams.toString();
+    const newUrl = `${location.pathname}${newSearch ? '?' + newSearch : ''}`;
+    navigate(newUrl, { replace: true });
+  };
+
+  // Helper function to enter edit mode and update URL
+  const enterEditMode = () => {
+    setIsEditing(true);
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('edit', 'true');
+    const newUrl = `${location.pathname}?${searchParams.toString()}`;
+    navigate(newUrl, { replace: true });
+  };
+
   // Fetch dynasty data
   useEffect(() => {
     const fetchDynasty = async () => {
@@ -129,6 +153,12 @@ function DynastyDetail({ user: initialUser }) {
         setComments(data.comments || []);
         setLikes(data.likes?.length || 0);
         setUserLiked(user && data.likes?.includes(user._id));
+        
+        // Check if edit mode is requested via query parameter
+        const searchParams = new URLSearchParams(location.search);
+        if (searchParams.get('edit') === 'true' && user && user.role === 'admin') {
+          setIsEditing(true);
+        }
         
         // Initialize editable data
         setEditableData({
@@ -273,7 +303,7 @@ function DynastyDetail({ user: initialUser }) {
 
       const updatedDynasty = await res.json();
       setDynasty(updatedDynasty);
-      setIsEditing(false);
+      closeEditMode();
     } catch (err) {
       console.error(err);
       setError(err.message);
@@ -452,430 +482,600 @@ function DynastyDetail({ user: initialUser }) {
   const colorScheme = dynastyColors[dynasty.slug] || { primary: '#000', secondary: '#f5f5f5' };
 
   // ADMIN EDIT VIEW
+  // TabPanel component for organized tabs
+  function TabPanel({ children, value, index }) {
+    return (
+      <Box role="tabpanel" hidden={value !== index} sx={{ py: 3 }}>
+        {value === index && children}
+      </Box>
+    );
+  }
+
   if (isEditing && user && user.role === "admin") {
     return (
       <Container maxWidth="xl" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, pb: 2, borderBottom: '1px solid #eee' }}>
+        <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden' }}>
+          {/* Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            p: 3,
+            bgcolor: '#8B0000',
+            color: 'white'
+          }}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               {t('dynasty.edit', 'Edit Dynasty')}
             </Typography>
-            <IconButton onClick={() => setIsEditing(false)}>
+            <IconButton onClick={closeEditMode} sx={{ color: 'white' }}>
               <Close />
             </IconButton>
           </Box>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Name (EN)"
-                value={editableData.name_en}
-                onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Name (TA)"
-                value={editableData.name_ta}
-                onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })}
-                fullWidth
-              />
-            </Grid>
+          {/* Tabs Navigation */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#f5f5f5' }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': { 
+                  fontWeight: 600,
+                  minWidth: 120,
+                  px: 3
+                },
+                '& .Mui-selected': { 
+                  color: '#8B0000' 
+                },
+                '& .MuiTabs-indicator': { 
+                  backgroundColor: '#8B0000',
+                  height: 3
+                }
+              }}
+            >
+              <Tab label="Basic Info" />
+              <Tab label="Territory & Rulers" />
+              <Tab label="Overview" />
+              <Tab label="Military & Culture" />
+              <Tab label="Architecture & Economy" />
+              <Tab label="Legacy & Decline" />
+              <Tab label="Media & Sections" />
+            </Tabs>
+          </Box>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Period (EN)"
-                value={editableData.period_en}
-                onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Period (TA)"
-                value={editableData.period_ta}
-                onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })}
-                fullWidth
-              />
-            </Grid>
+          {/* Tab Content */}
+          <Box sx={{ p: 4 }}>
+            {/* Tab 0: Basic Info */}
+            <TabPanel value={activeTab} index={0}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Basic Information
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Dynasty Name (English)"
+                    value={editableData.name_en}
+                    onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })}
+                    fullWidth
+                    variant="outlined"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Dynasty Name (Tamil)"
+                    value={editableData.name_ta}
+                    onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })}
+                    fullWidth
+                    variant="outlined"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Period (English)"
+                    value={editableData.period_en}
+                    onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })}
+                    fullWidth
+                    placeholder="e.g., 300 BCE - 1279 CE"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Period (Tamil)"
+                    value={editableData.period_ta}
+                    onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })}
+                    fullWidth
+                    placeholder="e.g., கி.மு. 300 - கி.பி. 1279"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Capital (English)"
+                    value={editableData.capital_en}
+                    onChange={(e) => setEditableData({ ...editableData, capital_en: e.target.value })}
+                    fullWidth
+                    placeholder="e.g., Thanjavur, Gangaikonda Cholapuram"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Capital (Tamil)"
+                    value={editableData.capital_ta}
+                    onChange={(e) => setEditableData({ ...editableData, capital_ta: e.target.value })}
+                    fullWidth
+                    placeholder="e.g., தஞ்சாவூர், கங்கைகொண்ட சோழபுரம்"
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Capital (EN)"
-                value={editableData.capital_en}
-                onChange={(e) => setEditableData({ ...editableData, capital_en: e.target.value })}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Capital (TA)"
-                value={editableData.capital_ta}
-                onChange={(e) => setEditableData({ ...editableData, capital_ta: e.target.value })}
-                fullWidth
-              />
-            </Grid>
+            {/* Tab 1: Territory & Rulers */}
+            <TabPanel value={activeTab} index={1}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Territory & Famous Rulers
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Territory (English)"
+                    value={editableData.territory_en}
+                    onChange={(e) => setEditableData({ ...editableData, territory_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={4}
+                    placeholder="Describe the geographical extent of the dynasty..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Territory (Tamil)"
+                    value={editableData.territory_ta}
+                    onChange={(e) => setEditableData({ ...editableData, territory_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={4}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Famous Rulers (English)"
+                    value={editableData.rulers_en}
+                    onChange={(e) => setEditableData({ ...editableData, rulers_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="List notable rulers and their contributions..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Famous Rulers (Tamil)"
+                    value={editableData.rulers_ta}
+                    onChange={(e) => setEditableData({ ...editableData, rulers_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Territory (EN)"
-                value={editableData.territory_en}
-                onChange={(e) => setEditableData({ ...editableData, territory_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={2}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Territory (TA)"
-                value={editableData.territory_ta}
-                onChange={(e) => setEditableData({ ...editableData, territory_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={2}
-              />
-            </Grid>
+            {/* Tab 2: Overview (Description, Content, Achievements) */}
+            <TabPanel value={activeTab} index={2}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Dynasty Overview
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Description (English)"
+                    value={editableData.description_en}
+                    onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Brief overview of the dynasty..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Description (Tamil)"
+                    value={editableData.description_ta}
+                    onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Detailed Content (English)"
+                    value={editableData.content_en}
+                    onChange={(e) => setEditableData({ ...editableData, content_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={8}
+                    placeholder="Detailed historical information..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Detailed Content (Tamil)"
+                    value={editableData.content_ta}
+                    onChange={(e) => setEditableData({ ...editableData, content_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={8}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Major Achievements (English)"
+                    value={editableData.achievements_en}
+                    onChange={(e) => setEditableData({ ...editableData, achievements_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="List significant achievements..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Major Achievements (Tamil)"
+                    value={editableData.achievements_ta}
+                    onChange={(e) => setEditableData({ ...editableData, achievements_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Famous Rulers (EN)"
-                value={editableData.rulers_en}
-                onChange={(e) => setEditableData({ ...editableData, rulers_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Famous Rulers (TA)"
-                value={editableData.rulers_ta}
-                onChange={(e) => setEditableData({ ...editableData, rulers_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
+            {/* Tab 3: Military & Culture */}
+            <TabPanel value={activeTab} index={3}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Military Power & Cultural Contributions
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Military Strength (English)"
+                    value={editableData.militaryStrength_en}
+                    onChange={(e) => setEditableData({ ...editableData, militaryStrength_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Describe military achievements, strategies, conquests..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Military Strength (Tamil)"
+                    value={editableData.militaryStrength_ta}
+                    onChange={(e) => setEditableData({ ...editableData, militaryStrength_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Cultural Contributions (English)"
+                    value={editableData.culturalContributions_en}
+                    onChange={(e) => setEditableData({ ...editableData, culturalContributions_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Literature, arts, dance, music, language development..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Cultural Contributions (Tamil)"
+                    value={editableData.culturalContributions_ta}
+                    onChange={(e) => setEditableData({ ...editableData, culturalContributions_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Achievements (EN)"
-                value={editableData.achievements_en}
-                onChange={(e) => setEditableData({ ...editableData, achievements_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Achievements (TA)"
-                value={editableData.achievements_ta}
-                onChange={(e) => setEditableData({ ...editableData, achievements_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
+            {/* Tab 4: Architecture & Economy */}
+            <TabPanel value={activeTab} index={4}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Architecture & Economic System
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Architecture (English)"
+                    value={editableData.architecture_en}
+                    onChange={(e) => setEditableData({ ...editableData, architecture_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Temples, monuments, architectural innovations..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Architecture (Tamil)"
+                    value={editableData.architecture_ta}
+                    onChange={(e) => setEditableData({ ...editableData, architecture_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Trade & Economy (English)"
+                    value={editableData.tradeAndEconomy_en}
+                    onChange={(e) => setEditableData({ ...editableData, tradeAndEconomy_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Trade routes, economic policies, prosperity..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Trade & Economy (Tamil)"
+                    value={editableData.tradeAndEconomy_ta}
+                    onChange={(e) => setEditableData({ ...editableData, tradeAndEconomy_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Description (EN)"
-                value={editableData.description_en}
-                onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={5}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Description (TA)"
-                value={editableData.description_ta}
-                onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={5}
-              />
-            </Grid>
+            {/* Tab 5: Legacy & Decline */}
+            <TabPanel value={activeTab} index={5}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Decline & Legacy
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Decline (English)"
+                    value={editableData.decline_en}
+                    onChange={(e) => setEditableData({ ...editableData, decline_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Factors leading to decline, invasions, internal conflicts..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Decline (Tamil)"
+                    value={editableData.decline_ta}
+                    onChange={(e) => setEditableData({ ...editableData, decline_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Legacy (English)"
+                    value={editableData.legacy_en}
+                    onChange={(e) => setEditableData({ ...editableData, legacy_en: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                    placeholder="Lasting impact on culture, society, politics..."
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Legacy (Tamil)"
+                    value={editableData.legacy_ta}
+                    onChange={(e) => setEditableData({ ...editableData, legacy_ta: e.target.value })}
+                    fullWidth
+                    multiline
+                    rows={5}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
 
-            <Grid item xs={12}>
-              <TextField
-                label="Content (EN)"
-                value={editableData.content_en}
-                onChange={(e) => setEditableData({ ...editableData, content_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={6}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Content (TA)"
-                value={editableData.content_ta}
-                onChange={(e) => setEditableData({ ...editableData, content_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={6}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Military Strength (EN)"
-                value={editableData.militaryStrength_en}
-                onChange={(e) => setEditableData({ ...editableData, militaryStrength_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Military Strength (TA)"
-                value={editableData.militaryStrength_ta}
-                onChange={(e) => setEditableData({ ...editableData, militaryStrength_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Cultural Contributions (EN)"
-                value={editableData.culturalContributions_en}
-                onChange={(e) => setEditableData({ ...editableData, culturalContributions_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Cultural Contributions (TA)"
-                value={editableData.culturalContributions_ta}
-                onChange={(e) => setEditableData({ ...editableData, culturalContributions_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Architecture (EN)"
-                value={editableData.architecture_en}
-                onChange={(e) => setEditableData({ ...editableData, architecture_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Architecture (TA)"
-                value={editableData.architecture_ta}
-                onChange={(e) => setEditableData({ ...editableData, architecture_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Trade and Economy (EN)"
-                value={editableData.tradeAndEconomy_en}
-                onChange={(e) => setEditableData({ ...editableData, tradeAndEconomy_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Trade and Economy (TA)"
-                value={editableData.tradeAndEconomy_ta}
-                onChange={(e) => setEditableData({ ...editableData, tradeAndEconomy_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Decline (EN)"
-                value={editableData.decline_en}
-                onChange={(e) => setEditableData({ ...editableData, decline_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Decline (TA)"
-                value={editableData.decline_ta}
-                onChange={(e) => setEditableData({ ...editableData, decline_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                label="Legacy (EN)"
-                value={editableData.legacy_en}
-                onChange={(e) => setEditableData({ ...editableData, legacy_en: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Legacy (TA)"
-                value={editableData.legacy_ta}
-                onChange={(e) => setEditableData({ ...editableData, legacy_ta: e.target.value })}
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Flag URL"
-                value={editableData.flag}
-                onChange={(e) => setEditableData({ ...editableData, flag: e.target.value })}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Image URL"
-                value={editableData.image}
-                onChange={(e) => setEditableData({ ...editableData, image: e.target.value })}
-                fullWidth
-              />
-            </Grid>
-
-            {/* Content Sections */}
-            <Grid item xs={12}>
-              <Divider sx={{ my: 3 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6">Content Sections</Typography>
-                <Button startIcon={<Add />} onClick={addContentSection} variant="outlined">
-                  Add Section
-                </Button>
-              </Box>
-
-              {editableData.contentSections.map((section, index) => (
-                <Paper key={section.id} sx={{ p: 3, mb: 3, bgcolor: '#f9f9f9' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      Section {index + 1}
+            {/* Tab 6: Media & Content Sections */}
+            <TabPanel value={activeTab} index={6}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: '#8B0000', fontWeight: 600 }}>
+                    Images & Media
+                  </Typography>
+                  <Divider sx={{ mb: 3 }} />
+                </Grid>
+                
+                {/* Flag Image */}
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 2, p: 3, bgcolor: '#fafafa' }}>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: '#8B0000' }}>
+                      Dynasty Flag
                     </Typography>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => removeContentSection(section.id)}
+                    <MediaUpload
+                      label="Flag Image"
+                      currentImage={editableData.flag}
+                      currentImageLink={editableData.flag}
+                      onImageChange={(url) => setEditableData({ ...editableData, flag: url })}
+                      onImageLinkChange={(url) => setEditableData({ ...editableData, flag: url })}
+                    />
+                  </Box>
+                </Grid>
+
+                {/* Main Image */}
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ border: '1px solid #e0e0e0', borderRadius: 2, p: 3, bgcolor: '#fafafa' }}>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ color: '#8B0000' }}>
+                      Main Dynasty Image
+                    </Typography>
+                    <MediaUpload
+                      label="Main Image"
+                      currentImage={editableData.image}
+                      currentImageLink={editableData.image}
+                      onImageChange={(url) => setEditableData({ ...editableData, image: url })}
+                      onImageLinkChange={(url) => setEditableData({ ...editableData, image: url })}
+                    />
+                  </Box>
+                </Grid>
+
+                {/* Content Sections */}
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 3 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography variant="h6" sx={{ color: '#8B0000', fontWeight: 600 }}>
+                      Additional Content Sections
+                    </Typography>
+                    <Button 
+                      startIcon={<Add />} 
+                      onClick={addContentSection} 
+                      variant="contained"
+                      sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' } }}
                     >
-                      <Delete />
-                    </IconButton>
+                      Add Section
+                    </Button>
                   </Box>
 
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        label="Subtitle (EN)"
-                        value={section.subtitle_en}
-                        onChange={(e) => updateContentSection(section.id, 'subtitle_en', e.target.value)}
-                        fullWidth
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        label="Subtitle (TA)"
-                        value={section.subtitle_ta}
-                        onChange={(e) => updateContentSection(section.id, 'subtitle_ta', e.target.value)}
-                        fullWidth
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Content (EN)"
-                        value={section.content_en}
-                        onChange={(e) => updateContentSection(section.id, 'content_en', e.target.value)}
-                        fullWidth
-                        multiline
-                        rows={3}
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Content (TA)"
-                        value={section.content_ta}
-                        onChange={(e) => updateContentSection(section.id, 'content_ta', e.target.value)}
-                        fullWidth
-                        multiline
-                        rows={3}
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        label="Image URL"
-                        value={section.imageUrl}
-                        onChange={(e) => updateContentSection(section.id, 'imageUrl', e.target.value)}
-                        fullWidth
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        label="Image Link"
-                        value={section.imageLink}
-                        onChange={(e) => updateContentSection(section.id, 'imageLink', e.target.value)}
-                        fullWidth
-                        size="small"
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Video URL"
-                        value={section.videoUrl}
-                        onChange={(e) => updateContentSection(section.id, 'videoUrl', e.target.value)}
-                        fullWidth
-                        size="small"
-                      />
-                    </Grid>
-                  </Grid>
-                </Paper>
-              ))}
-            </Grid>
+                  {editableData.contentSections.map((section, index) => (
+                    <Paper key={section.id} sx={{ p: 3, mb: 3, bgcolor: '#f9f9f9', border: '1px solid #e0e0e0' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                        <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#8B0000' }}>
+                          Section {index + 1}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeContentSection(section.id)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
 
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-              <Button variant="outlined" onClick={() => setIsEditing(false)}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            label="Subtitle (EN)"
+                            value={section.subtitle_en}
+                            onChange={(e) => updateContentSection(section.id, 'subtitle_en', e.target.value)}
+                            fullWidth
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <TextField
+                            label="Subtitle (TA)"
+                            value={section.subtitle_ta}
+                            onChange={(e) => updateContentSection(section.id, 'subtitle_ta', e.target.value)}
+                            fullWidth
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            label="Content (EN)"
+                            value={section.content_en}
+                            onChange={(e) => updateContentSection(section.id, 'content_en', e.target.value)}
+                            fullWidth
+                            multiline
+                            rows={3}
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField
+                            label="Content (TA)"
+                            value={section.content_ta}
+                            onChange={(e) => updateContentSection(section.id, 'content_ta', e.target.value)}
+                            fullWidth
+                            multiline
+                            rows={3}
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            label="Image URL"
+                            value={section.imageUrl}
+                            onChange={(e) => updateContentSection(section.id, 'imageUrl', e.target.value)}
+                            fullWidth
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            label="Image Link"
+                            value={section.imageLink}
+                            onChange={(e) => updateContentSection(section.id, 'imageLink', e.target.value)}
+                            fullWidth
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            label="Video URL"
+                            value={section.videoUrl}
+                            onChange={(e) => updateContentSection(section.id, 'videoUrl', e.target.value)}
+                            fullWidth
+                            size="small"
+                          />
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  ))}
+                </Grid>
+              </Grid>
+            </TabPanel>
+
+            {/* Action Buttons */}
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4, pt: 3, borderTop: '1px solid #e0e0e0' }}>
+              <Button 
+                variant="outlined" 
+                onClick={closeEditMode}
+                size="large"
+                sx={{ minWidth: 120 }}
+              >
                 Cancel
               </Button>
               <Button
                 variant="contained"
                 onClick={handleSave}
-                sx={{ bgcolor: colorScheme.primary, '&:hover': { bgcolor: colorScheme.primary, opacity: 0.9 } }}
+                size="large"
+                sx={{ 
+                  minWidth: 120,
+                  bgcolor: '#8B0000', 
+                  '&:hover': { bgcolor: '#6B0000' } 
+                }}
               >
                 Save Changes
               </Button>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Paper>
       </Container>
     );
@@ -987,7 +1187,7 @@ function DynastyDetail({ user: initialUser }) {
             {user && user.role === 'admin' && (
               <Button
                 startIcon={<EditIcon />}
-                onClick={() => setIsEditing(true)}
+                onClick={enterEditMode}
                 variant="contained"
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.9)',

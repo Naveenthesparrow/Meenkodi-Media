@@ -598,7 +598,6 @@ export default function LandDetail({ user }) {
                                 {/* Comments Section */}
                                 <ScrollReveal delay={0.1}>
                                 <Box sx={{ mt: 2 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Community Thoughts</Typography>
                                     <Comments user={user} relatedType="Land" relatedId={land._id} />
                                 </Box>
                                 </ScrollReveal>
