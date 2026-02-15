@@ -986,6 +986,85 @@ app.post('/api/seedsandfootprints/folders/:id/photos', ensureAdmin, async (req, 
   }
 });
 
+// Bulk upload photos to a specific research folder
+app.post('/api/seedsandfootprints/folders/:id/photos/bulk', ensureAdmin, async (req, res) => {
+  try {
+    console.log('Bulk photo upload request:', {
+      folderId: req.params.id,
+      body: req.body,
+      user: req.user ? { id: req.user._id, role: req.user.role } : 'No user'
+    });
+
+    const { images } = req.body || {};
+
+    if (!Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({ error: 'Images array is required and must not be empty' });
+    }
+
+    const folder = await ResearchFolder.findById(req.params.id);
+    if (!folder) {
+      console.log('Folder not found:', req.params.id);
+      return res.status(404).json({ error: 'Folder not found' });
+    }
+
+    console.log('Found folder:', folder.name, 'existing photos:', folder.photos?.length || 0);
+    console.log('Bulk uploading', images.length, 'photos');
+
+    let nextOrder = (folder.photos || []).length
+      ? Math.max(...folder.photos.map((p) => p.order || 0)) + 1
+      : 1;
+
+    const addedPhotos = [];
+
+    // Process each image
+    for (const img of images) {
+      const { imageUrl, caption, credit, name, keywords, sourceLink, videoLink } = img;
+
+      const photo = {
+        url: imageUrl || '',
+        videoLink: videoLink || '',
+        caption: {
+          en: caption?.en || '',
+          ta: caption?.ta || ''
+        },
+        credit: credit || '',
+        name: name || undefined,
+        keywords: Array.isArray(keywords) ? keywords : (typeof keywords === 'string' ? keywords.split(',').map(k => k.trim()).filter(Boolean) : []),
+        sourceLink: sourceLink || '',
+        order: nextOrder++
+      };
+
+      folder.photos.push(photo);
+      addedPhotos.push(folder.photos[folder.photos.length - 1]);
+    }
+
+    folder.updatedAt = new Date();
+    await folder.save();
+
+    console.log('Bulk upload successful, added', addedPhotos.length, 'photos. Total photos now:', folder.photos.length);
+
+    res.status(201).json({
+      success: true,
+      count: addedPhotos.length,
+      photos: addedPhotos.map(p => ({
+        _id: p._id,
+        url: p.url,
+        videoLink: p.videoLink,
+        caption: p.caption,
+        credit: p.credit,
+        name: p.name,
+        keywords: p.keywords,
+        sourceLink: p.sourceLink,
+        order: p.order,
+        createdAt: p.createdAt
+      }))
+    });
+  } catch (err) {
+    console.error('Error bulk uploading photos to research folder:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
 // Update a photo's metadata or replace its image (admin only)
 app.put('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
   try {
@@ -1565,6 +1644,77 @@ app.post(
     } catch (error) {
       console.error("Image upload error:", error);
       res.status(500).json({ error: "Image upload failed", details: error.message });
+    }
+  }
+);
+
+// Bulk image upload endpoint
+app.post(
+  "/api/upload/images/bulk",
+  ensureAdmin,
+  (req, res, next) => {
+    // Log authentication details
+    console.log("Bulk Image Upload Authentication Check:", {
+      isAuthenticated: req.isAuthenticated(),
+      user: req.user
+        ? {
+          id: req.user._id,
+          email: req.user.email,
+          role: req.user.role,
+        }
+        : "No user",
+    });
+
+    // Ensure admin authentication
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({
+        error: "Unauthorized",
+        details: "Only admin users can upload images",
+      });
+    }
+
+    next();
+  },
+  imageUpload.array("images", 50), // Allow up to 50 images at once
+  (req, res) => {
+    try {
+      console.log("Bulk Image Upload Request:", {
+        filesCount: req.files ? req.files.length : 0,
+        user: req.user
+          ? {
+            email: req.user.email,
+            role: req.user.role,
+            id: req.user._id,
+          }
+          : "No user",
+      });
+
+      if (!req.files || req.files.length === 0) {
+        console.error("No files uploaded");
+        return res.status(400).json({
+          error: "No image files uploaded",
+          details: "Files were not processed by multer",
+        });
+      }
+
+      console.log("Bulk upload successful:", req.files.length, "images uploaded to Cloudinary");
+
+      const uploadedImages = req.files.map(file => ({
+        imageUrl: file.path,
+        url: file.path,
+        id: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+      }));
+
+      res.json({
+        success: true,
+        count: uploadedImages.length,
+        images: uploadedImages,
+      });
+    } catch (error) {
+      console.error("Bulk image upload error:", error);
+      res.status(500).json({ error: "Bulk image upload failed", details: error.message });
     }
   }
 );

@@ -71,6 +71,14 @@ export default function SeedsFootprintsDetail({ user }) {
         editLanguage: 'en'
     });
 
+    // Bulk upload states
+    const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+    const [bulkFiles, setBulkFiles] = useState([]);
+    const [bulkUploading, setBulkUploading] = useState(false);
+    const [bulkUploadProgress, setBulkUploadProgress] = useState(0);
+    const [bulkUploadError, setBulkUploadError] = useState('');
+    const [bulkUploadedCount, setBulkUploadedCount] = useState(0);
+
     // Ensure body can scroll properly
     React.useEffect(() => {
         document.body.style.overflow = 'unset';
@@ -602,6 +610,131 @@ export default function SeedsFootprintsDetail({ user }) {
         }
     };
 
+    const handleBulkFilesChange = (event) => {
+        const files = Array.from(event.target.files || []);
+        setBulkFiles(files);
+        setBulkUploadError('');
+    };
+
+    const handleBulkUpload = async () => {
+        if (bulkFiles.length === 0) {
+            setBulkUploadError('Please select at least one image');
+            return;
+        }
+
+        try {
+            setBulkUploading(true);
+            setBulkUploadError('');
+            setBulkUploadProgress(0);
+            setBulkUploadedCount(0);
+
+            const totalFiles = bulkFiles.length;
+            const allUploadedImages = [];
+            let uploadedCount = 0;
+
+            // Upload images in batches of 5 for better progress feedback
+            const batchSize = 5;
+
+            for (let i = 0; i < totalFiles; i += batchSize) {
+                const batch = bulkFiles.slice(i, i + batchSize);
+                
+                // Upload batch with individual progress tracking
+                const uploadPromises = batch.map(async (file, batchIndex) => {
+                    const formData = new FormData();
+                    formData.append('image', file);
+
+                    try {
+                        const uploadRes = await fetch('/api/upload/image', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'include'
+                        });
+
+                        if (!uploadRes.ok) {
+                            const errBody = await uploadRes.json().catch(() => ({}));
+                            throw new Error(errBody.error || `Failed to upload ${file.name}`);
+                        }
+
+                        const result = await uploadRes.json();
+                        
+                        // Update counter immediately after each image uploads
+                        uploadedCount++;
+                        setBulkUploadedCount(uploadedCount);
+                        
+                        // Update progress bar
+                        const progress = Math.min(90, Math.floor((uploadedCount / totalFiles) * 90));
+                        setBulkUploadProgress(progress);
+                        
+                        return result;
+                    } catch (error) {
+                        console.error(`Failed to upload ${file.name}:`, error);
+                        throw error;
+                    }
+                });
+
+                try {
+                    const batchResults = await Promise.all(uploadPromises);
+                    allUploadedImages.push(...batchResults);
+                } catch (error) {
+                    console.error('Batch upload error:', error);
+                    throw error;
+                }
+            }
+
+            setBulkUploadProgress(95);
+
+            // 2) Add all photos to the folder in one request
+            const images = allUploadedImages.map(img => ({
+                imageUrl: img.imageUrl || img.url,
+                caption: { en: '', ta: '' },
+                credit: '',
+                name: { en: '', ta: '' },
+                keywords: [],
+                sourceLink: '',
+                videoLink: ''
+            }));
+
+            const bulkRes = await fetch(`/api/seedsandfootprints/folders/${id}/photos/bulk`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ images })
+            });
+
+            if (!bulkRes.ok) {
+                const errBody = await bulkRes.json().catch(() => ({}));
+                throw new Error(errBody.error || 'Failed to add photos to collection');
+            }
+
+            const bulkJson = await bulkRes.json();
+            const addedPhotos = bulkJson.photos || [];
+
+            setBulkUploadProgress(100);
+
+            // Update the photos state
+            setPhotos((prev) => {
+                const next = [...prev, ...addedPhotos];
+                return next.slice().sort((a, b) => {
+                    if (a.order !== b.order) return (a.order || 0) - (b.order || 0);
+                    return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+                });
+            });
+
+            // Close dialog and reset after a short delay to show 100%
+            setTimeout(() => {
+                setBulkUploadOpen(false);
+                setBulkFiles([]);
+                setBulkUploadProgress(0);
+                setBulkUploadedCount(0);
+            }, 500);
+        } catch (err) {
+            console.error('Bulk upload error:', err);
+            setBulkUploadError(err.message || 'Bulk upload failed');
+        } finally {
+            setBulkUploading(false);
+        }
+    };
+
     return (
         <Container
             maxWidth="lg"
@@ -833,9 +966,33 @@ export default function SeedsFootprintsDetail({ user }) {
                                     fontSize: i18n.language === 'ta'
                                         ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
                                         : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+                                    mr: 1
                                 }}
                             >
                                 {t('gallery.addImage', 'Add Image')}
+                            </Button>
+                            <Button
+                                onClick={() => setBulkUploadOpen(true)}
+                                variant="outlined"
+                                startIcon={<ImageIcon />}
+                                sx={{
+                                    borderColor: "#8B0000",
+                                    color: "#8B0000",
+                                    transition: 'all 0.3s ease',
+                                    "&:hover": {
+                                        borderColor: "#6B0000",
+                                        bgcolor: "rgba(139,0,0,0.05)",
+                                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                                    },
+                                    borderRadius: 0,
+                                    px: { xs: 2, md: 3 },
+                                    py: { xs: 0.5, md: 1 },
+                                    fontSize: i18n.language === 'ta'
+                                        ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
+                                        : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+                                }}
+                            >
+                                {t('gallery.bulkUpload', 'Bulk Upload')}
                             </Button>
                         </Box>
                     )}
@@ -1045,6 +1202,256 @@ export default function SeedsFootprintsDetail({ user }) {
                                     {uploading ? 'Saving...' : 'Save'}
                                 </Button>
                             </Box>
+                        </Dialog>
+                    )}
+
+                    {/* Bulk Upload Dialog */}
+                    {user && user.role === 'admin' && (
+                        <Dialog
+                            open={bulkUploadOpen}
+                            onClose={() => !bulkUploading && setBulkUploadOpen(false)}
+                            maxWidth="md"
+                            fullWidth
+                            sx={{
+                                '& .MuiDialog-container': {
+                                    alignItems: { xs: 'flex-start', sm: 'center' }
+                                },
+                                '& .MuiDialog-paper': {
+                                    maxHeight: { xs: '95vh', md: '90vh' },
+                                    m: { xs: 1, sm: 2 },
+                                    width: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 32px)' },
+                                    maxWidth: { xs: '100%', sm: 'md' },
+                                    borderRadius: 2,
+                                    boxShadow: '0 18px 60px rgba(0,0,0,0.25)'
+                                }
+                            }}
+                        >
+                            <DialogTitle sx={{ 
+                                bgcolor: '#8B0000', 
+                                color: '#fff', 
+                                py: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontWeight: 600,
+                                fontSize: '1.25rem'
+                            }}>
+                                {t('gallery.bulkUploadTitle', 'Bulk Upload Images')}
+                                <IconButton 
+                                    onClick={() => !bulkUploading && setBulkUploadOpen(false)} 
+                                    sx={{ color: 'white' }}
+                                    disabled={bulkUploading}
+                                >
+                                    <CloseIcon />
+                                </IconButton>
+                            </DialogTitle>
+
+                            <DialogContent sx={{ mt: 3, p: { xs: 2, sm: 3 } }}>
+                                <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+                                    <Typography variant="body1" sx={{ mb: 3, color: '#666' }}>
+                                        {t('gallery.bulkUploadDescription', 'Select multiple images to upload at once. You can add captions and details later by editing each photo individually.')}
+                                    </Typography>
+
+                                    <Box sx={{ mb: 3 }}>
+                                        <Typography variant="h6" sx={{ mb: 1.5, color: '#333', fontWeight: 600 }}>
+                                            {t('gallery.selectImages', 'Select Images')}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ mb: 2, color: '#666' }}>
+                                            Supported formats: JPG, PNG, GIF, WEBP | Max 50 images at once
+                                        </Typography>
+                                        <Button 
+                                            component="label" 
+                                            variant="outlined" 
+                                            startIcon={<ImageIcon />}
+                                            disabled={bulkUploading}
+                                            sx={{ 
+                                                borderRadius: 1.5, 
+                                                px: 3, 
+                                                py: 1.5,
+                                                width: { xs: '100%', sm: 'auto' },
+                                                borderColor: '#8B0000',
+                                                color: '#8B0000',
+                                                '&:hover': {
+                                                    borderColor: '#6B0000',
+                                                    bgcolor: 'rgba(139,0,0,0.05)'
+                                                }
+                                            }}
+                                        >
+                                            {bulkFiles.length > 0 ? `${bulkFiles.length} ${t('gallery.filesSelected', 'files selected')}` : t('gallery.selectFiles', 'Select Files')}
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                multiple 
+                                                hidden 
+                                                onChange={handleBulkFilesChange}
+                                                disabled={bulkUploading}
+                                            />
+                                        </Button>
+                                    </Box>
+
+                                    {bulkFiles.length > 0 && (
+                                        <Box sx={{ mb: 3 }}>
+                                            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: '#333' }}>
+                                                {t('gallery.selectedFiles', 'Selected Files')} ({bulkFiles.length})
+                                            </Typography>
+                                            <Box sx={{ 
+                                                maxHeight: 200, 
+                                                overflowY: 'auto',
+                                                border: '1px solid #e0e0e0',
+                                                borderRadius: 1,
+                                                p: 2
+                                            }}>
+                                                {bulkFiles.map((file, idx) => (
+                                                    <Typography key={idx} variant="body2" sx={{ color: '#666', mb: 0.5 }}>
+                                                        {idx + 1}. {file.name}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        </Box>
+                                    )}
+
+                                    {bulkUploading && (
+                                        <Box sx={{ mb: 3, p: 3, bgcolor: '#f9f9f9', borderRadius: 2, border: '2px solid #8B0000' }}>
+                                            {/* Large Counter Display */}
+                                            <Box sx={{ textAlign: 'center', mb: 2 }}>
+                                                <Typography 
+                                                    key={bulkUploadedCount}
+                                                    variant="h3" 
+                                                    sx={{ 
+                                                        color: '#8B0000', 
+                                                        fontWeight: 700,
+                                                        fontSize: { xs: '2.5rem', sm: '3rem' },
+                                                        lineHeight: 1,
+                                                        mb: 0.5,
+                                                        fontFamily: 'monospace',
+                                                        animation: 'countPulse 0.4s ease-out',
+                                                        '@keyframes countPulse': {
+                                                            '0%': { 
+                                                                transform: 'scale(1)',
+                                                                color: '#8B0000'
+                                                            },
+                                                            '50%': { 
+                                                                transform: 'scale(1.15)',
+                                                                color: '#c00000'
+                                                            },
+                                                            '100%': { 
+                                                                transform: 'scale(1)',
+                                                                color: '#8B0000'
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    {bulkUploadedCount} / {bulkFiles.length}
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ color: '#666', fontWeight: 600, letterSpacing: 0.5 }}>
+                                                    {bulkUploadProgress < 90 
+                                                        ? t('gallery.imagesUploaded', 'images uploaded') 
+                                                        : t('gallery.processingImages', 'Processing...')}
+                                                </Typography>
+                                            </Box>
+                                            
+                                            {/* Progress Bar */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                                <Typography variant="caption" sx={{ color: '#666', fontWeight: 600, fontSize: '0.85rem' }}>
+                                                    Progress
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: '#8B0000', fontWeight: 700, fontSize: '0.9rem' }}>
+                                                    {bulkUploadProgress}%
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ 
+                                                width: '100%', 
+                                                height: 12, 
+                                                bgcolor: '#e0e0e0', 
+                                                borderRadius: 2,
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                                            }}>
+                                                <Box sx={{ 
+                                                    width: `${bulkUploadProgress}%`, 
+                                                    height: '100%', 
+                                                    bgcolor: '#8B0000',
+                                                    transition: 'width 0.5s ease-out',
+                                                    position: 'relative',
+                                                    background: bulkUploadProgress < 100 
+                                                        ? 'linear-gradient(90deg, #8B0000 0%, #c00000 50%, #8B0000 100%)'
+                                                        : '#2e7d32',
+                                                    backgroundSize: '200% 100%',
+                                                    animation: bulkUploadProgress < 100 ? 'shimmer 1.5s infinite' : 'none',
+                                                    '@keyframes shimmer': {
+                                                        '0%': { backgroundPosition: '200% 0' },
+                                                        '100%': { backgroundPosition: '-200% 0' }
+                                                    }
+                                                }} />
+                                            </Box>
+                                            
+                                            {/* Speed indicator */}
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
+                                                <Box 
+                                                    sx={{ 
+                                                        width: 8, 
+                                                        height: 8, 
+                                                        borderRadius: '50%', 
+                                                        bgcolor: bulkUploadProgress < 90 ? '#4caf50' : '#2196f3',
+                                                        animation: bulkUploadProgress < 90 ? 'blink 1s infinite' : 'none',
+                                                        '@keyframes blink': {
+                                                            '0%, 100%': { opacity: 1 },
+                                                            '50%': { opacity: 0.3 }
+                                                        }
+                                                    }} 
+                                                />
+                                                <Typography 
+                                                    variant="body2" 
+                                                    sx={{ 
+                                                        color: '#666',
+                                                        fontWeight: 500,
+                                                        fontSize: '0.9rem'
+                                                    }}
+                                                >
+                                                    {bulkUploadProgress < 90 
+                                                        ? '⚡ Uploading to cloud...' 
+                                                        : '✅ Finalizing...'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
+
+                                    {bulkUploadError && (
+                                        <Typography variant="body2" sx={{ color: '#d32f2f', textAlign: 'center', mb: 2 }}>
+                                            {bulkUploadError}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </DialogContent>
+
+                            <DialogActions sx={{ 
+                                px: { xs: 2, sm: 3 }, 
+                                py: 2, 
+                                borderTop: '1px solid #eee',
+                                justifyContent: 'flex-end',
+                                gap: 2
+                            }}>
+                                <Button 
+                                    variant="text" 
+                                    onClick={() => setBulkUploadOpen(false)}
+                                    disabled={bulkUploading}
+                                    sx={{ color: '#777' }}
+                                >
+                                    {t('actions.cancel', 'Cancel')}
+                                </Button>
+                                <Button 
+                                    variant="contained" 
+                                    onClick={handleBulkUpload}
+                                    disabled={bulkUploading || bulkFiles.length === 0}
+                                    sx={{ 
+                                        bgcolor: '#8B0000',
+                                        '&:hover': { bgcolor: '#6B0000' }
+                                    }}
+                                >
+                                    {bulkUploading ? t('gallery.uploading', 'Uploading...') : t('gallery.uploadAll', 'Upload All')}
+                                </Button>
+                            </DialogActions>
                         </Dialog>
                     )}
 
