@@ -48,6 +48,66 @@ export default function ArticleDetail({ user }) {
   const [videoLink, setVideoLink] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Parse markdown-like formatting to HTML
+  const parseContent = (content) => {
+    if (!content) return '';
+    
+    // Split content into lines for better processing
+    let lines = content.split('\n');
+    let html = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      
+      // Skip empty lines
+      if (!line.trim()) {
+        html += '<br />';
+        continue;
+      }
+      
+      // Headers (must be at start of line)
+      if (line.match(/^### /)) {
+        line = line.replace(/^### (.*)$/, '<h3 style="font-size: 1.3rem; font-weight: 600; margin: 16px 0 8px; color: #333;">$1</h3>');
+      } else if (line.match(/^## /)) {
+        line = line.replace(/^## (.*)$/, '<h2 style="font-size: 1.6rem; font-weight: 700; margin: 20px 0 12px; color: #1a1a1a;">$1</h2>');
+      } else if (line.match(/^# /)) {
+        line = line.replace(/^# (.*)$/, '<h1 style="font-size: 2rem; font-weight: 700; margin: 24px 0 16px; color: #000;">$1</h1>');
+      }
+      // Numbered lists
+      else if (line.match(/^\d+\.\s+/)) {
+        line = line.replace(/^(\d+)\.\s+(.*)$/, '<li style="margin-left: 20px; list-style-type: decimal; margin-bottom: 8px;">$2</li>');
+      }
+      // Bullet lists
+      else if (line.match(/^-\s+/)) {
+        line = line.replace(/^-\s+(.*)$/, '<li style="margin-left: 20px; list-style-type: disc; margin-bottom: 8px;">$1</li>');
+      }
+      // Regular paragraph
+      else {
+        line = '<p style="margin-bottom: 12px;">' + line + '</p>';
+      }
+      
+      // Now apply inline formatting (bold, italic, code, links, images)
+      // Images (must be before links)
+      line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; margin: 16px 0; border-radius: 8px; display: block;" />');
+      
+      // Links
+      line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #8B0000; text-decoration: underline; font-weight: 600;">$1</a>');
+      
+      // Bold (must be before italic)
+      line = line.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 700; color: #000;">$1</strong>');
+      
+      // Italic
+      line = line.replace(/\*([^*]+)\*/g, '<em style="font-style: italic; color: #333;">$1</em>');
+      
+      // Code
+      line = line.replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d63384;">$1</code>');
+      
+      html += line;
+    }
+    
+    return html;
+  };
+
   useEffect(() => {
     fetch(`/api/articles/${id}`)
       .then((res) => {
@@ -56,12 +116,12 @@ export default function ArticleDetail({ user }) {
       })
       .then((data) => {
         setArticle(data);
-        setTitleEn(data.title.en);
-        setTitleTa(data.title.ta);
-        setContentEn(data.content.en);
-        setContentTa(data.content.ta);
-        setAuthorEn(data.author.en);
-        setAuthorTa(data.author.ta);
+        setTitleEn(data.title?.en || "");
+        setTitleTa(data.title?.ta || "");
+        setContentEn(data.content?.en || "");
+        setContentTa(data.content?.ta || "");
+        setAuthorEn(data.author?.en || "");
+        setAuthorTa(data.author?.ta || "");
         setImageLink(data.imageLink || "");
         setVideoLink(data.videoLink || "");
         setImage(data.image || "");
@@ -117,7 +177,20 @@ export default function ArticleDetail({ user }) {
       if (!res.ok) throw new Error("Failed to update article");
 
       const data = await res.json();
-      setArticle(data);
+      // Refetch to get the full article with all fields
+      const refreshRes = await fetch(`/api/articles/${id}`);
+      const refreshData = await refreshRes.json();
+      setArticle(refreshData);
+      setTitleEn(refreshData.title?.en || "");
+      setTitleTa(refreshData.title?.ta || "");
+      setContentEn(refreshData.content?.en || "");
+      setContentTa(refreshData.content?.ta || "");
+      setAuthorEn(refreshData.author?.en || "");
+      setAuthorTa(refreshData.author?.ta || "");
+      setImageLink(refreshData.imageLink || "");
+      setVideoLink(refreshData.videoLink || "");
+      setImage(refreshData.image || "");
+      setVideoUrl(refreshData.videoUrl || "");
       setEditMode(false);
     } catch (err) {
       setError(err.message);
@@ -527,7 +600,7 @@ export default function ArticleDetail({ user }) {
         {/* Reading Mode */}
         <Box>
           {/* Hero Image Section */}
-          {(article.image) && (
+          {(article.image || article.imageLink) && (
             <Box sx={{
               width: '100%',
               height: { xs: 300, md: 450 },
@@ -538,7 +611,7 @@ export default function ArticleDetail({ user }) {
             }}>
               <Box
                 component="img"
-                src={article.image}
+                src={article.imageLink || article.image}
                 alt={getContent(article.title)}
                 sx={{
                   width: '100%',
@@ -650,8 +723,7 @@ export default function ArticleDetail({ user }) {
             </Box>
 
             {/* Article Content */}
-            <Typography
-              variant="body1"
+            <Box
               sx={{
                 lineHeight: 1.9,
                 fontSize: { xs: '1.05rem', md: '1.15rem' },
@@ -661,16 +733,29 @@ export default function ArticleDetail({ user }) {
                 '& p': {
                   mb: 2,
                 },
-                whiteSpace: 'pre-line',
+                '& h1, & h2, & h3': {
+                  fontFamily: 'Georgia, serif',
+                },
+                '& strong': {
+                  fontWeight: 700,
+                  color: '#000',
+                },
+                '& em': {
+                  fontStyle: 'italic',
+                },
+                '& a': {
+                  color: '#8B0000',
+                  textDecoration: 'underline',
+                  fontWeight: 600,
+                },
                 textAlign: 'justify',
               }}
-            >
-              {getContent(article.content)}
-            </Typography>
+              dangerouslySetInnerHTML={{ __html: parseContent(getContent(article.content)) }}
+            />
 
             {/* Media Display */}
             <MediaDisplay
-              imageUrl={article.image}
+              imageUrl={article.imageLink || article.image}
               videoUrl={article.videoUrl}
               videoLink={article.videoLink}
               title={article.title}

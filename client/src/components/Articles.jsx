@@ -320,90 +320,123 @@ export default function Articles({ user }) {
               <Card
                 sx={{
                   width: '100%',
-                  height: { xs: 480, md: 520 },
+                  height: 'auto',
+                  minHeight: { xs: 520, md: 560 },
                   display: 'flex',
                   flexDirection: 'column',
-                  border: 'none',
-                  borderRadius: 0,
+                  border: '1px solid #e5e5e5',
+                  borderRadius: 3,
                   bgcolor: "#fff",
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
                   cursor: "pointer",
                   position: 'relative',
                   overflow: 'hidden',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  '&::before': {
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+                  '&::after': {
                     content: '""',
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    right: 0,
-                    bottom: 0,
-                    border: '3px solid #8B0000',
-                    opacity: 0,
-                    transition: 'opacity 0.4s ease',
-                    zIndex: 10,
-                    pointerEvents: 'none',
+                    width: '4px',
+                    height: '100%',
+                    bgcolor: '#8B0000',
+                    transform: 'scaleY(0)',
+                    transformOrigin: 'top',
+                    transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   },
                   "&:hover": {
-                    transform: "translateY(-12px)",
-                    boxShadow: '0 20px 40px rgba(139,0,0,0.25)',
-                    '&::before': {
-                      opacity: 1,
+                    transform: "translateY(-8px)",
+                    boxShadow: '0 12px 28px rgba(139,0,0,0.15), 0 4px 8px rgba(0,0,0,0.08)',
+                    borderColor: '#8B0000',
+                    '&::after': {
+                      transform: 'scaleY(1)',
                     },
                     "& .article-image": {
-                      transform: 'scale(1.08)',
-                      filter: 'brightness(0.9)',
+                      transform: 'scale(1.05)',
+                    },
+                    "& .article-image-overlay": {
+                      opacity: 0.7,
                     },
                     "& .status-badge": {
                       transform: 'translateY(-4px)',
                     },
                     "& .read-more-btn": {
-                      backgroundColor: '#8B0000',
+                      bgcolor: '#8B0000',
                       color: '#fff',
-                      transform: 'translateY(-2px)',
+                      borderColor: '#8B0000',
+                      '& svg': {
+                        transform: 'translateX(4px)',
+                      }
                     },
                     "& .article-title": {
                       color: '#8B0000',
+                    },
+                    "& .category-tag": {
+                      bgcolor: '#8B0000',
+                      color: '#fff',
                     }
                   },
                 }}
                 onClick={() => navigate(`/articles/${article._id}`)}
               >
                 {/* Image Section */}
-                <Box sx={{ position: 'relative', height: 220, overflow: 'hidden' }}>
-                  {(article.image) ? (
-                    <CardMedia
-                      component="img"
-                      image={article.image}
-                      alt={getContent(article.title)}
-                      className="article-image"
-                      sx={{ 
-                        objectFit: "cover",
-                        width: '100%',
-                        height: '100%',
-                        transition: 'all 0.5s ease',
-                      }}
-                      onError={(e) => {
-                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='220' viewBox='0 0 400 220'%3E%3Crect fill='%23e0e0e0' width='400' height='220'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18px' fill='%23999'%3ENo Image%3C/text%3E%3C/svg%3E";
-                      }}
-                    />
+                <Box sx={{ position: 'relative', height: 260, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
+                  {(article.imageLink || article.image) ? (
+                    <>
+                      <CardMedia
+                        component="img"
+                        image={article.imageLink || article.image}
+                        alt={getContent(article.title)}
+                        className="article-image"
+                        sx={{ 
+                          objectFit: "cover",
+                          width: '100%',
+                          height: '100%',
+                          transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                        onError={(e) => {
+                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='260' viewBox='0 0 400 260'%3E%3Crect fill='%23f5f5f5' width='400' height='260'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia, serif' font-size='16px' fill='%23999'%3E📰 Article%3C/text%3E%3C/svg%3E";
+                        }}
+                      />
+                      {/* Subtle overlay */}
+                      <Box
+                        className="article-image-overlay"
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          bgcolor: 'rgba(139, 0, 0, 0.05)',
+                          opacity: 0,
+                          transition: 'opacity 0.4s ease',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    </>
                   ) : (
                     <Box
                       sx={{
                         height: '100%',
                         width: '100%',
-                        backgroundColor: '#e0e0e0',
+                        background: 'linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)',
                         display: 'flex',
+                        flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
+                        gap: 1,
                       }}
                     >
+                      <Box sx={{ fontSize: '3rem' }}>📰</Box>
                       <Typography 
                         variant="body2" 
-                        color="textSecondary"
-                        sx={{ fontFamily: 'Georgia, serif' }}
+                        sx={{ 
+                          fontFamily: 'Georgia, serif',
+                          color: '#999',
+                          fontWeight: 500,
+                        }}
                       >
-                        📰 {t('common.noImage', 'No Image')}
+                        {t('common.article', 'Article')}
                       </Typography>
                     </Box>
                   )}
@@ -417,48 +450,83 @@ export default function Articles({ user }) {
                       color={article.status === 'pending' ? 'warning' : 'error'}
                       sx={{ 
                         position: 'absolute',
-                        top: 12,
-                        right: 12,
+                        top: 16,
+                        right: 16,
                         fontSize: '0.7rem', 
-                        height: 24,
+                        height: 26,
                         fontWeight: 700,
+                        borderRadius: '4px',
                         transition: 'transform 0.3s ease',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                       }}
                     />
                   )}
 
-                  {/* Gradient Overlay */}
+                  {/* Category Tag - Top Left */}
                   <Box
+                    className="category-tag"
                     sx={{
                       position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '50%',
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 100%)',
-                      pointerEvents: 'none',
+                      top: 16,
+                      left: 16,
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      color: '#8B0000',
+                      px: 2,
+                      py: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      borderRadius: '4px',
+                      backdropFilter: 'blur(8px)',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     }}
-                  />
+                  >
+                    {t('common.article', 'Article')}
+                  </Box>
                 </Box>
                 <CardContent
                   sx={{
-                    p: 3,
+                    p: { xs: 2.5, md: 3 },
                     flexGrow: 1,
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
                   }}
                 >
-                  {/* Author & Date */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: '#8B0000', fontSize: '0.9rem', fontWeight: 700 }}>
-                      {article.authorName ? article.authorName[0].toUpperCase() : 'A'}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, display: 'block', color: '#000', lineHeight: 1.2 }}>
-                        {article.authorName || getContent(article.author) || 'Anonymous'}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#999', fontSize: '0.75rem', letterSpacing: 0.3 }}>
+                  {/* Title & Content */}
+                  <Box sx={{ mb: 'auto' }}>
+                    {/* Date */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1, 
+                      mb: 1.5,
+                      color: '#8B0000',
+                      bgcolor: 'rgba(139, 0, 0, 0.05)',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: '20px',
+                      width: 'fit-content',
+                    }}>
+                      <Box 
+                        component="svg" 
+                        sx={{ width: 14, height: 14, fill: 'currentColor' }} 
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                      </Box>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontSize: '0.75rem', 
+                          fontWeight: 700,
+                          letterSpacing: '0.4px',
+                          textTransform: 'uppercase',
+                          color: '#8B0000',
+                        }}
+                      >
                         {new Date(article.createdAt).toLocaleDateString('en-US', { 
                           year: 'numeric', 
                           month: 'short', 
@@ -466,49 +534,62 @@ export default function Articles({ user }) {
                         })}
                       </Typography>
                     </Box>
-                  </Box>
 
-                  {/* Title & Content */}
-                  <Box sx={{ mb: 2 }}>
                     <Typography
                       className="article-title"
-                      variant="h6"
+                      variant="h5"
                       sx={{
                         fontWeight: 700, 
-                        color: "#000", 
-                        mb: 1.5,
-                        lineHeight: 1.3,
-                        fontSize: { xs: '1.15rem', md: '1.25rem' },
+                        color: "#FFB700", 
+                        mb: 2,
+                        lineHeight: 1.35,
+                        fontSize: { xs: '1.2rem', md: '1.35rem' },
                         fontFamily: 'Georgia, serif',
+                        transition: 'color 0.3s ease',
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: { xs: '2.6rem', md: '3rem' },
-                        transition: 'color 0.3s ease',
+                        minHeight: { xs: '3.2rem', md: '3.6rem' },
                       }}
                     >
                       {getContent(article.title)}
                     </Typography>
-                    <Typography
-                      variant="body2"
+
+                    <Box
                       sx={{ 
-                        color: "#555", 
-                        lineHeight: 1.7, 
-                        fontSize: '0.9rem',
+                        color: "#666", 
+                        lineHeight: 1.75, 
+                        fontSize: '0.95rem',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        minHeight: '4.5rem',
+                        minHeight: '5rem',
+                        mb: 2,
+                        '& strong': {
+                          fontWeight: 700,
+                          color: '#1a1a1a',
+                        },
+                        '& em': {
+                          fontStyle: 'italic',
+                          color: '#555',
+                        },
                       }}
-                    >
-                      {getContent(article.content).length > 120 
-                        ? `${getContent(article.content).substring(0, 120)}...` 
-                        : getContent(article.content)}
-                    </Typography>
+                      dangerouslySetInnerHTML={{
+                        __html: (() => {
+                          const rawContent = getContent(article.content);
+                          const contentPreview = rawContent.length > 140 ? `${rawContent.substring(0, 140)}...` : rawContent;
+                          // Quick markdown parsing for bold and italic
+                          return contentPreview
+                            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                        })()
+                      }}
+                    />
                   </Box>
 
                   {/* Admin Actions for pending articles */}
@@ -557,63 +638,92 @@ export default function Articles({ user }) {
                     </Box>
                   )}
 
-                  {/* Likes */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleLike(article._id);
-                      }}
-                      startIcon={article.userLiked ? <Favorite /> : <FavoriteBorder />}
-                      variant="text"
-                      sx={{
-                        color: article.userLiked ? '#8B0000' : '#666',
-                        fontWeight: 700,
-                        textTransform: 'none',
-                        '&:hover': { bgcolor: 'rgba(139,0,0,0.08)' },
-                      }}
-                      disabled={!user}
-                    >
-                      {t('articles.like', 'Like')}
-                    </Button>
-                    <Typography variant="body2" sx={{ color: '#666', fontWeight: 600 }}>
-                      {article.likesCount || 0} {t('articles.likes', 'likes')}
-                    </Typography>
-                  </Box>
+                  {/* Bottom Section */}
+                  <Box>
+                    {/* Divider */}
+                    <Box sx={{ 
+                      height: '1px', 
+                      bgcolor: '#e5e5e5', 
+                      mb: 2,
+                      mx: -0.5,
+                    }} />
 
-                  {/* Read More Button */}
-                  <Button
-                    component={Link}
-                    to={`/articles/${article._id}`}
-                    className="read-more-btn"
-                    variant="outlined"
-                    fullWidth
-                    endIcon={
-                      <Box component="svg" sx={{ width: 16, height: 16, fill: 'currentColor' }} viewBox="0 0 24 24">
-                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
-                      </Box>
-                    }
-                    sx={{
-                      color: "#000",
-                      borderColor: "#000",
-                      borderWidth: 2,
-                      borderRadius: 0,
-                      mt: 'auto',
-                      py: 1,
-                      fontWeight: 700,
-                      fontSize: '0.85rem',
-                      letterSpacing: 0.5,
-                      transition: 'all 0.3s ease',
-                      "&:hover": { 
-                        bgcolor: "#000",
-                        borderColor: "#000",
-                        color: '#fff',
-                      },
-                    }}
-                  >
-                    {t('actions.readMore', 'Read Article')}
-                  </Button>
+                    {/* Likes and Action */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      gap: 2,
+                    }}>
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleLike(article._id);
+                        }}
+                        startIcon={article.userLiked ? <Favorite /> : <FavoriteBorder />}
+                        variant="text"
+                        size="small"
+                        sx={{
+                          color: article.userLiked ? '#8B0000' : '#666',
+                          fontWeight: 600,
+                          textTransform: 'none',
+                          px: 1.5,
+                          py: 0.75,
+                          fontSize: '0.85rem',
+                          minWidth: 'auto',
+                          '&:hover': { 
+                            bgcolor: 'rgba(139,0,0,0.08)',
+                            color: '#8B0000',
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                        disabled={!user}
+                      >
+                        {article.likesCount || 0}
+                      </Button>
+
+                      <Button
+                        component={Link}
+                        to={`/articles/${article._id}`}
+                        className="read-more-btn"
+                        variant="text"
+                        size="small"
+                        endIcon={
+                          <Box 
+                            component="svg" 
+                            sx={{ 
+                              width: 18, 
+                              height: 18, 
+                              fill: 'currentColor',
+                              transition: 'transform 0.3s ease',
+                            }} 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z" />
+                          </Box>
+                        }
+                        sx={{
+                          color: "#8B0000",
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          px: 2,
+                          py: 0.75,
+                          borderRadius: '6px',
+                          transition: 'all 0.3s ease',
+                          "&:hover": { 
+                            bgcolor: "#8B0000",
+                            color: '#fff',
+                            transform: 'translateX(4px)',
+                          },
+                        }}
+                      >
+                        {t('actions.readMore', 'Read More')}
+                      </Button>
+                    </Box>
+                  </Box>
                 </CardContent>
               </Card>
             </Box>
