@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Box, Typography, Avatar, IconButton, Divider } from '@mui/material';
+import { Box, Typography, Avatar, IconButton } from '@mui/material';
 import { Twitter, AutoAwesome, Edit, Delete, Add } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -10,26 +10,26 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const quantity = directors.length;
 
-  const handleCardClick = (slug) => {
+  const handleCardClick = useCallback((slug) => {
     if (slug) {
       if (onNavigate) onNavigate();
       navigate(`/poets/${slug}`);
     }
-  };
+  }, [navigate, onNavigate]);
 
   // Enhanced gradient colors for each card
-  const cardGradients = [
+  const cardGradients = useMemo(() => [
     'linear-gradient(135deg, #8B0000 0%, #DC143C 50%, #FF6B6B 100%)', // Deep Red to Crimson
     'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)', // Royal Blue
     'linear-gradient(135deg, #115e59 0%, #14b8a6 50%, #5eead4 100%)', // Teal
     'linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #fb923c 100%)', // Heritage Orange
-  ];
+  ], []);
 
   return (
     <SliderContainer style={{ '--width': '300px', '--height': '380px', '--quantity': quantity }}>
       <div className="list">
         {directors.map((member, index) => (
-          <div className="item" style={{ '--position': index + 1 }} key={index}>
+          <div className="item" style={{ '--position': index + 1 }} key={member._id || member.slug || index}>
             <div 
               className="card" 
               onClick={() => handleCardClick(member.slug)}
@@ -159,6 +159,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
 
                 <Avatar
                   src={member.image}
+                  imgProps={{ loading: 'lazy', decoding: 'async' }}
                   sx={{
                     width: 110,
                     height: 110,
@@ -364,6 +365,8 @@ const SliderContainer = styled.div`
   height: var(--height);
   overflow: hidden;
   mask-image: linear-gradient(to right, transparent, #000 10% 90%, transparent);
+  contain: layout paint style;
+  isolation: isolate;
   
   .list {
     display: flex;
@@ -379,6 +382,9 @@ const SliderContainer = styled.div`
     left: 100%;
     animation: ${autoRun} 35s linear infinite;
     transition: filter 0.5s;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    contain: layout paint;
     animation-delay: calc(
       (35s / var(--quantity)) * (var(--position) - 1) - 35s
     ) !important;
@@ -402,7 +408,8 @@ const SliderContainer = styled.div`
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(10px);
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   /* Animated Background Ornament */
@@ -414,7 +421,7 @@ const SliderContainer = styled.div`
     height: 200%;
     background: radial-gradient(circle, var(--card-gradient) 0%, transparent 70%);
     opacity: 0.03;
-    animation: ${rotate} 30s linear infinite;
+    animation: none;
     pointer-events: none;
     z-index: 0;
   }
@@ -490,6 +497,7 @@ const SliderContainer = styled.div`
 
   .item:hover .bg-ornament {
     opacity: 0.08;
+    animation: ${rotate} 30s linear infinite;
   }
 
   /* Avatar Effects on Hover */
@@ -541,6 +549,10 @@ const SliderContainer = styled.div`
       transparent 100%
     );
     background-size: 200% 100%;
+    animation: none;
+  }
+
+  .item:hover .social-btn::before {
     animation: ${shimmer} 3s infinite;
   }
 
@@ -561,4 +573,4 @@ const SliderContainer = styled.div`
   }
 `;
 
-export default DirectorsSlider;
+export default React.memo(DirectorsSlider);

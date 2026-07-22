@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useCallback } from 'react';
 
 /**
  * Hook to get bilingual content based on current language
@@ -6,24 +7,21 @@ import { useTranslation } from 'react-i18next';
  */
 export const useBilingualContent = () => {
   const { i18n } = useTranslation();
-  
+
   /**
    * Get content in the current language
-   * @param {Object|String} content - Either a bilingual object {en: "...", ta: "..."} or a plain string
-   * @param {String} fallback - Fallback text if no content available
-   * @returns {String} Content in current language
+   * Wrapped in `useCallback` so the returned function is stable
+   * and can safely be used in dependency arrays.
    */
-  const getContent = (content, fallback = '') => {
+  const getContent = useCallback((content, fallback = '') => {
     if (!content) return fallback;
-    
-    // If it's already a string (legacy data), return it
+
     if (typeof content === 'string') return content;
-    
-    // If it's a bilingual object, return the appropriate language
+
     const currentLang = i18n.language || 'en';
     return content[currentLang] || content.en || content.ta || fallback;
-  };
-  
+  }, [i18n.language]);
+
   return getContent;
 };
 

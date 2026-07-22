@@ -41,13 +41,21 @@ const bilingual = {
 const dynastySchema = new mongoose.Schema({
   name: { type: bilingual, required: true },
   slug: { type: String, required: true, unique: true }, // pandiya, chera, chola, pallava, ltte
+  tagline: bilingual,
   period: bilingual,
   capital: bilingual,
+  region: bilingual,
+  language: bilingual,
+  religion: bilingual,
   territory: bilingual,
   rulers: bilingual, // Famous rulers
   achievements: bilingual,
+  summary: bilingual,
   description: bilingual,
   content: bilingual,
+  banner: String,
+  mapEmbed: String,
+  mediaText: bilingual,
   flag: String, // Dynasty flag/emblem
   image: String, // Main image
   media: [String], // Additional images/videos

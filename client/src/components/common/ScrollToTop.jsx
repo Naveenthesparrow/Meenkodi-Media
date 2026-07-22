@@ -1,20 +1,34 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigationType } from "react-router-dom";
 
 export default function ScrollToTop() {
     const { pathname, state } = useLocation();
+    const navigationType = useNavigationType();
 
     useEffect(() => {
-        // Check if we have a saved scroll position for home page
         const savedScrollPosition = sessionStorage.getItem('homeScrollPosition');
-        
-        // Don't scroll to top if:
-        // 1. state.scrollTo is set (custom scroll position)
-        // 2. We're on home page and have a saved scroll position
-        if (!state?.scrollTo && !(pathname === '/' && savedScrollPosition)) {
+
+        // Restore saved home scroll position first when available.
+        if (pathname === '/' && savedScrollPosition && !state?.scrollTo) {
+            const y = parseInt(savedScrollPosition, 10);
+            if (!Number.isNaN(y)) {
+                requestAnimationFrame(() => window.scrollTo(0, y));
+                setTimeout(() => window.scrollTo(0, y), 80);
+            }
+            sessionStorage.removeItem('homeScrollPosition');
+            return;
+        }
+
+        // Don't force scroll-to-top on browser back/forward navigation.
+        if (navigationType === 'POP') {
+            return;
+        }
+
+        // Custom section scrolling handles its own position.
+        if (!state?.scrollTo) {
             window.scrollTo(0, 0);
         }
-    }, [pathname, state]);
+    }, [pathname, state, navigationType]);
 
     return null;
 }

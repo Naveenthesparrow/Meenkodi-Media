@@ -5,7 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import AddIcon from '@mui/icons-material/Add';
-import { Edit, DragIndicator, ArrowUpward, ArrowDownward, Image as ImageIcon } from '@mui/icons-material';
+import { Edit, DragIndicator, ArrowUpward, ArrowDownward, Image as ImageIcon, Share as ShareIcon, Check as CheckIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from './common/SEO';
 
@@ -19,6 +19,7 @@ export default function SeedsFootprints({ user }) {
   const [openOrderDialog, setOpenOrderDialog] = useState(false);
   const [folderOrder, setFolderOrder] = useState([]);
   const [dragIndex, setDragIndex] = useState(null);
+  const [copiedFolderId, setCopiedFolderId] = useState(null);
   
   // Edit folder states
   const [editingFolder, setEditingFolder] = useState(null);
@@ -30,6 +31,32 @@ export default function SeedsFootprints({ user }) {
     if (!field) return '';
     if (typeof field === 'string') return field;
     return i18n.language === 'ta' && field.ta ? field.ta : field.en || '';
+  };
+
+  const handleShare = async (e, folder) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const folderUrl = `${window.location.origin}/seeds-and-footprints/folders/${folder._id}`;
+    const folderName = getContent(folder.name) || 'Tamil Heritage Folder';
+    
+    const shareData = {
+      title: folderName,
+      text: getContent(folder.description) || `Explore ${folderName} on Meenkodi`,
+      url: folderUrl
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(folderUrl);
+        setCopiedFolderId(folder._id);
+        setTimeout(() => setCopiedFolderId(null), 2000);
+      }
+    } catch (err) {
+      console.error('Failed to share folder:', err);
+    }
   };
 
   const loadFolders = () => {
@@ -930,6 +957,40 @@ export default function SeedsFootprints({ user }) {
                         </Box>
                       </Box>
                     </Paper>
+
+                    {/* Share Button (floating top-left) */}
+                    <IconButton
+                      onClick={(e) => handleShare(e, f)}
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 16,
+                        left: 16,
+                        bgcolor: 'rgba(255, 255, 255, 0.98)',
+                        backdropFilter: 'blur(12px)',
+                        boxShadow: '0 8px 24px rgba(139, 0, 0, 0.15)',
+                        border: '1.5px solid rgba(139, 0, 0, 0.2)',
+                        width: 40,
+                        height: 40,
+                        color: '#8B0000',
+                        zIndex: 10,
+                        '&:hover': {
+                          bgcolor: '#8B0000',
+                          color: 'white',
+                          transform: 'scale(1.15) rotate(8deg)',
+                          boxShadow: '0 12px 32px rgba(139, 0, 0, 0.3)',
+                          borderColor: '#8B0000'
+                        },
+                        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                      }}
+                      title={t('actions.share', 'Share Folder')}
+                    >
+                      {copiedFolderId === f._id ? (
+                        <CheckIcon sx={{ fontSize: 20 }} />
+                      ) : (
+                        <ShareIcon sx={{ fontSize: 20 }} />
+                      )}
+                    </IconButton>
 
                     {/* Admin Action Buttons */}
                     {isAdmin && (

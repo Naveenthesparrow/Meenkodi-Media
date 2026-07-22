@@ -799,6 +799,30 @@ app.put("/api/gallery/folders/order", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+app.put("/api/gallery/photos/order", ensureAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: "orderedIds must be an array" });
+    }
+
+    const bulkOps = orderedIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id, isFolder: { $ne: true } },
+        update: { $set: { order: index + 1 } },
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await Gallery.bulkWrite(bulkOps);
+    }
+
+    res.json({ updated: bulkOps.length });
+  } catch (err) {
+    console.error("Photo order update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 app.delete("/api/gallery/:id", ensureAdmin, async (req, res) => {
   console.log("DELETE /api/gallery/:id", req.params.id);
   const result = await Gallery.findByIdAndDelete(req.params.id);

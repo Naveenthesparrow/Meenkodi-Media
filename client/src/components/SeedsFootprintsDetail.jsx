@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -21,9 +21,10 @@ import {
     DialogActions
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { ArrowBack, Add, Image as ImageIcon, Edit, DragIndicator, ArrowUpward, ArrowDownward, ArrowForward, Close as CloseIcon, PlayCircleOutline } from '@mui/icons-material';
+import { ArrowBack, Add, Image as ImageIcon, Edit, DragIndicator, ArrowUpward, ArrowDownward, ArrowForward, Close as CloseIcon, PlayCircleOutline, Download as DownloadIcon, Share as ShareIcon, Check as CheckIcon } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SEO, { pageSEO } from './common/SEO';
+import OptimizedImage from './common/OptimizedImage';
 
 export default function SeedsFootprintsDetail({ user }) {
     const { id } = useParams();
@@ -54,6 +55,7 @@ export default function SeedsFootprintsDetail({ user }) {
     const [openOrderDialog, setOpenOrderDialog] = useState(false);
     const [photoOrder, setPhotoOrder] = useState([]);
     const [dragIndex, setDragIndex] = useState(null);
+    const [copiedPhotoId, setCopiedPhotoId] = useState(null);
 
     // Touch/swipe support state
     const [touchStart, setTouchStart] = useState(null);
@@ -88,6 +90,50 @@ export default function SeedsFootprintsDetail({ user }) {
             document.documentElement.style.overflow = '';
         };
     }, []);
+
+    const handleDownload = async (imageUrl, filename) => {
+        try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || 'heritage-photo.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Failed to download image:', err);
+            // Fallback: open in new tab
+            window.open(imageUrl, '_blank');
+        }
+    };
+
+    const handleShare = async (e, photo) => {
+        e.stopPropagation();
+        const absoluteImageUrl = photo.url.startsWith('http')
+            ? photo.url
+            : `${window.location.origin}${photo.url.startsWith('/') ? '' : '/'}${photo.url}`;
+        
+        const shareData = {
+            title: getContent(photo.name) || 'Tamil Heritage Photo',
+            text: getCaption(photo.caption) || 'Explore Tamil Heritage at Meenkodi',
+            url: absoluteImageUrl
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(absoluteImageUrl);
+                setCopiedPhotoId(photo._id);
+                setTimeout(() => setCopiedPhotoId(null), 2000);
+            }
+        } catch (err) {
+            console.error('Failed to share:', err);
+        }
+    };
 
     const getContent = (field) => {
         if (!field) return '';
@@ -1781,22 +1827,22 @@ export default function SeedsFootprintsDetail({ user }) {
                                                         }}
                                                     />
 
-                                                    {/* Deep Background (No blurred ambient, clean museum look) */}
-                                                    <Box
-                                                        component="img"
+                                                    <OptimizedImage
                                                         src={photo.url}
                                                         alt={getCaption(photo.caption) || folderName}
-                                                        loading="lazy"
                                                         className="photo-image"
                                                         sx={{
                                                             height: '90%',
-                                                            width: 'auto',
+                                                            width: '100%',
                                                             maxWidth: '90%',
                                                             objectFit: 'contain',
                                                             display: 'block',
                                                             zIndex: 1,
                                                             transition: 'all 0.6s ease-out',
                                                             filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))'
+                                                        }}
+                                                        skeletonSx={{
+                                                            bgcolor: 'rgba(212, 175, 55, 0.08)',
                                                         }}
                                                     />
 
@@ -1935,8 +1981,8 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     {/* badge removed per request */}
                                                 </Box>
 
-                                                {photo.sourceLink && (
-                                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1.5 }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, mt: 1.5 }}>
+                                                    {photo.sourceLink && (
                                                         <Box
                                                             component="a"
                                                             href={photo.sourceLink}
@@ -1969,8 +2015,74 @@ export default function SeedsFootprintsDetail({ user }) {
                                                         >
                                                             {t('research.source', 'Source')}
                                                         </Box>
+                                                    )}
+                                                    <Box
+                                                        component="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDownload(photo.url, `${getContent(photo.name) || 'heritage-photo'}.jpg`);
+                                                        }}
+                                                        sx={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: 0.5,
+                                                            px: 2,
+                                                            py: 0.75,
+                                                            bgcolor: '#8B0000',
+                                                            color: '#fff',
+                                                            borderRadius: 1,
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: 600,
+                                                            border: '2px solid #8B0000',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                                            transition: 'all 0.3s ease',
+                                                            fontFamily: '"Inter", sans-serif',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.05em',
+                                                            '&:hover': {
+                                                                bgcolor: '#fff',
+                                                                color: '#8B0000',
+                                                                transform: 'translateY(-2px)',
+                                                                boxShadow: '0 4px 12px rgba(139,0,0,0.25)'
+                                                            }
+                                                        }}
+                                                    >
+                                                        <DownloadIcon sx={{ fontSize: '1rem', mr: 0.5 }} />
+                                                        {t('actions.download', 'Download')}
                                                     </Box>
-                                                )}
+                                                    <Box
+                                                        component="button"
+                                                        onClick={(e) => handleShare(e, photo)}
+                                                        sx={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '38px',
+                                                            height: '38px',
+                                                            bgcolor: '#fff',
+                                                            color: '#8B0000',
+                                                            borderRadius: 1,
+                                                            border: '2px solid #8B0000',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                                                            transition: 'all 0.3s ease',
+                                                            '&:hover': {
+                                                                bgcolor: '#8B0000',
+                                                                color: '#fff',
+                                                                transform: 'translateY(-2px)',
+                                                                boxShadow: '0 4px 12px rgba(139,0,0,0.25)'
+                                                            }
+                                                        }}
+                                                        title={t('actions.share', 'Share')}
+                                                    >
+                                                        {copiedPhotoId === photo._id ? (
+                                                            <CheckIcon sx={{ fontSize: '1.1rem' }} />
+                                                        ) : (
+                                                            <ShareIcon sx={{ fontSize: '1.1rem' }} />
+                                                        )}
+                                                    </Box>
+                                                </Box>
                                             </Box>
                                         </Grid>
                                     ))}
@@ -2283,6 +2395,47 @@ export default function SeedsFootprintsDetail({ user }) {
                                     </Box>
                                 </Box>
                             )}
+
+                            {/* Download Section */}
+                            <Box sx={{ mb: 3 }}>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: '#8B7355',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        letterSpacing: '0.1em',
+                                        textTransform: 'uppercase',
+                                        mb: 1
+                                    }}
+                                >
+                                    {t('actions.download', 'Download')}
+                                </Typography>
+                                <Button
+                                    onClick={() => handleDownload(displayPhotos[activeIndex].url, `${getContent(displayPhotos[activeIndex].name) || 'heritage-photo'}.jpg`)}
+                                    variant="outlined"
+                                    startIcon={<DownloadIcon />}
+                                    sx={{
+                                        color: '#D4AF37',
+                                        borderColor: '#D4AF37',
+                                        textTransform: 'none',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 500,
+                                        px: 2,
+                                        py: 1,
+                                        borderRadius: '4px',
+                                        transition: 'all 0.2s ease',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(212, 175, 55, 0.15)',
+                                            borderColor: '#D4AF37',
+                                            boxShadow: '0 0 10px rgba(212, 175, 55, 0.3)',
+                                            transform: 'translateY(-2px)'
+                                        }
+                                    }}
+                                >
+                                    {t('actions.download', 'Download Photo')}
+                                </Button>
+                            </Box>
 
                             {/* Video Player */}
                             {(() => {
@@ -2708,6 +2861,44 @@ export default function SeedsFootprintsDetail({ user }) {
                                             </Box>
                                         </Box>
                                     )}
+
+                                    {/* Download Section (Mobile) */}
+                                    <Box sx={{ mb: 2 }}>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: '#8B7355',
+                                                fontSize: '0.7rem',
+                                                fontWeight: 600,
+                                                letterSpacing: '0.1em',
+                                                textTransform: 'uppercase',
+                                                mb: 0.5
+                                            }}
+                                        >
+                                            {t('actions.download', 'Download')}
+                                        </Typography>
+                                        <Button
+                                            onClick={() => handleDownload(displayPhotos[activeIndex].url, `${getContent(displayPhotos[activeIndex].name) || 'heritage-photo'}.jpg`)}
+                                            variant="outlined"
+                                            startIcon={<DownloadIcon />}
+                                            sx={{
+                                                color: '#D4AF37',
+                                                borderColor: '#D4AF37',
+                                                textTransform: 'none',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 500,
+                                                px: 2,
+                                                py: 1,
+                                                borderRadius: '4px',
+                                                '&:active': {
+                                                    bgcolor: 'rgba(212, 175, 55, 0.2)',
+                                                    transform: 'scale(0.98)'
+                                                }
+                                            }}
+                                        >
+                                            {t('actions.download', 'Download Photo')}
+                                        </Button>
+                                    </Box>
 
                                     {/* Video Player (Mobile version) */}
                                     {(() => {

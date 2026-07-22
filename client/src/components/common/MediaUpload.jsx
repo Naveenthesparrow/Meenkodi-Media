@@ -1,4 +1,4 @@
-import React, { useState, useId, useEffect } from "react";
+import React, { useState, useId, useEffect, useRef } from "react";
 import {
   Box,
   Button,
@@ -9,6 +9,10 @@ import {
   IconButton,
   Card,
   CardMedia,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   CloudUpload as UploadIcon,
@@ -29,6 +33,7 @@ const MediaUpload = ({
   label = "Media Upload",
   showInputsOnly = false,
   isFolder = false,
+  onUploadingChange,
 }) => {
   const reactId = useId();
   const inputId = `media-upload-${reactId.replace(/:/g, "")}`;
@@ -39,6 +44,14 @@ const MediaUpload = ({
   const [videoLink, setVideoLink] = useState(currentVideoLink || "");
   const [videoUrlState, setVideoUrlState] = useState(currentVideo || "");
   const [lastServerUrl, setLastServerUrl] = useState(null); // last returned server URL for retry attempts
+  
+  // Crop states and refs
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState(null);
+  const [tempFileName, setTempFileName] = useState("");
+  const [crop, setCrop] = useState({ x: 0, y: 0, size: 200 });
+  const imageRef = useRef(null);
+  const dragState = useRef(null);
 
   useEffect(() => {
     setPreviewImage(currentImage || "");
@@ -64,60 +77,35 @@ const MediaUpload = ({
     return `${API_BASE_URL}${withLeading}`;
   };
 
-  const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      const errorMsg = `Unsupported file type: ${file.type}. Allowed types: ${allowedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}`;
-      console.error(errorMsg);
-      setError(errorMsg);
-      return;
-    }
-
+  const uploadImageFile = async (file) => {
     setUploading(true);
+    if (onUploadingChange) onUploadingChange(true);
     setError(null);
 
     if (imageLink) {
       setImageLink("");
-      onImageLinkChange("");
+      if (onImageLinkChange) onImageLinkChange("");
     }
 
     const formData = new FormData();
     formData.append("image", file);
 
     try {
-      // Read file as data URL for immediate preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewImage(e.target.result); // Show local preview immediately
-      };
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-      };
-      reader.readAsDataURL(file);
-
       const uploadResponse = await fetch("/api/upload/image", {
         method: "POST",
         body: formData,
       });
 
-      console.log("Upload Response Status:", uploadResponse.status);
       const responseText = await uploadResponse.text();
-      console.log("Upload Response Full Text:", responseText);
-
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        console.error("Failed to parse response:", parseError);
         throw new Error(`Invalid server response: ${responseText}`);
       }
 
       if (!uploadResponse.ok) {
         const errorDetails = data.error || data.details || `Upload failed: ${uploadResponse.status}`;
-        console.error("Server Upload Error:", { status: uploadResponse.status, errorDetails, fullResponse: data });
         throw new Error(errorDetails);
       }
 
@@ -140,12 +128,167 @@ const MediaUpload = ({
       setError(null);
       setLastServerUrl(null);
     } catch (err) {
-      console.error("Complete Image Upload Error:", { message: err.message, name: err.name, stack: err.stack });
-      const errorMessage = `Upload failed: ${err.message}`;
-      setError(errorMessage);
+      console.error("Upload error:", err);
+      setError(`Upload failed: ${err.message}`);
     } finally {
       setUploading(false);
+      if (onUploadingChange) onUploadingChange(false);
     }
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      const errorMsg = `Unsupported file type: ${file.type}. Allowed types: ${allowedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}`;
+      setError(errorMsg);
+      return;
+    }
+
+    if (isFolder) {
+      setTempFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setTempImageSrc(e.target.result);
+        setCropModalOpen(true);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Direct upload for regular gallery items
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      uploadImageFile(file);
+    }
+    
+    // reset input value so user can upload the same file again if they cancel
+    event.target.value = "";
+  };
+
+  // Crop overlay handlers
+  const handleImageLoaded = (e) => {
+    const img = e.target;
+    imageRef.current = img;
+    
+    // Set crop square relative to image render size
+    const minDim = Math.min(img.width, img.height);
+    const size = minDim * 0.8;
+    setCrop({
+      x: (img.width - size) / 2,
+      y: (img.height - size) / 2,
+      size: size
+    });
+  };
+
+  const handleCropMouseDown = (e, type) => {
+    e.preventDefault();
+    if (!imageRef.current) return;
+    
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    dragState.current = {
+      type, // 'move', 'tl', 'tr', 'bl', 'br'
+      startX: clientX,
+      startY: clientY,
+      startCrop: { ...crop }
+    };
+  };
+
+  const handleCropMouseMove = (e) => {
+    if (!dragState.current || !imageRef.current) return;
+    
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+    const dx = clientX - dragState.current.startX;
+    const dy = clientY - dragState.current.startY;
+    
+    const imgWidth = imageRef.current.width;
+    const imgHeight = imageRef.current.height;
+    const { startCrop, type } = dragState.current;
+
+    if (type === 'move') {
+      let newX = startCrop.x + dx;
+      let newY = startCrop.y + dy;
+      
+      newX = Math.max(0, Math.min(newX, imgWidth - startCrop.size));
+      newY = Math.max(0, Math.min(newY, imgHeight - startCrop.size));
+      
+      setCrop(prev => ({ ...prev, x: newX, y: newY }));
+    } else {
+      let newSize = startCrop.size;
+      let newX = startCrop.x;
+      let newY = startCrop.y;
+
+      if (type === 'br') {
+        const delta = Math.max(dx, dy);
+        newSize = Math.max(50, startCrop.size + delta);
+        newSize = Math.min(newSize, imgWidth - startCrop.x, imgHeight - startCrop.y);
+      } else if (type === 'tl') {
+        const delta = Math.min(dx, dy);
+        newSize = Math.max(50, startCrop.size - delta);
+        newSize = Math.min(newSize, startCrop.x + startCrop.size, startCrop.y + startCrop.size);
+        newX = startCrop.x + (startCrop.size - newSize);
+        newY = startCrop.y + (startCrop.size - newSize);
+      } else if (type === 'tr') {
+        const delta = Math.max(dx, -dy);
+        newSize = Math.max(50, startCrop.size + delta);
+        newSize = Math.min(newSize, imgWidth - startCrop.x, startCrop.y + startCrop.size);
+        newY = startCrop.y + (startCrop.size - newSize);
+      } else if (type === 'bl') {
+        const delta = Math.max(-dx, dy);
+        newSize = Math.max(50, startCrop.size + delta);
+        newSize = Math.min(newSize, startCrop.x + startCrop.size, imgHeight - startCrop.y);
+        newX = startCrop.x + (startCrop.size - newSize);
+      }
+
+      setCrop({ x: newX, y: newY, size: newSize });
+    }
+  };
+
+  const handleCropMouseUp = () => {
+    dragState.current = null;
+  };
+
+  const handleCropSave = () => {
+    if (!imageRef.current || !tempImageSrc) return;
+
+    const img = imageRef.current;
+    const scaleX = img.naturalWidth / img.width;
+    const scaleY = img.naturalHeight / img.height;
+
+    const sourceX = crop.x * scaleX;
+    const sourceY = crop.y * scaleY;
+    const sourceWidth = crop.size * scaleX;
+    const sourceHeight = crop.size * scaleY;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = sourceWidth;
+    canvas.height = sourceHeight;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(
+      img,
+      sourceX, sourceY, sourceWidth, sourceHeight,
+      0, 0, sourceWidth, sourceHeight
+    );
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const croppedFile = new File([blob], tempFileName || 'thumbnail.jpg', { type: 'image/jpeg' });
+        // Set local preview URL
+        const localPreviewUrl = URL.createObjectURL(blob);
+        setPreviewImage(localPreviewUrl);
+        // Upload cropped file
+        uploadImageFile(croppedFile);
+      }
+      setCropModalOpen(false);
+    }, 'image/jpeg', 0.92);
   };
 
   const handleImageLinkChange = (event) => {
@@ -341,6 +484,152 @@ const MediaUpload = ({
         </Box>
         )}
       </Box>
+
+      {/* Interactive Crop Modal */}
+      <Dialog 
+        open={cropModalOpen} 
+        onClose={() => setCropModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#1a1a1a',
+            color: '#fff',
+            borderRadius: 2
+          }
+        }}
+      >
+        <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: 600 }}>
+          Adjust Thumbnail Crop
+        </DialogTitle>
+        <DialogContent sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: '#121212' }}>
+          <Typography variant="body2" sx={{ color: '#aaa', mb: 3, textAlign: 'center' }}>
+            Drag the box to move it, or drag the blue corners to resize.
+          </Typography>
+
+          {tempImageSrc && (
+            <Box
+              onMouseMove={handleCropMouseMove}
+              onMouseUp={handleCropMouseUp}
+              onMouseLeave={handleCropMouseUp}
+              onTouchMove={handleCropMouseMove}
+              onTouchEnd={handleCropMouseUp}
+              sx={{
+                position: 'relative',
+                display: 'inline-block',
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                bgcolor: '#000',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                overflow: 'hidden',
+                userSelect: 'none',
+                touchAction: 'none'
+              }}
+            >
+              <Box
+                component="img"
+                src={tempImageSrc}
+                onLoad={handleImageLoaded}
+                alt="Source Image"
+                sx={{
+                  display: 'block',
+                  maxWidth: '100%',
+                  maxHeight: '60vh',
+                  pointerEvents: 'none',
+                }}
+              />
+
+              {/* Crop box overlay */}
+              {imageRef.current && (
+                <Box
+                  onMouseDown={(e) => handleCropMouseDown(e, 'move')}
+                  onTouchStart={(e) => handleCropMouseDown(e, 'move')}
+                  sx={{
+                    position: 'absolute',
+                    left: crop.x,
+                    top: crop.y,
+                    width: crop.size,
+                    height: crop.size,
+                    border: '2px dashed #00E5FF',
+                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+                    cursor: 'move',
+                    zIndex: 10,
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {/* Grid Lines */}
+                  <Box sx={{ position: 'absolute', top: '33.33%', left: 0, right: 0, height: '1px', bgcolor: 'rgba(255,255,255,0.35)', pointerEvents: 'none' }} />
+                  <Box sx={{ position: 'absolute', top: '66.66%', left: 0, right: 0, height: '1px', bgcolor: 'rgba(255,255,255,0.35)', pointerEvents: 'none' }} />
+                  <Box sx={{ position: 'absolute', left: '33.33%', top: 0, bottom: 0, width: '1px', bgcolor: 'rgba(255,255,255,0.35)', pointerEvents: 'none' }} />
+                  <Box sx={{ position: 'absolute', left: '66.66%', top: 0, bottom: 0, width: '1px', bgcolor: 'rgba(255,255,255,0.35)', pointerEvents: 'none' }} />
+
+                  {/* Corner resizing handles */}
+                  {/* Top Left */}
+                  <Box
+                    onMouseDown={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'tl'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'tl'); }}
+                    sx={{
+                      position: 'absolute', top: -3, left: -3, width: 14, height: 14,
+                      borderTop: '3px solid #00E5FF', borderLeft: '3px solid #00E5FF',
+                      cursor: 'nwse-resize', zIndex: 11
+                    }}
+                  />
+                  {/* Top Right */}
+                  <Box
+                    onMouseDown={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'tr'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'tr'); }}
+                    sx={{
+                      position: 'absolute', top: -3, right: -3, width: 14, height: 14,
+                      borderTop: '3px solid #00E5FF', borderRight: '3px solid #00E5FF',
+                      cursor: 'nesw-resize', zIndex: 11
+                    }}
+                  />
+                  {/* Bottom Left */}
+                  <Box
+                    onMouseDown={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'bl'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'bl'); }}
+                    sx={{
+                      position: 'absolute', bottom: -3, left: -3, width: 14, height: 14,
+                      borderBottom: '3px solid #00E5FF', borderLeft: '3px solid #00E5FF',
+                      cursor: 'nesw-resize', zIndex: 11
+                    }}
+                  />
+                  {/* Bottom Right */}
+                  <Box
+                    onMouseDown={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'br'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); handleCropMouseDown(e, 'br'); }}
+                    sx={{
+                      position: 'absolute', bottom: -3, right: -3, width: 14, height: 14,
+                      borderBottom: '3px solid #00E5FF', borderRight: '3px solid #00E5FF',
+                      cursor: 'nwse-resize', zIndex: 11
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(255,255,255,0.1)', gap: 1.5 }}>
+          <Button 
+            onClick={() => setCropModalOpen(false)} 
+            sx={{ color: '#aaa', '&:hover': { color: '#fff' } }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCropSave}
+            variant="contained"
+            sx={{
+              bgcolor: '#00E5FF',
+              color: '#000',
+              fontWeight: 600,
+              '&:hover': { bgcolor: '#00B8D4' }
+            }}
+          >
+            Crop & Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

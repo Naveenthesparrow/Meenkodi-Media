@@ -22,6 +22,15 @@ const landSchema = new mongoose.Schema({
   flora: [String],
   fauna: [String],
   people: [String],
+  contentSections: [{
+    subtitle: bilingual,
+    content: bilingual,
+    imageUrl: String,
+    imageLink: String,
+    videoUrl: String,
+    videoTitle: bilingual,
+    videoDescription: bilingual,
+  }],
   image: String,
   createdAt: { type: Date, default: Date.now },
 });

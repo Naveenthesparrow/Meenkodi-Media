@@ -241,7 +241,7 @@ export default function AdminDynasties({ user }) {
   };
 
   const handleView = (dynasty) => {
-    navigate(`/dynasties/${dynasty.slug || dynasty._id}`);
+    navigate('/explore/kings');
   };
 
   if (loading) {

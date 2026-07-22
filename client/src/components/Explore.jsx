@@ -6,7 +6,6 @@ import SEO, { pageSEO } from "./common/SEO";
 import PageHeading from './common/PageHeading';
 import {
   Home,
-  AccountBalance,
   MenuBook,
   SportsKabaddi,
   RestaurantMenu,
@@ -25,7 +24,6 @@ function Explore() {
   const categories = useMemo(
     () => [
       { icon: Home, titleKey: "explore.temples", path: "temples" },
-      { icon: AccountBalance, titleKey: "explore.kings", path: "kings" },
       { icon: MenuBook, titleKey: "explore.literature", path: "literature" },
       { icon: SportsKabaddi, titleKey: "explore.dance", path: "dance" },
       { icon: RestaurantMenu, titleKey: "explore.foods", path: "foods" },

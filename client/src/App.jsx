@@ -4,15 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { HelmetProvider } from 'react-helmet-async';
 // Route-split heavier pages and details
 const TempleDetail = React.lazy(() => import("./components/details/TempleDetail"));
-const KingDetail = React.lazy(() => import("./components/details/KingDetail"));
+const DynastyDetail = React.lazy(() => import("./components/details/DynastyDetail"));
 const LiteratureDetail = React.lazy(() => import("./components/details/LiteratureDetail"));
 const DanceDetail = React.lazy(() => import("./components/details/DanceDetail"));
 const FoodDetail = React.lazy(() => import("./components/details/FoodDetail"));
 const FestivalDetail = React.lazy(() => import("./components/details/FestivalDetail"));
-const DynastyDetail = React.lazy(() => import("./components/details/DynastyDetail"));
 const PoetDetail = React.lazy(() => import("./components/details/PoetDetail"));
+const LandDetailExpanded = React.lazy(() => import("./components/details/LandDetailExpanded"));
 const EventDetail = React.lazy(() => import("./components/EventDetail"));
-const SeedsFootprints = React.lazy(() => import("./components/SeedsFootprints"));
+import SeedsFootprints from "./components/SeedsFootprints";
 const SeedsFootprintsDetail = React.lazy(() => import("./components/SeedsFootprintsDetail.jsx"));
 import {
   BrowserRouter as Router,
@@ -25,15 +25,12 @@ const AdminPortal = React.lazy(() => import("./components/AdminPortal"));
 const UserPortal = React.lazy(() => import("./components/UserPortal"));
 const MyArticles = React.lazy(() => import("./components/MyArticles"));
 import Home from "./components/Home";
-const Articles = React.lazy(() => import("./components/Articles"));
-const Gallery = React.lazy(() => import("./components/Gallery"));
-const Events = React.lazy(() => import("./components/Events"));
-const Resources = React.lazy(() => import("./components/Resources"));
+import Articles from "./components/Articles";
+import Gallery from "./components/Gallery";
+import Events from "./components/Events";
+import Resources from "./components/Resources";
 const NotFound = React.lazy(() => import("./components/NotFound"));
-const Explore = React.lazy(() => import("./components/Explore"));
-const Lands = React.lazy(() => import("./components/Lands"));
-const Kings = React.lazy(() => import("./components/categories/Kings"));
-const DynastyKings = React.lazy(() => import("./components/categories/DynastyKings"));
+import Explore from "./components/Explore";
 const Literature = React.lazy(() => import("./components/categories/Literature"));
 const Dance = React.lazy(() => import("./components/categories/Dance"));
 const Temples = React.lazy(() => import("./components/categories/Temples"));
@@ -42,7 +39,7 @@ const Festivals = React.lazy(() => import("./components/categories/Festivals"));
 const Foods = React.lazy(() => import("./components/categories/Foods"));
 const AncientScience = React.lazy(() => import("./components/categories/AncientScience"));
 const ResourceDetail = React.lazy(() => import("./components/ResourceDetail"));
-const FAQ = React.lazy(() => import("./components/FAQ"));
+import FAQ from "./components/FAQ";
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
 import {
@@ -66,8 +63,6 @@ const GalleryDetail = React.lazy(() => import("./components/GalleryDetail"));
 const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
 const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
 const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
-const LandDetail = React.lazy(() => import("./components/details/LandDetail"));
-const LandDetailExpanded = React.lazy(() => import("./components/details/LandDetailExpanded"));
 const ScrollExpandDemo = React.lazy(() => import("./components/demos/ScrollExpandDemo"));
 import SiteLogo from "./components/common/SiteLogo";
 import Footer from "./components/common/Footer";
@@ -685,12 +680,7 @@ function App() {
               <Route path="/seeds-and-footprints/folders/:id" element={<SeedsFootprintsDetail user={user} />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/explore" element={<Explore user={user} />} />
-              {/* <Route path="/explore/lands" element={<Lands user={user} />} /> Route removed as per user request */}
-              <Route path="/explore/lands/:id" element={<LandDetailExpanded user={user} />} />
-              <Route path="/explore/lands/:id/classic" element={<LandDetail user={user} />} />
               <Route path="/demo/scroll-expand" element={<ScrollExpandDemo />} />
-              <Route path="/explore/kings" element={<Kings user={user} />} />
-              <Route path="/explore/kings/dynasty/:dynastyId" element={<DynastyKings user={user} />} />
               <Route
                 path="/explore/literature"
                 element={<Literature user={user} />}
@@ -708,9 +698,7 @@ function App() {
                 element={<AncientScience user={user} />}
               />
               <Route path="/explore/temples/:id" element={<TempleDetail user={user} />} />
-              <Route path="/explore/kings/:id" element={<KingDetail user={user} />} />
               <Route path="/dynasties/:slug" element={<DynastyDetail user={user} />} />
-              <Route path="/dynasties/id/:id" element={<DynastyDetail user={user} />} />
               <Route path="/poets/:slug" element={<PoetDetail user={user} />} />
               <Route
                 path="/explore/literature/:id"
@@ -719,6 +707,7 @@ function App() {
               <Route path="/explore/dance/:id" element={<DanceDetail user={user} />} />
               <Route path="/explore/foods/:id" element={<FoodDetail user={user} />} />
               <Route path="/explore/festivals/:id" element={<FestivalDetail user={user} />} />
+              <Route path="/explore/lands/:id" element={<LandDetailExpanded user={user} />} />
               <Route path="/events/:id" element={<EventDetail user={user} />} />
               <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
               <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
