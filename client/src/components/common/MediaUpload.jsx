@@ -433,6 +433,28 @@ const MediaUpload = ({
             </IconButton>
           )}
         </Box>
+        {onImageLinkChange && (
+          <Box sx={{ mb: 2, mt: 1 }}>
+            <Typography variant="caption" sx={{ color: "#666", display: "block", mb: 0.5 }}>
+              -- OR paste direct image link (URL) --
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              label="Image Link (URL)"
+              value={imageLink}
+              onChange={handleImageLinkChange}
+              placeholder="https://example.com/image.jpg"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: "#ddd" },
+                  "&:hover fieldset": { borderColor: "#000" },
+                  "&.Mui-focused fieldset": { borderColor: "#000" },
+                },
+              }}
+            />
+          </Box>
+        )}
         {(previewImage || imageLink) && (
           <Card sx={{ maxWidth: 200, mb: 2 }}>
             <CardMedia

@@ -42,12 +42,20 @@ import {
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 
+let cachedFoodsData = null;
+
 export default function Foods({ user }) {
   const getContent = useBilingualContent();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [foods, setFoods] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [foodsRaw, setFoodsRaw] = useState(cachedFoodsData || []);
+  const setFoods = (val) => {
+    if (typeof val === 'function') {
+      setFoodsRaw(prev => { const next = val(prev); cachedFoodsData = next; return next; });
+    } else { cachedFoodsData = val; setFoodsRaw(val); }
+  };
+  const foods = foodsRaw;
+  const [loading, setLoading] = useState(!cachedFoodsData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -64,7 +72,7 @@ export default function Foods({ user }) {
   });
 
   const fetchFoods = async () => {
-    setLoading(true);
+    if (!cachedFoodsData) setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/foods`);
       if (!res.ok) throw new Error("Failed to fetch foods");
@@ -72,7 +80,7 @@ export default function Foods({ user }) {
       setFoods(data);
     } catch (err) {
       console.error("Error fetching foods:", err);
-      setFoods([]); // Fallback to an empty array instead of dummy data
+      if (!cachedFoodsData) setFoods([]);
     } finally {
       setLoading(false);
     }
@@ -192,9 +200,9 @@ export default function Foods({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

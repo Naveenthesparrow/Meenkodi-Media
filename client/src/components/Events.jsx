@@ -30,11 +30,19 @@ import { useTranslation } from 'react-i18next';
 
 import styled from 'styled-components';
 
+let cachedEventsData = null;
+
 export default function Events({ user }) {
   const getContent = useBilingualContent();
   const { t } = useTranslation();
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [eventsRaw, setEventsRaw] = useState(cachedEventsData || []);
+  const setEvents = (val) => {
+    if (typeof val === 'function') {
+      setEventsRaw(prev => { const next = val(prev); cachedEventsData = next; return next; });
+    } else { cachedEventsData = val; setEventsRaw(val); }
+  };
+  const events = eventsRaw;
+  const [loading, setLoading] = useState(!cachedEventsData);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editLanguage, setEditLanguage] = useState('en');
@@ -55,19 +63,17 @@ export default function Events({ user }) {
   }, []);
 
   const fetchEvents = async () => {
+    if (!cachedEventsData) setLoading(true);
     try {
       const response = await fetch(`/api/events`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
+      if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
       setEvents(data);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching events:', err);
-      setError(err.message);
+      if (!cachedEventsData) { setError(err.message); setEvents(dummyEvents); }
       setLoading(false);
-      setEvents(dummyEvents); // Fallback to dummy data
     }
   };
 
@@ -222,15 +228,22 @@ export default function Events({ user }) {
           variant="contained"
           startIcon={<Add />}
           sx={{
-            bgcolor: "#000",
-            color: "#fff",
-            transition: 'all 0.3s ease',
-            '&:hover': { bgcolor: '#333', boxShadow: '0 8px 15px rgba(0,0,0,0.2)', transform: 'translateY(-3px)' },
-            borderRadius: 0,
+            bgcolor: '#8B0000',
+            color: '#fff',
             px: 3,
             py: 1,
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            fontFamily: 'Georgia, serif',
+            borderRadius: 0,
+            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
             textTransform: 'uppercase',
-            fontWeight: 600,
+            letterSpacing: '0.05em',
+            '&:hover': {
+              bgcolor: '#6B0000',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+            },
+            transition: 'all 0.2s ease',
           }}
         >
           {t('events.add', 'Add Event')}

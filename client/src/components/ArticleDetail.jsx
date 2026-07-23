@@ -26,6 +26,14 @@ import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 
+const getCleanAuthorName = (name) => {
+  if (!name) return 'Anonymous';
+  if (name.includes('@')) {
+    return name.split('@')[0];
+  }
+  return name;
+};
+
 export default function ArticleDetail({ user }) {
   const getContent = useBilingualContent();
   const { t, i18n } = useTranslation();
@@ -140,6 +148,14 @@ export default function ArticleDetail({ user }) {
       return;
     }
 
+    const previousArticle = { ...article };
+    setArticle((prev) => {
+      if (!prev) return prev;
+      const userLiked = !prev.userLiked;
+      const likesCount = Math.max(0, prev.likesCount + (userLiked ? 1 : -1));
+      return { ...prev, userLiked, likesCount };
+    });
+
     try {
       const response = await fetch(`/api/articles/${id}/like`, {
         method: "POST",
@@ -148,8 +164,11 @@ export default function ArticleDetail({ user }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to like article");
 
+      // Verify and set state with server confirmation
       setArticle((prev) => prev ? { ...prev, likesCount: data.likesCount, userLiked: data.userLiked } : prev);
     } catch (err) {
+      // Rollback to original state on network/server error
+      setArticle(previousArticle);
       setError(err.message);
     }
   };
@@ -213,7 +232,22 @@ export default function ArticleDetail({ user }) {
     }
   };
 
-  if (loading) return <CircularProgress />;
+  const handleStartEdit = () => {
+    // Default to the current UI language (i18n.language) or fall back based on content availability
+    let defaultLang = i18n.language === 'ta' ? 'ta' : 'en';
+    
+    // If the selected default language has absolutely no content, but the other does, switch to the other
+    if (defaultLang === 'en' && !title_en && !content_en && (title_ta || content_ta)) {
+      defaultLang = 'ta';
+    } else if (defaultLang === 'ta' && !title_ta && !content_ta && (title_en || content_en)) {
+      defaultLang = 'en';
+    }
+    
+    setEditLanguage(defaultLang);
+    setEditMode(true);
+  };
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!article) {
     return (
@@ -231,7 +265,7 @@ export default function ArticleDetail({ user }) {
   // --- ADMIN EDIT VIEW ---
   if (editMode) {
     return (
-      <Container maxWidth="md" sx={{ py: { xs: 3, md: 6 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 } }}>
         <Paper 
           elevation={0} 
           sx={{ 
@@ -321,6 +355,11 @@ export default function ArticleDetail({ user }) {
               <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
             </ToggleButtonGroup>
+            <Typography variant="caption" sx={{ mt: 2, color: '#666', fontStyle: 'italic', textAlign: 'center', px: 2 }}>
+              {editLanguage === 'en'
+                ? "Note: If your article content is in Tamil, click the 'தமிழ்' button above to edit it."
+                : "குறிப்பு: உங்கள் கட்டுரை ஆங்கிலத்தில் இருந்தால், அதைத் திருத்த மேலே உள்ள 'ENGLISH' பொத்தானைக் கிளிக் செய்யவும்."}
+            </Typography>
           </Box>
 
           {/* Form Fields */}
@@ -362,46 +401,6 @@ export default function ArticleDetail({ user }) {
                 }}
               />
             </Box>
-
-            {/* Author Section */}
-            <Box>
-              <Typography 
-                variant="overline" 
-                sx={{ 
-                  color: '#8B0000', 
-                  fontWeight: 700, 
-                  fontSize: '0.75rem',
-                  letterSpacing: '1px',
-                  mb: 1,
-                  display: 'block'
-                }}
-              >
-                {editLanguage === 'en' ? 'AUTHOR NAME' : 'ஆசிரியர் பெயர்'}
-              </Typography>
-              <TextField 
-                label={editLanguage === 'en' ? 'Author (English)' : 'ஆசிரியர் (தமிழ்)'} 
-                value={editLanguage === 'en' ? author_en : author_ta} 
-                onChange={(e) => editLanguage === 'en' ? setAuthorEn(e.target.value) : setAuthorTa(e.target.value)} 
-                fullWidth
-                variant="outlined"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#8B0000',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#8B0000',
-                      borderWidth: 2,
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#8B0000',
-                  }
-                }}
-              />
-            </Box>
-
-            <Divider sx={{ my: 1 }} />
 
             {/* Content Section */}
             <Box>
@@ -464,10 +463,8 @@ export default function ArticleDetail({ user }) {
               </Typography>
             </Box>
 
-            <Divider sx={{ my: 1 }} />
-
-            {/* Media Settings Section */}
-            <Box>
+            {/* Thumbnail / Image Upload */}
+            <Box sx={{ mt: 3, mb: 3 }}>
               <Typography 
                 variant="overline" 
                 sx={{ 
@@ -475,11 +472,11 @@ export default function ArticleDetail({ user }) {
                   fontWeight: 700, 
                   fontSize: '0.75rem',
                   letterSpacing: '1px',
-                  mb: 2,
+                  mb: 1,
                   display: 'block'
                 }}
               >
-                MEDIA SETTINGS
+                ARTICLE THUMBNAIL (IMAGE)
               </Typography>
               <Box sx={{ 
                 p: { xs: 2, md: 3 }, 
@@ -489,20 +486,13 @@ export default function ArticleDetail({ user }) {
               }}>
                 <MediaUpload
                   onImageLinkChange={setImageLink}
-                  onVideoLinkChange={setVideoLink}
                   onImageChange={setImage}
-                  onVideoChange={setVideoUrl}
                   currentImageLink={imageLink}
-                  currentVideoLink={videoLink}
                   currentImage={image}
-                  currentVideo={videoUrl}
-                  label="Media Links"
-                  showInputsOnly={true}
+                  label="Article Thumbnail"
                 />
               </Box>
             </Box>
-
-            {/* Action Buttons */}
             <Box sx={{ 
               display: 'flex', 
               gap: 2, 
@@ -593,7 +583,7 @@ export default function ArticleDetail({ user }) {
       py: { xs: 4, md: 6 },
     }}>
       <Box sx={{
-        maxWidth: 900,
+        maxWidth: 1150,
         mx: "auto",
         px: { xs: 2, md: 4 },
       }}>
@@ -664,64 +654,6 @@ export default function ArticleDetail({ user }) {
               {getContent(article.title)}
             </Typography>
 
-            {/* Likes */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Button
-                onClick={handleLike}
-                startIcon={article.userLiked ? <Favorite /> : <FavoriteBorder />}
-                variant="text"
-                sx={{
-                  color: article.userLiked ? '#8B0000' : '#666',
-                  fontWeight: 700,
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: 'rgba(139,0,0,0.08)' },
-                }}
-                disabled={!user}
-              >
-                {t('articles.like', 'Like')}
-              </Button>
-              <Typography variant="body2" sx={{ color: '#666', fontWeight: 600 }}>
-                {article.likesCount || 0} {t('articles.likes', 'likes')}
-              </Typography>
-            </Box>
-
-            {/* Author & Date Info */}
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              pb: 3,
-              mb: 4,
-              borderBottom: '2px solid #e0e0e0',
-            }}>
-              <Box sx={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                bgcolor: '#8B0000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 700,
-                fontSize: '1.2rem',
-              }}>
-                {(article.authorName || getContent(article.author) || 'A')[0].toUpperCase()}
-              </Box>
-              <Box>
-                <Typography variant="body1" sx={{ fontWeight: 700, color: '#000', lineHeight: 1.2 }}>
-                  {getContent(article.author) || article.authorName || 'Anonymous'}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#666', fontSize: '0.85rem', mt: 0.5 }}>
-                  Published on {new Date(article.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Typography>
-              </Box>
-            </Box>
-
             {/* Article Content */}
             <Box
               sx={{
@@ -753,13 +685,87 @@ export default function ArticleDetail({ user }) {
               dangerouslySetInnerHTML={{ __html: parseContent(getContent(article.content)) }}
             />
 
-            {/* Media Display */}
-            <MediaDisplay
-              imageUrl={article.imageLink || article.image}
-              videoUrl={article.videoUrl}
-              videoLink={article.videoLink}
-              title={article.title}
-            />
+            {/* Media Display - Only if video exists */}
+            {(article.videoUrl || article.videoLink) && (
+              <MediaDisplay
+                videoUrl={article.videoUrl}
+                videoLink={article.videoLink}
+                title={article.title}
+              />
+            )}
+
+            <Divider sx={{ my: 4 }} />
+
+            {/* Engagement & Author Info Footer */}
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: 3,
+              pb: 3,
+              mb: 4,
+            }}>
+              {/* Author & Date Info */}
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}>
+                <Box sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  bgcolor: '#8B0000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '1.2rem',
+                }}>
+                  {getCleanAuthorName(getContent(article.author) || article.authorName)[0].toUpperCase()}
+                </Box>
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 700, color: '#000', lineHeight: 1.2 }}>
+                    {getCleanAuthorName(getContent(article.author) || article.authorName)}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666', fontSize: '0.85rem', mt: 0.5 }}>
+                    Published on {new Date(article.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Likes (Like Button Only - Hiding Likes Count) */}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Button
+                  onClick={handleLike}
+                  startIcon={article.userLiked ? <Favorite sx={{ fill: '#8B0000' }} /> : <FavoriteBorder />}
+                  variant="text"
+                  sx={{
+                    color: article.userLiked ? '#8B0000' : '#666',
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    border: '1px solid',
+                    borderColor: article.userLiked ? '#8B0000' : '#ccc',
+                    borderRadius: '20px',
+                    px: 3,
+                    py: 0.75,
+                    '&:hover': {
+                      bgcolor: 'rgba(139,0,0,0.08)',
+                      borderColor: '#8B0000'
+                    },
+                  }}
+                >
+                  {article.userLiked ? t('articles.liked', 'Liked') : t('articles.like', 'Like')}
+                  {` (${article.likesCount || 0})`}
+                </Button>
+              </Box>
+            </Box>
 
             {/* Admin Actions */}
             {user && user.role === "admin" && (
@@ -771,7 +777,7 @@ export default function ArticleDetail({ user }) {
                 gap: 2,
               }}>
                 <Button
-                  onClick={() => setEditMode(true)}
+                  onClick={handleStartEdit}
                   variant="contained"
                   sx={{
                     bgcolor: '#8B0000',

@@ -491,9 +491,9 @@ function AncientScienceDetail({ user: initialUser }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress />
-      </Container>
+      </Box>
     );
   }
 

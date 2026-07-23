@@ -26,12 +26,20 @@ import { Link } from "react-router-dom";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 
+let cachedClothingData = null;
+
 export default function Clothing({ user }) {
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const { t } = useTranslation();
-  const [clothing, setClothing] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [clothingRaw, setClothingRaw] = useState(cachedClothingData || []);
+  const setClothing = (val) => {
+    if (typeof val === 'function') {
+      setClothingRaw(prev => { const next = val(prev); cachedClothingData = next; return next; });
+    } else { cachedClothingData = val; setClothingRaw(val); }
+  };
+  const clothing = clothingRaw;
+  const [loading, setLoading] = useState(!cachedClothingData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -43,7 +51,7 @@ export default function Clothing({ user }) {
   });
 
   const fetchClothing = async () => {
-    setLoading(true);
+    if (!cachedClothingData) setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/clothing`);
       if (!res.ok) throw new Error("Failed to fetch clothing");
@@ -51,7 +59,7 @@ export default function Clothing({ user }) {
       setClothing(data);
     } catch (err) {
       console.error("Error fetching clothing:", err);
-      setClothing([]); // Fallback to an empty array instead of dummy data
+      if (!cachedClothingData) setClothing([]);
     } finally {
       setLoading(false);
     }
@@ -149,9 +157,9 @@ export default function Clothing({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

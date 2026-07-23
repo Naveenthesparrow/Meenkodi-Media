@@ -127,9 +127,9 @@ export default function DynastyKings({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: currentDynasty.color }} />
-      </Container>
+      </Box>
     );
   }
 

@@ -508,7 +508,7 @@ app.get("/api/articles", async (req, res) => {
     query.status = 'published';
   }
 
-  const articles = await Article.find(query).sort({ likesCount: -1, createdAt: -1 });
+  const articles = await Article.find(query).sort({ order: 1, likesCount: -1, createdAt: -1 });
   const enriched = articles.map((article) => {
     const obj = article.toObject();
     const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
@@ -522,6 +522,26 @@ app.get("/api/articles", async (req, res) => {
 app.get("/api/articles/pending/count", ensureAdmin, async (req, res) => {
   const count = await Article.countDocuments({ status: 'pending' });
   res.json({ count });
+});
+
+app.put("/api/articles/order", ensureAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: "orderedIds must be an array" });
+    }
+    const bulkOps = orderedIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { $set: { order: index + 1 } },
+      }
+    }));
+    await Article.bulkWrite(bulkOps);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Article order update error:", err);
+    res.status(500).json({ error: "Failed to update article order" });
+  }
 });
 
 app.get("/api/articles/:id", async (req, res) => {
@@ -586,7 +606,7 @@ app.post("/api/articles", ensureAuthenticated, async (req, res) => {
     const articleData = {
       ...req.body,
       authorId: req.user._id,
-      authorName: req.user.name || req.user.email,
+      authorName: req.user.displayName || req.user.email,
       authorEmail: req.user.email,
       status: req.user.role === 'admin' ? 'published' : 'pending',
       submittedAt: new Date(),
@@ -1602,7 +1622,7 @@ const imageUpload = multer({
 // General image upload endpoint
 app.post(
   "/api/upload/image",
-  ensureAdmin,
+  ensureAuthenticated,
   (req, res, next) => {
     // Log authentication details
     console.log("Image Upload Authentication Check:", {
@@ -1616,11 +1636,11 @@ app.post(
         : "No user",
     });
 
-    // Ensure admin authentication
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
-      return res.status(403).json({
+    // Ensure user authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({
         error: "Unauthorized",
-        details: "Only admin users can upload images",
+        details: "Only authenticated users can upload images",
       });
     }
 
@@ -1675,7 +1695,7 @@ app.post(
 // Bulk image upload endpoint
 app.post(
   "/api/upload/images/bulk",
-  ensureAdmin,
+  ensureAuthenticated,
   (req, res, next) => {
     // Log authentication details
     console.log("Bulk Image Upload Authentication Check:", {
@@ -1689,11 +1709,11 @@ app.post(
         : "No user",
     });
 
-    // Ensure admin authentication
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
-      return res.status(403).json({
+    // Ensure user authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({
         error: "Unauthorized",
-        details: "Only admin users can upload images",
+        details: "Only authenticated users can upload images",
       });
     }
 

@@ -52,12 +52,20 @@ import {
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 
+let cachedFestivalsData = null;
+
 export default function Festivals({ user }) {
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const { t } = useTranslation();
-  const [festivals, setFestivals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [festivalsRaw, setFestivalsRaw] = useState(cachedFestivalsData || []);
+  const setFestivals = (val) => {
+    if (typeof val === 'function') {
+      setFestivalsRaw(prev => { const next = val(prev); cachedFestivalsData = next; return next; });
+    } else { cachedFestivalsData = val; setFestivalsRaw(val); }
+  };
+  const festivals = festivalsRaw;
+  const [loading, setLoading] = useState(!cachedFestivalsData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -80,25 +88,19 @@ export default function Festivals({ user }) {
   }, []);
 
   const fetchFestivals = async () => {
+    if (!cachedFestivalsData) setLoading(true);
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/festivals`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch Festivals data");
-      }
+      if (!res.ok) throw new Error("Failed to fetch Festivals data");
       const data = await res.json();
-
-      // Add fallback for missing images
       const processedFestivals = data.map(festival => ({
         ...festival,
-        image: festival.image || "data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1200\' height=\'600\' viewBox=\'0 0 1200 600\'%3E%3Crect fill=\'%23cccccc\' width=\'1200\' height=\'600\'%3E%3C/rect%3E%3Ctext x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'monospace\' font-size=\'100px\' fill=\'%23333333\'%3E1200x600%3C/text%3E%3C/svg%3E"
+        image: festival.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23e0e0e0' width='400' height='240'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18px' fill='%23999'%3E🎉%3C/text%3E%3C/svg%3E"
       }));
-
       setFestivals(processedFestivals);
     } catch (err) {
       console.error("Error fetching Festivals data:", err);
-      // Fallback to empty array if fetch fails
-      setFestivals([]);
+      if (!cachedFestivalsData) setFestivals([]);
     } finally {
       setLoading(false);
     }
@@ -210,9 +212,9 @@ export default function Festivals({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

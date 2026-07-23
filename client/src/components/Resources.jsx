@@ -29,11 +29,19 @@ import PageHeading from './common/PageHeading';
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 
+let cachedResourcesData = null;
+
 export default function Resources({ user }) {
   const getContent = useBilingualContent();
   const { t, i18n } = useTranslation();
-  const [resources, setResources] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [resourcesRaw, setResourcesRaw] = useState(cachedResourcesData || []);
+  const setResources = (val) => {
+    if (typeof val === 'function') {
+      setResourcesRaw(prev => { const next = val(prev); cachedResourcesData = next; return next; });
+    } else { cachedResourcesData = val; setResourcesRaw(val); }
+  };
+  const resources = resourcesRaw;
+  const [loading, setLoading] = useState(!cachedResourcesData);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editLanguage, setEditLanguage] = useState('en');
@@ -52,20 +60,17 @@ export default function Resources({ user }) {
   }, []);
 
   const fetchResources = async () => {
+    if (!cachedResourcesData) setLoading(true);
     try {
       const response = await fetch(`/api/resources`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch resources');
-      }
+      if (!response.ok) throw new Error('Failed to fetch resources');
       const data = await response.json();
-      console.log('Fetched resources:', data);
       setResources(data);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching resources:', err);
-      setError(err.message);
+      if (!cachedResourcesData) { setError(err.message); setResources(dummyResources); }
       setLoading(false);
-      setResources(dummyResources); // Fallback to dummy data
     }
   };
 
@@ -233,15 +238,22 @@ export default function Resources({ user }) {
             variant="contained"
             startIcon={<Add />}
             sx={{
-              bgcolor: '#000',
+              bgcolor: '#8B0000',
               color: '#fff',
-              transition: 'all 0.3s ease',
-              '&:hover': { bgcolor: '#333' },
-              borderRadius: 0,
               px: 3,
               py: 1,
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              fontFamily: 'Georgia, serif',
+              borderRadius: 0,
+              boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
               textTransform: 'uppercase',
-              fontWeight: 600,
+              letterSpacing: '0.05em',
+              '&:hover': {
+                bgcolor: '#6B0000',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+              },
+              transition: 'all 0.2s ease',
             }}
           >
             {t('resources.add', 'Add Resource')}

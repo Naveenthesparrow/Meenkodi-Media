@@ -18,27 +18,285 @@ import {
   Badge,
   Chip,
   Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  ToggleButtonGroup,
+  ToggleButton,
+  Divider,
 } from '@mui/material';
 import PageHeading from './common/PageHeading';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Cancel, Visibility, Favorite, FavoriteBorder } from '@mui/icons-material';
+import { CheckCircle, Cancel, Visibility, Favorite, FavoriteBorder, Edit as EditIcon, Close as CloseIcon, Save as SaveIcon, Delete as DeleteIcon, Settings as SettingsIcon, ArrowUpward, ArrowDownward, DragIndicator } from '@mui/icons-material';
 import ArticleComposer from './ArticleComposer';
+import MediaUpload from './common/MediaUpload';
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 
+const stripMarkdownForSnippet = (text) => {
+  if (!text) return '';
+  return text
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '') // remove images
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // keep link text only, remove url
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // remove bold formatting syntax
+    .replace(/\*([^*]+)\*/g, '$1') // remove italic formatting syntax
+    .replace(/`([^`]+)`/g, '$1') // remove code formatting syntax
+    .replace(/(#+)\s+(.*)/g, '$2'); // remove header hash symbols
+};
+
+const toAbsoluteMediaUrl = (url) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('data:')) return url;
+  const withLeading = url.startsWith('/') ? url : `/${url}`;
+  return withLeading;
+};
+
+let cachedArticlesData = null;
+
 export default function Articles({ user }) {
   const getContent = useBilingualContent();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [articlesRaw, setArticlesRaw] = useState(cachedArticlesData || []);
+  const setArticles = (val) => {
+    if (typeof val === 'function') {
+      setArticlesRaw(prev => {
+        const next = val(prev);
+        cachedArticlesData = next;
+        return next;
+      });
+    } else {
+      cachedArticlesData = val;
+      setArticlesRaw(val);
+    }
+  };
+  const articles = articlesRaw;
+  const [loading, setLoading] = useState(!cachedArticlesData);
   const [error, setError] = useState(null);
   const [currentTab, setCurrentTab] = useState('published');
   const [pendingCount, setPendingCount] = useState(0);
   const [showComposer, setShowComposer] = useState(false);
+
+  // Edit Article States
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedArticleId, setSelectedArticleId] = useState(null);
+  const [editLanguage, setEditLanguage] = useState('en');
+  const [editTitleEn, setEditTitleEn] = useState('');
+  const [editTitleTa, setEditTitleTa] = useState('');
+  const [editContentEn, setEditContentEn] = useState('');
+  const [editContentTa, setEditContentTa] = useState('');
+  const [editImageLink, setEditImageLink] = useState('');
+  const [editImage, setEditImage] = useState('');
+  const [savingArticle, setSavingArticle] = useState(false);
+
+  // Manage Articles States
+  const [manageDialogOpen, setManageDialogOpen] = useState(false);
+  const [manageArticlesList, setManageArticlesList] = useState([]);
+  const [manageFilterTab, setManageFilterTab] = useState('all');
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
+
+  const handleOpenEditModal = (article) => {
+    setSelectedArticleId(article._id);
+    setEditTitleEn(article.title?.en || '');
+    setEditTitleTa(article.title?.ta || '');
+    setEditContentEn(article.content?.en || '');
+    setEditContentTa(article.content?.ta || '');
+    setEditImageLink(article.imageLink || '');
+    setEditImage(article.image || '');
+    
+    // Choose the default language based on content availability
+    let defaultLang = i18n.language === 'ta' ? 'ta' : 'en';
+    if (defaultLang === 'en' && !(article.title?.en || article.content?.en) && (article.title?.ta || article.content?.ta)) {
+      defaultLang = 'ta';
+    } else if (defaultLang === 'ta' && !(article.title?.ta || article.content?.ta) && (article.title?.en || article.content?.en)) {
+      defaultLang = 'en';
+    }
+    setEditLanguage(defaultLang);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEditedArticle = async () => {
+    setSavingArticle(true);
+    try {
+      const payload = {
+        title: { en: editTitleEn, ta: editTitleTa },
+        content: { en: editContentEn, ta: editContentTa },
+        imageLink: editImageLink,
+        image: editImage,
+      };
+
+      const response = await fetch(`/api/articles/${selectedArticleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Failed to save article changes');
+      
+      const updatedData = await response.json();
+      
+      // Update local state so the grid refreshes immediately
+      setArticles(prev => prev.map(art => art._id === selectedArticleId ? { ...art, ...updatedData } : art));
+      setEditDialogOpen(false);
+    } catch (err) {
+      alert(err.message || 'Error saving changes');
+    } finally {
+      setSavingArticle(false);
+    }
+  };
+
+  const handleDeleteArticle = async (e, article) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this article?")) {
+      try {
+        const response = await fetch(`/api/articles/${article._id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        if (!response.ok) throw new Error('Failed to delete article');
+
+        // Remove from local state
+        setArticles(prev => prev.filter(art => art._id !== article._id));
+        // Update pending count if it was pending
+        if (article.status === 'pending') {
+          setPendingCount(prev => Math.max(0, prev - 1));
+        }
+      } catch (err) {
+        alert(err.message || 'Error deleting article');
+      }
+    }
+  };
+  
+  const handleOpenManageArticles = () => {
+    setManageArticlesList([...articles]);
+    setManageFilterTab('all');
+    setManageDialogOpen(true);
+  };
+
+  const handleMoveArticleInManageList = (item, direction) => {
+    const globalIndex = manageArticlesList.findIndex(art => art._id === item._id);
+    if (globalIndex === -1) return;
+    
+    const targetGlobalIndex = direction === 'up' ? globalIndex - 1 : globalIndex + 1;
+    if (targetGlobalIndex < 0 || targetGlobalIndex >= manageArticlesList.length) return;
+    
+    const updated = [...manageArticlesList];
+    const temp = updated[globalIndex];
+    updated[globalIndex] = updated[targetGlobalIndex];
+    updated[targetGlobalIndex] = temp;
+    setManageArticlesList(updated);
+  };
+
+  const handleDragStartArticle = (index) => {
+    setDragIndex(index);
+  };
+
+  const handleDropArticle = (targetIndex) => {
+    if (dragIndex === null || dragIndex === targetIndex) return;
+    const updated = [...manageArticlesList];
+    const [moved] = updated.splice(dragIndex, 1);
+    updated.splice(targetIndex, 0, moved);
+    setManageArticlesList(updated);
+    setDragIndex(null);
+  };
+
+  const handleUpdateArticleStatus = async (articleId, newStatus) => {
+    try {
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update article status');
+
+      // Update in our manage list state
+      setManageArticlesList(prev => prev.map(art => art._id === articleId ? { ...art, status: newStatus } : art));
+
+      // Also update in the main articles state so the grid updates instantly!
+      setArticles(prev => prev.map(art => art._id === articleId ? { ...art, status: newStatus } : art));
+    } catch (err) {
+      alert(err.message || 'Error updating status');
+    }
+  };
+
+  const handleSaveArticleOrder = async () => {
+    setSavingOrder(true);
+    try {
+      const orderedIds = manageArticlesList.map(art => art._id);
+      const response = await fetch('/api/articles/order', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ orderedIds })
+      });
+
+      if (!response.ok) throw new Error('Failed to save article sequence');
+
+      // Update the main articles list to match the new order!
+      setArticles(manageArticlesList);
+      setManageDialogOpen(false);
+    } catch (err) {
+      alert(err.message || 'Error saving article order');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const handleLike = async (articleId) => {
+    if (!user) {
+      alert(t('articles.loginToLike', 'Please login to like articles'));
+      return;
+    }
+
+    let rollbackArticles = [];
+    setArticles((prev) => {
+      rollbackArticles = prev;
+      return prev.map((art) => {
+        if (art._id === articleId) {
+          const userLiked = !art.userLiked;
+          const likesCount = Math.max(0, art.likesCount + (userLiked ? 1 : -1));
+          return { ...art, userLiked, likesCount };
+        }
+        return art;
+      });
+    });
+
+    try {
+      const response = await fetch(`/api/articles/${articleId}/like`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to like article");
+
+      // Verify and set state with server confirmation
+      setArticles((prev) =>
+        prev.map((art) =>
+          art._id === articleId
+            ? { ...art, likesCount: data.likesCount, userLiked: data.userLiked }
+            : art
+        )
+      );
+    } catch (err) {
+      // Rollback to original state on network/server error
+      setArticles(rollbackArticles);
+      alert(err.message || 'Error processing like');
+    }
+  };
+  
   
   useEffect(() => {
     const loadArticles = async () => {
+      // Only block with a spinner on first load — afterwards revalidate silently
+      if (!cachedArticlesData) setLoading(true);
       try {
         const res = await fetch('/api/articles');
         if (!res.ok) throw new Error('Failed to fetch articles');
@@ -48,7 +306,7 @@ export default function Articles({ user }) {
         setPendingCount(pending);
         setLoading(false);
       } catch (err) {
-        setError(err.message || String(err));
+        if (!cachedArticlesData) setError(err.message || String(err));
         setLoading(false);
       }
     };
@@ -113,136 +371,63 @@ export default function Articles({ user }) {
       }
     }}>
       <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 3 }, pb: 4, position: 'relative' }}>
-      <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }}>
+      <PageHeading 
+        typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }}
+        leftActions={user && user.role === 'admin' ? (
+          <Button
+            onClick={handleOpenManageArticles}
+            variant="outlined"
+            startIcon={<SettingsIcon sx={{ fontSize: '1rem !important' }} />}
+            size="small"
+            sx={{
+              borderColor: '#8B0000',
+              color: '#8B0000',
+              '&:hover': {
+                bgcolor: 'rgba(139,0,0,0.08)',
+                borderColor: '#8B0000',
+              },
+              borderRadius: 0,
+              fontFamily: 'Georgia, serif',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              px: 2,
+              py: 0.75,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}
+          >
+            Manage Articles
+          </Button>
+        ) : null}
+        actions={user && user.role === 'admin' && !showComposer ? (
+          <Button
+            variant="contained"
+            onClick={() => setShowComposer(true)}
+            sx={{
+              bgcolor: '#8B0000',
+              color: '#fff',
+              px: 3,
+              py: 1,
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              fontFamily: 'Georgia, serif',
+              borderRadius: 0,
+              boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              '&:hover': {
+                bgcolor: '#6B0000',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            + {t('articles.writeArticle', 'Write Article')}
+          </Button>
+        ) : null}
+      >
         {t('articles.title', 'Articles')}
       </PageHeading>
-
-      {/* Admin Tabs */}
-      {user && user.role === 'admin' && (
-        <Box sx={{ 
-          mb: 5, 
-          display: 'flex', 
-          justifyContent: 'center',
-        }}>
-          <Box sx={{
-            bgcolor: 'rgba(139,0,0,0.04)',
-            border: '1px solid rgba(139,0,0,0.15)',
-            borderRadius: 999,
-            px: { xs: 0.5, md: 1 },
-            py: { xs: 0.5, md: 0.75 },
-          }}>
-            <Tabs 
-              value={currentTab} 
-              onChange={(e, v) => setCurrentTab(v)}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                minHeight: 44,
-                '& .MuiTabs-flexContainer': {
-                  gap: { xs: 0.5, md: 1 },
-                },
-                '& .MuiTab-root': {
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.85rem', md: '0.95rem' },
-                  color: '#5a5a5a',
-                  minHeight: 40,
-                  px: { xs: 2, md: 3 },
-                  borderRadius: 999,
-                  transition: 'all 0.25s ease',
-                  '&:hover': {
-                    color: '#8B0000',
-                    bgcolor: 'rgba(139,0,0,0.08)',
-                  },
-                  '&.Mui-selected': {
-                    color: '#fff',
-                    bgcolor: '#8B0000',
-                    boxShadow: '0 6px 16px rgba(139,0,0,0.25)',
-                  },
-                },
-                '& .MuiTabs-indicator': {
-                  display: 'none',
-                },
-              }}
-            >
-            <Tab label={t('articles.tabs.published', 'Published')} value="published" />
-            <Tab 
-              label={
-                <Badge badgeContent={pendingCount} color="error" sx={{ '& .MuiBadge-badge': { right: -6, top: 6 } }}>
-                  {t('articles.tabs.pending', 'Pending')}
-                </Badge>
-              }
-              value="pending"
-            />
-            <Tab label={t('articles.tabs.rejected', 'Rejected')} value="rejected" />
-            </Tabs>
-          </Box>
-        </Box>
-      )}
-
-      {/* Write Article + My Articles Buttons */}
-      {user && !showComposer && (
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
-          <Box sx={{
-            display: 'flex',
-            gap: 1,
-            p: 0.75,
-            borderRadius: 999,
-            bgcolor: 'rgba(139,0,0,0.06)',
-            border: '1px solid rgba(139,0,0,0.15)',
-            boxShadow: '0 6px 16px rgba(0,0,0,0.08)',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}>
-            <Button
-              variant="contained"
-              onClick={() => setShowComposer(true)}
-              sx={{
-                bgcolor: '#8B0000',
-                color: '#fff',
-                px: { xs: 3, md: 4 },
-                py: 1.2,
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                borderRadius: 999,
-                textTransform: 'none',
-                boxShadow: '0 8px 18px rgba(139,0,0,0.35)',
-                '&:hover': {
-                  bgcolor: '#6B0000',
-                  boxShadow: '0 10px 22px rgba(139,0,0,0.45)',
-                  transform: 'translateY(-1px)',
-                },
-                transition: 'all 0.2s ease',
-                minWidth: { xs: 160, md: 180 },
-              }}
-            >
-              ✍️ {t('articles.writeArticle', 'Write Article')}
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/my-articles')}
-              sx={{
-                borderColor: 'rgba(139,0,0,0.4)',
-                color: '#8B0000',
-                px: { xs: 3, md: 4 },
-                py: 1.2,
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                borderRadius: 999,
-                textTransform: 'none',
-                bgcolor: '#fff',
-                '&:hover': {
-                  bgcolor: 'rgba(139,0,0,0.08)',
-                  borderColor: '#8B0000',
-                },
-                minWidth: { xs: 150, md: 170 },
-              }}
-            >
-              {t('articles.myArticles', 'My Articles')}
-            </Button>
-          </Box>
-        </Box>
-      )}
 
       {/* Post Composer */}
       {user && showComposer && (
@@ -462,6 +647,66 @@ export default function Articles({ user }) {
                     />
                   )}
 
+                  {/* Action Buttons for Authorized Users */}
+                  {(() => {
+                    if (!user) return null;
+                    const canEdit = user.role === 'admin' || user._id === article.authorId;
+                    const canDelete = user.role === 'admin';
+                    
+                    const badgeOffset = article.status && article.status !== 'published' ? 80 : 0;
+                    
+                    return (
+                      <>
+                        {canEdit && (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditModal(article);
+                            }}
+                            sx={{
+                              position: 'absolute',
+                              top: 16,
+                              right: 16 + badgeOffset + (canDelete ? 40 : 0),
+                              bgcolor: 'rgba(255, 255, 255, 0.95)',
+                              color: '#8B0000',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                              zIndex: 10,
+                              '&:hover': {
+                                bgcolor: '#8B0000',
+                                color: '#fff',
+                              }
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                        
+                        {canDelete && (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleDeleteArticle(e, article)}
+                            sx={{
+                              position: 'absolute',
+                              top: 16,
+                              right: 16 + badgeOffset,
+                              bgcolor: 'rgba(255, 255, 255, 0.95)',
+                              color: '#d32f2f',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                              zIndex: 10,
+                              '&:hover': {
+                                bgcolor: '#d32f2f',
+                                color: '#fff',
+                              }
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </>
+                    );
+                  })()}
+
                   {/* Category Tag - Top Left */}
                   <Box
                     className="category-tag"
@@ -582,11 +827,9 @@ export default function Articles({ user }) {
                       dangerouslySetInnerHTML={{
                         __html: (() => {
                           const rawContent = getContent(article.content);
-                          const contentPreview = rawContent.length > 140 ? `${rawContent.substring(0, 140)}...` : rawContent;
-                          // Quick markdown parsing for bold and italic
-                          return contentPreview
-                            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                          const cleanContent = stripMarkdownForSnippet(rawContent);
+                          const contentPreview = cleanContent.length > 140 ? `${cleanContent.substring(0, 140)}...` : cleanContent;
+                          return contentPreview;
                         })()
                       }}
                     />
@@ -678,7 +921,6 @@ export default function Articles({ user }) {
                           },
                           transition: 'all 0.2s ease',
                         }}
-                        disabled={!user}
                       >
                         {article.likesCount || 0}
                       </Button>
@@ -757,6 +999,369 @@ export default function Articles({ user }) {
           ← {t('actions.backToHome', 'Back to Home')}
         </Button>
       </Box>
+      {/* Edit Article Dialog */}
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            p: 1
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, borderBottom: '2px solid #8B0000' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Georgia, serif', color: '#8B0000' }}>
+            {t('articles.edit', 'Edit Article')}
+          </Typography>
+          <IconButton onClick={() => setEditDialogOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Language Selector */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1.5, bgcolor: '#fafafa', borderRadius: 1 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
+              Select Language to Edit:
+            </Typography>
+            <ToggleButtonGroup
+              value={editLanguage}
+              exclusive
+              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 3,
+                  py: 0.75,
+                  border: '2px solid #8B0000',
+                  color: '#8B0000',
+                  fontWeight: 700,
+                  '&.Mui-selected': {
+                    bgcolor: '#8B0000',
+                    color: '#fff',
+                    '&:hover': { bgcolor: '#6B0000' },
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="en">ENGLISH</ToggleButton>
+              <ToggleButton value="ta">தமிழ்</ToggleButton>
+            </ToggleButtonGroup>
+            <Typography variant="caption" sx={{ mt: 1, color: '#666', fontStyle: 'italic' }}>
+              {editLanguage === 'en'
+                ? "Note: If your article content is in Tamil, click the 'தமிழ்' button above to edit it."
+                : "குறிப்பு: உங்கள் கட்டுரை ஆங்கிலத்தில் இருந்தால், அதைத் திருத்த மேலே உள்ள 'ENGLISH' பொத்தானைக் கிளிக் செய்யவும்."}
+            </Typography>
+          </Box>
+
+          {/* Title Input */}
+          <TextField
+            label={editLanguage === 'en' ? 'Title (English)' : 'தலைப்பு (தமிழ்)'}
+            value={editLanguage === 'en' ? editTitleEn : editTitleTa}
+            onChange={(e) => editLanguage === 'en' ? setEditTitleEn(e.target.value) : setEditTitleTa(e.target.value)}
+            fullWidth
+            variant="outlined"
+          />
+
+          {/* Content Input */}
+          <TextField
+            label={editLanguage === 'en' ? 'Content (English)' : 'உள்ளடக்கம் (தமிழ்)'}
+            value={editLanguage === 'en' ? editContentEn : editContentTa}
+            onChange={(e) => editLanguage === 'en' ? setEditContentEn(e.target.value) : setEditContentTa(e.target.value)}
+            fullWidth
+            multiline
+            rows={10}
+            variant="outlined"
+            placeholder="Write content here..."
+            sx={{ '& textarea': { fontFamily: 'Georgia, serif' } }}
+          />
+
+          {/* Thumbnail / Image Upload */}
+          <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderRadius: 1, border: '1px dashed #ccc' }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700, color: '#8B0000' }}>
+              ARTICLE THUMBNAIL (IMAGE)
+            </Typography>
+            <MediaUpload
+              onImageLinkChange={setEditImageLink}
+              onImageChange={setEditImage}
+              currentImageLink={editImageLink}
+              currentImage={editImage}
+              label="Article Thumbnail"
+            />
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2.5, gap: 1.5, borderTop: '1px solid #e0e0e0' }}>
+          <Button onClick={() => setEditDialogOpen(false)} variant="outlined" sx={{ color: '#666', borderColor: '#ccc' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveEditedArticle}
+            variant="contained"
+            disabled={savingArticle}
+            startIcon={savingArticle ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            sx={{
+              bgcolor: '#8B0000',
+              color: '#fff',
+              fontWeight: 700,
+              px: 3,
+              '&:hover': { bgcolor: '#6B0000' }
+            }}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Manage Articles Dialog */}
+      <Dialog
+        open={manageDialogOpen}
+        onClose={() => setManageDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 0,
+            border: '3px solid #8B0000',
+            maxHeight: '90vh',
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: '#8B0000',
+            color: '#fff',
+            fontFamily: 'Georgia, serif',
+            fontWeight: 700,
+            textAlign: 'center',
+            py: 2,
+          }}
+        >
+          MANAGE ARTICLES & SEQUENCE
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {/* Tab Filter inside Dialog */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', borderBottom: '1px solid #e0e0e0', pb: 1 }}>
+            <Tabs 
+              value={manageFilterTab} 
+              onChange={(e, v) => setManageFilterTab(v)}
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  fontSize: '0.8rem',
+                  fontFamily: 'Georgia, serif',
+                  minWidth: 100,
+                },
+                '& .MuiTabs-indicator': { bgcolor: '#8B0000' },
+                '& .Mui-selected': { color: '#8B0000 !important' }
+              }}
+            >
+              <Tab label="All" value="all" />
+              <Tab label="Published" value="published" />
+              <Tab label="Pending" value="pending" />
+              <Tab label="Rejected" value="rejected" />
+            </Tabs>
+          </Box>
+
+          <Typography variant="caption" sx={{ color: '#666', fontStyle: 'italic', textAlign: 'center', display: 'block' }}>
+            Tip: You can drag and drop rows, or use the Up/Down arrow buttons to reorder articles globally in the sequence below.
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: '55vh', overflowY: 'auto', pr: 1 }}>
+            {manageArticlesList.filter(art => {
+              if (manageFilterTab === 'all') return true;
+              return art.status === manageFilterTab;
+            }).map((article) => {
+              const globalIdx = manageArticlesList.findIndex(art => art._id === article._id);
+              const isFirst = globalIdx === 0;
+              const isLast = globalIdx === manageArticlesList.length - 1;
+
+              return (
+                <Box
+                  key={article._id}
+                  draggable
+                  onDragStart={() => handleDragStartArticle(globalIdx)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => handleDropArticle(globalIdx)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
+                    p: 2,
+                    border: '1px solid #e0e0e0',
+                    bgcolor: '#fff',
+                    transition: 'all 0.2s',
+                    cursor: 'grab',
+                    '&:active': { cursor: 'grabbing' },
+                    '&:hover': {
+                      borderColor: '#8B0000',
+                      bgcolor: '#fafafa',
+                    }
+                  }}
+                >
+                  {/* Drag Indicator Handle */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#8B0000',
+                      opacity: 0.5,
+                      mr: 0.5
+                    }}
+                  >
+                    <DragIndicator fontSize="small" />
+                  </Box>
+
+                  {/* Thumbnail Avatar */}
+                  <Avatar
+                    variant="square"
+                    src={toAbsoluteMediaUrl(article.imageLink || article.image)}
+                    sx={{ width: 44, height: 44, border: '1px solid #eee', bgcolor: '#f5f5f5' }}
+                  >
+                    📝
+                  </Avatar>
+
+                  {/* Title and Date */}
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="subtitle2" 
+                      sx={{ 
+                        fontWeight: 700, 
+                        fontFamily: 'Georgia, serif', 
+                        color: '#000',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {getContent(article.title)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#888' }}>
+                      By {article.authorName || 'Author'} • {new Date(article.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+
+                  {/* Status Badge */}
+                  <Chip
+                    label={article.status?.toUpperCase() || 'PENDING'}
+                    size="small"
+                    color={
+                      article.status === 'published' ? 'success' :
+                      article.status === 'pending' ? 'warning' : 'error'
+                    }
+                    sx={{ fontWeight: 700, fontSize: '0.65rem', borderRadius: '4px', height: 22 }}
+                  />
+
+                  {/* Inline Reorder Actions */}
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <IconButton
+                      size="small"
+                      disabled={isFirst}
+                      onClick={() => handleMoveArticleInManageList(article, 'up')}
+                      sx={{ bgcolor: '#f5f5f5' }}
+                    >
+                      <ArrowUpward fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      disabled={isLast}
+                      onClick={() => handleMoveArticleInManageList(article, 'down')}
+                      sx={{ bgcolor: '#f5f5f5' }}
+                    >
+                      <ArrowDownward fontSize="small" />
+                    </IconButton>
+                  </Box>
+
+                  {/* Inline Moderation Actions */}
+                  <Box sx={{ display: 'flex', gap: 0.5, borderLeft: '1px solid #ddd', pl: 1.5 }}>
+                    {article.status !== 'published' && (
+                      <IconButton
+                        size="small"
+                        color="success"
+                        onClick={() => handleUpdateArticleStatus(article._id, 'published')}
+                        title="Approve & Publish"
+                      >
+                        <CheckCircle fontSize="small" />
+                      </IconButton>
+                    )}
+                    {article.status !== 'rejected' && (
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleUpdateArticleStatus(article._id, 'rejected')}
+                        title="Reject & Hide"
+                      >
+                        <Cancel fontSize="small" />
+                      </IconButton>
+                    )}
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => {
+                        setManageDialogOpen(false);
+                        handleOpenEditModal(article);
+                      }}
+                      title="Edit text"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (window.confirm("Are you sure you want to delete this article?")) {
+                          try {
+                            const res = await fetch(`/api/articles/${article._id}`, {
+                              method: 'DELETE',
+                              credentials: 'include',
+                            });
+                            if (res.ok) {
+                              setManageArticlesList(prev => prev.filter(art => art._id !== article._id));
+                              setArticles(prev => prev.filter(art => art._id !== article._id));
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }
+                      }}
+                      title="Delete permanently"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2.5, gap: 1.5, borderTop: '1px solid #e0e0e0' }}>
+          <Button onClick={() => setManageDialogOpen(false)} variant="outlined" sx={{ color: '#666', borderColor: '#ccc' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveArticleOrder}
+            variant="contained"
+            disabled={savingOrder}
+            startIcon={savingOrder ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            sx={{
+              bgcolor: '#8B0000',
+              color: '#fff',
+              fontWeight: 700,
+              px: 3,
+              '&:hover': { bgcolor: '#6B0000' }
+            }}
+          >
+            Save Sequence
+          </Button>
+        </DialogActions>
+      </Dialog>
       </Container>
     </Box>
     </>

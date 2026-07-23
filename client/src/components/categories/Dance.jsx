@@ -52,12 +52,20 @@ import {
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 
+let cachedDancesData = null;
+
 export default function Dance({ user }) {
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const { t } = useTranslation();
-  const [dances, setDances] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [dancesRaw, setDancesRaw] = useState(cachedDancesData || []);
+  const setDances = (val) => {
+    if (typeof val === 'function') {
+      setDancesRaw(prev => { const next = val(prev); cachedDancesData = next; return next; });
+    } else { cachedDancesData = val; setDancesRaw(val); }
+  };
+  const dances = dancesRaw;
+  const [loading, setLoading] = useState(!cachedDancesData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -80,17 +88,15 @@ export default function Dance({ user }) {
   }, []);
 
   const fetchDances = async () => {
+    if (!cachedDancesData) setLoading(true);
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/dance`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch Dance data");
-      }
+      if (!res.ok) throw new Error("Failed to fetch Dance data");
       const data = await res.json();
       setDances(data);
     } catch (err) {
       console.error("Error fetching Dance data:", err);
-      setDances([]); // Fallback to an empty array instead of dummy data
+      if (!cachedDancesData) setDances([]);
     } finally {
       setLoading(false);
     }
@@ -206,9 +212,9 @@ export default function Dance({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

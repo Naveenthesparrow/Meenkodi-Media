@@ -53,9 +53,17 @@ import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 import MediaUpload from "../common/MediaUpload";
 
+let cachedSciencesData = null;
+
 export default function AncientScience({ user }) {
-  const [sciences, setSciences] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [sciencesRaw, setSciencesRaw] = useState(cachedSciencesData || []);
+  const setSciences = (val) => {
+    if (typeof val === 'function') {
+      setSciencesRaw(prev => { const next = val(prev); cachedSciencesData = next; return next; });
+    } else { cachedSciencesData = val; setSciencesRaw(val); }
+  };
+  const sciences = sciencesRaw;
+  const [loading, setLoading] = useState(!cachedSciencesData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -81,17 +89,15 @@ export default function AncientScience({ user }) {
   }, []);
 
   const fetchScience = async () => {
+    if (!cachedSciencesData) setLoading(true);
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/ancientscience`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch Ancient Science data");
-      }
+      if (!res.ok) throw new Error("Failed to fetch Ancient Science data");
       const data = await res.json();
       setSciences(data);
     } catch (err) {
       console.error("Error fetching Ancient Science data:", err);
-      setSciences([]); // Fallback to an empty array instead of dummy data
+      if (!cachedSciencesData) setSciences([]);
     } finally {
       setLoading(false);
     }
@@ -226,9 +232,9 @@ export default function AncientScience({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

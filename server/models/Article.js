@@ -28,6 +28,7 @@ const articleSchema = new mongoose.Schema({
   viewCount: { type: Number, default: 0 },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   likesCount: { type: Number, default: 0 },
+  order: { type: Number, default: 9999 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

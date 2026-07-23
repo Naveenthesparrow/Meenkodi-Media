@@ -38,12 +38,20 @@ import {
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 
+let cachedTemplesData = null;
+
 export default function Temples({ user }) {
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const { t } = useTranslation();
-  const [temples, setTemples] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [templesRaw, setTemplesRaw] = useState(cachedTemplesData || []);
+  const setTemples = (val) => {
+    if (typeof val === 'function') {
+      setTemplesRaw(prev => { const next = val(prev); cachedTemplesData = next; return next; });
+    } else { cachedTemplesData = val; setTemplesRaw(val); }
+  };
+  const temples = templesRaw;
+  const [loading, setLoading] = useState(!cachedTemplesData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -63,7 +71,7 @@ export default function Temples({ user }) {
   };
 
   const fetchTemples = async () => {
-    setLoading(true);
+    if (!cachedTemplesData) setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/temples`);
       if (!res.ok) throw new Error("Failed to fetch temples");
@@ -71,8 +79,7 @@ export default function Temples({ user }) {
       setTemples(data);
     } catch (err) {
       console.error(err);
-      // fallback to an empty array so UI isn't blank
-      setTemples([]);
+      if (!cachedTemplesData) setTemples([]);
     } finally {
       setLoading(false);
     }
@@ -184,9 +191,9 @@ export default function Temples({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

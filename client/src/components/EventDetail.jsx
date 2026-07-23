@@ -114,7 +114,7 @@ export default function EventDetail({ user }) {
     }
   };
 
-  if (loading) return <CircularProgress />;
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!event) {
     return (

@@ -9,10 +9,25 @@ import { Edit, DragIndicator, ArrowUpward, ArrowDownward, Image as ImageIcon, Sh
 import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from './common/SEO';
 
+let cachedSeedsData = null;
+
 export default function SeedsFootprints({ user }) {
   const { t, i18n } = useTranslation();
-  const [folders, setFolders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [foldersRaw, setFoldersRaw] = useState(cachedSeedsData || []);
+  const setFolders = (val) => {
+    if (typeof val === 'function') {
+      setFoldersRaw(prev => {
+        const next = val(prev);
+        cachedSeedsData = next;
+        return next;
+      });
+    } else {
+      cachedSeedsData = val;
+      setFoldersRaw(val);
+    }
+  };
+  const folders = foldersRaw;
+  const [loading, setLoading] = useState(!cachedSeedsData);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ nameEn: '', nameTa: '', descEn: '', descTa: '', coverPhoto: null });
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
@@ -61,7 +76,9 @@ export default function SeedsFootprints({ user }) {
 
   const loadFolders = () => {
     let mounted = true;
-    setLoading(true);
+    if (!cachedSeedsData) {
+      setLoading(true);
+    }
     fetch('/api/seedsandfootprints/folders')
       .then((r) => r.json())
       .then((data) => {
@@ -293,20 +310,22 @@ export default function SeedsFootprints({ user }) {
                 variant="contained"
                 startIcon={<AddIcon />}
                 sx={{
-                  bgcolor: "#000",
-                  color: "#fff",
-                  transition: 'all 0.3s ease',
-                  "&:hover": {
-                    bgcolor: "#333",
-                    boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                    transform: { xs: 'none', md: 'translateY(-3px)' },
-                  },
+                  bgcolor: '#8B0000',
+                  color: '#fff',
+                  px: 3,
+                  py: 1,
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  fontFamily: 'Georgia, serif',
                   borderRadius: 0,
-                  px: { xs: 2, md: 3 },
-                  py: { xs: 0.5, md: 1 },
-                  fontSize: i18n.language === 'ta'
-                    ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
-                    : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  '&:hover': {
+                    bgcolor: '#6B0000',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+                  },
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {t('research.addDiscovery', 'Add Discovery')}

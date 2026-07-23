@@ -38,12 +38,20 @@ import {
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 
+let cachedLiteratureData = null;
+
 export default function Literature({ user }) {
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const { t } = useTranslation();
-  const [literature, setLiterature] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [literatureRaw, setLiteratureRaw] = useState(cachedLiteratureData || []);
+  const setLiterature = (val) => {
+    if (typeof val === 'function') {
+      setLiteratureRaw(prev => { const next = val(prev); cachedLiteratureData = next; return next; });
+    } else { cachedLiteratureData = val; setLiteratureRaw(val); }
+  };
+  const literature = literatureRaw;
+  const [loading, setLoading] = useState(!cachedLiteratureData);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -63,7 +71,7 @@ export default function Literature({ user }) {
   };
 
   const fetchLiterature = async () => {
-    setLoading(true);
+    if (!cachedLiteratureData) setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/literature`);
       if (!res.ok) throw new Error("Failed to fetch literature");
@@ -71,7 +79,7 @@ export default function Literature({ user }) {
       setLiterature(data);
     } catch (err) {
       console.error("Error fetching literature:", err);
-      setLiterature([]); // Fallback to empty array instead of dummy data
+      if (!cachedLiteratureData) setLiterature([]);
     } finally {
       setLoading(false);
     }
@@ -185,9 +193,9 @@ export default function Literature({ user }) {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress sx={{ color: "#000" }} />
-      </Container>
+      </Box>
     );
   }
 

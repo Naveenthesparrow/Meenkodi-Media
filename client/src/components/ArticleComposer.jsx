@@ -121,14 +121,61 @@ export default function ArticleComposer({ user, onPostCreated }) {
   const insertNumberedList = () => insertFormatting('\n1. ');
   const insertCode = () => insertFormatting('`', '`');
 
-  const insertImageLink = () => {
-    const url = prompt(composerLanguage === 'en' 
-      ? 'Enter image URL:' 
-      : 'படத்தின் URL ஐ உள்ளிடவும்:'
-    );
-    if (url) {
-      insertFormatting(`![Image](${url})\n`);
-    }
+  const handleEditorImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      setUploading(true);
+      setError(null);
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const response = await fetch('/api/upload/image', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+
+        const responseText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseErr) {
+          throw new Error(`Server returned non-JSON error: ${responseText.substring(0, 100)}`);
+        }
+
+        if (!response.ok) throw new Error(data.error || data.details || 'Upload failed');
+
+        const imageUrl = data.imageUrl || data.url || data.fullPath;
+        if (!imageUrl) {
+          throw new Error('No image URL returned from server');
+        }
+
+        let normalizedUrl;
+        if (imageUrl.startsWith('http') || imageUrl.startsWith('//') || imageUrl.startsWith('data:')) {
+          normalizedUrl = imageUrl;
+        } else {
+          normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
+        }
+        
+        const finalUrl = (normalizedUrl.startsWith('http') || normalizedUrl.startsWith('//') || normalizedUrl.startsWith('data:'))
+          ? normalizedUrl
+          : `${API_BASE_URL}${normalizedUrl}`;
+
+        insertFormatting(`![image](${finalUrl})\n`);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setUploading(false);
+      }
+    };
+    input.click();
   };
 
   const insertLink = () => {
@@ -380,9 +427,14 @@ export default function ArticleComposer({ user, onPostCreated }) {
             </IconButton>
           </Tooltip>
           <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title="Insert Image Link">
-            <IconButton size="small" onClick={insertImageLink} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <ImageIcon fontSize="small" />
+          <Tooltip title={composerLanguage === 'en' ? "Upload & Insert Image" : "படம் பதிவேற்றி செருகவும்"}>
+            <IconButton 
+              size="small" 
+              onClick={handleEditorImageUpload} 
+              disabled={uploading}
+              sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}
+            >
+              {uploading ? <CircularProgress size={18} color="inherit" /> : <ImageIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Insert Link">
@@ -534,13 +586,13 @@ export default function ArticleComposer({ user, onPostCreated }) {
             <>
               • <strong>**Bold text**</strong> for bold • <em>*Italic text*</em> for italic<br />
               • <strong># Heading 1</strong>, <strong>## Heading 2</strong>, <strong>### Heading 3</strong><br />
-              • Use toolbar buttons or type manually • Click image button to insert image links
+              • Use toolbar buttons or type manually • Click image button to upload and insert images
             </>
           ) : (
             <>
               • <strong>**தடிமன் உரை**</strong> தடிமனாக • <em>*சாய்வு உரை*</em> சாய்வாக<br />
               • <strong># தலைப்பு 1</strong>, <strong>## தலைப்பு 2</strong>, <strong>### தலைப்பு 3</strong><br />
-              • கருவிப்பட்டை பொத்தான்களைப் பயன்படுத்தவும் • படங்களைச் சேர்க்க பொத்தானைக் கிளிக் செய்யவும்
+              • கருவிப்பட்டை பொத்தான்களைப் பயன்படுத்தவும் • படங்களை பதிவேற்றி சேர்க்க பொத்தானைக் கிளிக் செய்யவும்
             </>
           )}
         </Typography>
