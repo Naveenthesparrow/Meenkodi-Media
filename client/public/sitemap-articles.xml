@@ -2,8 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
-    <loc>https://www.meenkodi.com/articles/69116c5703ba23cc2e360c28</loc>
-    <lastmod>2025-12-17</lastmod>
+    <loc>https://www.meenkodi.com/articles/69929d27020e8a4c0376d7bb</loc>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <news:news>
@@ -11,8 +11,23 @@
         <news:name>Meenkodi Tamil Heritage</news:name>
         <news:language>en</news:language>
       </news:publication>
-      <news:publication_date>2025-12-17T09:57:18.255Z</news:publication_date>
-      <news:title>Chola Maritime Power</news:title>
+      <news:publication_date>2026-02-16T04:29:27.675Z</news:publication_date>
+      <news:title>Kudumbar Ethnic Group Leader Cikai Koṟraṉ / Kudumi Koṟraṉ in Egypt&apos;s Valley of the Kings!</news:title>
+      <news:keywords>Tamil Heritage, Tamil Heritage, Tamil Culture</news:keywords>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://www.meenkodi.com/articles/6a61ec7d28787f808f5171f5</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>Meenkodi Tamil Heritage</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-07-23T10:27:09.320Z</news:publication_date>
+      <news:title>Untitled</news:title>
       <news:keywords>Tamil Heritage, Tamil Heritage, Tamil Culture</news:keywords>
     </news:news>
   </url>
