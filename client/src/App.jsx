@@ -2,18 +2,46 @@ import React, { useState, useEffect } from 'react';
 import './i18n/i18n.js';
 import { useTranslation } from 'react-i18next';
 import { HelmetProvider } from 'react-helmet-async';
+// Helper for resilient lazy loading with auto-reload on stale deployment chunk errors
+const lazyRetry = (componentImport) =>
+  React.lazy(async () => {
+    const pageHasAlreadyBeenRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-refreshed') || 'false'
+    );
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenRefreshed) {
+        window.sessionStorage.setItem('page-has-been-refreshed', 'true');
+        window.location.reload();
+        return { default: () => null };
+      }
+      throw error;
+    }
+  });
+
+// Handle Vite dynamic import preload errors globally
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', (event) => {
+    console.warn('Vite preload error detected, reloading page for latest bundle...', event);
+    window.location.reload();
+  });
+}
+
 // Route-split heavier pages and details
-const TempleDetail = React.lazy(() => import("./components/details/TempleDetail"));
-const DynastyDetail = React.lazy(() => import("./components/details/DynastyDetail"));
-const LiteratureDetail = React.lazy(() => import("./components/details/LiteratureDetail"));
-const DanceDetail = React.lazy(() => import("./components/details/DanceDetail"));
-const FoodDetail = React.lazy(() => import("./components/details/FoodDetail"));
-const FestivalDetail = React.lazy(() => import("./components/details/FestivalDetail"));
-const PoetDetail = React.lazy(() => import("./components/details/PoetDetail"));
-const LandDetailExpanded = React.lazy(() => import("./components/details/LandDetailExpanded"));
-const EventDetail = React.lazy(() => import("./components/EventDetail"));
+const TempleDetail = lazyRetry(() => import("./components/details/TempleDetail"));
+const DynastyDetail = lazyRetry(() => import("./components/details/DynastyDetail"));
+const LiteratureDetail = lazyRetry(() => import("./components/details/LiteratureDetail"));
+const DanceDetail = lazyRetry(() => import("./components/details/DanceDetail"));
+const FoodDetail = lazyRetry(() => import("./components/details/FoodDetail"));
+const FestivalDetail = lazyRetry(() => import("./components/details/FestivalDetail"));
+const PoetDetail = lazyRetry(() => import("./components/details/PoetDetail"));
+const LandDetailExpanded = lazyRetry(() => import("./components/details/LandDetailExpanded"));
+const EventDetail = lazyRetry(() => import("./components/EventDetail"));
 import SeedsFootprints from "./components/SeedsFootprints";
-const SeedsFootprintsDetail = React.lazy(() => import("./components/SeedsFootprintsDetail.jsx"));
+const SeedsFootprintsDetail = lazyRetry(() => import("./components/SeedsFootprintsDetail.jsx"));
 import {
   BrowserRouter as Router,
   Routes,
@@ -21,24 +49,24 @@ import {
   Link as RouterLink,
   useLocation
 } from "react-router-dom";
-const AdminPortal = React.lazy(() => import("./components/AdminPortal"));
-const UserPortal = React.lazy(() => import("./components/UserPortal"));
-const MyArticles = React.lazy(() => import("./components/MyArticles"));
+const AdminPortal = lazyRetry(() => import("./components/AdminPortal"));
+const UserPortal = lazyRetry(() => import("./components/UserPortal"));
+const MyArticles = lazyRetry(() => import("./components/MyArticles"));
 import Home from "./components/Home";
 import Articles from "./components/Articles";
 import Gallery from "./components/Gallery";
 import Events from "./components/Events";
 import Resources from "./components/Resources";
-const NotFound = React.lazy(() => import("./components/NotFound"));
+const NotFound = lazyRetry(() => import("./components/NotFound"));
 import Explore from "./components/Explore";
-const Literature = React.lazy(() => import("./components/categories/Literature"));
-const Dance = React.lazy(() => import("./components/categories/Dance"));
-const Temples = React.lazy(() => import("./components/categories/Temples"));
-const Clothing = React.lazy(() => import("./components/categories/Clothing"));
-const Festivals = React.lazy(() => import("./components/categories/Festivals"));
-const Foods = React.lazy(() => import("./components/categories/Foods"));
-const AncientScience = React.lazy(() => import("./components/categories/AncientScience"));
-const ResourceDetail = React.lazy(() => import("./components/ResourceDetail"));
+const Literature = lazyRetry(() => import("./components/categories/Literature"));
+const Dance = lazyRetry(() => import("./components/categories/Dance"));
+const Temples = lazyRetry(() => import("./components/categories/Temples"));
+const Clothing = lazyRetry(() => import("./components/categories/Clothing"));
+const Festivals = lazyRetry(() => import("./components/categories/Festivals"));
+const Foods = lazyRetry(() => import("./components/categories/Foods"));
+const AncientScience = lazyRetry(() => import("./components/categories/AncientScience"));
+const ResourceDetail = lazyRetry(() => import("./components/ResourceDetail"));
 import FAQ from "./components/FAQ";
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
@@ -59,11 +87,11 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import LanguageSwitcher from './components/common/LanguageSwitcher';
-const GalleryDetail = React.lazy(() => import("./components/GalleryDetail"));
-const ArticleDetail = React.lazy(() => import("./components/ArticleDetail"));
-const AncientScienceDetail = React.lazy(() => import("./components/details/AncientScienceDetail"));
-const ClothingDetail = React.lazy(() => import("./components/details/ClothingDetail"));
-const ScrollExpandDemo = React.lazy(() => import("./components/demos/ScrollExpandDemo"));
+const GalleryDetail = lazyRetry(() => import("./components/GalleryDetail"));
+const ArticleDetail = lazyRetry(() => import("./components/ArticleDetail"));
+const AncientScienceDetail = lazyRetry(() => import("./components/details/AncientScienceDetail"));
+const ClothingDetail = lazyRetry(() => import("./components/details/ClothingDetail"));
+const ScrollExpandDemo = lazyRetry(() => import("./components/demos/ScrollExpandDemo"));
 import SiteLogo from "./components/common/SiteLogo";
 import Footer from "./components/common/Footer";
 import ScrollToTop from "./components/common/ScrollToTop";
