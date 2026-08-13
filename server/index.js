@@ -1958,7 +1958,7 @@ app.post(
   }
 );
 
-// Multer memory storage for PDF book uploads (uploads permanently to Cloudinary Cloud)
+// Multer memory storage for PDF book uploads
 const pdfMemoryStorage = multer.memoryStorage();
 
 const pdfUpload = multer({
@@ -1975,11 +1975,103 @@ const pdfUpload = multer({
     }
   },
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB max
+    fileSize: 200 * 1024 * 1024, // 200MB max limit
   },
 });
 
-// PDF upload endpoint for resources/books (Permanent Cloudinary Storage)
+// Helper for Cloudinary or Disk upload fallback
+function uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted) {
+  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "meenkodi_pdf_books",
+        resource_type: "auto",
+        public_id: uniqueFilename,
+      },
+      (cloudinaryErr, result) => {
+        if (cloudinaryErr) {
+          console.error("Cloudinary PDF upload error:", cloudinaryErr);
+          return saveToLocalDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+        }
+
+        const pdfUrl = result.secure_url || result.url;
+        console.log("✓ PDF Book uploaded to Cloudinary successfully:", pdfUrl, sizeFormatted);
+
+        return res.json({
+          url: pdfUrl,
+          downloadLink: pdfUrl,
+          filename: result.public_id,
+          originalName: req.file.originalname,
+          size: sizeBytes,
+          pdfSize: sizeFormatted,
+          pdfName: req.file.originalname,
+        });
+      }
+    );
+    uploadStream.end(req.file.buffer);
+  } else {
+    return saveToLocalDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+  }
+}
+
+function saveToLocalDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted) {
+  try {
+    const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    const filePath = path.join(uploadsDir, uniqueFilename);
+    fs.writeFileSync(filePath, req.file.buffer);
+
+    const pdfUrl = `/uploads/resources/pdf/${uniqueFilename}`;
+    console.log("✓ PDF Book saved to local disk fallback:", pdfUrl);
+
+    return res.json({
+      url: pdfUrl,
+      downloadLink: pdfUrl,
+      filename: uniqueFilename,
+      originalName: req.file.originalname,
+      size: sizeBytes,
+      pdfSize: sizeFormatted,
+      pdfName: req.file.originalname,
+    });
+  } catch (err) {
+    console.error("Disk save error:", err);
+    return res.status(500).json({ error: "Failed to save PDF file", details: err.message });
+  }
+}
+
+// Stream PDF directly from MongoDB Database GridFS
+app.get("/api/resources/pdf/:id", async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) return res.status(500).send("Database connection not ready");
+
+    const bucket = new GridFSBucket(db, { bucketName: "pdf_books" });
+    const fileId = new mongoose.Types.ObjectId(req.params.id);
+
+    const files = await bucket.find({ _id: fileId }).toArray();
+    if (!files || files.length === 0) {
+      return res.status(404).send("PDF Book file not found in database");
+    }
+
+    const file = files[0];
+
+    res.set({
+      "Content-Type": file.contentType || "application/pdf",
+      "Content-Length": file.length,
+      "Content-Disposition": `inline; filename="${file.filename}"`,
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "public, max-age=31536000",
+    });
+
+    const downloadStream = bucket.openDownloadStream(fileId);
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error("PDF streaming error:", err);
+    res.status(500).send("Error streaming PDF from database");
+  }
+});
+
+// PDF upload endpoint for resources/books (Multi-tiered Storage)
 app.post(
   "/api/upload/pdf",
   ensureAdmin,
@@ -2001,63 +2093,58 @@ app.post(
         ? `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
         : `${(sizeBytes / 1024).toFixed(1)} KB`;
 
-      // Upload to Cloudinary Cloud Storage if configured
-      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
-        const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_").toLowerCase();
-        const uniqueFilename = `book-${Date.now()}-${sanitizedName}`;
+      const sanitizedOriginal = (req.file.originalname || "document.pdf")
+        .replace(/[^a-zA-Z0-9.-]/g, "_")
+        .toLowerCase();
+      const uniqueFilename = `book-${Date.now()}-${sanitizedOriginal}`;
 
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "meenkodi_pdf_books",
-            resource_type: "raw",
-            public_id: uniqueFilename,
-          },
-          (cloudinaryErr, result) => {
-            if (cloudinaryErr) {
-              console.error("Cloudinary PDF upload error:", cloudinaryErr);
-              return res.status(500).json({ error: "Cloud upload failed", details: cloudinaryErr.message });
+      // Method 1: MongoDB GridFS Storage (Permanent Cloud Database Storage)
+      const db = mongoose.connection?.db;
+      if (db) {
+        try {
+          const bucket = new GridFSBucket(db, { bucketName: "pdf_books" });
+          const uploadStream = bucket.openUploadStream(uniqueFilename, {
+            contentType: req.file.mimetype || "application/pdf",
+            metadata: {
+              originalName: req.file.originalname,
+              uploadedBy: req.user._id,
             }
+          });
 
-            const pdfUrl = result.secure_url || result.url;
-            console.log("PDF Book uploaded to Cloudinary successfully:", pdfUrl, sizeFormatted);
+          uploadStream.on("finish", () => {
+            const fileId = uploadStream.id;
+            const pdfUrl = `/api/resources/pdf/${fileId}`;
+            console.log("✓ PDF Book stored in MongoDB Database GridFS successfully:", fileId, pdfUrl, sizeFormatted);
 
             return res.json({
               url: pdfUrl,
               downloadLink: pdfUrl,
-              filename: result.public_id,
+              filename: uniqueFilename,
+              fileId: fileId,
               originalName: req.file.originalname,
               size: sizeBytes,
               pdfSize: sizeFormatted,
               pdfName: req.file.originalname,
             });
-          }
-        );
+          });
 
-        uploadStream.end(req.file.buffer);
-      } else {
-        // Fallback to local disk if Cloudinary environment variables are missing
-        const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
-        fs.mkdirSync(uploadsDir, { recursive: true });
-        const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_").toLowerCase();
-        const filename = `book-${Date.now()}-${sanitizedName}`;
-        const filePath = path.join(uploadsDir, filename);
-        fs.writeFileSync(filePath, req.file.buffer);
+          uploadStream.on("error", (gridFsErr) => {
+            console.error("GridFS stream error, falling back to Cloudinary:", gridFsErr);
+            return uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+          });
 
-        const pdfUrl = `/uploads/resources/pdf/${filename}`;
-        console.log("PDF Book uploaded to local disk fallback:", pdfUrl);
-
-        return res.json({
-          url: pdfUrl,
-          downloadLink: pdfUrl,
-          filename: filename,
-          originalName: req.file.originalname,
-          size: sizeBytes,
-          pdfSize: sizeFormatted,
-          pdfName: req.file.originalname,
-        });
+          uploadStream.end(req.file.buffer);
+          return;
+        } catch (gfsErr) {
+          console.error("GridFS initialization error, falling back:", gfsErr);
+        }
       }
+
+      // Fallback if GridFS is not connected
+      return uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+
     } catch (error) {
-      console.error("PDF upload error:", error);
+      console.error("PDF upload root error:", error);
       res.status(500).json({ error: "Failed to upload PDF book", details: error.message });
     }
   }
