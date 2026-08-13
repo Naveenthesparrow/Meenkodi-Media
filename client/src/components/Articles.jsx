@@ -503,7 +503,10 @@ export default function Articles({ user }) {
               }}
             >
               <Card
+                component={Link}
+                to={`/articles/${article._id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: 'auto',
                   minHeight: { xs: 520, md: 560 },
@@ -562,7 +565,6 @@ export default function Articles({ user }) {
                     }
                   },
                 }}
-                onClick={() => navigate(`/articles/${article._id}`)}
               >
                 {/* Image Section */}
                 <Box sx={{ position: 'relative', height: 260, overflow: 'hidden', bgcolor: '#f5f5f5' }}>

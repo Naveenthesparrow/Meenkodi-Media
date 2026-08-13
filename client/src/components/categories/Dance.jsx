@@ -351,7 +351,10 @@ export default function Dance({ user }) {
                 dance._id
               )}
               <Card
+                component={Link}
+                to={`/explore/dance/${dance._id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: { xs: 460, md: 500 },
                   display: 'flex',
@@ -405,7 +408,6 @@ export default function Dance({ user }) {
                     }
                   },
                 }}
-                onClick={() => handleCardClick(dance._id)}
               >
                 {/* Image Section with Overlay */}
                 <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>

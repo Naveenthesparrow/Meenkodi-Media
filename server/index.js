@@ -1573,6 +1573,7 @@ const createDirectories = () => {
     "uploads/articles",
     "uploads/events",
     "uploads/resources",
+    "uploads/resources/pdf",
   ];
 
   directories.forEach((dir) => {
@@ -1951,6 +1952,86 @@ app.post(
         details: error.message,
         stack: error.stack,
       });
+    }
+  }
+);
+
+// Multer setup for PDF book uploads (NO file size limit)
+const pdfStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
+    try {
+      fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
+    } catch (mkdirError) {
+      console.error("Failed to create PDF uploads directory:", mkdirError);
+    }
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const sanitizedOriginalName = file.originalname
+      .replace(/[^a-zA-Z0-9.-]/g, "_")
+      .toLowerCase();
+    cb(null, `book-${uniqueSuffix}-${sanitizedOriginalName}`);
+  },
+});
+
+const pdfUpload = multer({
+  storage: pdfStorage,
+  fileFilter: (req, file, cb) => {
+    const isPdf =
+      file.mimetype === "application/pdf" ||
+      file.originalname.toLowerCase().endsWith(".pdf") ||
+      file.mimetype === "application/octet-stream";
+    if (isPdf) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF format books are allowed"), false);
+    }
+  },
+  limits: {
+    // No restrictive MB limit for books (allows up to 50 GB)
+    fileSize: 50 * 1024 * 1024 * 1024,
+  },
+});
+
+// PDF upload endpoint for resources/books
+app.post(
+  "/api/upload/pdf",
+  ensureAdmin,
+  (req, res, next) => {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized. Admin role required." });
+    }
+    next();
+  },
+  pdfUpload.single("pdf"),
+  (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No PDF file uploaded" });
+      }
+
+      const pdfUrl = `/uploads/resources/pdf/${req.file.filename}`;
+      const sizeBytes = req.file.size || 0;
+      const sizeFormatted = sizeBytes > 1024 * 1024
+        ? `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+        : `${(sizeBytes / 1024).toFixed(1)} KB`;
+
+      console.log("PDF Book uploaded successfully:", pdfUrl, sizeFormatted);
+
+      res.json({
+        url: pdfUrl,
+        downloadLink: pdfUrl,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: sizeBytes,
+        pdfSize: sizeFormatted,
+        pdfName: req.file.originalname,
+      });
+    } catch (error) {
+      console.error("PDF upload error:", error);
+      res.status(500).json({ error: "Failed to upload PDF book", details: error.message });
     }
   }
 );
@@ -4640,6 +4721,30 @@ app.use(
     next();
   },
   express.static(path.join(process.cwd(), "uploads/gallery"))
+);
+
+// Serve resource uploads (PDF books, covers) statically with CORS and PDF support
+app.use(
+  "/uploads/resources",
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    if (req.path.match(/\.pdf$/i)) {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+    next();
+  },
+  express.static(path.join(process.cwd(), "uploads/resources"))
+);
+
+// Fallback static handler for all other uploads
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  express.static(path.join(process.cwd(), "uploads"))
 );
 
 // If a client build exists, serve it as static files and provide an SPA fallback.

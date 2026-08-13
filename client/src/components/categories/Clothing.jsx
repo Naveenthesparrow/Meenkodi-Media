@@ -290,7 +290,10 @@ export default function Clothing({ user }) {
               }}
             >
               <Card
+                component={Link}
+                to={`/explore/clothing/${item._id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: { xs: 460, md: 500 },
                   display: 'flex',
@@ -344,7 +347,6 @@ export default function Clothing({ user }) {
                     }
                   },
                 }}
-                onClick={() => navigate(`/explore/clothing/${item._id}`)}
               >
                 {/* Image Section with Overlay */}
                 <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>

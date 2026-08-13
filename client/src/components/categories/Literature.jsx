@@ -326,7 +326,10 @@ export default function Literature({ user }) {
               }}
             >
               <Card
+                component={Link}
+                to={`/explore/literature/${literature._id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: { xs: 460, md: 500 },
                   display: 'flex',
@@ -380,7 +383,6 @@ export default function Literature({ user }) {
                     }
                   },
                 }}
-                onClick={() => navigate(`/explore/literature/${literature._id}`)}
               >
                 <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
                   {(literature.image || literature.imageLink) ? (

@@ -279,7 +279,7 @@ export default function Events({ user }) {
               }}
             >
               <StyledWrapper>
-                <div className="card" onClick={() => navigate(`/events/${event._id}`)}>
+                <Link className="card" to={`/events/${event._id}`}>
                   <b />
                   <img
                     src={event.imageUrl || event.imageLink || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3ENo Image%3C/text%3E%3C/svg%3E"}
@@ -293,16 +293,27 @@ export default function Events({ user }) {
                     </p>
                     {/* Admin Controls */}
                     {user && user.role === "admin" && (
-                      <div className="sci" onClick={(e) => e.stopPropagation()}>
+                      <div className="sci" onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}>
                         <IconButton
-                          onClick={() => handleEdit(event)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleEdit(event);
+                          }}
                           size="small"
                           sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.5)', mr: 1, '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
                         >
                           <Edit fontSize="small" />
                         </IconButton>
                         <IconButton
-                          onClick={() => handleDelete(event._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleDelete(event._id);
+                          }}
                           size="small"
                           sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.5)', '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' } }}
                         >
@@ -311,7 +322,7 @@ export default function Events({ user }) {
                       </div>
                     )}
                   </div>
-                </div>
+                </Link>
               </StyledWrapper>
             </Grid>
           </Fade>
@@ -504,6 +515,7 @@ const StyledWrapper = styled.div`
     align-items: center;
     cursor: pointer;
     overflow: hidden;
+    text-decoration: none;
   }
 
   .card::before {

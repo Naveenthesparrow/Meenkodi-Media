@@ -333,7 +333,10 @@ export default function Foods({ user }) {
               }}
             >
               <Card
+                component={Link}
+                to={`/explore/foods/${food._id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: { xs: 460, md: 500 },
                   display: 'flex',
@@ -387,7 +390,6 @@ export default function Foods({ user }) {
                     }
                   },
                 }}
-                onClick={() => navigate(`/explore/foods/${food._id}`)}
               >
                 {/* Image Section with Overlay */}
                 <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>

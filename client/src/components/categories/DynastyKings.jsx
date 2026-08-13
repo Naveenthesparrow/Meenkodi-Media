@@ -262,7 +262,10 @@ export default function DynastyKings({ user }) {
                 }}
               >
                 <Card
+                  component={Link}
+                  to={`/explore/kings/${king._id}`}
                   sx={{
+                    textDecoration: 'none',
                     width: '100%',
                     height: { xs: 460, md: 500 },
                     display: 'flex',
@@ -313,8 +316,7 @@ export default function DynastyKings({ user }) {
                       }
                     },
                   }}
-                  onClick={() => navigate(`/explore/kings/${king._id}`)}
-                >
+                  >
                   {(king.image || king.imageLink) ? (
                     <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
                       <CardMedia

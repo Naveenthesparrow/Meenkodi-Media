@@ -12,6 +12,10 @@ const resourceSchema = new mongoose.Schema({
   author: bilingual,
   image: String,
   downloadLink: String,
+  pdfSize: String,
+  pdfName: String,
+  format: { type: String, default: "PDF" },
+  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -21,8 +21,9 @@ import {
   ToggleButtonGroup
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Add, Edit, Delete, GetApp, Favorite } from '@mui/icons-material';
+import { Add, Edit, Delete, GetApp, Favorite, AddPhotoAlternate } from '@mui/icons-material';
 import MediaUpload from './common/MediaUpload';
+import PdfUpload from './common/PdfUpload';
 import SEO, { pageSEO } from './common/SEO';
 import PageHeading from './common/PageHeading';
 
@@ -45,6 +46,7 @@ export default function Resources({ user }) {
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editLanguage, setEditLanguage] = useState('en');
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [currentResource, setCurrentResource] = useState({
     title_en: '', title_ta: '',
     description_en: '', description_ta: '',
@@ -52,6 +54,8 @@ export default function Resources({ user }) {
     author_en: '', author_ta: '',
     image: '',
     downloadLink: '',
+    pdfName: '',
+    pdfSize: '',
   });
   const navigate = useNavigate();
 
@@ -102,10 +106,12 @@ export default function Resources({ user }) {
     setCurrentResource({
       title_en: '', title_ta: '',
       description_en: '', description_ta: '',
-      category_en: '', category_ta: '',
+      category_en: 'Sangam Literature', category_ta: 'சங்க இலக்கியம்',
       author_en: '', author_ta: '',
       image: '',
       downloadLink: '',
+      pdfName: '',
+      pdfSize: '',
     });
     setOpenDialog(true);
   };
@@ -124,6 +130,8 @@ export default function Resources({ user }) {
       author_en: part(resource.author, 'en'), author_ta: part(resource.author, 'ta'),
       image: resource.image || '',
       downloadLink: resource.downloadLink || '',
+      pdfName: resource.pdfName || '',
+      pdfSize: resource.pdfSize || '',
     });
     setOpenDialog(true);
   };
@@ -146,6 +154,8 @@ export default function Resources({ user }) {
           author: { en: currentResource.author_en, ta: currentResource.author_ta },
           image: currentResource.image,
           downloadLink: currentResource.downloadLink,
+          pdfName: currentResource.pdfName,
+          pdfSize: currentResource.pdfSize,
         }),
       });
 
@@ -166,6 +176,30 @@ export default function Resources({ user }) {
       setOpenDialog(false);
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleThumbnailUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      setUploadingThumbnail(true);
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to upload thumbnail photo');
+      const data = await response.json();
+      const uploadedUrl = data.imageUrl || data.url;
+      setCurrentResource(prev => ({ ...prev, image: uploadedUrl }));
+    } catch (err) {
+      console.error('Thumbnail upload error:', err);
+      alert('Failed to upload thumbnail photo: ' + err.message);
+    } finally {
+      setUploadingThumbnail(false);
     }
   };
 
@@ -296,7 +330,10 @@ export default function Resources({ user }) {
                 }}
               >
                 <Card
+                  component={Link}
+                  to={`/resources/${resource._id}`}
                   sx={{
+                    textDecoration: 'none',
                     width: '100%',
                     maxWidth: 370,
                     height: 540,
@@ -355,7 +392,6 @@ export default function Resources({ user }) {
                       }
                     },
                   }}
-                  onClick={() => navigate(`/resources/${resource._id}`)}
                 >
                   {/* Book Cover Image */}
                   <Box
@@ -412,29 +448,6 @@ export default function Resources({ user }) {
                         transition: 'opacity 0.4s ease',
                       }}
                     />
-
-                    {/* Category Tag */}
-                    {getContent(resource.category) && (
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          bottom: 16,
-                          left: 16,
-                          bgcolor: 'rgba(255,255,255,0.95)',
-                          color: '#8B0000',
-                          px: 2,
-                          py: 0.5,
-                          fontSize: '0.7rem',
-                          fontWeight: 700,
-                          letterSpacing: '1px',
-                          textTransform: 'uppercase',
-                          backdropFilter: 'blur(10px)',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                        }}
-                      >
-                        {getContent(resource.category)}
-                      </Box>
-                    )}
 
                     {/* Like Badge */}
                     <Box
@@ -671,17 +684,20 @@ export default function Resources({ user }) {
           sx={{
             '& .MuiDialog-paper': {
               borderRadius: 0,
-              border: '3px solid #000',
+              border: '3px solid #8B0000',
               maxHeight: '90vh',
             }
           }}
         >
           <DialogTitle
             sx={{
-              bgcolor: '#000',
+              bgcolor: '#8B0000',
               color: '#fff',
               textAlign: 'center',
-              fontWeight: 700
+              fontWeight: 700,
+              fontFamily: 'Georgia, serif',
+              letterSpacing: '0.05em',
+              py: 2
             }}
           >
             {currentResource._id ? t('resources.edit', 'Edit Resource') : t('resources.addNew', 'Add New Resource')}
@@ -727,7 +743,7 @@ export default function Resources({ user }) {
             </Box>
 
             <TextField
-              label={editLanguage === 'en' ? "Title (English)" : "தலைப்பு (தமிழ்)"}
+              label={editLanguage === 'en' ? "Book Title" : "புத்தகத் தலைப்பு"}
               fullWidth
               sx={{ mb: 2 }}
               value={editLanguage === 'en' ? currentResource.title_en : currentResource.title_ta}
@@ -737,7 +753,7 @@ export default function Resources({ user }) {
               })}
             />
             <TextField
-              label={editLanguage === 'en' ? "Author (English)" : "ஆசிரியர் (தமிழ்)"}
+              label={editLanguage === 'en' ? "Author Name" : "ஆசிரியர் பெயர்"}
               fullWidth
               sx={{ mb: 2 }}
               value={editLanguage === 'en' ? currentResource.author_en : currentResource.author_ta}
@@ -747,53 +763,93 @@ export default function Resources({ user }) {
               })}
             />
             <TextField
-              label={editLanguage === 'en' ? "Category (English)" : "வகை (தமிழ்)"}
-              fullWidth
-              sx={{ mb: 2 }}
-              value={editLanguage === 'en' ? currentResource.category_en : currentResource.category_ta}
-              onChange={(e) => setCurrentResource({
-                ...currentResource,
-                [editLanguage === 'en' ? 'category_en' : 'category_ta']: e.target.value
-              })}
-            />
-            <TextField
-              label={editLanguage === 'en' ? "Description (English)" : "விளக்கம் (தமிழ்)"}
+              label={editLanguage === 'en' ? "Book Description" : "நூல் விளக்கம்"}
               fullWidth
               multiline
-              minRows={5}
-              sx={{ mb: 2 }}
+              minRows={4}
+              sx={{ mb: 2.5 }}
               value={editLanguage === 'en' ? currentResource.description_en : currentResource.description_ta}
               onChange={(e) => setCurrentResource({
                 ...currentResource,
                 [editLanguage === 'en' ? 'description_en' : 'description_ta']: e.target.value
               })}
             />
-            <TextField
-              label="Download Link"
-              fullWidth
-              sx={{ mb: 2 }}
-              value={currentResource.downloadLink}
-              onChange={(e) => setCurrentResource({ ...currentResource, downloadLink: e.target.value })}
-              placeholder="Optional: Add a download link for the resource"
-            />
-            <MediaUpload
-              onImageLinkChange={(link) => {
-                console.log('Image link changed:', link);
-                setCurrentResource({ ...currentResource, image: link });
+
+            {/* PDF Book Upload */}
+            <PdfUpload
+              pdfUrl={currentResource.downloadLink}
+              pdfName={currentResource.pdfName}
+              pdfSize={currentResource.pdfSize}
+              label={editLanguage === 'en' ? "PDF Book File" : "PDF நூல் கோப்பு"}
+              onPdfChange={({ url, name, size }) => {
+                setCurrentResource({
+                  ...currentResource,
+                  downloadLink: url,
+                  pdfName: name,
+                  pdfSize: size
+                });
               }}
-              onVideoLinkChange={(link) => { }} // No video link field in this dialog
-              onImageChange={(url) => {
-                console.log('Image URL changed:', url);
-                setCurrentResource({ ...currentResource, image: url });
-              }}
-              onVideoChange={(url) => { }} // No video URL field in this dialog
-              currentImageLink={currentResource.image}
-              currentVideoLink={''} // No video link in this dialog
-              currentImage={currentResource.image}
-              currentVideo={''} // No video URL in this dialog
-              label="Media Links"
-              showInputsOnly={true}
             />
+
+            {/* Upload Thumbnail Photo Only */}
+            <Box sx={{ mb: 2.5, mt: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#333', fontFamily: 'Georgia, serif' }}>
+                {editLanguage === 'en' ? "Thumbnail Image" : "முகப்புப் படம்"}
+              </Typography>
+              {currentResource.image ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, border: '1px solid #ccc', borderRadius: 1, bgcolor: '#f9f9f9' }}>
+                  <Box
+                    component="img"
+                    src={currentResource.image}
+                    alt="Thumbnail Preview"
+                    sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, border: '1px solid #ddd' }}
+                  />
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="caption" sx={{ color: '#2e7d32', fontWeight: 700, display: 'block' }}>
+                      ✓ Thumbnail Photo Uploaded
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#666' }}>
+                      Photo ready for book card cover
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => setCurrentResource({ ...currentResource, image: '' })}
+                  >
+                    Remove
+                  </Button>
+                </Box>
+              ) : (
+                <Button
+                  variant="outlined"
+                  component="label"
+                  disabled={uploadingThumbnail}
+                  startIcon={uploadingThumbnail ? <CircularProgress size={18} /> : <AddPhotoAlternate />}
+                  sx={{
+                    color: '#8B0000',
+                    borderColor: '#8B0000',
+                    py: 1.2,
+                    px: 3,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: 'rgba(139,0,0,0.05)', borderColor: '#8B0000' }
+                  }}
+                >
+                  {uploadingThumbnail
+                    ? (editLanguage === 'en' ? "Uploading Thumbnail..." : "படம் பதிவேற்றப்படுகிறது...")
+                    : (editLanguage === 'en' ? "Upload Photo of Thumbnail" : "முகப்புப் படம் பதிவேற்றுக")
+                  }
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleThumbnailUpload}
+                  />
+                </Button>
+              )}
+            </Box>
           </DialogContent>
           <DialogActions
             sx={{
@@ -812,10 +868,12 @@ export default function Resources({ user }) {
               onClick={handleSave}
               variant="contained"
               sx={{
-                bgcolor: '#000',
+                bgcolor: '#8B0000',
                 color: '#fff',
-                '&:hover': { bgcolor: '#333' },
+                '&:hover': { bgcolor: '#6B0000' },
                 borderRadius: 0,
+                fontWeight: 700,
+                px: 3
               }}
             >
               {currentResource._id

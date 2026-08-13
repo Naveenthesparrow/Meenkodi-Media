@@ -323,7 +323,10 @@ export default function Temples({ user }) {
               }}
             >
               <Card
+                component={Link}
+                to={`/explore/temples/${temple._id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: { xs: 460, md: 500 },
                   display: 'flex',
@@ -377,7 +380,6 @@ export default function Temples({ user }) {
                     }
                   },
                 }}
-                onClick={() => navigate(`/explore/temples/${temple._id}`)}
               >
                 {/* Image Section with Overlay */}
                 <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>

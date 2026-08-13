@@ -22,8 +22,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Favorite from "@mui/icons-material/Favorite";
 import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
 import GetAppIcon from "@mui/icons-material/GetApp";
+import PictureAsPdf from "@mui/icons-material/PictureAsPdf";
+import MenuBook from "@mui/icons-material/MenuBook";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useTranslation } from 'react-i18next';
 import MediaUpload from "./common/MediaUpload";
+import PdfUpload from "./common/PdfUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
@@ -48,6 +53,9 @@ export default function ResourceDetail({ user }) {
   const [author_ta, setAuthorTa] = useState("");
   const [image, setImage] = useState("");
   const [downloadLink, setDownloadLink] = useState("");
+  const [pdfName, setPdfName] = useState("");
+  const [pdfSize, setPdfSize] = useState("");
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -68,6 +76,8 @@ export default function ResourceDetail({ user }) {
         setAuthorTa(data.author?.ta || "");
         setImage(data.image || "");
         setDownloadLink(data.downloadLink || "");
+        setPdfName(data.pdfName || "");
+        setPdfSize(data.pdfSize || "");
         setLoading(false);
       })
       .catch((err) => {
@@ -106,6 +116,8 @@ export default function ResourceDetail({ user }) {
         author: { en: author_en, ta: author_ta },
         image,
         downloadLink,
+        pdfName,
+        pdfSize,
       };
 
       const res = await fetch(`/api/resources/${id}`, {
@@ -159,17 +171,7 @@ export default function ResourceDetail({ user }) {
         <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, bgcolor: "#fff" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
             <Box sx={{ flexGrow: 1 }}>
-              {resource.category && (
-                <Chip
-                  label={getContent(resource.category)}
-                  sx={{
-                    bgcolor: "#8B0000",
-                    color: "#fff",
-                    mb: 2,
-                    fontWeight: 600,
-                  }}
-                />
-              )}
+              {/* Category chip removed */}
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
               <IconButton onClick={() => navigate("/resources")} size="small">
@@ -199,12 +201,58 @@ export default function ResourceDetail({ user }) {
           <Grid container spacing={4}>
             <Grid item xs={12} md={5}>
               {editMode && user?.role === "admin" ? (
-                <MediaUpload
-                  currentImage={image}
-                  onImageChange={(newImage) => setImage(newImage)}
-                  uploadEndpoint="/api/upload/resources"
-                  type="image"
-                />
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#333' }}>
+                    Thumbnail Image
+                  </Typography>
+                  {image ? (
+                    <Box sx={{ position: 'relative', mb: 2 }}>
+                      <Box
+                        component="img"
+                        src={image}
+                        alt="Thumbnail"
+                        sx={{ width: '100%', maxHeight: 250, objectFit: 'cover', borderRadius: 2 }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        onClick={() => setImage('')}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                      >
+                        Remove Photo
+                      </Button>
+                    </Box>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      fullWidth
+                      sx={{ py: 2, color: '#8B0000', borderColor: '#8B0000' }}
+                    >
+                      Upload Photo of Thumbnail
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files && e.target.files[0];
+                          if (!file) return;
+                          const formData = new FormData();
+                          formData.append('image', file);
+                          try {
+                            const res = await fetch('/api/upload/image', { method: 'POST', body: formData, credentials: 'include' });
+                            if (!res.ok) throw new Error('Upload failed');
+                            const data = await res.json();
+                            setImage(data.imageUrl || data.url);
+                          } catch (err) {
+                            alert(err.message);
+                          }
+                        }}
+                      />
+                    </Button>
+                  )}
+                </Box>
               ) : (
                 <Box
                   component="img"
@@ -240,76 +288,66 @@ export default function ResourceDetail({ user }) {
                     <>
                       <TextField
                         fullWidth
-                        label="Title (English)"
+                        label="Book Title"
                         value={title_en}
                         onChange={(e) => setTitleEn(e.target.value)}
                         margin="normal"
                       />
                       <TextField
                         fullWidth
-                        label="Description (English)"
+                        label="Author Name"
+                        value={author_en}
+                        onChange={(e) => setAuthorEn(e.target.value)}
+                        margin="normal"
+                      />
+                      <TextField
+                        fullWidth
+                        label="Book Description"
                         value={description_en}
                         onChange={(e) => setDescriptionEn(e.target.value)}
                         margin="normal"
                         multiline
                         rows={4}
                       />
-                      <TextField
-                        fullWidth
-                        label="Category (English)"
-                        value={category_en}
-                        onChange={(e) => setCategoryEn(e.target.value)}
-                        margin="normal"
-                      />
-                      <TextField
-                        fullWidth
-                        label="Author (English)"
-                        value={author_en}
-                        onChange={(e) => setAuthorEn(e.target.value)}
-                        margin="normal"
-                      />
                     </>
                   ) : (
                     <>
                       <TextField
                         fullWidth
-                        label="தலைப்பு (Tamil)"
+                        label="புத்தகத் தலைப்பு"
                         value={title_ta}
                         onChange={(e) => setTitleTa(e.target.value)}
                         margin="normal"
                       />
                       <TextField
                         fullWidth
-                        label="விளக்கம் (Tamil)"
+                        label="ஆசிரியர் பெயர்"
+                        value={author_ta}
+                        onChange={(e) => setAuthorTa(e.target.value)}
+                        margin="normal"
+                      />
+                      <TextField
+                        fullWidth
+                        label="நூல் விளக்கம்"
                         value={description_ta}
                         onChange={(e) => setDescriptionTa(e.target.value)}
                         margin="normal"
                         multiline
                         rows={4}
                       />
-                      <TextField
-                        fullWidth
-                        label="வகை (Tamil)"
-                        value={category_ta}
-                        onChange={(e) => setCategoryTa(e.target.value)}
-                        margin="normal"
-                      />
-                      <TextField
-                        fullWidth
-                        label="ஆசிரியர் (Tamil)"
-                        value={author_ta}
-                        onChange={(e) => setAuthorTa(e.target.value)}
-                        margin="normal"
-                      />
                     </>
                   )}
 
-                  <TextField
-                    fullWidth
-                    label="Download Link"
-                    value={downloadLink}
-                    onChange={(e) => setDownloadLink(e.target.value)}
-                    margin="normal"
+                  <PdfUpload
+                    pdfUrl={downloadLink}
+                    pdfName={pdfName}
+                    pdfSize={pdfSize}
+                    label="PDF Book File"
+                    onPdfChange={({ url, name, size }) => {
+                      setDownloadLink(url);
+                      setPdfName(name);
+                      setPdfSize(size);
+                    }}
                   />
 
                   <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
@@ -369,25 +407,76 @@ export default function ResourceDetail({ user }) {
                     {getContent(resource.description)}
                   </Typography>
 
-                  <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
-                    {downloadLink && (
-                      <Button
-                        variant="contained"
-                        startIcon={<GetAppIcon />}
-                        href={downloadLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{
-                          bgcolor: "#8B0000",
-                          "&:hover": { bgcolor: "#700000" },
-                          textTransform: "none",
-                          px: 3,
-                        }}
-                      >
-                        {t('resources.download', 'Download Resource')}
-                      </Button>
-                    )}
+                  {/* PDF Book Actions & Preview */}
+                  {downloadLink && (
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2.5,
+                        mb: 4,
+                        bgcolor: '#faf8f5',
+                        border: '1px solid #e0dcd3',
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                        <PictureAsPdf sx={{ color: '#8B0000', fontSize: 32 }} />
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#111', fontFamily: 'Georgia, serif' }}>
+                            {pdfName || 'PDF Book Document'}
+                          </Typography>
+                        </Box>
+                      </Box>
 
+                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <Button
+                          variant="contained"
+                          startIcon={showPdfViewer ? <VisibilityOff /> : <MenuBook />}
+                          onClick={() => setShowPdfViewer(!showPdfViewer)}
+                          sx={{
+                            bgcolor: '#8B0000',
+                            '&:hover': { bgcolor: '#6B0000' },
+                            textTransform: 'none',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {showPdfViewer ? 'Hide Reader' : 'Read Book Online'}
+                        </Button>
+
+                        <Button
+                          variant="outlined"
+                          startIcon={<GetAppIcon />}
+                          href={downloadLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={{
+                            color: '#8B0000',
+                            borderColor: '#8B0000',
+                            '&:hover': { bgcolor: 'rgba(139,0,0,0.05)', borderColor: '#8B0000' },
+                            textTransform: 'none',
+                            fontWeight: 700,
+                          }}
+                        >
+                          Download PDF Book
+                        </Button>
+                      </Box>
+
+                      {/* Embedded Inline PDF Reader */}
+                      {showPdfViewer && (
+                        <Box sx={{ mt: 3, border: '2px solid #8B0000', borderRadius: 1, overflow: 'hidden', height: '650px', bgcolor: '#fff' }}>
+                          <iframe
+                            src={downloadLink}
+                            title="PDF Book Reader"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 'none' }}
+                          />
+                        </Box>
+                      )}
+                    </Paper>
+                  )}
+
+                  <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
                     <IconButton
                       onClick={handleLike}
                       sx={{

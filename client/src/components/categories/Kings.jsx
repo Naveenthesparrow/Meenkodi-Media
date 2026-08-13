@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import SEO, { pageSEO } from '../common/SEO';
 import {
   Box,
@@ -198,7 +198,10 @@ export default function Kings({ user }) {
               }}
             >
               <Card
+                component={Link}
+                to={`/explore/kings/dynasty/${dynasty.id}`}
                 sx={{
+                  textDecoration: 'none',
                   width: '100%',
                   height: { xs: 460, md: 500 },
                   display: 'flex',
@@ -245,7 +248,6 @@ export default function Kings({ user }) {
                     },
                   },
                 }}
-                onClick={() => navigate(`/explore/kings/dynasty/${dynasty.id}`)}
               >
                 <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
                   {dynasty.image ? (
