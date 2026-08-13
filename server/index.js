@@ -2075,7 +2075,7 @@ app.get("/api/resources/pdf/:id", async (req, res) => {
     const db = mongoose.connection.db;
     if (!db) return res.status(500).send("Database connection not ready");
 
-    const bucket = new GridFSBucket(db, { bucketName: "pdf_books" });
+    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "pdf_books" });
     const fileId = new mongoose.Types.ObjectId(req.params.id);
 
     const files = await bucket.find({ _id: fileId }).toArray();
@@ -2134,7 +2134,7 @@ app.post(
       const db = mongoose.connection?.db;
       if (db) {
         try {
-          const bucket = new GridFSBucket(db, { bucketName: "pdf_books" });
+          const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "pdf_books" });
           const uploadStream = bucket.openUploadStream(uniqueFilename, {
             contentType: req.file.mimetype || "application/pdf",
             metadata: {
