@@ -99,6 +99,8 @@ app.get('/sitemap.xml', (req, res) => {
 
 // Serve static files from the client build directory
 app.use(express.static(path.join(__dirname, "../client/dist")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Connect to MongoDB
 const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;

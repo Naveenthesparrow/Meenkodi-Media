@@ -399,9 +399,12 @@ export default function Resources({ user }) {
                       position: 'relative',
                       height: 300,
                       overflow: 'hidden',
-                      bgcolor: '#f8f7f5',
+                      bgcolor: '#f4f1ea',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      p: 1.5,
                     }}
-
                   >
                     {(resource.image) ? (
                       <CardMedia
@@ -410,9 +413,13 @@ export default function Resources({ user }) {
                         alt={getContent(resource.title)}
                         className="book-image"
                         sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
+                          maxHeight: '100%',
+                          maxWidth: '100%',
+                          width: 'auto',
+                          height: 'auto',
+                          objectFit: 'contain',
+                          borderRadius: 1,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
                           transition: 'transform 0.4s ease',
                         }}
                         onError={(e) => {
