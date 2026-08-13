@@ -1958,11 +1958,29 @@ app.post(
   }
 );
 
-// Multer memory storage for PDF book uploads
-const pdfMemoryStorage = multer.memoryStorage();
+
+
+// Multer disk storage for temp PDF files to avoid RAM overflow and crash on low-memory servers like Render
+const tempPdfStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const tempDir = path.join(process.cwd(), "uploads/temp");
+    try {
+      fs.mkdirSync(tempDir, { recursive: true });
+    } catch (e) {
+      console.error("Temp directory creation error:", e);
+    }
+    cb(null, tempDir);
+  },
+  filename: (req, file, cb) => {
+    const sanitizedOriginal = (file.originalname || "document.pdf")
+      .replace(/[^a-zA-Z0-9.-]/g, "_")
+      .toLowerCase();
+    cb(null, `temp-${Date.now()}-${sanitizedOriginal}`);
+  }
+});
 
 const pdfUpload = multer({
-  storage: pdfMemoryStorage,
+  storage: tempPdfStorage,
   fileFilter: (req, file, cb) => {
     const isPdf =
       file.mimetype === "application/pdf" ||
@@ -1980,18 +1998,21 @@ const pdfUpload = multer({
 });
 
 // Helper for Cloudinary or Disk upload fallback
-function uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted) {
+function uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted) {
   if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
-    const uploadStream = cloudinary.uploader.upload_stream(
+    console.log("GridFS failed/skipped: Uploading directly to Cloudinary via file path...", uniqueFilename);
+    cloudinary.uploader.upload(
+      tempFilePath,
       {
         folder: "meenkodi_pdf_books",
         resource_type: "auto",
         public_id: uniqueFilename,
       },
       (cloudinaryErr, result) => {
+        cleanupFile(tempFilePath);
         if (cloudinaryErr) {
           console.error("Cloudinary PDF upload error:", cloudinaryErr);
-          return saveToLocalDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+          return res.status(500).json({ error: "Cloud upload failed", details: cloudinaryErr.message });
         }
 
         const pdfUrl = result.secure_url || result.url;
@@ -2008,34 +2029,43 @@ function uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeForma
         });
       }
     );
-    uploadStream.end(req.file.buffer);
   } else {
-    return saveToLocalDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+    // If not using Cloudinary, copy from temp to final local upload path
+    try {
+      const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      const finalPath = path.join(uploadsDir, uniqueFilename);
+      fs.copyFileSync(tempFilePath, finalPath);
+      cleanupFile(tempFilePath);
+
+      const pdfUrl = `/uploads/resources/pdf/${uniqueFilename}`;
+      console.log("✓ PDF Book saved to local disk fallback:", pdfUrl);
+
+      return res.json({
+        url: pdfUrl,
+        downloadLink: pdfUrl,
+        filename: uniqueFilename,
+        originalName: req.file.originalname,
+        size: sizeBytes,
+        pdfSize: sizeFormatted,
+        pdfName: req.file.originalname,
+      });
+    } catch (err) {
+      cleanupFile(tempFilePath);
+      console.error("Disk copy error:", err);
+      return res.status(500).json({ error: "Failed to save PDF file locally", details: err.message });
+    }
   }
 }
 
-function saveToLocalDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted) {
-  try {
-    const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
-    fs.mkdirSync(uploadsDir, { recursive: true });
-    const filePath = path.join(uploadsDir, uniqueFilename);
-    fs.writeFileSync(filePath, req.file.buffer);
-
-    const pdfUrl = `/uploads/resources/pdf/${uniqueFilename}`;
-    console.log("✓ PDF Book saved to local disk fallback:", pdfUrl);
-
-    return res.json({
-      url: pdfUrl,
-      downloadLink: pdfUrl,
-      filename: uniqueFilename,
-      originalName: req.file.originalname,
-      size: sizeBytes,
-      pdfSize: sizeFormatted,
-      pdfName: req.file.originalname,
-    });
-  } catch (err) {
-    console.error("Disk save error:", err);
-    return res.status(500).json({ error: "Failed to save PDF file", details: err.message });
+// Utility to clean up temp files safely
+function cleanupFile(filePath) {
+  if (filePath && fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+    } catch (e) {
+      console.error("Failed to delete temp file:", filePath, e);
+    }
   }
 }
 
@@ -2083,11 +2113,13 @@ app.post(
   },
   pdfUpload.single("pdf"),
   async (req, res) => {
+    let tempFilePath = null;
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No PDF file uploaded" });
       }
 
+      tempFilePath = req.file.path;
       const sizeBytes = req.file.size || 0;
       const sizeFormatted = sizeBytes > 1024 * 1024
         ? `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
@@ -2111,11 +2143,19 @@ app.post(
             }
           });
 
+          const readStream = fs.createReadStream(tempFilePath);
+
+          readStream.on("error", (readErr) => {
+            console.error("Read stream error, falling back to Cloudinary:", readErr);
+            cleanupFile(tempFilePath);
+            return uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted);
+          });
+
           uploadStream.on("finish", () => {
             const fileId = uploadStream.id;
             const pdfUrl = `/api/resources/pdf/${fileId}`;
             console.log("✓ PDF Book stored in MongoDB Database GridFS successfully:", fileId, pdfUrl, sizeFormatted);
-
+            cleanupFile(tempFilePath);
             return res.json({
               url: pdfUrl,
               downloadLink: pdfUrl,
@@ -2130,10 +2170,11 @@ app.post(
 
           uploadStream.on("error", (gridFsErr) => {
             console.error("GridFS stream error, falling back to Cloudinary:", gridFsErr);
-            return uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+            cleanupFile(tempFilePath);
+            return uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted);
           });
 
-          uploadStream.end(req.file.buffer);
+          readStream.pipe(uploadStream);
           return;
         } catch (gfsErr) {
           console.error("GridFS initialization error, falling back:", gfsErr);
@@ -2141,14 +2182,17 @@ app.post(
       }
 
       // Fallback if GridFS is not connected
-      return uploadToCloudinaryOrDisk(req, res, uniqueFilename, sizeBytes, sizeFormatted);
+      return uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted);
 
     } catch (error) {
       console.error("PDF upload root error:", error);
+      cleanupFile(tempFilePath);
       res.status(500).json({ error: "Failed to upload PDF book", details: error.message });
     }
   }
 );
+
+
 
 // Multer setup for Land images
 const landStorage = multer.diskStorage({
