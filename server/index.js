@@ -1958,28 +1958,11 @@ app.post(
   }
 );
 
-// Multer setup for PDF book uploads (NO file size limit)
-const pdfStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
-    try {
-      fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o777 });
-    } catch (mkdirError) {
-      console.error("Failed to create PDF uploads directory:", mkdirError);
-    }
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const sanitizedOriginalName = file.originalname
-      .replace(/[^a-zA-Z0-9.-]/g, "_")
-      .toLowerCase();
-    cb(null, `book-${uniqueSuffix}-${sanitizedOriginalName}`);
-  },
-});
+// Multer memory storage for PDF book uploads (uploads permanently to Cloudinary Cloud)
+const pdfMemoryStorage = multer.memoryStorage();
 
 const pdfUpload = multer({
-  storage: pdfStorage,
+  storage: pdfMemoryStorage,
   fileFilter: (req, file, cb) => {
     const isPdf =
       file.mimetype === "application/pdf" ||
@@ -1992,12 +1975,11 @@ const pdfUpload = multer({
     }
   },
   limits: {
-    // No restrictive MB limit for books (allows up to 50 GB)
-    fileSize: 50 * 1024 * 1024 * 1024,
+    fileSize: 100 * 1024 * 1024, // 100MB max
   },
 });
 
-// PDF upload endpoint for resources/books
+// PDF upload endpoint for resources/books (Permanent Cloudinary Storage)
 app.post(
   "/api/upload/pdf",
   ensureAdmin,
@@ -2008,29 +1990,72 @@ app.post(
     next();
   },
   pdfUpload.single("pdf"),
-  (req, res) => {
+  async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No PDF file uploaded" });
       }
 
-      const pdfUrl = `/uploads/resources/pdf/${req.file.filename}`;
       const sizeBytes = req.file.size || 0;
       const sizeFormatted = sizeBytes > 1024 * 1024
         ? `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
         : `${(sizeBytes / 1024).toFixed(1)} KB`;
 
-      console.log("PDF Book uploaded successfully:", pdfUrl, sizeFormatted);
+      // Upload to Cloudinary Cloud Storage if configured
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+        const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_").toLowerCase();
+        const uniqueFilename = `book-${Date.now()}-${sanitizedName}`;
 
-      res.json({
-        url: pdfUrl,
-        downloadLink: pdfUrl,
-        filename: req.file.filename,
-        originalName: req.file.originalname,
-        size: sizeBytes,
-        pdfSize: sizeFormatted,
-        pdfName: req.file.originalname,
-      });
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "meenkodi_pdf_books",
+            resource_type: "raw",
+            public_id: uniqueFilename,
+          },
+          (cloudinaryErr, result) => {
+            if (cloudinaryErr) {
+              console.error("Cloudinary PDF upload error:", cloudinaryErr);
+              return res.status(500).json({ error: "Cloud upload failed", details: cloudinaryErr.message });
+            }
+
+            const pdfUrl = result.secure_url || result.url;
+            console.log("PDF Book uploaded to Cloudinary successfully:", pdfUrl, sizeFormatted);
+
+            return res.json({
+              url: pdfUrl,
+              downloadLink: pdfUrl,
+              filename: result.public_id,
+              originalName: req.file.originalname,
+              size: sizeBytes,
+              pdfSize: sizeFormatted,
+              pdfName: req.file.originalname,
+            });
+          }
+        );
+
+        uploadStream.end(req.file.buffer);
+      } else {
+        // Fallback to local disk if Cloudinary environment variables are missing
+        const uploadsDir = path.join(process.cwd(), "uploads/resources/pdf");
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_").toLowerCase();
+        const filename = `book-${Date.now()}-${sanitizedName}`;
+        const filePath = path.join(uploadsDir, filename);
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        const pdfUrl = `/uploads/resources/pdf/${filename}`;
+        console.log("PDF Book uploaded to local disk fallback:", pdfUrl);
+
+        return res.json({
+          url: pdfUrl,
+          downloadLink: pdfUrl,
+          filename: filename,
+          originalName: req.file.originalname,
+          size: sizeBytes,
+          pdfSize: sizeFormatted,
+          pdfName: req.file.originalname,
+        });
+      }
     } catch (error) {
       console.error("PDF upload error:", error);
       res.status(500).json({ error: "Failed to upload PDF book", details: error.message });
