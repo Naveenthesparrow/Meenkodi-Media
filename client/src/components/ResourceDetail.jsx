@@ -500,7 +500,14 @@ export default function ResourceDetail({ user }) {
                         <Button
                           variant="contained"
                           startIcon={<MenuBook />}
-                          onClick={() => setShowPdfViewer(true)}
+                          onClick={() => {
+                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                            if (isMobile) {
+                              window.open(downloadLink, '_blank');
+                            } else {
+                              setShowPdfViewer(true);
+                            }
+                          }}
                           sx={{
                             bgcolor: '#8B0000',
                             '&:hover': { bgcolor: '#6B0000' },

@@ -2105,6 +2105,7 @@ function cleanupFile(filePath) {
 }
 
 // Stream PDF directly from MongoDB Database GridFS
+// Stream PDF directly from MongoDB Database GridFS with HTTP Range request support
 app.get("/api/resources/pdf/:id", async (req, res) => {
   try {
     const db = mongoose.connection.db;
@@ -2119,17 +2120,65 @@ app.get("/api/resources/pdf/:id", async (req, res) => {
     }
 
     const file = files[0];
+    const totalLength = file.length;
+    const rangeHeader = req.headers.range;
 
-    res.set({
-      "Content-Type": file.contentType || "application/pdf",
-      "Content-Length": file.length,
-      "Content-Disposition": `inline; filename="${file.filename}"`,
-      "Accept-Ranges": "bytes",
-      "Cache-Control": "public, max-age=31536000",
-    });
+    if (rangeHeader) {
+      const parts = rangeHeader.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : totalLength - 1;
 
-    const downloadStream = bucket.openDownloadStream(fileId);
-    downloadStream.pipe(res);
+      // Validate range limits
+      if (!isNaN(start) && start >= 0 && start < totalLength && end >= start && end < totalLength) {
+        const chunksize = (end - start) + 1;
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${totalLength}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunksize,
+          "Content-Type": file.contentType || "application/pdf",
+          "Content-Disposition": `inline; filename="${file.filename}"`,
+          "Cache-Control": "public, max-age=31536000",
+        });
+
+        // GridFS end is exclusive, so we pass end + 1
+        const downloadStream = bucket.openDownloadStream(fileId, {
+          start,
+          end: end + 1
+        });
+
+        downloadStream.on("error", (streamErr) => {
+          console.error("GridFS download range stream error:", streamErr);
+          if (!res.headersSent) {
+            res.status(500).send("Error streaming PDF range");
+          }
+        });
+
+        downloadStream.pipe(res);
+        return;
+      } else {
+        res.writeHead(416, {
+          "Content-Range": `bytes */${totalLength}`
+        });
+        return res.end();
+      }
+    } else {
+      res.set({
+        "Content-Type": file.contentType || "application/pdf",
+        "Content-Length": totalLength,
+        "Content-Disposition": `inline; filename="${file.filename}"`,
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=31536000",
+      });
+
+      const downloadStream = bucket.openDownloadStream(fileId);
+      downloadStream.on("error", (streamErr) => {
+        console.error("GridFS download stream error:", streamErr);
+        if (!res.headersSent) {
+          res.status(500).send("Error streaming PDF");
+        }
+      });
+      downloadStream.pipe(res);
+    }
   } catch (err) {
     console.error("PDF streaming error:", err);
     res.status(500).send("Error streaming PDF from database");
