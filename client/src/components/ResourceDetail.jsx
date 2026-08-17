@@ -63,9 +63,16 @@ export default function ResourceDetail({ user }) {
   const [pdfName, setPdfName] = useState("");
   const [pdfSize, setPdfSize] = useState("");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
+
+  useEffect(() => {
+    if (showPdfViewer) {
+      setIframeLoading(true);
+    }
+  }, [showPdfViewer]);
 
   const handleCopyLink = () => {
     const url = window.location.href;
@@ -497,28 +504,45 @@ export default function ResourceDetail({ user }) {
                       </Box>
 
                       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                        <Button
-                          variant="contained"
-                          startIcon={<MenuBook />}
-                          onClick={() => {
-                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                            if (isMobile) {
-                              window.open(downloadLink, '_blank');
-                            } else {
+                        {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? (
+                          <Button
+                            variant="contained"
+                            component="a"
+                            href={downloadLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            startIcon={<MenuBook />}
+                            sx={{
+                              bgcolor: '#8B0000',
+                              '&:hover': { bgcolor: '#6B0000' },
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              px: 3,
+                              py: 1,
+                            }}
+                          >
+                            Read Book Online
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            startIcon={<MenuBook />}
+                            onClick={() => {
+                              setIframeLoading(true);
                               setShowPdfViewer(true);
-                            }
-                          }}
-                          sx={{
-                            bgcolor: '#8B0000',
-                            '&:hover': { bgcolor: '#6B0000' },
-                            textTransform: 'none',
-                            fontWeight: 700,
-                            px: 3,
-                            py: 1,
-                          }}
-                        >
-                          Read Book Online
-                        </Button>
+                            }}
+                            sx={{
+                              bgcolor: '#8B0000',
+                              '&:hover': { bgcolor: '#6B0000' },
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              px: 3,
+                              py: 1,
+                            }}
+                          >
+                            Read Book Online
+                          </Button>
+                        )}
 
                         <Button
                           variant="outlined"
@@ -718,16 +742,41 @@ export default function ResourceDetail({ user }) {
                           </Button>
                         </Box>
 
+                        {iframeLoading && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              bgcolor: '#2b2b2b',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              zIndex: 10,
+                              gap: 2
+                            }}
+                          >
+                            <CircularProgress sx={{ color: '#8B0000' }} />
+                            <Typography variant="body1" sx={{ color: '#fff', fontFamily: 'Georgia, serif' }}>
+                              Loading PDF Book Document...
+                            </Typography>
+                          </Box>
+                        )}
                         <iframe
                           src={`${downloadLink}#toolbar=1&navpanes=0&scrollbar=1`}
                           title={`Reading ${getContent(resource.title)}`}
+                          onLoad={() => setIframeLoading(false)}
                           width="100%"
                           height="100%"
                           style={{
                             border: 'none',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: '#ffffff'
+                            backgroundColor: '#ffffff',
+                            display: iframeLoading ? 'none' : 'block'
                           }}
                         />
                       </Box>

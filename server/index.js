@@ -2104,81 +2104,74 @@ function cleanupFile(filePath) {
   }
 }
 
-// Stream PDF directly from MongoDB Database GridFS
-// Stream PDF directly from MongoDB Database GridFS with HTTP Range request support
+// Stream PDF directly from MongoDB Database GridFS with local disk caching
 app.get("/api/resources/pdf/:id", async (req, res) => {
   try {
     const db = mongoose.connection.db;
     if (!db) return res.status(500).send("Database connection not ready");
 
-    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "pdf_books" });
-    const fileId = new mongoose.Types.ObjectId(req.params.id);
+    const fileIdStr = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(fileIdStr)) {
+      return res.status(400).send("Invalid PDF ID format");
+    }
+    const fileId = new mongoose.Types.ObjectId(fileIdStr);
 
+    const cacheDir = path.join(process.cwd(), "uploads/pdf_cache");
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+    const cachedFilePath = path.join(cacheDir, `${fileIdStr}.pdf`);
+
+    // If cached locally, serve it instantly. res.sendFile handles HTTP Range requests natively!
+    if (fs.existsSync(cachedFilePath)) {
+      return res.sendFile(cachedFilePath);
+    }
+
+    // Otherwise, fetch metadata first
+    const bucket = new mongoose.mongo.GridFSBucket(db, { bucketName: "pdf_books" });
     const files = await bucket.find({ _id: fileId }).toArray();
     if (!files || files.length === 0) {
       return res.status(404).send("PDF Book file not found in database");
     }
 
-    const file = files[0];
-    const totalLength = file.length;
-    const rangeHeader = req.headers.range;
+    const tempFilePath = path.join(cacheDir, `${fileIdStr}.tmp`);
 
-    if (rangeHeader) {
-      const parts = rangeHeader.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : totalLength - 1;
+    // Download from GridFS to local temp file
+    console.log(`Downloading PDF ${fileIdStr} from MongoDB Atlas to local cache...`);
+    const downloadStream = bucket.openDownloadStream(fileId);
+    const writeStream = fs.createWriteStream(tempFilePath);
 
-      // Validate range limits
-      if (!isNaN(start) && start >= 0 && start < totalLength && end >= start && end < totalLength) {
-        const chunksize = (end - start) + 1;
-        res.writeHead(206, {
-          "Content-Range": `bytes ${start}-${end}/${totalLength}`,
-          "Accept-Ranges": "bytes",
-          "Content-Length": chunksize,
-          "Content-Type": file.contentType || "application/pdf",
-          "Content-Disposition": `inline; filename="${file.filename}"`,
-          "Cache-Control": "public, max-age=31536000",
-        });
+    downloadStream.pipe(writeStream);
 
-        // GridFS end is exclusive, so we pass end + 1
-        const downloadStream = bucket.openDownloadStream(fileId, {
-          start,
-          end: end + 1
-        });
-
-        downloadStream.on("error", (streamErr) => {
-          console.error("GridFS download range stream error:", streamErr);
-          if (!res.headersSent) {
-            res.status(500).send("Error streaming PDF range");
-          }
-        });
-
-        downloadStream.pipe(res);
-        return;
-      } else {
-        res.writeHead(416, {
-          "Content-Range": `bytes */${totalLength}`
-        });
-        return res.end();
+    downloadStream.on("error", (err) => {
+      console.error("GridFS download error while caching:", err);
+      cleanupFile(tempFilePath);
+      if (!res.headersSent) {
+        res.status(500).send("Error downloading file from database");
       }
-    } else {
-      res.set({
-        "Content-Type": file.contentType || "application/pdf",
-        "Content-Length": totalLength,
-        "Content-Disposition": `inline; filename="${file.filename}"`,
-        "Accept-Ranges": "bytes",
-        "Cache-Control": "public, max-age=31536000",
-      });
+    });
 
-      const downloadStream = bucket.openDownloadStream(fileId);
-      downloadStream.on("error", (streamErr) => {
-        console.error("GridFS download stream error:", streamErr);
-        if (!res.headersSent) {
-          res.status(500).send("Error streaming PDF");
-        }
-      });
-      downloadStream.pipe(res);
-    }
+    writeStream.on("error", (err) => {
+      console.error("Write stream error while caching:", err);
+      cleanupFile(tempFilePath);
+      if (!res.headersSent) {
+        res.status(500).send("Error writing cache file");
+      }
+    });
+
+    writeStream.on("finish", () => {
+      try {
+        fs.renameSync(tempFilePath, cachedFilePath);
+        console.log(`✓ PDF ${fileIdStr} successfully cached to disk.`);
+        // Serve the newly cached file
+        res.sendFile(cachedFilePath);
+      } catch (renameErr) {
+        console.error("Failed to rename temp cache file:", renameErr);
+        // Fallback: send the temp file if renaming failed
+        res.sendFile(tempFilePath, () => cleanupFile(tempFilePath));
+      }
+    });
+
   } catch (err) {
     console.error("PDF streaming error:", err);
     res.status(500).send("Error streaming PDF from database");
