@@ -133,9 +133,20 @@ export default function ResourceDetail({ user }) {
         method: "POST",
         credentials: "include",
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to like resource");
 
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error(t('resources.loginToLike', 'Please login to like resources'));
+        }
+        let errMsg = "Failed to like resource";
+        try {
+          const data = await response.json();
+          errMsg = data.error || errMsg;
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
+
+      const data = await response.json();
       setResource((prev) => prev ? { ...prev, likesCount: data.likesCount, userLiked: data.userLiked } : prev);
     } catch (err) {
       setError(err.message);

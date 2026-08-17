@@ -81,7 +81,6 @@ export default function PdfUpload({
             name: uploadedName,
             size: uploadedSize
           });
-          setCustomUrl(uploadedUrl);
         } catch (e) {
           setError('Failed to parse upload response.');
         }

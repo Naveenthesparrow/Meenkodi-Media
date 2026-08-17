@@ -1414,9 +1414,44 @@ app.get("/api/resources/:id", async (req, res) => {
     if (!resource) {
       return res.status(404).json({ error: "Resource not found" });
     }
-    res.json(localizeSingle(resource, 'resources', lang));
+    const obj = resource.toObject();
+    const likesCount = obj.likes ? obj.likes.length : 0;
+    const userLiked = req.user ? (obj.likes ? obj.likes.some((id) => id.toString() === req.user._id.toString()) : false) : false;
+    res.json(localizeSingle({ ...obj, likesCount, userLiked }, 'resources', lang));
   } catch (err) {
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Like/Unlike Resource
+app.post("/api/resources/:id/like", ensureAuthenticated, async (req, res) => {
+  try {
+    const resource = await Resource.findById(req.params.id);
+    if (!resource) {
+      return res.status(404).json({ error: "Resource not found" });
+    }
+
+    const likes = resource.likes || [];
+    const userLikeIndex = likes.findIndex(
+      (likeId) => likeId.toString() === req.user._id.toString()
+    );
+
+    if (userLikeIndex > -1) {
+      likes.splice(userLikeIndex, 1);
+    } else {
+      likes.push(req.user._id);
+    }
+
+    resource.likes = likes;
+    await resource.save();
+
+    res.json({
+      likesCount: likes.length,
+      userLiked: userLikeIndex === -1,
+    });
+  } catch (err) {
+    console.error("Resource like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
   }
 });
 app.post("/api/resources", ensureAdmin, async (req, res) => {
