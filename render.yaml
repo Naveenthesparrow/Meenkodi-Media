@@ -2,11 +2,14 @@ services:
   - type: web
     name: Meenkodi-Server
     env: node
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
     branch: main
     plan: free
     region: oregon
     # Build the client first so `client/dist` is available, then install server deps
-    buildCommand: cd client && npm ci && npm run build && cd ../server && npm ci
+    buildCommand: cd client && npm install --include=dev && npm run build && cd ../server && npm install
     startCommand: cd server && node index.js
 
   - type: static_site
