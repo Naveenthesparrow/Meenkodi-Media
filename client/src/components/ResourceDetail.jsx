@@ -65,6 +65,9 @@ export default function ResourceDetail({ user }) {
   const [pdfSize, setPdfSize] = useState("");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeError, setIframeError] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [useGoogleViewer, setUseGoogleViewer] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
@@ -72,6 +75,17 @@ export default function ResourceDetail({ user }) {
   useEffect(() => {
     if (showPdfViewer) {
       setIframeLoading(true);
+      setIframeError(false);
+      setLoadProgress(0);
+      setUseGoogleViewer(false);
+      // Animate progress bar while PDF loads
+      const interval = setInterval(() => {
+        setLoadProgress(prev => {
+          if (prev >= 85) { clearInterval(interval); return prev; }
+          return prev + Math.random() * 12;
+        });
+      }, 400);
+      return () => clearInterval(interval);
     }
   }, [showPdfViewer]);
 
@@ -513,45 +527,25 @@ export default function ResourceDetail({ user }) {
                       </Box>
 
                       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                        {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? (
-                          <Button
-                            variant="contained"
-                            component="a"
-                            href={downloadLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            startIcon={<MenuBook />}
-                            sx={{
-                              bgcolor: '#8B0000',
-                              '&:hover': { bgcolor: '#6B0000' },
-                              textTransform: 'none',
-                              fontWeight: 700,
-                              px: 3,
-                              py: 1,
-                            }}
-                          >
-                            Read Book Online
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            startIcon={<MenuBook />}
-                            onClick={() => {
-                              setIframeLoading(true);
-                              setShowPdfViewer(true);
-                            }}
-                            sx={{
-                              bgcolor: '#8B0000',
-                              '&:hover': { bgcolor: '#6B0000' },
-                              textTransform: 'none',
-                              fontWeight: 700,
-                              px: 3,
-                              py: 1,
-                            }}
-                          >
-                            Read Book Online
-                          </Button>
-                        )}
+                        <Button
+                          variant="contained"
+                          startIcon={<MenuBook />}
+                          onClick={() => {
+                            setIframeLoading(true);
+                            setIframeError(false);
+                            setShowPdfViewer(true);
+                          }}
+                          sx={{
+                            bgcolor: '#8B0000',
+                            '&:hover': { bgcolor: '#6B0000' },
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            px: 3,
+                            py: 1,
+                          }}
+                        >
+                          Read Book Online
+                        </Button>
 
                         <Button
                           variant="outlined"
@@ -724,33 +718,7 @@ export default function ResourceDetail({ user }) {
                           position: 'relative'
                         }}
                       >
-                        {/* Mobile Helper Bar */}
-                        <Box
-                          sx={{
-                            display: { xs: 'flex', md: 'none' },
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            px: 2,
-                            py: 0.8,
-                            bgcolor: '#1a1a1a',
-                            color: '#ddd',
-                            borderBottom: '1px solid #333'
-                          }}
-                        >
-                          <Typography variant="caption" sx={{ color: '#bbb', fontSize: '0.75rem' }}>
-                            📱 Mobile Reader: Tap to view full tab or download
-                          </Typography>
-                          <Button
-                            size="small"
-                            href={downloadLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ color: '#DAA520', p: 0, textTransform: 'none', fontSize: '0.75rem', fontWeight: 700 }}
-                          >
-                            Full Tab ↗
-                          </Button>
-                        </Box>
-
+                        {/* Loading overlay with animated progress bar */}
                         {iframeLoading && (
                           <Box
                             sx={{
@@ -759,33 +727,123 @@ export default function ResourceDetail({ user }) {
                               left: 0,
                               width: '100%',
                               height: '100%',
-                              bgcolor: '#2b2b2b',
+                              bgcolor: '#1a1a1a',
                               display: 'flex',
                               flexDirection: 'column',
                               justifyContent: 'center',
                               alignItems: 'center',
                               zIndex: 10,
-                              gap: 2
+                              gap: 3,
+                              px: 4,
                             }}
                           >
-                            <CircularProgress sx={{ color: '#8B0000' }} />
-                            <Typography variant="body1" sx={{ color: '#fff', fontFamily: 'Georgia, serif' }}>
-                              Loading PDF Book Document...
+                            {/* Book icon animation */}
+                            <Box sx={{ fontSize: '3rem', animation: 'pulse 1.5s ease-in-out infinite', '@keyframes pulse': { '0%,100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: 0.6, transform: 'scale(1.08)' } } }}>
+                              📖
+                            </Box>
+                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif', fontWeight: 700, textAlign: 'center' }}>
+                              Opening Book...
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#aaa', textAlign: 'center', maxWidth: 320 }}>
+                              {getContent(resource.title)}
+                            </Typography>
+                            {/* Progress bar */}
+                            <Box sx={{ width: '100%', maxWidth: 360, mt: 1 }}>
+                              <Box sx={{ width: '100%', height: 6, bgcolor: '#333', borderRadius: 3, overflow: 'hidden' }}>
+                                <Box
+                                  sx={{
+                                    height: '100%',
+                                    bgcolor: '#8B0000',
+                                    borderRadius: 3,
+                                    width: `${Math.min(loadProgress, 95)}%`,
+                                    transition: 'width 0.4s ease',
+                                    background: 'linear-gradient(90deg, #8B0000, #cc2200)',
+                                  }}
+                                />
+                              </Box>
+                              <Typography variant="caption" sx={{ color: '#777', mt: 0.5, display: 'block', textAlign: 'right' }}>
+                                {Math.min(Math.round(loadProgress), 95)}%
+                              </Typography>
+                            </Box>
+                            <Typography variant="caption" sx={{ color: '#666', textAlign: 'center' }}>
+                              Large books may take a moment to load
                             </Typography>
                           </Box>
                         )}
+
+                        {/* Error / blocked iframe fallback */}
+                        {iframeError && !iframeLoading && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              bgcolor: '#1a1a1a',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              zIndex: 10,
+                              gap: 2,
+                              px: 3,
+                              textAlign: 'center',
+                            }}
+                          >
+                            <Box sx={{ fontSize: '2.5rem' }}>⚠️</Box>
+                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif' }}>
+                              Could not embed the PDF
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#aaa', maxWidth: 380 }}>
+                              The PDF file cannot be displayed inline. Try opening it in a new tab or use the Google Docs viewer.
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center', mt: 1 }}>
+                              <Button
+                                variant="contained"
+                                onClick={() => { setIframeError(false); setIframeLoading(true); setUseGoogleViewer(true); }}
+                                sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' }, textTransform: 'none', fontWeight: 700 }}
+                              >
+                                Try Google Docs Viewer
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                href={downloadLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                startIcon={<OpenInNewIcon />}
+                                sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)', textTransform: 'none', '&:hover': { borderColor: '#fff' } }}
+                              >
+                                Open in New Tab
+                              </Button>
+                            </Box>
+                          </Box>
+                        )}
+
                         <iframe
-                          src={`${downloadLink}#toolbar=1&navpanes=0&scrollbar=1`}
+                          key={useGoogleViewer ? 'google' : 'direct'}
+                          src={useGoogleViewer
+                            ? `https://docs.google.com/viewer?url=${encodeURIComponent(downloadLink)}&embedded=true`
+                            : `${downloadLink}#toolbar=1&navpanes=0&scrollbar=1`
+                          }
                           title={`Reading ${getContent(resource.title)}`}
-                          onLoad={() => setIframeLoading(false)}
+                          onLoad={() => {
+                            setLoadProgress(100);
+                            setTimeout(() => setIframeLoading(false), 300);
+                          }}
+                          onError={() => {
+                            setIframeLoading(false);
+                            setIframeError(true);
+                          }}
                           width="100%"
                           height="100%"
+                          allow="fullscreen"
                           style={{
                             border: 'none',
                             width: '100%',
                             height: '100%',
                             backgroundColor: '#ffffff',
-                            display: iframeLoading ? 'none' : 'block'
+                            display: (iframeLoading || iframeError) ? 'none' : 'block'
                           }}
                         />
                       </Box>
