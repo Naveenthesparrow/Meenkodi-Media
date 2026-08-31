@@ -25,6 +25,7 @@ import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
+import SEO from "./common/SEO";
 
 const getCleanAuthorName = (name) => {
   if (!name) return 'Anonymous';
@@ -582,6 +583,14 @@ export default function ArticleDetail({ user }) {
       backgroundColor: '#fff',
       py: { xs: 4, md: 6 },
     }}>
+      <SEO 
+        title={article ? `${getContent(article.title)} - Tamil Heritage Article` : 'Tamil Heritage Article'}
+        description={article ? (getContent(article.content) || `Read ${getContent(article.title)} on Meenkodi Tamil Heritage.`).replace(/<[^>]*>/g, '').slice(0, 160) : 'Read Tamil heritage articles.'}
+        keywords={article ? `${getContent(article.title)}, ${getContent(article.author) || ''}, Tamil Articles, Tamil History, Meenkodi` : 'Tamil Articles, Tamil History'}
+        image={article?.imageLink || article?.image || undefined}
+        url={`https://www.meenkodi.com/articles/${id}`}
+        type="article"
+      />
       <Box sx={{
         maxWidth: 1150,
         mx: "auto",

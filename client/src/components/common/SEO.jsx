@@ -20,11 +20,13 @@ export default function SEO({
   const location = useLocation();
   const baseUrl = 'https://www.meenkodi.com';
   
-  const fullUrl = url || `${baseUrl}${location.pathname}`;
+  const rawUrl = url || `${location.pathname}${location.search || ''}`;
+  const fullUrl = (rawUrl.startsWith('http') ? rawUrl : `${baseUrl}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`)
+    .replace('https://meenkodi.com', 'https://www.meenkodi.com');
   const fullTitle = title ? `${title} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
   const defaultDescription = 'Meenkodi preserves and shares 5000+ years of Tamil civilization — history, temples, dynasties (Pandiya, Chola, Chera , Pallava), cultural traditions, and archaeological discoveries. Explore the stories of the Southerns (தென்புலத்தார் / தென்னவர்), Pandiyargal, temple architecture, Sangam literature, festivals, and living heritage across International and the Tamil diaspora.';
   const metaDescription = description || defaultDescription;
-  const metaImage = image || `${baseUrl}/logo.png`;
+  const metaImage = (image || `${baseUrl}/logo.png`).replace('https://meenkodi.com', 'https://www.meenkodi.com');
 
   return (
     <Helmet>

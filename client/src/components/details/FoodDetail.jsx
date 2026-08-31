@@ -40,6 +40,7 @@ import {
 } from "@mui/icons-material";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
+import SEO from "../common/SEO";
 
 function FoodDetail({ user: initialUser }) {
   const user = initialUser;
@@ -634,6 +635,14 @@ function FoodDetail({ user: initialUser }) {
         alignItems: 'center',
       }}
     >
+      <SEO 
+        title={food ? `${getContent(food.name)} - Traditional Tamil Cuisine` : 'Tamil Cuisine & Food'}
+        description={food ? (getContent(food.description) || `Discover traditional Tamil food recipe for ${getContent(food.name)} from ${getContent(food.region) || 'Tamil Nadu'}.`).slice(0, 160) : 'Explore ancient and traditional Tamil recipes and culinary culture.'}
+        keywords={food ? `${getContent(food.name)}, Tamil Cuisine, ${getContent(food.region) || ''}, Traditional Tamil Recipe, Meenkodi` : 'Tamil Cuisine, Tamil Food'}
+        image={food?.image || food?.imageUrl || undefined}
+        url={`https://www.meenkodi.com/explore/foods/${id}`}
+        type="article"
+      />
       {/* Header */}
       <Box
         sx={{

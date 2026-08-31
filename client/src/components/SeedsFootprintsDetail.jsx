@@ -798,6 +798,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 title={folderName ? `${folderName} - Seeds & Footprints` : 'Discovery Collection - Seeds & Footprints'}
                 description={folderDescription || `Archaeological discoveries and Tamil heritage traces in ${folderName}. Documenting the footprints of our ancestors and seeds of Tamil civilization.`}
                 keywords={`Tamil Heritage, Archaeological Discoveries, ${folderName}, Heritage Evidence, Tamil History, Cultural Traces, Heritage Documentation`}
+                url={`https://www.meenkodi.com/seeds-and-footprints/folders/${id}`}
                 type="article"
                 tags={folderName ? [folderName, 'Seeds & Footprints', 'Tamil Heritage', 'Archaeological Discovery'] : ['Seeds & Footprints']}
             />

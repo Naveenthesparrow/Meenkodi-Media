@@ -50,6 +50,7 @@ import MediaUpload from "../common/MediaUpload";
 import { API_BASE_URL } from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
+import SEO from "../common/SEO";
 
 function DanceDetail({ user: initialUser }) {
   const user = initialUser;
@@ -683,6 +684,14 @@ function DanceDetail({ user: initialUser }) {
         alignItems: "center",
       }}
     >
+      <SEO 
+        title={dance ? `${getContent(dance.name)} - Tamil Dance & Performing Arts` : 'Tamil Dance'}
+        description={dance ? (getContent(dance.description) || `Explore classical Tamil dance form ${getContent(dance.name)} from ${getContent(dance.origin) || 'Tamil Nadu'}.`).slice(0, 160) : 'Explore classical Bharatanatyam and Tamil folk dance traditions.'}
+        keywords={dance ? `${getContent(dance.name)}, Tamil Dance, ${getContent(dance.style) || ''}, Bharatanatyam, Meenkodi` : 'Tamil Dance, Bharatanatyam'}
+        image={dance?.image || undefined}
+        url={`https://www.meenkodi.com/explore/dance/${id}`}
+        type="article"
+      />
       {/* Header */}
       <Box
         sx={{

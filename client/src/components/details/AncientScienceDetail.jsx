@@ -38,6 +38,7 @@ import {
 } from "@mui/icons-material";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
+import SEO from "../common/SEO";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
@@ -627,6 +628,14 @@ function AncientScienceDetail({ user: initialUser }) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <SEO 
+        title={science ? `${getContent(science.name)} - Ancient Tamil Science & Innovation` : 'Ancient Tamil Science'}
+        description={science ? (getContent(science.description) || `Discover ancient Tamil scientific achievements in ${getContent(science.field) || 'science'} during ${getContent(science.period) || 'ancient period'}.`).slice(0, 160) : 'Explore ancient Tamil astronomy, metallurgy, medicine, and engineering.'}
+        keywords={science ? `${getContent(science.name)}, Ancient Tamil Science, ${getContent(science.field) || ''}, Siddha Medicine, Tamil Engineering, Meenkodi` : 'Ancient Tamil Science, Siddha Medicine'}
+        image={science?.image || undefined}
+        url={`https://www.meenkodi.com/explore/ancientscience/${id}`}
+        type="article"
+      />
       {/* Header */}
       <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
         <IconButton

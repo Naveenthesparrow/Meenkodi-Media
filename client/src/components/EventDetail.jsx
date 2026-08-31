@@ -22,6 +22,7 @@ import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBilingualContent } from '../utils/bilingualContent';
+import SEO from "./common/SEO";
 
 export default function EventDetail({ user }) {
   const getContent = useBilingualContent();
@@ -224,6 +225,14 @@ export default function EventDetail({ user }) {
       background: 'linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)',
       py: { xs: 3, md: 5 },
     }}>
+      <SEO 
+        title={event ? `${getContent(event.title)} - Tamil Cultural Event` : 'Tamil Cultural Event'}
+        description={event ? (getContent(event.description) || `Join us for ${getContent(event.title)} in ${getContent(event.location) || 'Tamil Nadu'}.`).slice(0, 160) : 'Explore Tamil heritage events and workshops.'}
+        keywords={event ? `${getContent(event.title)}, ${getContent(event.location) || ''}, Tamil Events, Cultural Workshops, Meenkodi` : 'Tamil Events, Cultural Workshops'}
+        image={event?.imageUrl || event?.imageLink || undefined}
+        url={`https://www.meenkodi.com/events/${id}`}
+        type="article"
+      />
       <Box sx={{
         maxWidth: 1200,
         mx: "auto",

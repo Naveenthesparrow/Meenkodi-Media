@@ -50,6 +50,7 @@ import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
+import SEO from "../common/SEO";
 function LiteratureDetail({ user: initialUser }) {
   const user = initialUser;
   const { id } = useParams();
@@ -643,6 +644,14 @@ function LiteratureDetail({ user: initialUser }) {
         alignItems: "center",
       }}
     >
+      <SEO 
+        title={literature ? `${getContent(literature.title)} - Tamil Literature` : 'Tamil Literature'}
+        description={literature ? (getContent(literature.description) || getContent(literature.summary) || `Explore ${getContent(literature.title)} by ${getContent(literature.author) || 'ancient Tamil poet'}.`).slice(0, 160) : 'Explore Sangam poetry and classical Tamil literature.'}
+        keywords={literature ? `${getContent(literature.title)}, ${getContent(literature.author) || ''}, Sangam Literature, Tamil Poetry, Meenkodi` : 'Sangam Literature, Tamil Poetry'}
+        image={literature?.image || literature?.imageLink || undefined}
+        url={`https://www.meenkodi.com/explore/literature/${id}`}
+        type="article"
+      />
       {/* Header */}
       <Box
         sx={{

@@ -38,6 +38,7 @@ import {
 } from "@mui/icons-material";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
+import SEO from "../common/SEO";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 function ClothingDetail({ user: initialUser }) {
@@ -623,6 +624,14 @@ function ClothingDetail({ user: initialUser }) {
         alignItems: 'center',
       }}
     >
+      <SEO 
+        title={clothing ? `${getContent(clothing.name)} - Traditional Tamil Attire & Clothing` : 'Tamil Traditional Attire'}
+        description={clothing ? (getContent(clothing.description) || `Explore historical Tamil clothing ${getContent(clothing.name)} made of ${getContent(clothing.materials) || 'traditional textiles'}.`).slice(0, 160) : 'Discover traditional Tamil textiles, weaving, and attire.'}
+        keywords={clothing ? `${getContent(clothing.name)}, Tamil Clothing, ${getContent(clothing.type) || ''}, Kanchipuram Silk, Tamil Attire, Meenkodi` : 'Tamil Clothing, Traditional Attire'}
+        image={clothing?.image || undefined}
+        url={`https://www.meenkodi.com/explore/clothing/${id}`}
+        type="article"
+      />
       {/* Header */}
       <Box
         sx={{

@@ -41,6 +41,7 @@ import {
 } from "@mui/icons-material";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from "react-i18next";
+import SEO from "../common/SEO";
 
 function PoetDetail({ user: initialUser }) {
   const user = initialUser;
@@ -751,6 +752,14 @@ function PoetDetail({ user: initialUser }) {
   // PUBLIC VIEW
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa' }}>
+      <SEO 
+        title={poet ? `${getContent(poet.name)} - Tamil Poet & Scholar` : 'Tamil Poet'}
+        description={poet ? (getContent(poet.description) || `Explore works and legacy of ${getContent(poet.name)} during ${getContent(poet.period) || 'ancient Tamil period'}.`).slice(0, 160) : 'Discover ancient Tamil poets.'}
+        keywords={poet ? `${getContent(poet.name)}, Tamil Poets, Sangam Literature, ${getContent(poet.period) || ''}, Meenkodi` : 'Tamil Poets, Sangam Literature'}
+        image={poet?.image || undefined}
+        url={`https://www.meenkodi.com/poets/${slug}`}
+        type="article"
+      />
       {/* Hero Section */}
       <Box
         sx={{

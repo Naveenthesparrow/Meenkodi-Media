@@ -10,15 +10,10 @@ import {
     Paper
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SEO from './common/SEO';
 
 const FAQ = () => {
     const { t } = useTranslation();
-
-    // We'll fetch the FAQ items from the translation file
-    // Assuming the structure in json will be an array of objects or keys
-    // For simplicity with i18next, we often map through a known number of items or a key that returns an array
-    // Here we will assume we have keys like faq.q1.question, faq.q1.answer, etc.
-    // A cleaner way is to have an array in the translation file, but i18next returnObjects: true works well.
 
     const faqItems = t('faq.items', { returnObjects: true });
 
@@ -43,6 +38,12 @@ const FAQ = () => {
               backgroundSize: { xs: '18px 18px', md: '14px 14px' }
             }
           }}>
+            <SEO 
+              title="Frequently Asked Questions (FAQ) - Meenkodi Tamil Heritage"
+              description="Find answers to common questions about Meenkodi Tamil Heritage Foundation, Tamil history, ancient dynasties, cultural archives, and resources."
+              keywords="Meenkodi FAQ, Tamil Heritage FAQ, Tamil History Questions, Meenkodi Foundation"
+              url="https://www.meenkodi.com/faq"
+            />
             {/* Hero Section */}
             <Container maxWidth="lg" sx={{ mb: 6, textAlign: 'center' }}>
                 <Typography

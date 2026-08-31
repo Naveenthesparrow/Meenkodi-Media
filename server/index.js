@@ -4992,15 +4992,36 @@ if (fs.existsSync(clientIndex)) {
   // Serve static assets (JS/CSS/images)
   app.use(express.static(clientDist));
 
+  let cachedIndexHtml = null;
   // SPA fallback: only for non-API and non-upload routes
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
-    res.sendFile(clientIndex, (err) => {
-      if (err) {
-        console.error('Error sending client index:', err);
-        res.status(500).send('Server error');
+    try {
+      if (!cachedIndexHtml || process.env.NODE_ENV !== 'production') {
+        cachedIndexHtml = fs.readFileSync(clientIndex, 'utf8');
       }
-    });
+      const canonicalHost = 'https://www.meenkodi.com';
+      const requestUrl = req.originalUrl || req.path;
+      const canonicalUrl = `${canonicalHost}${requestUrl}`;
+      const canonicalTag = `<link rel="canonical" href="${canonicalUrl}" />`;
+
+      let html = cachedIndexHtml;
+      if (html.includes('<!-- CANONICAL_TAG -->')) {
+        html = html.replace('<!-- CANONICAL_TAG -->', canonicalTag);
+      } else if (html.includes('<link rel="canonical"')) {
+        html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, canonicalTag);
+      } else {
+        html = html.replace('</head>', `  ${canonicalTag}\n</head>`);
+      }
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html);
+    } catch (err) {
+      console.error('Error sending client index with dynamic canonical:', err);
+      res.sendFile(clientIndex, (sendErr) => {
+        if (sendErr && !res.headersSent) res.status(500).send('Server error');
+      });
+    }
   });
 } else {
   console.log('No client build found at:', clientIndex, "— the Web Service will only serve API routes until you build the client.");

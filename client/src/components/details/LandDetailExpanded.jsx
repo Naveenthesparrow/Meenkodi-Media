@@ -29,6 +29,7 @@ import OptimizedImage from "../common/OptimizedImage";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
 import { useTranslation } from "react-i18next";
+import SEO from "../common/SEO";
 
 const TINAI = {
   kurinji: {
@@ -560,6 +561,14 @@ export default function LandDetailExpanded({ user }) {
         `,
       }}
     >
+      <SEO 
+        title={land ? `${name} - Five Ainthinai Landscapes` : 'Tamil Ainthinai Landscapes'}
+        description={land ? (description || `Explore ${name} (${land.type}) landscape in Sangam literature and Tamil geography.`).slice(0, 160) : 'Explore Five Ainthinai landscapes of Tamil Sangam age.'}
+        keywords={land ? `${name}, Five Ainthinai, ${land.type || ''}, Kurinji, Mullai, Marutham, Neithal, Palai, Meenkodi` : 'Five Ainthinai, Sangam Landscapes'}
+        image={land?.image || undefined}
+        url={`https://www.meenkodi.com/lands/${id}`}
+        type="article"
+      />
       {editDialog}
 
       <Box

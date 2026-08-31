@@ -39,6 +39,7 @@ import PdfUpload from "./common/PdfUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
+import SEO from "./common/SEO";
 
 export default function ResourceDetail({ user }) {
   const getContent = useBilingualContent();
@@ -221,6 +222,14 @@ export default function ResourceDetail({ user }) {
 
   return (
     <Box sx={{ bgcolor: "#f7f5f0", minHeight: "100vh" }}>
+      <SEO 
+        title={resource ? `${getContent(resource.title)} - Tamil Resource & Archives` : 'Tamil Heritage Resource'}
+        description={resource ? (getContent(resource.description) || `Educational materials and research on ${getContent(resource.title)}.`).slice(0, 160) : 'Explore Tamil heritage resources.'}
+        keywords={resource ? `${getContent(resource.title)}, ${getContent(resource.author) || ''}, Tamil Resources, Tamil Books, Tamil Manuscripts, Meenkodi` : 'Tamil Resources, Tamil Books'}
+        image={resource?.image || undefined}
+        url={`https://www.meenkodi.com/resources/${id}`}
+        type="article"
+      />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, bgcolor: "#fff" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
