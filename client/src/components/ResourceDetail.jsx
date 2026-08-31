@@ -65,9 +65,8 @@ export default function ResourceDetail({ user }) {
   const [pdfSize, setPdfSize] = useState("");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
-  const [iframeError, setIframeError] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
-  const [useGoogleViewer, setUseGoogleViewer] = useState(false);
+  const [loadTooLong, setLoadTooLong] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
@@ -75,17 +74,20 @@ export default function ResourceDetail({ user }) {
   useEffect(() => {
     if (showPdfViewer) {
       setIframeLoading(true);
-      setIframeError(false);
       setLoadProgress(0);
-      setUseGoogleViewer(false);
-      // Animate progress bar while PDF loads
+      setLoadTooLong(false);
+      // Animate progress bar while PDF loads (Google Docs viewer)
       const interval = setInterval(() => {
         setLoadProgress(prev => {
-          if (prev >= 85) { clearInterval(interval); return prev; }
-          return prev + Math.random() * 12;
+          if (prev >= 88) { clearInterval(interval); return prev; }
+          return prev + Math.random() * 8;
         });
-      }, 400);
-      return () => clearInterval(interval);
+      }, 500);
+      // After 45s, show "still loading" message with Open in Browser option
+      const timeout = setTimeout(() => {
+        setLoadTooLong(true);
+      }, 45000);
+      return () => { clearInterval(interval); clearTimeout(timeout); };
     }
   }, [showPdfViewer]);
 
@@ -771,69 +773,52 @@ export default function ResourceDetail({ user }) {
                           </Box>
                         )}
 
-                        {/* Error / blocked iframe fallback */}
-                        {iframeError && !iframeLoading && (
+                        {/* "Taking too long" overlay */}
+                        {loadTooLong && iframeLoading && (
                           <Box
                             sx={{
                               position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: '100%',
-                              height: '100%',
-                              bgcolor: '#1a1a1a',
+                              bottom: 24,
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              bgcolor: 'rgba(0,0,0,0.85)',
+                              borderRadius: 2,
+                              px: 3,
+                              py: 2,
+                              zIndex: 20,
                               display: 'flex',
                               flexDirection: 'column',
-                              justifyContent: 'center',
                               alignItems: 'center',
-                              zIndex: 10,
-                              gap: 2,
-                              px: 3,
+                              gap: 1.5,
                               textAlign: 'center',
+                              maxWidth: 340,
+                              width: '90%',
                             }}
                           >
-                            <Box sx={{ fontSize: '2.5rem' }}>⚠️</Box>
-                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif' }}>
-                              Could not embed the PDF
+                            <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
+                              Still loading... large PDFs may take up to a minute.
                             </Typography>
-                            <Typography variant="body2" sx={{ color: '#aaa', maxWidth: 380 }}>
-                              The PDF file cannot be displayed inline. Try opening it in a new tab or use the Google Docs viewer.
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center', mt: 1 }}>
-                              <Button
-                                variant="contained"
-                                onClick={() => { setIframeError(false); setIframeLoading(true); setUseGoogleViewer(true); }}
-                                sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' }, textTransform: 'none', fontWeight: 700 }}
-                              >
-                                Try Google Docs Viewer
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                href={downloadLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                startIcon={<OpenInNewIcon />}
-                                sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)', textTransform: 'none', '&:hover': { borderColor: '#fff' } }}
-                              >
-                                Open in New Tab
-                              </Button>
-                            </Box>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              href={downloadLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              startIcon={<OpenInNewIcon />}
+                              sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' }, textTransform: 'none', fontWeight: 700, fontSize: '0.8rem' }}
+                            >
+                              Open PDF in Browser Tab
+                            </Button>
                           </Box>
                         )}
 
+                        {/* Always use Google Docs Viewer — works on all devices including mobile */}
                         <iframe
-                          key={useGoogleViewer ? 'google' : 'direct'}
-                          src={useGoogleViewer
-                            ? `https://docs.google.com/viewer?url=${encodeURIComponent(downloadLink)}&embedded=true`
-                            : `${downloadLink}#toolbar=1&navpanes=0&scrollbar=1`
-                          }
+                          src={`https://docs.google.com/viewer?url=${encodeURIComponent(downloadLink)}&embedded=true`}
                           title={`Reading ${getContent(resource.title)}`}
                           onLoad={() => {
                             setLoadProgress(100);
-                            setTimeout(() => setIframeLoading(false), 300);
-                          }}
-                          onError={() => {
-                            setIframeLoading(false);
-                            setIframeError(true);
+                            setTimeout(() => setIframeLoading(false), 400);
                           }}
                           width="100%"
                           height="100%"
@@ -843,7 +828,7 @@ export default function ResourceDetail({ user }) {
                             width: '100%',
                             height: '100%',
                             backgroundColor: '#ffffff',
-                            display: (iframeLoading || iframeError) ? 'none' : 'block'
+                            display: iframeLoading ? 'none' : 'block'
                           }}
                         />
                       </Box>
