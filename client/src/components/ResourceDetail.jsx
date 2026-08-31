@@ -1,4 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
+// Use local pdf worker to avoid CORS issues
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 import {
   Box,
   Typography,
@@ -64,32 +73,31 @@ export default function ResourceDetail({ user }) {
   const [pdfName, setPdfName] = useState("");
   const [pdfSize, setPdfSize] = useState("");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
-  const [iframeLoading, setIframeLoading] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const [loadTooLong, setLoadTooLong] = useState(false);
+  const [numPages, setNumPages] = useState(null);
+  const [pdfLoadError, setPdfLoadError] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
 
+  // Reset reader state when opened
   useEffect(() => {
     if (showPdfViewer) {
-      setIframeLoading(true);
-      setLoadProgress(0);
-      setLoadTooLong(false);
-      // Animate progress bar while PDF loads (Google Docs viewer)
-      const interval = setInterval(() => {
-        setLoadProgress(prev => {
-          if (prev >= 88) { clearInterval(interval); return prev; }
-          return prev + Math.random() * 8;
-        });
-      }, 500);
-      // After 45s, show "still loading" message with Open in Browser option
-      const timeout = setTimeout(() => {
-        setLoadTooLong(true);
-      }, 45000);
-      return () => { clearInterval(interval); clearTimeout(timeout); };
+      setNumPages(null);
+      setPdfLoadError(false);
+      setPdfLoading(true);
     }
   }, [showPdfViewer]);
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+    setPdfLoading(false);
+  };
+
+  const onDocumentLoadError = () => {
+    setPdfLoadError(true);
+    setPdfLoading(false);
+  };
 
   const handleCopyLink = () => {
     const url = window.location.href;
@@ -533,7 +541,7 @@ export default function ResourceDetail({ user }) {
                           variant="contained"
                           startIcon={<MenuBook />}
                           onClick={() => {
-                            setIframeLoading(true);
+                            setPdfLoading(true);
                             setShowPdfViewer(true);
                           }}
                           sx={{
@@ -719,117 +727,82 @@ export default function ResourceDetail({ user }) {
                           position: 'relative'
                         }}
                       >
-                        {/* Loading overlay with animated progress bar */}
-                        {iframeLoading && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: '100%',
-                              height: '100%',
-                              bgcolor: '#1a1a1a',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              zIndex: 10,
-                              gap: 3,
-                              px: 4,
-                            }}
-                          >
-                            {/* Book icon animation */}
-                            <Box sx={{ fontSize: '3rem', animation: 'pulse 1.5s ease-in-out infinite', '@keyframes pulse': { '0%,100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: 0.6, transform: 'scale(1.08)' } } }}>
-                              📖
-                            </Box>
-                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif', fontWeight: 700, textAlign: 'center' }}>
-                              Opening Book...
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#aaa', textAlign: 'center', maxWidth: 320 }}>
-                              {getContent(resource.title)}
-                            </Typography>
-                            {/* Progress bar */}
-                            <Box sx={{ width: '100%', maxWidth: 360, mt: 1 }}>
-                              <Box sx={{ width: '100%', height: 6, bgcolor: '#333', borderRadius: 3, overflow: 'hidden' }}>
-                                <Box
-                                  sx={{
-                                    height: '100%',
-                                    bgcolor: '#8B0000',
-                                    borderRadius: 3,
-                                    width: `${Math.min(loadProgress, 95)}%`,
-                                    transition: 'width 0.4s ease',
-                                    background: 'linear-gradient(90deg, #8B0000, #cc2200)',
-                                  }}
-                                />
-                              </Box>
-                              <Typography variant="caption" sx={{ color: '#777', mt: 0.5, display: 'block', textAlign: 'right' }}>
-                                {Math.min(Math.round(loadProgress), 95)}%
-                              </Typography>
-                            </Box>
-                            <Typography variant="caption" sx={{ color: '#666', textAlign: 'center' }}>
-                              Large books may take a moment to load
-                            </Typography>
+
+                        {/* react-pdf Continuous Scroll Renderer */}
+                        {pdfLoading && !pdfLoadError && (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 2 }}>
+                            <Box sx={{ fontSize: '3rem', animation: 'pulse 1.5s ease-in-out infinite', '@keyframes pulse': { '0%,100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: 0.6, transform: 'scale(1.08)' } } }}>📖</Box>
+                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif', fontWeight: 700 }}>Opening Book...</Typography>
+                            <Typography variant="body2" sx={{ color: '#aaa' }}>Loading pages, please wait...</Typography>
+                            <CircularProgress sx={{ color: '#8B0000', mt: 1 }} />
                           </Box>
                         )}
 
-                        {/* "Taking too long" overlay */}
-                        {loadTooLong && iframeLoading && (
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              bottom: 24,
-                              left: '50%',
-                              transform: 'translateX(-50%)',
-                              bgcolor: 'rgba(0,0,0,0.85)',
-                              borderRadius: 2,
-                              px: 3,
-                              py: 2,
-                              zIndex: 20,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              gap: 1.5,
-                              textAlign: 'center',
-                              maxWidth: 340,
-                              width: '90%',
-                            }}
-                          >
-                            <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600 }}>
-                              Still loading... large PDFs may take up to a minute.
-                            </Typography>
+                        {pdfLoadError && (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 2, px: 3, textAlign: 'center' }}>
+                            <Box sx={{ fontSize: '2.5rem' }}>⚠️</Box>
+                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif' }}>Could not load PDF</Typography>
+                            <Typography variant="body2" sx={{ color: '#aaa', maxWidth: 340 }}>The PDF could not be loaded. You can open it directly in your browser.</Typography>
                             <Button
                               variant="contained"
-                              size="small"
                               href={downloadLink}
                               target="_blank"
                               rel="noopener noreferrer"
                               startIcon={<OpenInNewIcon />}
-                              sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' }, textTransform: 'none', fontWeight: 700, fontSize: '0.8rem' }}
+                              sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#6B0000' }, textTransform: 'none', fontWeight: 700, mt: 1 }}
                             >
-                              Open PDF in Browser Tab
+                              Open in Browser Tab
                             </Button>
                           </Box>
                         )}
 
-                        {/* Always use Google Docs Viewer — works on all devices including mobile */}
-                        <iframe
-                          src={`https://docs.google.com/viewer?url=${encodeURIComponent(downloadLink)}&embedded=true`}
-                          title={`Reading ${getContent(resource.title)}`}
-                          onLoad={() => {
-                            setLoadProgress(100);
-                            setTimeout(() => setIframeLoading(false), 400);
-                          }}
-                          width="100%"
-                          height="100%"
-                          allow="fullscreen"
-                          style={{
-                            border: 'none',
+                        {/* Continuous scroll: render ALL pages stacked vertically */}
+                        <Box
+                          sx={{
+                            overflowY: 'auto',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: '#ffffff',
-                            display: iframeLoading ? 'none' : 'block'
+                            display: pdfLoadError ? 'none' : 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1,
+                            pt: 2,
+                            pb: 4,
+                            bgcolor: '#3a3a3a',
                           }}
-                        />
+                        >
+                          <Document
+                            file={downloadLink}
+                            onLoadSuccess={onDocumentLoadSuccess}
+                            onLoadError={onDocumentLoadError}
+                            loading={null}
+                          >
+                            {numPages && Array.from({ length: numPages }, (_, i) => (
+                              <Box
+                                key={i + 1}
+                                sx={{
+                                  mb: 1.5,
+                                  boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                                  borderRadius: 0.5,
+                                  overflow: 'hidden',
+                                  lineHeight: 0,
+                                }}
+                              >
+                                <Page
+                                  pageNumber={i + 1}
+                                  width={Math.min(window.innerWidth - 32, 900)}
+                                  renderAnnotationLayer
+                                  renderTextLayer
+                                  loading={
+                                    <Box sx={{ width: Math.min(window.innerWidth - 32, 900), height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#2b2b2b' }}>
+                                      <CircularProgress size={24} sx={{ color: '#8B0000' }} />
+                                    </Box>
+                                  }
+                                />
+                              </Box>
+                            ))}
+                          </Document>
+                        </Box>
                       </Box>
                     </Dialog>
                   )}
