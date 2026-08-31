@@ -534,7 +534,6 @@ export default function ResourceDetail({ user }) {
                           startIcon={<MenuBook />}
                           onClick={() => {
                             setIframeLoading(true);
-                            setIframeError(false);
                             setShowPdfViewer(true);
                           }}
                           sx={{
