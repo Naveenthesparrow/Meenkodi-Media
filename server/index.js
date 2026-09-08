@@ -213,12 +213,14 @@ app.use((req, res, next) => {
   next();
 });
 
+const rawBackendUrl = (process.env.BACKEND_URL || "http://localhost:5000").trim().replace(/\/+$/, "").replace(/(%20|\s)+$/, "");
+
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
+      clientID: (process.env.GOOGLE_CLIENT_ID || "").trim(),
+      clientSecret: (process.env.GOOGLE_CLIENT_SECRET || "").trim(),
+      callbackURL: `${rawBackendUrl}/auth/google/callback`,
       // Explicitly set the scope here as well
       scope: ["profile", "email"],
       // Pass through the scope to the authorization URL
@@ -261,10 +263,10 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Normalize and trim trailing spaces in request URLs
+// Normalize and trim trailing spaces in request URLs (handles path before query string)
 app.use((req, res, next) => {
-  if (req.url && (req.url.endsWith(' ') || req.url.endsWith('%20'))) {
-    req.url = req.url.replace(/(%20|\s)+$/, '');
+  if (req.url) {
+    req.url = req.url.replace(/^([^?]*?)(?:%20|\s)+(\?.*)?$/, '$1$2');
   }
   next();
 });
@@ -274,7 +276,7 @@ app.get(
   ["/auth/google", "/auth/google/"],
   (req, res, next) => {
     console.log("Initiating Google OAuth flow...");
-    console.log("Callback URL will be:", `${process.env.BACKEND_URL}/auth/google/callback`);
+    console.log("Callback URL will be:", `${rawBackendUrl}/auth/google/callback`);
     next();
   },
   passport.authenticate("google", {
@@ -285,7 +287,7 @@ app.get(
 );
 
 app.get(
-  "/auth/google/callback",
+  ["/auth/google/callback", "/auth/google/callback/"],
   (req, res, next) => {
     console.log("=== OAuth Callback Received ===");
     console.log("Query params:", req.query);
