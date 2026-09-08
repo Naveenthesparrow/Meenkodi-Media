@@ -261,9 +261,17 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
+// Normalize and trim trailing spaces in request URLs
+app.use((req, res, next) => {
+  if (req.url && (req.url.endsWith(' ') || req.url.endsWith('%20'))) {
+    req.url = req.url.replace(/(%20|\s)+$/, '');
+  }
+  next();
+});
+
 // Auth routes
 app.get(
-  "/auth/google",
+  ["/auth/google", "/auth/google/"],
   (req, res, next) => {
     console.log("Initiating Google OAuth flow...");
     console.log("Callback URL will be:", `${process.env.BACKEND_URL}/auth/google/callback`);
