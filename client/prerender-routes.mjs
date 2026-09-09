@@ -76,14 +76,24 @@ async function apiFetch(path) {
   }
 }
 
-/** Write an HTML file to dist/<routePath>/index.html */
+/** Write an HTML file to dist/<routePath>/index.html AND dist/<routePath>.html */
 function writeRoute(routePath, html) {
-  const dir  = path.join(DIST_DIR, routePath.replace(/^\//, ''));
+  const cleanPath = routePath.replace(/^\//, '');
+  if (!cleanPath) return; // homepage is dist/index.html
+
+  // 1. Write dist/<routePath>/index.html
+  const dir  = path.join(DIST_DIR, cleanPath);
   const file = path.join(dir, 'index.html');
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(file, html, 'utf8');
+
+  // 2. Write dist/<routePath>.html for static hosts that match clean file names
+  const directFile = path.join(DIST_DIR, `${cleanPath}.html`);
+  fs.mkdirSync(path.dirname(directFile), { recursive: true });
+  fs.writeFileSync(directFile, html, 'utf8');
+
   const kb = (html.length / 1024).toFixed(1);
-  console.log(`  ✅  ${routePath} → ${file.replace(DIST_DIR, 'dist')} (${kb} KB)`);
+  console.log(`  ✅  ${routePath} → ${cleanPath}.html & ${cleanPath}/index.html (${kb} KB)`);
 }
 
 /**

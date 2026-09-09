@@ -1,14 +1,10 @@
 # Redirect non-www to www
 https://meenkodi.com/*   https://www.meenkodi.com/:splat  301!
 
-# Pre-rendered static gallery routes (serve generated HTML files)
-/gallery/:slug          /gallery/:slug/index.html        200
-/gallery/:slug/         /gallery/:slug/index.html        200
-/gallery                /gallery/index.html              200
-/gallery/               /gallery/index.html              200
-
-# SPA routing fallback for remaining dynamic routes
+# SPA routing fallback (Render automatically serves matching static .html files first)
 /*                    /index.html                      200
+
+
 
 
 
