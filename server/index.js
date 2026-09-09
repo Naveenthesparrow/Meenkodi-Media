@@ -36,6 +36,18 @@ import researchRoutes from './routes/research.js';
 import directorsRoutes from './routes/directors.js';
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import {
+  buildPageHtml,
+  buildHomeBodyHtml,
+  buildArticlesBodyHtml,
+  buildArticleDetailBodyHtml,
+  buildGalleryBodyHtml,
+  buildGalleryDetailBodyHtml,
+  buildEventsBodyHtml,
+  buildEventDetailBodyHtml,
+  buildExploreBodyHtml,
+} from './prerender.js';
+import { generateAllSitemaps } from './scripts/generate-sitemap.js';
 
 dotenv.config();
 
@@ -72,6 +84,22 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime(),
     mongoConnected: mongoose.connection.readyState === 1
   });
+});
+
+// Admin: regenerate all sitemaps from live DB data
+app.post('/api/sitemap/refresh', async (req, res) => {
+  // Allow only admins; skip auth check if called internally during startup
+  if (req.isAuthenticated && req.isAuthenticated() && req.user && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  try {
+    console.log('[Sitemap] Refresh triggered by', req.user ? req.user.email : 'system');
+    const result = await generateAllSitemaps();
+    res.json({ success: true, generated: result.generated });
+  } catch (err) {
+    console.error('[Sitemap] Refresh error:', err);
+    res.status(500).json({ error: 'Sitemap generation failed', details: err.message });
+  }
 });
 
 // Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
@@ -4992,47 +5020,246 @@ app.use(
   express.static(path.join(process.cwd(), "uploads"))
 );
 
+// ─── Serve client build with SSR HTML injection ──────────────────────────────
 // If a client build exists, serve it as static files and provide an SPA fallback.
 // Use __dirname so this works regardless of working directory when the process starts.
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
 const clientIndex = path.join(clientDist, 'index.html');
 
 if (fs.existsSync(clientIndex)) {
-  console.log('Client build detected at:', clientDist, '— serving static client from Express.');
-  // Serve static assets (JS/CSS/images)
+  console.log('Client build detected at:', clientDist, '— serving static client with SSR injection from Express.');
+  // Serve static assets (JS/CSS/images) — must come before the SSR routes
   app.use(express.static(clientDist));
 
-  let cachedIndexHtml = null;
-  // SPA fallback: only for non-API and non-upload routes
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+  // Cache base HTML in production; re-read on every request in dev so edits are reflected
+  let cachedBaseHtml = null;
+  function getBaseHtml() {
+    if (!cachedBaseHtml || process.env.NODE_ENV !== 'production') {
+      cachedBaseHtml = fs.readFileSync(clientIndex, 'utf8');
+    }
+    return cachedBaseHtml;
+  }
+
+  /** Shared helper: send SSR-injected HTML with error fallback */
+  function sendSsr(res, opts) {
     try {
-      if (!cachedIndexHtml || process.env.NODE_ENV !== 'production') {
-        cachedIndexHtml = fs.readFileSync(clientIndex, 'utf8');
-      }
-      const canonicalHost = 'https://www.meenkodi.com';
-      const requestUrl = req.originalUrl || req.path;
-      const canonicalUrl = `${canonicalHost}${requestUrl}`;
-      const canonicalTag = `<link rel="canonical" href="${canonicalUrl}" />`;
-
-      let html = cachedIndexHtml;
-      if (html.includes('<!-- CANONICAL_TAG -->')) {
-        html = html.replace('<!-- CANONICAL_TAG -->', canonicalTag);
-      } else if (html.includes('<link rel="canonical"')) {
-        html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, canonicalTag);
-      } else {
-        html = html.replace('</head>', `  ${canonicalTag}\n</head>`);
-      }
-
+      const html = buildPageHtml(getBaseHtml(), opts);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.send(html);
+      res.send(html);
     } catch (err) {
-      console.error('Error sending client index with dynamic canonical:', err);
+      console.error('[SSR] Error building page HTML:', err);
+      res.sendFile(clientIndex, (sendErr) => {
+        if (sendErr && !res.headersSent) res.status(500).send('Server error');
+      });
+    }
+  }
+
+  const BASE_URL = 'https://www.meenkodi.com';
+
+  // ── Homepage ──────────────────────────────────────────────────────────────
+  app.get('/', async (req, res) => {
+    try {
+      const [recentArticles, recentEvents] = await Promise.all([
+        Article.find({ status: 'published' })
+          .sort({ publishedAt: -1, createdAt: -1 })
+          .limit(8)
+          .select('title content image authorName _id'),
+        Event.find()
+          .sort({ date: 1, createdAt: -1 })
+          .limit(5)
+          .select('title description date location imageUrl _id'),
+      ]);
+      sendSsr(res, {
+        title: 'Meenkodi | Tamil Heritage | Pandiya, Chola, Chera Dynasties | Southerns History | தென்புலத்தார்',
+        description: 'Meenkodi preserves and shares 5000+ years of Tamil civilization — history, temples, dynasties (Pandiya, Chola, Chera), cultural traditions, and archaeological discoveries. Explore the stories of the Southerns (தென்புலத்தார்).',
+        canonicalUrl: `${BASE_URL}/`,
+        bodyHtml: buildHomeBodyHtml({ recentArticles, recentEvents }),
+      });
+    } catch (err) {
+      console.error('[SSR] Homepage error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/`, bodyHtml: buildHomeBodyHtml() });
+    }
+  });
+
+  // ── Articles list ─────────────────────────────────────────────────────────
+  app.get('/articles', async (req, res) => {
+    try {
+      const articles = await Article.find({ status: 'published' })
+        .sort({ order: 1, publishedAt: -1, createdAt: -1 })
+        .limit(30)
+        .select('title content image authorName _id');
+      sendSsr(res, {
+        title: 'Articles on Tamil Heritage, History & Culture | Meenkodi',
+        description: 'Read in-depth articles on Tamil civilization, Pandiya dynasty, Sangam literature, temple architecture, and cultural traditions on Meenkodi.',
+        canonicalUrl: `${BASE_URL}/articles`,
+        bodyHtml: buildArticlesBodyHtml({ articles }),
+      });
+    } catch (err) {
+      console.error('[SSR] Articles list error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/articles`, bodyHtml: buildArticlesBodyHtml() });
+    }
+  });
+
+  // ── Article detail ────────────────────────────────────────────────────────
+  app.get('/articles/:id', async (req, res) => {
+    try {
+      const article = await Article.findById(req.params.id).select('title content image authorName status _id');
+      if (article && article.status === 'published') {
+        const titleEn = (article.title && article.title.en) || 'Tamil Heritage Article';
+        const descEn = article.content && article.content.en
+          ? article.content.en.replace(/<[^>]+>/g, ' ').trim().slice(0, 200)
+          : 'Read this article on Meenkodi — Tamil heritage, history, and culture.';
+        sendSsr(res, {
+          title: `${titleEn} | Meenkodi Tamil Heritage`,
+          description: descEn,
+          canonicalUrl: `${BASE_URL}/articles/${req.params.id}`,
+          bodyHtml: buildArticleDetailBodyHtml({ article }),
+        });
+      } else {
+        // Article not found or not published — fall back to articles list meta
+        sendSsr(res, {
+          title: 'Article | Meenkodi Tamil Heritage',
+          description: 'Read articles on Tamil heritage on Meenkodi.',
+          canonicalUrl: `${BASE_URL}/articles/${req.params.id}`,
+          bodyHtml: '<main><h1>Article — Meenkodi Tamil Heritage</h1><p><a href="/articles">Browse all articles</a></p></main>',
+        });
+      }
+    } catch (err) {
+      console.error('[SSR] Article detail error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/articles/${req.params.id}`, bodyHtml: '<main><h1>Article — Meenkodi Tamil Heritage</h1></main>' });
+    }
+  });
+
+  // ── Gallery list ──────────────────────────────────────────────────────────
+  app.get('/gallery', async (req, res) => {
+    try {
+      const items = await Gallery.find()
+        .sort({ order: 1, createdAt: -1 })
+        .limit(40)
+        .select('name description imageUrl imageAlt category era location keywords isFolder _id');
+      sendSsr(res, {
+        title: 'Gallery — Tamil Heritage Photos, Temples & Kings | Meenkodi',
+        description: 'Browse our Tamil heritage photo gallery featuring ancient temples, Pandiya and Chola kings, traditional festivals, cultural events, and heritage sites.',
+        canonicalUrl: `${BASE_URL}/gallery`,
+        bodyHtml: buildGalleryBodyHtml({ items }),
+      });
+    } catch (err) {
+      console.error('[SSR] Gallery list error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/gallery`, bodyHtml: buildGalleryBodyHtml() });
+    }
+  });
+
+  // ── Gallery detail ────────────────────────────────────────────────────────
+  app.get('/gallery/:id', async (req, res) => {
+    try {
+      const item = await Gallery.findById(req.params.id)
+        .select('name description imageUrl imageAlt seoTitle seoDescription category era location keywords isFolder _id');
+      if (item) {
+        const nameEn = (item.name && item.name.en) || 'Gallery Item';
+        const seoTitleEn = (item.seoTitle && item.seoTitle.en) || nameEn;
+        const seoDescEn = (item.seoDescription && item.seoDescription.en)
+          || (item.description && item.description.en)
+          || `${nameEn} — Tamil heritage gallery on Meenkodi`;
+        sendSsr(res, {
+          title: `${seoTitleEn} | Meenkodi Tamil Heritage Gallery`,
+          description: seoDescEn.slice(0, 200),
+          canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`,
+          bodyHtml: buildGalleryDetailBodyHtml({ item }),
+        });
+      } else {
+        sendSsr(res, {
+          title: 'Gallery | Meenkodi Tamil Heritage',
+          description: 'Explore our Tamil heritage photo gallery on Meenkodi.',
+          canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`,
+          bodyHtml: '<main><h1>Gallery — Meenkodi</h1><p><a href="/gallery">Back to gallery</a></p></main>',
+        });
+      }
+    } catch (err) {
+      console.error('[SSR] Gallery detail error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`, bodyHtml: '<main><h1>Gallery — Meenkodi Tamil Heritage</h1></main>' });
+    }
+  });
+
+  // ── Events list ───────────────────────────────────────────────────────────
+  app.get('/events', async (req, res) => {
+    try {
+      const events = await Event.find()
+        .sort({ date: 1, createdAt: -1 })
+        .limit(30)
+        .select('title description date location imageUrl _id');
+      sendSsr(res, {
+        title: 'Tamil Heritage Events & Workshops | Meenkodi',
+        description: 'Join upcoming Tamil heritage events, cultural workshops, and community gatherings celebrating 5000+ years of Tamil civilization, Pandiya dynasty history, and Sangam literature.',
+        canonicalUrl: `${BASE_URL}/events`,
+        bodyHtml: buildEventsBodyHtml({ events }),
+      });
+    } catch (err) {
+      console.error('[SSR] Events list error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/events`, bodyHtml: buildEventsBodyHtml() });
+    }
+  });
+
+  // ── Event detail ──────────────────────────────────────────────────────────
+  app.get('/events/:id', async (req, res) => {
+    try {
+      const event = await Event.findById(req.params.id)
+        .select('title description date location imageUrl _id');
+      if (event) {
+        const titleEn = (event.title && event.title.en) || 'Tamil Heritage Event';
+        const descEn = (event.description && event.description.en)
+          || `${titleEn} — Tamil heritage event on Meenkodi`;
+        sendSsr(res, {
+          title: `${titleEn} | Meenkodi Events`,
+          description: descEn.slice(0, 200),
+          canonicalUrl: `${BASE_URL}/events/${req.params.id}`,
+          bodyHtml: buildEventDetailBodyHtml({ event }),
+        });
+      } else {
+        sendSsr(res, {
+          title: 'Event | Meenkodi Tamil Heritage',
+          description: 'Tamil heritage events on Meenkodi.',
+          canonicalUrl: `${BASE_URL}/events/${req.params.id}`,
+          bodyHtml: '<main><h1>Event — Meenkodi Tamil Heritage</h1><p><a href="/events">Back to events</a></p></main>',
+        });
+      }
+    } catch (err) {
+      console.error('[SSR] Event detail error:', err);
+      sendSsr(res, { canonicalUrl: `${BASE_URL}/events/${req.params.id}`, bodyHtml: '<main><h1>Event — Meenkodi Tamil Heritage</h1></main>' });
+    }
+  });
+
+  // ── Explore (static content) ──────────────────────────────────────────────
+  app.get('/explore', (req, res) => {
+    sendSsr(res, {
+      title: 'Explore Tamil Heritage — Temples, Literature, Dance, Food & More | Meenkodi',
+      description: 'Explore Tamil heritage across eight categories: Dravidian temples, Sangam literature, classical dance, traditional foods, festivals, clothing, ancient science, and the Five Tamil Lands.',
+      canonicalUrl: `${BASE_URL}/explore`,
+      bodyHtml: buildExploreBodyHtml(),
+    });
+  });
+
+  // ── Generic SPA catch-all (for all other routes) ──────────────────────────
+  // Injects canonical URL only — no DB fetch needed for uncovered routes
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return;
+    try {
+      const canonicalUrl = `${BASE_URL}${req.originalUrl || req.path}`;
+      const html = buildPageHtml(getBaseHtml(), {
+        canonicalUrl,
+        title: '',
+        description: '',
+        bodyHtml: '',
+      });
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(html);
+    } catch (err) {
+      console.error('[SSR] Catch-all error:', err);
       res.sendFile(clientIndex, (sendErr) => {
         if (sendErr && !res.headersSent) res.status(500).send('Server error');
       });
     }
   });
+
 } else {
   console.log('No client build found at:', clientIndex, "— the Web Service will only serve API routes until you build the client.");
 }
