@@ -127,25 +127,40 @@ function inject(baseHtml, { title, description, canonicalUrl, bodyHtml }) {
 
 // ─── Page-specific body builders ─────────────────────────────────────────────
 
-function galleryListHtml(items) {
-  const visible = items.filter(i => !i.isFolder);
-  const rows = visible.map(item => {
-    const name   = escapeHtml(pick(item.name));
-    const desc   = escapeHtml(truncate(pick(item.description)) ||
-                   `${pick(item.name)} — part of the ${item.category || 'Tamil heritage'} collection on Meenkodi.`);
-    const alt    = escapeHtml(pick(item.imageAlt) || pick(item.name) || 'Tamil heritage gallery image');
-    const cat    = escapeHtml(item.category || '');
-    const era    = item.era ? ` · ${escapeHtml(item.era)}` : '';
-    const img    = item.imageUrl
-      ? `<img src="${escapeHtml(item.imageUrl)}" alt="${alt}" loading="lazy" />`
-      : '';
+function slugify(str) {
+  if (!str) return '';
+  return str
+    .toString()
+    .toLowerCase()
+    .trim()
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function galleryFolderIndexHtml(foldersMap, nonFolders) {
+  const folderList = Object.values(foldersMap).map(f => {
+    const name  = escapeHtml(f.name);
+    const slug  = escapeHtml(f.slug);
+    const count = f.items.length;
     return `
-  <figure>
-    <a href="/gallery/${item._id}">${img}</a>
-    <h2><a href="/gallery/${item._id}">${name}</a></h2>
-    <p>${desc}</p>
-    ${cat ? `<p><small>Category: ${cat}${era}</small></p>` : ''}
-  </figure>`;
+    <li>
+      <h2><a href="/gallery/${slug}">${name}</a></h2>
+      <p><a href="/gallery/${slug}">${name}</a> (${count} items) — Tamil heritage gallery collection on Meenkodi.</p>
+    </li>`;
+  }).join('\n');
+
+  const photoList = nonFolders.slice(0, 40).map(item => {
+    const name = escapeHtml(pick(item.name));
+    const alt  = escapeHtml(pick(item.imageAlt) || pick(item.name));
+    const img  = item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${alt}" loading="lazy" />` : '';
+    return `
+    <figure>
+      <h3><a href="/gallery/${item._id}">${name}</a></h3>
+      ${img}
+      <figcaption>${name} — Tamil heritage gallery photo on Meenkodi.</figcaption>
+    </figure>`;
   }).join('\n');
 
   return `
@@ -154,9 +169,51 @@ function galleryListHtml(items) {
   <p>
     Browse our Tamil heritage gallery: photos of ancient Pandiya and Chola kings, Dravidian temples,
     traditional festivals, cultural events, and heritage sites across Tamil Nadu and the Tamil diaspora.
-    Every image is named and described to preserve its historical context.
   </p>
-  ${rows}
+
+  <section>
+    <h2>Gallery Collections &amp; Folders</h2>
+    <ul>
+      ${folderList}
+    </ul>
+  </section>
+
+  <section>
+    <h2>All Photos</h2>
+    ${photoList}
+  </section>
+</main>`;
+}
+
+function galleryFolderPageHtml(folderName, folderSlug, folderItems) {
+  const name = escapeHtml(folderName);
+  const itemsHtml = folderItems.map(item => {
+    const itemName = escapeHtml(pick(item.name));
+    const rawDesc  = pick(item.description);
+    const desc     = escapeHtml(truncate(rawDesc, 200) || `${pick(item.name)} — part of the ${folderName} heritage collection on Meenkodi.`);
+    const alt      = escapeHtml(pick(item.imageAlt) || pick(item.name) || folderName);
+    const img      = item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${alt}" loading="lazy" />` : '';
+    return `
+  <figure>
+    <h3><a href="/gallery/${item._id}">${itemName}</a></h3>
+    <a href="/gallery/${item._id}">${img}</a>
+    <figcaption>
+      <strong>${itemName}</strong>
+      <p>${desc}</p>
+    </figcaption>
+  </figure>`;
+  }).join('\n');
+
+  return `
+<main>
+  <h1>${name} | Meenkodi Gallery</h1>
+  <p>
+    Photos, images, and visual documentation for <strong>${name}</strong> — part of the Meenkodi Tamil heritage collection.
+  </p>
+  <p><a href="/gallery">← Back to Gallery Folders</a></p>
+  <section>
+    ${itemsHtml || `<p>No images in this folder yet.</p>`}
+  </section>
 </main>`;
 }
 
@@ -437,21 +494,69 @@ async function main() {
     console.log(`  ✅  / → dist/index.html (homepage updated)`);
   }
 
-  // ── Gallery list ──────────────────────────────────────────────────────────
+  // ── Gallery list & folder pages ───────────────────────────────────────────
   {
     const data = await apiFetch('/api/gallery');
     const items = Array.isArray(data) ? data : [];
-    const nonFolders = items.filter(i => !i.isFolder);
-    const html = inject(baseHtml, {
-      title: `Gallery — Tamil Heritage Photos, Kings, Temples & Culture | Meenkodi`,
-      description: `Browse ${nonFolders.length}+ Tamil heritage photos: Pandiya kings, Dravidian temples, traditional festivals, and cultural events. Each image is named and captioned.`,
-      canonicalUrl: `${BASE_URL}/gallery`,
-      bodyHtml: galleryListHtml(items),
-    });
-    writeRoute('/gallery', html);
+    const isLegacyFolder = (i) => (
+      i.category === 'Other' &&
+      i.customCategoryName &&
+      (i.customCategoryName.en || i.customCategoryName.ta) &&
+      (i.name?.en?.includes(' - Folder') || i.name?.ta?.includes(' - Folder'))
+    );
+    const nonFolders = items.filter(i => !(i.isFolder || isLegacyFolder(i)));
+    const folderObjects = items.filter(i => i.isFolder || isLegacyFolder(i));
 
-    // Gallery detail pages
-    console.log(`  🖼️   Pre-rendering ${nonFolders.length} gallery detail pages…`);
+    // Group folders by slug
+    const foldersMap = {};
+
+    for (const fObj of folderObjects) {
+      const fName = pick(fObj.customCategoryName || fObj.name);
+      if (!fName) continue;
+      const slug = slugify(fName);
+      if (!slug) continue;
+      if (!foldersMap[slug]) {
+        foldersMap[slug] = { name: fName, slug, items: [] };
+      }
+    }
+
+    for (const item of nonFolders) {
+      const catName = pick(item.customCategoryName) || item.category;
+      if (catName) {
+        const slug = slugify(catName);
+        if (slug) {
+          if (!foldersMap[slug]) {
+            foldersMap[slug] = { name: catName, slug, items: [] };
+          }
+          foldersMap[slug].items.push(item);
+        }
+      }
+    }
+
+    // 1. Write dist/gallery/index.html (lists ALL folders & photos)
+    const indexHtml = inject(baseHtml, {
+      title: `Gallery — Tamil Heritage Photos, Kings, Temples & Culture | Meenkodi`,
+      description: `Browse Tamil heritage photo collections: Pasupathi Pandiyar, Immanuvel Sekaranar, Pandiya kings, Dravidian temples, and cultural events.`,
+      canonicalUrl: `${BASE_URL}/gallery`,
+      bodyHtml: galleryFolderIndexHtml(foldersMap, nonFolders),
+    });
+    writeRoute('/gallery', indexHtml);
+
+    // 2. Write dist/gallery/[slug]/index.html for each folder
+    console.log(`  📁  Pre-rendering ${Object.keys(foldersMap).length} folder pages…`);
+    for (const slug of Object.keys(foldersMap)) {
+      const folder = foldersMap[slug];
+      const folderHtml = inject(baseHtml, {
+        title: `${folder.name} | Meenkodi Gallery`,
+        description: `Photos and heritage documentation for ${folder.name} on Meenkodi.`,
+        canonicalUrl: `${BASE_URL}/gallery/${slug}`,
+        bodyHtml: galleryFolderPageHtml(folder.name, slug, folder.items),
+      });
+      writeRoute(`/gallery/${slug}`, folderHtml);
+    }
+
+    // 3. Write detail pages dist/gallery/[id]/index.html for each photo
+    console.log(`  🖼️   Pre-rendering ${nonFolders.length} photo detail pages…`);
     for (const item of nonFolders) {
       const name    = pick(item.name) || 'Tamil Heritage Image';
       const seoT    = pick(item.seoTitle) || name;

@@ -701,6 +701,7 @@ function App() {
               <Route path="/articles" element={<Articles user={user} />} />
               <Route path="/my-articles" element={<MyArticles user={user} />} />
               <Route path="/gallery" element={<Gallery user={user} />} />
+              <Route path="/gallery/:folderSlug" element={<Gallery user={user} />} />
               <Route path="/events" element={<Events user={user} />} />
               <Route path="/resources" element={<Resources user={user} />} />
               <Route path="/resources/:id" element={<ResourceDetail user={user} />} />
