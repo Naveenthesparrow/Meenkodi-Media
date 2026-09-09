@@ -225,34 +225,51 @@ export function buildArticleDetailBodyHtml({ article }) {
 
 /**
  * Build hidden SSR body HTML for the /gallery listing page.
+ * Every gallery item gets:
+ *   - Its actual name as an <h2> heading
+ *   - The image with alt = actual name
+ *   - 1-2 sentence description (from DB or auto-generated from name + category)
  */
 export function buildGalleryBodyHtml({ items = [] } = {}) {
-  const nonFolders = items.filter(i => !i.isFolder).slice(0, 20);
+  const nonFolders = items.filter(i => !i.isFolder).slice(0, 40);
   const itemHtml = nonFolders.map(item => {
-    const name = pick(item.name);
-    const desc = truncate(pick(item.description), 160);
-    const alt = pick(item.imageAlt) || `${name} — Tamil heritage gallery image`;
-    const img = item.imageUrl
+    const name    = pick(item.name);
+    const rawDesc = pick(item.description);
+    const cat     = item.category || 'Tamil heritage';
+    const era     = item.era ? ` from the ${item.era} period` : '';
+    // Use DB description if present; otherwise auto-generate a meaningful sentence
+    const desc    = rawDesc
+      ? truncate(rawDesc, 200)
+      : `${name}${era} — part of the ${cat} collection on Meenkodi, preserving the visual heritage of Tamil civilization.`;
+    const alt     = pick(item.imageAlt) || name;
+    const img     = item.imageUrl
       ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(alt)}" loading="lazy" />`
       : '';
     return `
   <figure>
+    <h2><a href="/gallery/${item._id}">${escapeHtml(name)}</a></h2>
     <a href="/gallery/${item._id}">${img}</a>
-    <figcaption><a href="/gallery/${item._id}">${escapeHtml(name)}</a>${desc ? ` — ${escapeHtml(desc)}` : ''}</figcaption>
+    <figcaption>
+      <strong>${escapeHtml(name)}</strong>
+      <p>${escapeHtml(desc)}</p>
+      ${item.category ? `<p><small>Category: ${escapeHtml(item.category)}${era ? ` · ${escapeHtml(item.era)}` : ''}</small></p>` : ''}
+    </figcaption>
   </figure>`;
   }).join('\n');
 
   return `
 <main>
-  <h1>Gallery — Tamil Heritage Photos, Temples, Kings &amp; Culture — Meenkodi</h1>
+  <h1>Gallery — Tamil Heritage Photos, Kings, Temples &amp; Culture | Meenkodi</h1>
   <p>
-    Browse photos of ancient Tamil temples, Pandiya and Chola kings, traditional festivals,
-    cultural events, and heritage sites across Tamil Nadu and the Tamil diaspora.
+    Browse our Tamil heritage gallery: photos of ancient Pandiya and Chola kings, Dravidian temples,
+    traditional festivals, cultural events, and heritage sites across Tamil Nadu and the Tamil diaspora.
+    Every image is named and described to preserve its historical context.
   </p>
   ${itemHtml}
 </main>
 `;
 }
+
 
 /**
  * Build hidden SSR body HTML for a single gallery item detail page.

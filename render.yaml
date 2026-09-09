@@ -18,5 +18,8 @@ services:
     branch: main
     plan: free
     region: oregon
-    buildCommand: cd client && npm install && npm run build
+    # After Vite build, run the pre-render script to generate per-route HTML files
+    # The pre-render script fetches live content from the production API and writes
+    # gallery/index.html, articles/index.html, articles/:id/index.html etc. into dist/
+    buildCommand: cd client && npm install --include=dev && npm run build:ssr
     publishPath: client/dist
