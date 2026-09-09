@@ -5130,23 +5130,67 @@ if (fs.existsSync(clientIndex)) {
     }
   });
 
+  function renderPage(opts) {
+    return buildPageHtml(getBaseHtml(), {
+      canonicalUrl: opts.canonicalUrl || `${BASE_URL}/gallery`,
+      title: opts.title || '',
+      description: opts.description || '',
+      bodyHtml: opts.bodyHtml || '',
+    });
+  }
+
+  async function getGalleryItemsByFolder(folderName) {
+    if (!folderName) return getAllGalleryItems();
+    const queryRegex = new RegExp(folderName, 'i');
+    const items = await Gallery.find({
+      isFolder: { $ne: true },
+      $or: [
+        { 'customCategoryName.en': queryRegex },
+        { 'customCategoryName.ta': queryRegex },
+        { category: queryRegex },
+        { 'name.en': queryRegex },
+        { 'name.ta': queryRegex },
+        { keywords: queryRegex },
+        { tags: queryRegex }
+      ]
+    }).sort({ order: 1, createdAt: -1 });
+
+    return items.map(item => ({
+      name: (typeof item.name === 'object' ? (item.name.en || item.name.ta) : item.name) || 'Gallery Item',
+      imageUrl: item.imageUrl || '',
+    }));
+  }
+
+  async function getAllGalleryItems() {
+    const items = await Gallery.find({ isFolder: { $ne: true } })
+      .sort({ order: 1, createdAt: -1 })
+      .limit(50);
+
+    return items.map(item => ({
+      name: (typeof item.name === 'object' ? (item.name.en || item.name.ta) : item.name) || 'Gallery Item',
+      imageUrl: item.imageUrl || '',
+    }));
+  }
+
   // ── Gallery list ──────────────────────────────────────────────────────────
   app.get('/gallery', async (req, res) => {
-    try {
-      const items = await Gallery.find()
-        .sort({ order: 1, createdAt: -1 })
-        .limit(40)
-        .select('name description imageUrl imageAlt category era location keywords isFolder _id');
-      sendSsr(res, {
-        title: 'Gallery — Tamil Heritage Photos, Temples & Kings | Meenkodi',
-        description: 'Browse our Tamil heritage photo gallery featuring ancient temples, Pandiya and Chola kings, traditional festivals, cultural events, and heritage sites.',
-        canonicalUrl: `${BASE_URL}/gallery`,
-        bodyHtml: buildGalleryBodyHtml({ items }),
-      });
-    } catch (err) {
-      console.error('[SSR] Gallery list error:', err);
-      sendSsr(res, { canonicalUrl: `${BASE_URL}/gallery`, bodyHtml: buildGalleryBodyHtml() });
-    }
+    const folder = req.query.folder;
+    const items = folder
+      ? await getGalleryItemsByFolder(folder)
+      : await getAllGalleryItems();
+
+    const bodyHtml = items.map(item => `
+    <h3>${item.name}</h3>
+    <img src="${item.imageUrl}" alt="${item.name}" />
+    <p>${item.name} — part of the ${folder || 'Meenkodi'} heritage collection.</p>
+  `).join('');
+
+    const html = renderPage({
+      title: folder ? `${folder} | Meenkodi Gallery` : 'Gallery | Meenkodi',
+      description: folder ? `Photos from ${folder}` : 'Meenkodi photo gallery',
+      bodyHtml
+    });
+    res.send(html);
   });
 
   // ── Gallery detail ────────────────────────────────────────────────────────
