@@ -1,25 +1,7 @@
 # Redirect non-www to www
 https://meenkodi.com/*   https://www.meenkodi.com/:splat  301!
 
-# Pre-rendered static routes (serve generated HTML files for crawlers & browsers)
-/gallery              /gallery/index.html              200
-/gallery/             /gallery/index.html              200
-/gallery/*            /gallery/:splat/index.html       200
-/articles             /articles/index.html             200
-/articles/            /articles/index.html             200
-/articles/*           /articles/:splat/index.html      200
-/events               /events/index.html               200
-/events/              /events/index.html               200
-/events/*             /events/:splat/index.html        200
-/explore              /explore/index.html              200
-/explore/             /explore/index.html              200
-/seeds-and-footprints /seeds-and-footprints/index.html 200
-/seeds-and-footprints/ /seeds-and-footprints/index.html 200
-/faq                  /faq/index.html                  200
-/faq/                 /faq/index.html                  200
-/resources            /resources/index.html            200
-/resources/           /resources/index.html            200
-
-# SPA routing fallback for remaining dynamic routes
+# SPA routing fallback (Render automatically serves existing static files from dist/ first)
 /*                    /index.html                      200
+
 
