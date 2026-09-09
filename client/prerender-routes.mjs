@@ -447,6 +447,57 @@ function resourcesHtml() {
 </main>`;
 }
 
+function categoryPageHtml(categoryTitle, categoryDesc, items) {
+  const itemRows = items.map(item => {
+    const name = escapeHtml(pick(item.name || item.title));
+    const desc = escapeHtml(truncate(pick(item.description || item.content || item.significance), 250));
+    const imgUrl = item.imageUrl || item.image || item.media?.url;
+    const img = imgUrl ? `<img src="${escapeHtml(imgUrl)}" alt="${name} — ${categoryTitle}" loading="lazy" />` : '';
+    return `
+    <article>
+      <h2>${name}</h2>
+      ${img}
+      ${desc ? `<p>${desc}</p>` : ''}
+    </article>`;
+  }).join('\n');
+
+  return `
+<main>
+  <h1>${escapeHtml(categoryTitle)}</h1>
+  <p>${escapeHtml(categoryDesc)}</p>
+  <section>
+    ${itemRows}
+  </section>
+  <p><a href="/explore">← Back to Explore Heritage</a></p>
+</main>`;
+}
+
+function landDetailHtml(land) {
+  const name = pick(land.name) || land.type;
+  const desc = truncate(pick(land.description), 400);
+  const gods = (land.gods || []).join(', ');
+  const people = (land.people || []).join(', ');
+  const flora = (land.flora || []).join(', ');
+  const fauna = (land.fauna || []).join(', ');
+  const poetry = (land.poetry || []).map(escapeHtml).join('<br/>');
+  const img = land.image ? `<img src="${escapeHtml(land.image)}" alt="${escapeHtml(name)} land" loading="lazy" />` : '';
+
+  return `
+<main>
+  <h1>${escapeHtml(name)} — Five Tamil Lands (Ainthinai)</h1>
+  <p>Landscape Type: <strong>${escapeHtml(land.type || '')}</strong></p>
+  ${img}
+  ${desc ? `<p>${escapeHtml(desc)}</p>` : ''}
+  ${gods ? `<p><strong>Deities:</strong> ${escapeHtml(gods)}</p>` : ''}
+  ${people ? `<p><strong>Inhabitants:</strong> ${escapeHtml(people)}</p>` : ''}
+  ${flora ? `<p><strong>Flora:</strong> ${escapeHtml(flora)}</p>` : ''}
+  ${fauna ? `<p><strong>Fauna:</strong> ${escapeHtml(fauna)}</p>` : ''}
+  ${poetry ? `<blockquote style="font-style:italic;"><p>${poetry}</p></blockquote>` : ''}
+  <p><a href="/explore">← Back to Explore Heritage</a></p>
+</main>`;
+}
+
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -681,6 +732,62 @@ async function main() {
   for (const r of staticRoutes) {
     const html = inject(baseHtml, { ...r, canonicalUrl: `${BASE_URL}${r.path}` });
     writeRoute(r.path, html);
+  }
+
+  // ── Explore Categories ──────────────────────────────────────────────────
+  const exploreCategories = [
+    { path: '/explore/temples', api: '/api/temples', title: 'Tamil Temples & Dravidian Architecture | Meenkodi', desc: 'Ancient Dravidian temples patronized by Pandiya, Chola, and Chera kings.' },
+    { path: '/explore/literature', api: '/api/literature', title: 'Sangam Literature & Ancient Poetry | Meenkodi', desc: 'Classical Tamil Sangam literature including Thirukkural, Silappatikaram, Purananuru, and Agananuru.' },
+    { path: '/explore/dance', api: '/api/dance', title: 'Tamil Dance & Performing Arts | Meenkodi', desc: 'Bharatanatyam, Therukoothu, Karagattam, Silambam, and traditional Tamil performing arts.' },
+    { path: '/explore/foods', api: '/api/foods', title: 'Traditional Tamil Foods & Cuisine | Meenkodi', desc: 'Culinary traditions of ancient Tamil Nadu, Sangam age recipes, and medicinal food heritage.' },
+    { path: '/explore/festivals', api: '/api/festivals', title: 'Tamil Festivals & Celebrations | Meenkodi', desc: 'Pongal, Chithirai Thiruvizha, Karthigai Deepam, Aadi Perukku, and heritage festivals.' },
+    { path: '/explore/clothing', api: '/api/clothing', title: 'Traditional Tamil Clothing & Attire | Meenkodi', desc: 'Kanchipuram silk sarees, veshti, ancient weaving crafts, and traditional royal Tamil garments.' },
+    { path: '/explore/ancientscience', api: '/api/ancientscience', title: 'Ancient Tamil Science & Technology | Meenkodi', desc: 'Siddha medicine, metallurgy, astronomy, irrigation engineering, and maritime navigation.' },
+  ];
+
+  for (const cat of exploreCategories) {
+    const items = await apiFetch(cat.api);
+    const list = Array.isArray(items) ? items : [];
+    const html = inject(baseHtml, {
+      title: cat.title,
+      description: cat.desc,
+      canonicalUrl: `${BASE_URL}${cat.path}`,
+      bodyHtml: categoryPageHtml(cat.title, cat.desc, list),
+    });
+    writeRoute(cat.path, html);
+  }
+
+  // ── Five Tamil Lands (Ainthinai) ──────────────────────────────────────────
+  {
+    const lands = await apiFetch('/api/lands');
+    const landList = Array.isArray(lands) ? lands : [];
+    console.log(`  🌾  Pre-rendering ${landList.length} Tamil Land pages…`);
+    for (const land of landList) {
+      const name = pick(land.name) || land.type;
+      const slug = slugify(name);
+      const desc = truncate(pick(land.description), 200) || `${name} — Five Tamil Lands (Ainthinai) on Meenkodi.`;
+      const bodyHtml = landDetailHtml(land);
+
+      if (slug) {
+        const htmlSlug = inject(baseHtml, {
+          title: `${name} — Five Tamil Lands (Ainthinai) | Meenkodi`,
+          description: desc,
+          canonicalUrl: `${BASE_URL}/explore/lands/${slug}`,
+          bodyHtml,
+        });
+        writeRoute(`/explore/lands/${slug}`, htmlSlug);
+      }
+
+      if (land._id) {
+        const htmlId = inject(baseHtml, {
+          title: `${name} — Five Tamil Lands (Ainthinai) | Meenkodi`,
+          description: desc,
+          canonicalUrl: `${BASE_URL}/explore/lands/${land._id}`,
+          bodyHtml,
+        });
+        writeRoute(`/explore/lands/${land._id}`, htmlId);
+      }
+    }
   }
 
   // Write dist/_redirects with explicit rules for all pre-rendered paths
