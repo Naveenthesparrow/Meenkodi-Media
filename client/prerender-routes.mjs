@@ -76,10 +76,14 @@ async function apiFetch(path) {
   }
 }
 
+const prerenderedPaths = new Set();
+
 /** Write an HTML file to dist/<routePath>/index.html AND dist/<routePath>.html */
 function writeRoute(routePath, html) {
   const cleanPath = routePath.replace(/^\//, '');
   if (!cleanPath) return; // homepage is dist/index.html
+
+  prerenderedPaths.add(routePath);
 
   // 1. Write dist/<routePath>/index.html
   const dir  = path.join(DIST_DIR, cleanPath);
@@ -105,25 +109,35 @@ function inject(baseHtml, { title, description, canonicalUrl, bodyHtml }) {
 
   // 1. Canonical
   const canonical = `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`;
+  if (html.includes('<!-- CANONICAL_TAG -->')) {
+    html = html.replace('<!-- CANONICAL_TAG -->', canonical);
+  }
   if (html.includes('<link rel="canonical"')) {
-    html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, canonical);
+    html = html.replace(/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/gi, canonical);
   } else {
     html = html.replace('</head>', `  ${canonical}\n</head>`);
   }
 
+  // Also update open graph & twitter URL meta tags + alternate hreflang tags
+  if (canonicalUrl) {
+    html = html.replace(/(<meta\s+property="og:url"\s+content=")[^"]*(")/gi, `$1${escapeHtml(canonicalUrl)}$2`);
+    html = html.replace(/(<meta\s+property="twitter:url"\s+content=")[^"]*(")/gi, `$1${escapeHtml(canonicalUrl)}$2`);
+    html = html.replace(/(<link\s+rel="alternate"\s+hreflang="[^"]*"\s+href=")[^"]*(")/gi, `$1${escapeHtml(canonicalUrl)}$2`);
+  }
+
   // 2. Title
   if (title) {
-    html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)}</title>`);
-    html = html.replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/,
-      `$1${escapeHtml(title)}$2`);
+    html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+    html = html.replace(/(<meta\s+name="title"\s+content=")[^"]*(")/gi, `$1${escapeHtml(title)}$2`);
+    html = html.replace(/(<meta\s+property="og:title"\s+content=")[^"]*(")/gi, `$1${escapeHtml(title)}$2`);
+    html = html.replace(/(<meta\s+property="twitter:title"\s+content=")[^"]*(")/gi, `$1${escapeHtml(title)}$2`);
   }
 
   // 3. Meta description
   if (description) {
-    html = html.replace(/(<meta\s+name="description"\s+content=")[^"]*(")/,
-      `$1${escapeHtml(description)}$2`);
-    html = html.replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/,
-      `$1${escapeHtml(description)}$2`);
+    html = html.replace(/(<meta\s+name="description"\s+content=")[^"]*(")/gi, `$1${escapeHtml(description)}$2`);
+    html = html.replace(/(<meta\s+property="og:description"\s+content=")[^"]*(")/gi, `$1${escapeHtml(description)}$2`);
+    html = html.replace(/(<meta\s+property="twitter:description"\s+content=")[^"]*(")/gi, `$1${escapeHtml(description)}$2`);
   }
 
   // 4. SSR body block — injected before </body>, hidden from visual UI
@@ -134,6 +148,7 @@ function inject(baseHtml, { title, description, canonicalUrl, bodyHtml }) {
 
   return html;
 }
+
 
 // ─── Page-specific body builders ─────────────────────────────────────────────
 
@@ -667,6 +682,23 @@ async function main() {
     const html = inject(baseHtml, { ...r, canonicalUrl: `${BASE_URL}${r.path}` });
     writeRoute(r.path, html);
   }
+
+  // Write dist/_redirects with explicit rules for all pre-rendered paths
+  const redirectLines = [
+    '# Redirect non-www to www',
+    'https://meenkodi.com/*   https://www.meenkodi.com/:splat  301!',
+    '',
+    '# Explicit pre-rendered static route mappings generated at build time',
+    ...Array.from(prerenderedPaths).flatMap(p => [
+      `${p}  ${p}.html  200`,
+      `${p}/ ${p}.html  200`
+    ]),
+    '',
+    '# SPA routing fallback for remaining dynamic routes',
+    '/*  /index.html  200'
+  ];
+  fs.writeFileSync(path.join(DIST_DIR, '_redirects'), redirectLines.join('\n'), 'utf8');
+  console.log(`📄  Generated dist/_redirects with ${prerenderedPaths.size * 2} static route rules`);
 
   console.log('\n✅  Pre-render complete!\n');
 }
