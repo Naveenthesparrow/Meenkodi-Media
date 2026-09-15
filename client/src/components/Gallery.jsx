@@ -34,8 +34,22 @@ import MediaUpload from './common/MediaUpload';
 import PageHeading from './common/PageHeading';
 import OptimizedImage from './common/OptimizedImage';
 import { useTranslation } from 'react-i18next';
+import GalleryDetail from './GalleryDetail';
 
 let cachedGalleryData = null;
+
+// helper to create stable slug from category names (supports unicode characters like Tamil)
+const slugify = (str) => {
+  if (!str) return '';
+  return str
+    .toString()
+    .toLowerCase()
+    .trim()
+    .normalize('NFKD')
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
 
 const isLegacyFolder = (item) => (
   item.category === 'Other' &&
@@ -166,18 +180,24 @@ export default function Gallery({ user }) {
     }
   }, [folderSlug, location.search]);
 
-  // helper to create stable slug from category names (supports unicode characters like Tamil)
-  const slugify = (str) => {
-    if (!str) return '';
-    return str
-      .toString()
-      .toLowerCase()
-      .trim()
-      .normalize('NFKD')
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  };
+  const isPhotoItem = useMemo(() => {
+    if (!folderSlug) return false;
+    if (galleryItems.length === 0) return false;
+    const resolveName = (bilingual) => {
+      if (!bilingual) return '';
+      if (typeof bilingual === 'string') return bilingual;
+      return i18n.language === 'ta' && bilingual?.ta ? bilingual.ta : bilingual?.en || '';
+    };
+    const folderExists = galleryItems.some(item => {
+      if (!(item.isFolder || isLegacyFolder(item))) return false;
+      const name = resolveName(item.customCategoryName || item.name);
+      return slugify(name) === folderSlug.toLowerCase() || name.toLowerCase() === folderSlug.toLowerCase();
+    });
+    if (!folderExists && galleryItems.some(item => item._id === folderSlug)) {
+      return true;
+    }
+    return false;
+  }, [folderSlug, galleryItems, i18n.language]);
 
   useEffect(() => {
     const resolveName = (bilingual) => {
@@ -656,6 +676,10 @@ export default function Gallery({ user }) {
     updated.splice(toIndex, 0, moved);
     setFolderOrder(updated);
   };
+
+  if (isPhotoItem) {
+    return <GalleryDetail user={user} />;
+  }
 
   if (loading) {
     return (
