@@ -24,30 +24,49 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useBilingualContent } from '../utils/bilingualContent';
 import SEO from "./common/SEO";
 
+const cachedEventDetails = {};
+
 export default function EventDetail({ user }) {
   const getContent = useBilingualContent();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const hasCache = !!cachedEventDetails[id];
+  const [event, setEvent] = useState(() => cachedEventDetails[id] || null);
+  const [loading, setLoading] = useState(!hasCache);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [location, setLocation] = useState("");
-  const [imageLink, setImageLink] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [videoLink, setVideoLink] = useState("");
+  const [title, setTitle] = useState(() => {
+    const cached = cachedEventDetails[id];
+    if (!cached) return "";
+    return typeof cached.title === 'object' ? cached.title : { en: cached.title || '', ta: cached.title || '' };
+  });
+  const [description, setDescription] = useState(() => {
+    const cached = cachedEventDetails[id];
+    if (!cached) return "";
+    return typeof cached.description === 'object' ? cached.description : { en: cached.description || '', ta: cached.description || '' };
+  });
+  const [date, setDate] = useState(() => {
+    const cached = cachedEventDetails[id];
+    return cached && cached.date ? cached.date.substring(0, 10) : "";
+  });
+  const [location, setLocation] = useState(() => {
+    const cached = cachedEventDetails[id];
+    if (!cached) return "";
+    return typeof cached.location === 'object' ? cached.location : { en: cached.location || '', ta: cached.location || '' };
+  });
+  const [imageLink, setImageLink] = useState(() => cachedEventDetails[id]?.imageLink || "");
+  const [imageUrl, setImageUrl] = useState(() => cachedEventDetails[id]?.imageUrl || "");
+  const [videoUrl, setVideoUrl] = useState(() => cachedEventDetails[id]?.videoUrl || "");
+  const [videoLink, setVideoLink] = useState(() => cachedEventDetails[id]?.videoLink || "");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!hasCache) setLoading(true);
     fetch(`/api/events/${id}`)
       .then((res) => res.json())
       .then((data) => {
+        cachedEventDetails[id] = data;
         setEvent(data);
-        // Handle both old string format and new bilingual object format
         setTitle(typeof data.title === 'object' ? data.title : { en: data.title || '', ta: data.title || '' });
         setDescription(typeof data.description === 'object' ? data.description : { en: data.description || '', ta: data.description || '' });
         setDate(data.date ? data.date.substring(0, 10) : "");
@@ -59,7 +78,7 @@ export default function EventDetail({ user }) {
         setLoading(false);
       })
       .catch(() => {
-        setError("Failed to load event details");
+        if (!cachedEventDetails[id]) setError("Failed to load event details");
         setLoading(false);
       });
   }, [id]);

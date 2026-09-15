@@ -190,8 +190,14 @@ export default function Gallery({ user }) {
     };
     const folderExists = galleryItems.some(item => {
       if (!(item.isFolder || isLegacyFolder(item))) return false;
-      const name = resolveName(item.customCategoryName || item.name);
-      return slugify(name) === folderSlug.toLowerCase() || name.toLowerCase() === folderSlug.toLowerCase();
+      const candidates = [
+        resolveName(item.customCategoryName || item.name),
+        item.customCategoryName?.en,
+        item.customCategoryName?.ta,
+        item.name?.en,
+        item.name?.ta,
+      ].filter(Boolean);
+      return candidates.some(name => slugify(name) === folderSlug.toLowerCase() || name.toLowerCase().trim() === folderSlug.toLowerCase().trim());
     });
     if (!folderExists && galleryItems.some(item => item._id === folderSlug)) {
       return true;
@@ -227,15 +233,22 @@ export default function Gallery({ user }) {
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         .map((folder) => {
           const folderName = resolveName(folder.customCategoryName || folder.name);
-          const itemCount = photoItems.filter(photo => {
+          const folderSlug = slugify(folderName);
+          const folderPhotos = photoItems.filter(photo => {
             if (!photo.customCategoryName) return false;
-            return resolveName(photo.customCategoryName) === folderName;
-          }).length;
+            const photoFolderName = resolveName(photo.customCategoryName);
+            return (
+              photoFolderName.toString().trim().toLowerCase() === folderName.toString().trim().toLowerCase() ||
+              slugify(photoFolderName) === folderSlug
+            );
+          });
+          const itemCount = folderPhotos.length;
+          const coverImage = folder.imageUrl || (folderPhotos.find(p => p.imageUrl)?.imageUrl || '');
 
           return {
             ...folder,
             name: folder.customCategoryName || folder.name,
-            imageUrl: folder.imageUrl || '',
+            imageUrl: coverImage,
             itemCount,
             isFolder: true,
           };
@@ -256,15 +269,22 @@ export default function Gallery({ user }) {
         .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         .map((folder) => {
         const folderName = resolveName(folder.customCategoryName || folder.name);
-        const itemCount = photoItems.filter(photo => {
+        const folderSlug = slugify(folderName);
+        const folderPhotos = photoItems.filter(photo => {
           if (!photo.customCategoryName) return false;
-          return resolveName(photo.customCategoryName) === folderName;
-        }).length;
+          const photoFolderName = resolveName(photo.customCategoryName);
+          return (
+            photoFolderName.toString().trim().toLowerCase() === folderName.toString().trim().toLowerCase() ||
+            slugify(photoFolderName) === folderSlug
+          );
+        });
+        const itemCount = folderPhotos.length;
+        const coverImage = folder.imageUrl || (folderPhotos.find(p => p.imageUrl)?.imageUrl || '');
 
         return {
           ...folder,
           name: folder.customCategoryName || folder.name,
-          imageUrl: folder.imageUrl || '',
+          imageUrl: coverImage,
           itemCount,
           isFolder: true,
         };
@@ -275,11 +295,18 @@ export default function Gallery({ user }) {
       // Show images inside selected folder
       const normalize = (value) => (value || '').toString().trim().toLowerCase();
       const selectedNormalized = normalize(selectedFolderName);
+      const selectedSlug = slugify(selectedFolderName);
       
       // First, find which folder was selected by checking all folders
       const selectedFolder = folderItems.find(folder => {
-        const folderDisplayName = resolveName(folder.customCategoryName || folder.name);
-        return normalize(folderDisplayName) === selectedNormalized;
+        const candidates = [
+          resolveName(folder.customCategoryName || folder.name),
+          folder.customCategoryName?.en,
+          folder.customCategoryName?.ta,
+          folder.name?.en,
+          folder.name?.ta,
+        ].filter(Boolean);
+        return candidates.some(name => normalize(name) === selectedNormalized || slugify(name) === selectedSlug);
       });
       
       let images = photoItems.filter(item => {
@@ -287,6 +314,7 @@ export default function Gallery({ user }) {
         
         // Get the folder name from the image's customCategoryName
         const imageFolderName = resolveName(item.customCategoryName);
+        const imageFolderSlug = slugify(imageFolderName);
         
         // Also check against the selected folder's actual names
         if (selectedFolder) {
@@ -305,15 +333,18 @@ export default function Gallery({ user }) {
             : (item.customCategoryName.ta || '');
           
           // Match if either English or Tamil names match
-          return (
+          if (
             (selectedFolderEnName && normalize(imageEnName) === normalize(selectedFolderEnName)) ||
             (selectedFolderTaName && normalize(imageTaName) === normalize(selectedFolderTaName)) ||
-            normalize(imageFolderName) === selectedNormalized
-          );
+            normalize(imageFolderName) === selectedNormalized ||
+            imageFolderSlug === selectedSlug
+          ) {
+            return true;
+          }
         }
         
-        // Fallback: just compare the resolved names
-        return normalize(imageFolderName) === selectedNormalized;
+        // Fallback: compare the resolved names or slugified names
+        return normalize(imageFolderName) === selectedNormalized || imageFolderSlug === selectedSlug;
       }).sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
 
       setFilteredItems(images);
@@ -606,10 +637,17 @@ export default function Gallery({ user }) {
       };
       const normalize = (value) => (value || '').toString().trim().toLowerCase();
       const selectedNormalized = normalize(selectedFolderName);
+      const selectedSlug = slugify(selectedFolderName);
       
       const selectedFolder = galleryItems.find(folder => {
-        const folderDisplayName = resolveName(folder.customCategoryName || folder.name);
-        return normalize(folderDisplayName) === selectedNormalized;
+        const candidates = [
+          resolveName(folder.customCategoryName || folder.name),
+          folder.customCategoryName?.en,
+          folder.customCategoryName?.ta,
+          folder.name?.en,
+          folder.name?.ta,
+        ].filter(Boolean);
+        return candidates.some(name => normalize(name) === selectedNormalized || slugify(name) === selectedSlug);
       });
 
       const photos = galleryItems.filter(item => {
@@ -617,6 +655,7 @@ export default function Gallery({ user }) {
         if (!item.customCategoryName) return false;
         
         const imageFolderName = resolveName(item.customCategoryName);
+        const imageFolderSlug = slugify(imageFolderName);
 
         if (selectedFolder) {
           const selectedFolderEnName = typeof selectedFolder.customCategoryName === 'string' 
@@ -633,13 +672,16 @@ export default function Gallery({ user }) {
             ? '' 
             : (item.customCategoryName.ta || '');
           
-          return (
+          if (
             (selectedFolderEnName && normalize(imageEnName) === normalize(selectedFolderEnName)) ||
             (selectedFolderTaName && normalize(imageTaName) === normalize(selectedFolderTaName)) ||
-            normalize(imageFolderName) === selectedNormalized
-          );
+            normalize(imageFolderName) === selectedNormalized ||
+            imageFolderSlug === selectedSlug
+          ) {
+            return true;
+          }
         }
-        return normalize(imageFolderName) === selectedNormalized;
+        return normalize(imageFolderName) === selectedNormalized || imageFolderSlug === selectedSlug;
       }).sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
 
       setFolderOrder(photos);
@@ -943,7 +985,7 @@ export default function Gallery({ user }) {
           {filteredItems.map((item, index) => (
             <Fade
               in={true}
-              timeout={500 + index * 150}
+              timeout={350}
               key={item._id}
             >
               <Box

@@ -58,6 +58,61 @@ app.set('trust proxy', 1);
 
 app.use(express.json());
 
+// Server-Side In-Memory Cache System for Ultra-Fast API Responses
+const apiResponseCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
+
+export const invalidateApiCache = (pattern) => {
+  if (!pattern) {
+    apiResponseCache.clear();
+    return;
+  }
+  for (const key of apiResponseCache.keys()) {
+    if (key.includes(pattern)) {
+      apiResponseCache.delete(key);
+    }
+  }
+};
+
+app.use('/api', (req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/auth') || req.path === '/health') {
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+      const pathParts = req.path.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        invalidateApiCache(pathParts[0]);
+      } else {
+        invalidateApiCache();
+      }
+    }
+    return next();
+  }
+
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
+  
+  const cacheKey = `${req.originalUrl || req.url}_${req.headers['accept-language'] || ''}`;
+  const cached = apiResponseCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+    res.setHeader('X-Cache', 'HIT');
+    return res.status(cached.status).type(cached.contentType || 'application/json').send(cached.body);
+  }
+
+  const originalSend = res.send.bind(res);
+  res.send = (body) => {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      apiResponseCache.set(cacheKey, {
+        body,
+        status: res.statusCode,
+        contentType: res.getHeader('Content-Type'),
+        timestamp: Date.now()
+      });
+    }
+    res.setHeader('X-Cache', 'MISS');
+    return originalSend(body);
+  };
+
+  next();
+});
+
 // Redirect apex host to canonical www and optionally force HTTPS in production
 app.use((req, res, next) => {
   try {
@@ -5015,9 +5070,10 @@ app.use(
   "/uploads",
   (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
     next();
   },
-  express.static(path.join(process.cwd(), "uploads"))
+  express.static(path.join(process.cwd(), "uploads"), { maxAge: '1d' })
 );
 
 // ─── Serve client build with SSR HTML injection ──────────────────────────────
@@ -5028,8 +5084,8 @@ const clientIndex = path.join(clientDist, 'index.html');
 
 if (fs.existsSync(clientIndex)) {
   console.log('Client build detected at:', clientDist, '— serving static client with SSR injection from Express.');
-  // Serve static assets (JS/CSS/images) — must come before the SSR routes
-  app.use(express.static(clientDist));
+  // Serve static assets (JS/CSS/images) with long-term immutable caching
+  app.use(express.static(clientDist, { maxAge: '1y', immutable: true }));
 
   // Cache base HTML in production; re-read on every request in dev so edits are reflected
   let cachedBaseHtml = null;

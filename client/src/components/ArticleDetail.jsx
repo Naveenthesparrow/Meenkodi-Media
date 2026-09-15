@@ -35,26 +35,28 @@ const getCleanAuthorName = (name) => {
   return name;
 };
 
+let cachedArticleDetails = {};
+
 export default function ArticleDetail({ user }) {
   const getContent = useBilingualContent();
   const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [article, setArticle] = useState(() => cachedArticleDetails[id] || null);
+  const [loading, setLoading] = useState(!cachedArticleDetails[id]);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editLanguage, setEditLanguage] = useState('en');
-  const [title_en, setTitleEn] = useState("");
-  const [title_ta, setTitleTa] = useState("");
-  const [content_en, setContentEn] = useState("");
-  const [content_ta, setContentTa] = useState("");
-  const [author_en, setAuthorEn] = useState("");
-  const [author_ta, setAuthorTa] = useState("");
-  const [imageLink, setImageLink] = useState("");
-  const [image, setImage] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [videoLink, setVideoLink] = useState("");
+  const [title_en, setTitleEn] = useState(() => cachedArticleDetails[id]?.title?.en || "");
+  const [title_ta, setTitleTa] = useState(() => cachedArticleDetails[id]?.title?.ta || "");
+  const [content_en, setContentEn] = useState(() => cachedArticleDetails[id]?.content?.en || "");
+  const [content_ta, setContentTa] = useState(() => cachedArticleDetails[id]?.content?.ta || "");
+  const [author_en, setAuthorEn] = useState(() => cachedArticleDetails[id]?.author?.en || "");
+  const [author_ta, setAuthorTa] = useState(() => cachedArticleDetails[id]?.author?.ta || "");
+  const [imageLink, setImageLink] = useState(() => cachedArticleDetails[id]?.imageLink || "");
+  const [image, setImage] = useState(() => cachedArticleDetails[id]?.image || "");
+  const [videoUrl, setVideoUrl] = useState(() => cachedArticleDetails[id]?.videoUrl || "");
+  const [videoLink, setVideoLink] = useState(() => cachedArticleDetails[id]?.videoLink || "");
   const [submitting, setSubmitting] = useState(false);
 
   // Parse markdown-like formatting to HTML

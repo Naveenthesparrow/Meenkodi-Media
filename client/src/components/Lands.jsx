@@ -18,13 +18,29 @@ import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from "../utils/api";
 import { useTranslation } from 'react-i18next';
 
+let cachedLandsData = null;
+
 export default function Lands({ user }) {
   const { t, i18n } = useTranslation();
-  const [lands, setLands] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [landsRaw, setLandsRaw] = useState(cachedLandsData || []);
+  const setLands = (val) => {
+    if (typeof val === 'function') {
+      setLandsRaw(prev => {
+        const next = val(prev);
+        cachedLandsData = next;
+        return next;
+      });
+    } else {
+      cachedLandsData = val;
+      setLandsRaw(val);
+    }
+  };
+  const lands = landsRaw;
+  const [loading, setLoading] = useState(!cachedLandsData);
   const [year, setYear] = useState(300); // Placeholder for year slider
 
   useEffect(() => {
+    if (!cachedLandsData) setLoading(true);
     fetch(`${API_BASE_URL}/api/lands`)
       .then((res) => res.json())
       .then((data) => {
@@ -33,7 +49,7 @@ export default function Lands({ user }) {
       })
       .catch((err) => {
         console.error("Error fetching lands:", err);
-        setLands(dummyLands); // Fallback to dummy data
+        if (!cachedLandsData) setLands(dummyLands); // Fallback to dummy data
         setLoading(false);
       });
   }, []);

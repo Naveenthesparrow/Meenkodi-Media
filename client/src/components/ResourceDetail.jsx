@@ -50,28 +50,31 @@ import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 import SEO from "./common/SEO";
 
+const cachedResourceDetails = {};
+
 export default function ResourceDetail({ user }) {
   const getContent = useBilingualContent();
   const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [resource, setResource] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const hasCache = !!cachedResourceDetails[id];
+  const [resource, setResource] = useState(() => cachedResourceDetails[id] || null);
+  const [loading, setLoading] = useState(!hasCache);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editLanguage, setEditLanguage] = useState('en');
-  const [title_en, setTitleEn] = useState("");
-  const [title_ta, setTitleTa] = useState("");
-  const [description_en, setDescriptionEn] = useState("");
-  const [description_ta, setDescriptionTa] = useState("");
-  const [category_en, setCategoryEn] = useState("");
-  const [category_ta, setCategoryTa] = useState("");
-  const [author_en, setAuthorEn] = useState("");
-  const [author_ta, setAuthorTa] = useState("");
-  const [image, setImage] = useState("");
-  const [downloadLink, setDownloadLink] = useState("");
-  const [pdfName, setPdfName] = useState("");
-  const [pdfSize, setPdfSize] = useState("");
+  const [title_en, setTitleEn] = useState(() => cachedResourceDetails[id]?.title?.en || "");
+  const [title_ta, setTitleTa] = useState(() => cachedResourceDetails[id]?.title?.ta || "");
+  const [description_en, setDescriptionEn] = useState(() => cachedResourceDetails[id]?.description?.en || "");
+  const [description_ta, setDescriptionTa] = useState(() => cachedResourceDetails[id]?.description?.ta || "");
+  const [category_en, setCategoryEn] = useState(() => cachedResourceDetails[id]?.category?.en || "");
+  const [category_ta, setCategoryTa] = useState(() => cachedResourceDetails[id]?.category?.ta || "");
+  const [author_en, setAuthorEn] = useState(() => cachedResourceDetails[id]?.author?.en || "");
+  const [author_ta, setAuthorTa] = useState(() => cachedResourceDetails[id]?.author?.ta || "");
+  const [image, setImage] = useState(() => cachedResourceDetails[id]?.image || "");
+  const [downloadLink, setDownloadLink] = useState(() => cachedResourceDetails[id]?.downloadLink || "");
+  const [pdfName, setPdfName] = useState(() => cachedResourceDetails[id]?.pdfName || "");
+  const [pdfSize, setPdfSize] = useState(() => cachedResourceDetails[id]?.pdfSize || "");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [numPages, setNumPages] = useState(null);
   const [pdfLoadError, setPdfLoadError] = useState(false);
@@ -127,12 +130,14 @@ export default function ResourceDetail({ user }) {
   };
 
   useEffect(() => {
+    if (!hasCache) setLoading(true);
     fetch(`/api/resources/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch resource");
         return res.json();
       })
       .then((data) => {
+        cachedResourceDetails[id] = data;
         setResource(data);
         setTitleEn(data.title?.en || "");
         setTitleTa(data.title?.ta || "");
@@ -149,7 +154,7 @@ export default function ResourceDetail({ user }) {
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.message);
+        if (!cachedResourceDetails[id]) setError(err.message);
         setLoading(false);
       });
   }, [id]);

@@ -190,7 +190,9 @@ export default function SeedsFootprintsDetail({ user }) {
             setFolder(null);
             setLoading(false);
         } else {
-            setLoading(true);
+            if (!cachedFolderDetails[id]) {
+                setLoading(true);
+            }
 
             fetch(`/api/seedsandfootprints/folders/${id}`)
                 .then((r) => {
@@ -215,12 +217,13 @@ export default function SeedsFootprintsDetail({ user }) {
                         hasVideoLink: !!p.videoLink,
                         videoLink: p.videoLink
                     })));
+                    cachedFolderDetails[id] = { folder: data, photos: sortedPhotos };
                     setFolder(data);
                     setPhotos(sortedPhotos);
                 })
                 .catch((err) => {
                     console.error('Failed to load collection', err);
-                    if (mounted) setFolder(null);
+                    if (mounted && !cachedFolderDetails[id]) setFolder(null);
                 })
                 .finally(() => mounted && setLoading(false));
         }

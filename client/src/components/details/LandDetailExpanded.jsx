@@ -74,39 +74,61 @@ const TINAI = {
   },
 };
 
+const cachedLandDetails = {};
+
 export default function LandDetailExpanded({ user }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
   const { t: tr } = useTranslation();
 
-  const [land, setLand] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const hasCache = !!cachedLandDetails[id];
+  const [land, setLand] = useState(() => cachedLandDetails[id] || null);
+  const [loading, setLoading] = useState(!hasCache);
   const [error, setError] = useState(null);
 
   const [editMode, setEditMode] = useState(false);
   const [editLanguage, setEditLanguage] = useState("en");
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    name: { en: "", ta: "" },
-    type: "",
-    description: { en: "", ta: "" },
-    gods: "",
-    people: "",
-    flora: "",
-    fauna: "",
-    poetry: "",
-    image: "",
-    contentSections: [],
+  const [form, setForm] = useState(() => {
+    const d = cachedLandDetails[id];
+    if (!d) return { name: { en: "", ta: "" }, type: "", description: { en: "", ta: "" }, gods: "", people: "", flora: "", fauna: "", poetry: "", image: "", contentSections: [] };
+    return {
+      name: d.name || { en: "", ta: "" },
+      type: d.type || "",
+      description: d.description || { en: "", ta: "" },
+      gods: (d.gods || []).join(", "),
+      people: (d.people || []).join(", "),
+      flora: (d.flora || []).join(", "),
+      fauna: (d.fauna || []).join(", "),
+      poetry: (d.poetry || []).join("\n"),
+      image: d.image || "",
+      contentSections: (d.contentSections || []).map((section, index) => ({
+        id: `${Date.now()}-${index}-${Math.random()}`,
+        subtitle_en: section.subtitle?.en || "",
+        subtitle_ta: section.subtitle?.ta || "",
+        content_en: section.content?.en || "",
+        content_ta: section.content?.ta || "",
+        imageUrl: section.imageUrl || "",
+        imageLink: section.imageLink || "",
+        videoUrl: section.videoUrl || "",
+        videoTitle_en: section.videoTitle?.en || "",
+        videoTitle_ta: section.videoTitle?.ta || "",
+        videoDescription_en: section.videoDescription?.en || "",
+        videoDescription_ta: section.videoDescription?.ta || "",
+      })),
+    };
   });
 
   useEffect(() => {
+    if (!hasCache) setLoading(true);
     fetch(`${API_BASE_URL}/api/lands/${id}`)
       .then((r) => {
         if (!r.ok) throw new Error(tr("land.notFound", "Land not found"));
         return r.json();
       })
       .then((d) => {
+        cachedLandDetails[id] = d;
         setLand(d);
         setForm({
           name: d.name || { en: "", ta: "" },
@@ -136,7 +158,7 @@ export default function LandDetailExpanded({ user }) {
         setLoading(false);
       })
       .catch((e) => {
-        setError(e.message);
+        if (!cachedLandDetails[id]) setError(e.message);
         setLoading(false);
       });
   }, [id]);
