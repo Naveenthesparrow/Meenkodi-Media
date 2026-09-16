@@ -35,6 +35,7 @@ import PageHeading from './common/PageHeading';
 import OptimizedImage from './common/OptimizedImage';
 import { useTranslation } from 'react-i18next';
 import GalleryDetail from './GalleryDetail';
+import API_BASE_URL from '../utils/api';
 
 let cachedGalleryData = null;
 
@@ -353,7 +354,7 @@ export default function Gallery({ user }) {
 
   const fetchGalleryItems = async () => {
     try {
-      const response = await fetch(`/api/gallery`);
+      const response = await fetch(`${API_BASE_URL}/api/gallery`);
       if (!response.ok) {
         throw new Error('Failed to fetch gallery items');
       }
@@ -487,8 +488,8 @@ export default function Gallery({ user }) {
 
       const method = currentGalleryItem._id ? 'PUT' : 'POST';
       const url = currentGalleryItem._id
-        ? (currentGalleryItem.isFolder ? `/api/gallery/folder/${currentGalleryItem._id}` : `/api/gallery/${currentGalleryItem._id}`)
-        : `/api/gallery`;
+        ? (currentGalleryItem.isFolder ? `${API_BASE_URL}/api/gallery/folder/${currentGalleryItem._id}` : `${API_BASE_URL}/api/gallery/${currentGalleryItem._id}`)
+        : `${API_BASE_URL}/api/gallery`;
 
       const response = await fetch(url, {
         method,
@@ -520,7 +521,7 @@ export default function Gallery({ user }) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this gallery item?')) {
       try {
-        const response = await fetch(`/api/gallery/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/gallery/${id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
@@ -540,7 +541,7 @@ export default function Gallery({ user }) {
     const folderName = getContent(folderItem.customCategoryName || folderItem.name);
     if (window.confirm(`Delete the folder "${folderName}" and all photos inside it?`)) {
       try {
-        const response = await fetch(`/api/gallery/folder/${folderItem._id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/gallery/folder/${folderItem._id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
@@ -581,7 +582,7 @@ export default function Gallery({ user }) {
     };
 
     try {
-      const response = await fetch('/api/gallery', {
+      const response = await fetch(`${API_BASE_URL}/api/gallery`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -692,7 +693,7 @@ export default function Gallery({ user }) {
   const handleSaveOrder = async () => {
     try {
       const orderedIds = folderOrder.map(folder => folder._id);
-      const url = viewMode === 'folders' ? '/api/gallery/folders/order' : '/api/gallery/photos/order';
+      const url = viewMode === 'folders' ? `${API_BASE_URL}/api/gallery/folders/order` : `${API_BASE_URL}/api/gallery/photos/order`;
       const response = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

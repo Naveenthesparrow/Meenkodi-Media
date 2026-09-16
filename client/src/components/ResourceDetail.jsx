@@ -28,6 +28,7 @@ import {
   Toolbar,
   Snackbar
 } from "@mui/material";
+import API_BASE_URL from "../utils/api";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -131,7 +132,7 @@ export default function ResourceDetail({ user }) {
 
   useEffect(() => {
     if (!hasCache) setLoading(true);
-    fetch(`/api/resources/${id}`)
+    fetch(`${API_BASE_URL}/api/resources/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch resource");
         return res.json();
@@ -166,7 +167,7 @@ export default function ResourceDetail({ user }) {
     }
 
     try {
-      const response = await fetch(`/api/resources/${id}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/resources/${id}/like`, {
         method: "POST",
         credentials: "include",
       });
@@ -204,7 +205,7 @@ export default function ResourceDetail({ user }) {
         pdfSize,
       };
 
-      const res = await fetch(`/api/resources/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -226,7 +227,7 @@ export default function ResourceDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this resource?")) {
       try {
-        await fetch(`/api/resources/${id}`, {
+        await fetch(`${API_BASE_URL}/api/resources/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -340,7 +341,7 @@ export default function ResourceDetail({ user }) {
                           const formData = new FormData();
                           formData.append('image', file);
                           try {
-                            const res = await fetch('/api/upload/image', { method: 'POST', body: formData, credentials: 'include' });
+                            const res = await fetch(`${API_BASE_URL}/api/upload/image`, { method: 'POST', body: formData, credentials: 'include' });
                             if (!res.ok) throw new Error('Upload failed');
                             const data = await res.json();
                             setImage(data.imageUrl || data.url);

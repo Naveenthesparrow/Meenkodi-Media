@@ -33,13 +33,86 @@ import {
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
 
+const useTextHistory = (initialValue = '') => {
+  const [state, setState] = useState({
+    history: [initialValue],
+    pointer: 0
+  });
+  const lastPush = useRef(0);
+
+  const setValue = (newVal, forcePush = false) => {
+    const now = Date.now();
+    setState(prev => {
+      const { history, pointer } = prev;
+      const current = history[pointer];
+      if (current === newVal) return prev;
+
+      const isPaste = Math.abs(newVal.length - current.length) > 1;
+      const endsWithBoundary = /[\s\n]$/.test(newVal);
+      
+      const shouldPush = forcePush || (now - lastPush.current > 800) || isPaste || endsWithBoundary;
+      
+      if (!shouldPush) {
+        const newHistory = [...history];
+        newHistory[pointer] = newVal;
+        lastPush.current = now;
+        return { history: newHistory, pointer };
+      } else {
+        const newHistory = history.slice(0, pointer + 1);
+        newHistory.push(newVal);
+        if (newHistory.length > 50) newHistory.shift();
+        lastPush.current = now;
+        return {
+          history: newHistory,
+          pointer: newHistory.length - 1
+        };
+      }
+    });
+  };
+
+  const undo = () => {
+    setState(prev => {
+      if (prev.pointer > 0) {
+        return { ...prev, pointer: prev.pointer - 1 };
+      }
+      return prev;
+    });
+  };
+
+  const redo = () => {
+    setState(prev => {
+      if (prev.pointer < prev.history.length - 1) {
+        return { ...prev, pointer: prev.pointer + 1 };
+      }
+      return prev;
+    });
+  };
+
+  const reset = () => {
+    setState({ history: [initialValue], pointer: 0 });
+    lastPush.current = 0;
+  };
+
+  return {
+    value: state.history[state.pointer],
+    setValue,
+    undo,
+    redo,
+    reset
+  };
+};
+
 export default function ArticleComposer({ user, onPostCreated }) {
   const { t, i18n } = useTranslation();
   const [composerLanguage, setComposerLanguage] = useState('en'); // 'en' or 'ta'
   const [titleEn, setTitleEn] = useState('');
   const [titleTa, setTitleTa] = useState('');
-  const [contentEn, setContentEn] = useState('');
-  const [contentTa, setContentTa] = useState('');
+  const enHistory = useTextHistory('');
+  const taHistory = useTextHistory('');
+  const contentEn = enHistory.value;
+  const contentTa = taHistory.value;
+  const setContentEn = (val, forcePush = false) => enHistory.setValue(val, forcePush);
+  const setContentTa = (val, forcePush = false) => taHistory.setValue(val, forcePush);
   const [image, setImage] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [socialMediaLink, setSocialMediaLink] = useState('');
@@ -97,9 +170,9 @@ export default function ArticleComposer({ user, onPostCreated }) {
     const newText = currentContent.substring(0, start) + before + selectedText + after + currentContent.substring(end);
     
     if (composerLanguage === 'en') {
-      setContentEn(newText);
+      setContentEn(newText, true);
     } else {
-      setContentTa(newText);
+      setContentTa(newText, true);
     }
 
     // Set cursor position after insertion
@@ -291,8 +364,8 @@ export default function ArticleComposer({ user, onPostCreated }) {
       setSuccess(true);
       setTitleEn('');
       setTitleTa('');
-      setContentEn('');
-      setContentTa('');
+      enHistory.reset();
+      taHistory.reset();
       setImage('');
       setVideoUrl('');
       setSocialMediaLink('');
@@ -473,6 +546,19 @@ export default function ArticleComposer({ user, onPostCreated }) {
               onChange={(e) => composerLanguage === 'en' ? setContentEn(e.target.value) : setContentTa(e.target.value)}
               variant="outlined"
               inputRef={contentRef}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                  e.preventDefault();
+                  if (e.shiftKey) {
+                    composerLanguage === 'en' ? enHistory.redo() : taHistory.redo();
+                  } else {
+                    composerLanguage === 'en' ? enHistory.undo() : taHistory.undo();
+                  }
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                  e.preventDefault();
+                  composerLanguage === 'en' ? enHistory.redo() : taHistory.redo();
+                }
+              }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   fontFamily: 'Georgia, serif',

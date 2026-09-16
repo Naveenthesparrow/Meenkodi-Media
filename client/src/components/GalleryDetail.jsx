@@ -178,7 +178,7 @@ export default function GalleryDetail({ user }) {
         setLoading(false);
 
         // Fetch details silently in background to keep fresh
-        fetch(`/api/gallery/${id}`)
+        fetch(`${API_BASE_URL}/api/gallery/${id}`)
           .then(res => res.json())
           .then(freshData => {
             setGalleryItem(freshData);
@@ -192,7 +192,7 @@ export default function GalleryDetail({ user }) {
 
     // Normal full fetch flow (if cache is missing or item is not in cache)
     setLoading(true);
-    fetch(`/api/gallery/${id}`)
+    fetch(`${API_BASE_URL}/api/gallery/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setGalleryItem(data);
@@ -222,7 +222,7 @@ export default function GalleryDetail({ user }) {
         });
 
         // Fetch all gallery items to cache them and resolve siblings
-        return fetch("/api/gallery")
+        return fetch(`${API_BASE_URL}/api/gallery`)
           .then((res) => res.json())
           .then((allData) => {
             cachedAllGalleryItems = allData;
@@ -298,7 +298,7 @@ export default function GalleryDetail({ user }) {
         }
       }
 
-      const res = await fetch(`/api/gallery/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/gallery/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -330,7 +330,7 @@ export default function GalleryDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this gallery item?")) {
       try {
-        await fetch(`/api/gallery/${id}`, {
+        await fetch(`${API_BASE_URL}/api/gallery/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
