@@ -832,22 +832,6 @@ app.post("/api/gallery", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-app.put("/api/gallery/:id", ensureAdmin, async (req, res) => {
-  try {
-    console.log("PUT /api/gallery/:id", req.params.id, req.body);
-    const item = await Gallery.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!item) return res.status(404).json({ error: "Gallery item not found" });
-    res.json(item);
-  } catch (err) {
-    if (err.name === "ValidationError") {
-      return res.status(400).json({ error: err.message });
-    }
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
 app.put("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
   try {
@@ -938,12 +922,23 @@ app.put("/api/gallery/photos/order", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-app.delete("/api/gallery/:id", ensureAdmin, async (req, res) => {
-  console.log("DELETE /api/gallery/:id", req.params.id);
-  const result = await Gallery.findByIdAndDelete(req.params.id);
-  if (!result) return res.status(404).json({ error: "Gallery item not found" });
-  res.status(204).end();
+app.put("/api/gallery/:id", ensureAdmin, async (req, res) => {
+  try {
+    console.log("PUT /api/gallery/:id", req.params.id, req.body);
+    const item = await Gallery.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!item) return res.status(404).json({ error: "Gallery item not found" });
+    res.json(item);
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      return res.status(400).json({ error: err.message });
+    }
+    res.status(500).json({ error: "Server error" });
+  }
 });
+
 
 app.delete("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
   try {
@@ -980,6 +975,13 @@ app.delete("/api/gallery/folder/:id", ensureAdmin, async (req, res) => {
     console.error("Delete folder error:", err);
     res.status(500).json({ error: "Server error" });
   }
+});
+
+app.delete("/api/gallery/:id", ensureAdmin, async (req, res) => {
+  console.log("DELETE /api/gallery/:id", req.params.id);
+  const result = await Gallery.findByIdAndDelete(req.params.id);
+  if (!result) return res.status(404).json({ error: "Gallery item not found" });
+  res.status(204).end();
 });
 
 // Research folders endpoints
@@ -1328,52 +1330,6 @@ app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('
 });
 
 // Update research folder
-app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
-  try {
-    console.log('=== UPDATE RESEARCH FOLDER REQUEST ===');
-    console.log('Body:', req.body);
-    console.log('File:', req.file);
-
-    const { nameEn, nameTa, descriptionEn, descriptionTa, removeCoverPhoto } = req.body;
-
-    // Build the update payload using dot notation for bilingual fields to support partial updates
-    const updatePayload = {};
-
-    if (nameEn !== undefined) updatePayload['name.en'] = nameEn;
-    if (nameTa !== undefined) updatePayload['name.ta'] = nameTa;
-
-    if (descriptionEn !== undefined) updatePayload['description.en'] = descriptionEn;
-    if (descriptionTa !== undefined) updatePayload['description.ta'] = descriptionTa;
-
-    // Handle cover photo operations
-    if (req.file) {
-      // New cover photo uploaded
-      console.log('New cover photo uploaded:', req.file.path);
-      updatePayload.coverPhoto = req.file.path; // Cloudinary URL
-    } else if (removeCoverPhoto === 'true') {
-      // Remove existing cover photo
-      console.log('Removing existing cover photo');
-      updatePayload.coverPhoto = null;
-    }
-
-    console.log('Update payload:', updatePayload);
-
-    const updated = await ResearchFolder.findByIdAndUpdate(
-      req.params.id,
-      { $set: updatePayload, updatedAt: new Date() },
-      { new: true, runValidators: true }
-    );
-
-    if (!updated) return res.status(404).json({ error: "Folder not found" });
-
-    console.log('Folder updated successfully');
-    res.json(updated);
-  } catch (err) {
-    console.error("Error updating research folder:", err);
-    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
 app.delete("/api/seedsandfootprints/folders/:id", ensureAdmin, async (req, res) => {
   try {
@@ -1460,6 +1416,53 @@ app.get("/api/events/:id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.single('coverPhoto'), async (req, res) => {
+  try {
+    console.log('=== UPDATE RESEARCH FOLDER REQUEST ===');
+    console.log('Body:', req.body);
+    console.log('File:', req.file);
+
+    const { nameEn, nameTa, descriptionEn, descriptionTa, removeCoverPhoto } = req.body;
+
+    // Build the update payload using dot notation for bilingual fields to support partial updates
+    const updatePayload = {};
+
+    if (nameEn !== undefined) updatePayload['name.en'] = nameEn;
+    if (nameTa !== undefined) updatePayload['name.ta'] = nameTa;
+
+    if (descriptionEn !== undefined) updatePayload['description.en'] = descriptionEn;
+    if (descriptionTa !== undefined) updatePayload['description.ta'] = descriptionTa;
+
+    // Handle cover photo operations
+    if (req.file) {
+      // New cover photo uploaded
+      console.log('New cover photo uploaded:', req.file.path);
+      updatePayload.coverPhoto = req.file.path; // Cloudinary URL
+    } else if (removeCoverPhoto === 'true') {
+      // Remove existing cover photo
+      console.log('Removing existing cover photo');
+      updatePayload.coverPhoto = null;
+    }
+
+    console.log('Update payload:', updatePayload);
+
+    const updated = await ResearchFolder.findByIdAndUpdate(
+      req.params.id,
+      { $set: updatePayload, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: "Folder not found" });
+
+    console.log('Folder updated successfully');
+    res.json(updated);
+  } catch (err) {
+    console.error("Error updating research folder:", err);
+    if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.post("/api/events", ensureAdmin, async (req, res) => {
   try {
     const event = await Event.create(req.body);

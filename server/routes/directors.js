@@ -67,6 +67,32 @@ router.post('/', isAdmin, async (req, res) => {
   }
 });
 
+// PUT reorder directors (admin only)
+router.put('/reorder/all', isAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body;
+    
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: 'orderedIds must be an array' });
+    }
+
+    // Update order for each director
+    const updatePromises = orderedIds.map((id, index) =>
+      Director.findByIdAndUpdate(id, { order: index })
+    );
+
+    await Promise.all(updatePromises);
+    
+    const directors = await Director.find({ isActive: true })
+      .sort({ order: 1, createdAt: 1 });
+    
+    res.json(directors);
+  } catch (error) {
+    console.error('Error reordering directors:', error);
+    res.status(500).json({ error: 'Failed to reorder directors' });
+  }
+});
+
 // PUT update director (admin only)
 router.put('/:id', isAdmin, async (req, res) => {
   try {
@@ -108,32 +134,6 @@ router.delete('/:id', isAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error deleting director:', error);
     res.status(500).json({ error: 'Failed to delete director' });
-  }
-});
-
-// PUT reorder directors (admin only)
-router.put('/reorder/all', isAdmin, async (req, res) => {
-  try {
-    const { orderedIds } = req.body;
-    
-    if (!Array.isArray(orderedIds)) {
-      return res.status(400).json({ error: 'orderedIds must be an array' });
-    }
-
-    // Update order for each director
-    const updatePromises = orderedIds.map((id, index) =>
-      Director.findByIdAndUpdate(id, { order: index })
-    );
-
-    await Promise.all(updatePromises);
-    
-    const directors = await Director.find({ isActive: true })
-      .sort({ order: 1, createdAt: 1 });
-    
-    res.json(directors);
-  } catch (error) {
-    console.error('Error reordering directors:', error);
-    res.status(500).json({ error: 'Failed to reorder directors' });
   }
 });
 
