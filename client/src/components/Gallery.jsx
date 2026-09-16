@@ -89,7 +89,7 @@ export default function Gallery({ user }) {
   const [openCreateCategoryDialog, setOpenCreateCategoryDialog] = useState(false);
   const [newCategoryName_en, setNewCategoryName_en] = useState('');
   const [newCategoryName_ta, setNewCategoryName_ta] = useState('');
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('folders'); // 'folders' or 'images'
@@ -1303,6 +1303,7 @@ export default function Gallery({ user }) {
                     >
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           e.preventDefault();
                           handleEdit(item);
@@ -1325,6 +1326,7 @@ export default function Gallery({ user }) {
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           e.preventDefault();
                           if (item.isFolder) {
@@ -1431,8 +1433,8 @@ export default function Gallery({ user }) {
                   },
                 }}
               >
-                <ToggleButton value="en">ENGLISH</ToggleButton>
                 <ToggleButton value="ta">தமிழ்</ToggleButton>
+                <ToggleButton value="en">ENGLISH</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 

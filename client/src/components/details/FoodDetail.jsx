@@ -145,7 +145,7 @@ function FoodDetail({ user: initialUser }) {
   const fetchFood = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/foods/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}`);
       if (!res.ok) {
         throw new Error("Food not found");
       }
@@ -216,7 +216,7 @@ function FoodDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/foods/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -250,7 +250,7 @@ function FoodDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/foods/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -285,7 +285,7 @@ function FoodDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/foods/${id}/comments/${commentId}/replies`, {
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}/comments/${commentId}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -315,7 +315,7 @@ function FoodDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/foods/${id}/comments/${commentId}/reactions`, {
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}/comments/${commentId}/reactions`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -348,7 +348,7 @@ function FoodDetail({ user: initialUser }) {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/foods/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}`, {
         method: "DELETE",
         credentials: "include"
       });
@@ -367,7 +367,7 @@ function FoodDetail({ user: initialUser }) {
   const handleDeleteConfirmation = async () => {
     if (deleteType === 'comment') {
       try {
-        const res = await fetch(`/api/foods/${id}/comments/${itemToDelete}`, {
+        const res = await fetch(`${API_BASE_URL}/api/foods/${id}/comments/${itemToDelete}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -385,7 +385,7 @@ function FoodDetail({ user: initialUser }) {
     } else if (deleteType === 'reply') {
       try {
         const [commentId, replyId] = itemToDelete.split('-');
-        const res = await fetch(`/api/foods/${id}/comments/${commentId}/replies/${replyId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/foods/${id}/comments/${commentId}/replies/${replyId}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -444,7 +444,7 @@ function FoodDetail({ user: initialUser }) {
         contentSections: formattedContentSections
       };
 
-      const res = await fetch(`/api/foods/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/foods/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

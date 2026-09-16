@@ -40,6 +40,8 @@ import SEO from "../common/SEO";
 import MediaUpload from "../common/MediaUpload";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from "react-i18next";
+import API_BASE_URL from '../../utils/api';
+
 
 const DYNASTY_DETAILS = {
   pandiya: {
@@ -449,7 +451,7 @@ export default function DynastyDetail({ user }) {
     let isActive = true;
     const fetchDynasty = async () => {
       try {
-        const response = await fetch(`/api/dynasties/${slug}`, {
+        const response = await fetch(`${API_BASE_URL}/api/dynasties/${slug}`, {
           credentials: "include",
         });
         if (!response.ok) return;
@@ -536,7 +538,7 @@ export default function DynastyDetail({ user }) {
 
       if (user?.role === "admin") {
         const hasPersistedId = Boolean(dynasty._id);
-        const endpoint = hasPersistedId ? `/api/dynasties/${dynasty._id}` : "/api/dynasties";
+        const endpoint = hasPersistedId ? `${API_BASE_URL}/api/dynasties/${dynasty._id}` : `${API_BASE_URL}` + "/api/dynasties";
         const method = hasPersistedId ? "PUT" : "POST";
 
         const response = await fetch(endpoint, {
@@ -1076,8 +1078,8 @@ export default function DynastyDetail({ user }) {
                   },
                 }}
               >
-                <ToggleButton value="en">ENGLISH</ToggleButton>
                 <ToggleButton value="ta">தமிழ்</ToggleButton>
+                <ToggleButton value="en">ENGLISH</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 

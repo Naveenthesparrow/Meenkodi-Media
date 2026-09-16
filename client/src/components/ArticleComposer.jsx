@@ -104,7 +104,7 @@ const useTextHistory = (initialValue = '') => {
 
 export default function ArticleComposer({ user, onPostCreated }) {
   const { t, i18n } = useTranslation();
-  const [composerLanguage, setComposerLanguage] = useState('en'); // 'en' or 'ta'
+  const [composerLanguage, setComposerLanguage] = useState('ta'); // 'en' or 'ta'
   const [titleEn, setTitleEn] = useState('');
   const [titleTa, setTitleTa] = useState('');
   const enHistory = useTextHistory('');
@@ -138,7 +138,7 @@ export default function ArticleComposer({ user, onPostCreated }) {
     formData.append('image', file);
 
     try {
-      const response = await fetch('/api/upload/image', {
+      const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
         method: 'POST',
         body: formData,
       });
@@ -209,7 +209,7 @@ export default function ArticleComposer({ user, onPostCreated }) {
       formData.append('image', file);
 
       try {
-        const response = await fetch('/api/upload/image', {
+        const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
           method: 'POST',
           credentials: 'include',
           body: formData,
@@ -425,8 +425,8 @@ export default function ArticleComposer({ user, onPostCreated }) {
             },
           }}
         >
-          <ToggleButton value="en">ENGLISH</ToggleButton>
           <ToggleButton value="ta">தமிழ்</ToggleButton>
+          <ToggleButton value="en">ENGLISH</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 

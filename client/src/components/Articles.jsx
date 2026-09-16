@@ -34,6 +34,8 @@ import ArticleComposer from './ArticleComposer';
 import MediaUpload from './common/MediaUpload';
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
+import API_BASE_URL from '../utils/api';
+
 
 const stripMarkdownForSnippet = (text) => {
   if (!text) return '';
@@ -83,7 +85,7 @@ export default function Articles({ user }) {
   // Edit Article States
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState(null);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [editTitleEn, setEditTitleEn] = useState('');
   const [editTitleTa, setEditTitleTa] = useState('');
   const [editContentEn, setEditContentEn] = useState('');
@@ -129,7 +131,7 @@ export default function Articles({ user }) {
         image: editImage,
       };
 
-      const response = await fetch(`/api/articles/${selectedArticleId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${selectedArticleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -151,10 +153,11 @@ export default function Articles({ user }) {
   };
 
   const handleDeleteArticle = async (e, article) => {
-    e.stopPropagation();
+    e.preventDefault();
+                          e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this article?")) {
       try {
-        const response = await fetch(`/api/articles/${article._id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/articles/${article._id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
@@ -208,7 +211,7 @@ export default function Articles({ user }) {
 
   const handleUpdateArticleStatus = async (articleId, newStatus) => {
     try {
-      const response = await fetch(`/api/articles/${articleId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -231,7 +234,7 @@ export default function Articles({ user }) {
     setSavingOrder(true);
     try {
       const orderedIds = manageArticlesList.map(art => art._id);
-      const response = await fetch('/api/articles/order', {
+      const response = await fetch(`${API_BASE_URL}/api/articles/order`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -270,7 +273,7 @@ export default function Articles({ user }) {
     });
 
     try {
-      const response = await fetch(`/api/articles/${articleId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}/like`, {
         method: "POST",
         credentials: "include",
       });
@@ -298,7 +301,7 @@ export default function Articles({ user }) {
       // Only block with a spinner on first load — afterwards revalidate silently
       if (!cachedArticlesData) setLoading(true);
       try {
-        const res = await fetch('/api/articles');
+        const res = await fetch(`${API_BASE_URL}/api/articles`);
         if (!res.ok) throw new Error('Failed to fetch articles');
         const data = await res.json();
         setArticles(data);
@@ -663,7 +666,8 @@ export default function Articles({ user }) {
                           <IconButton
                             size="small"
                             onClick={(e) => {
-                              e.stopPropagation();
+                              e.preventDefault();
+                          e.stopPropagation();
                               handleOpenEditModal(article);
                             }}
                             sx={{
@@ -687,7 +691,11 @@ export default function Articles({ user }) {
                         {canDelete && (
                           <IconButton
                             size="small"
-                            onClick={(e) => handleDeleteArticle(e, article)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                          e.stopPropagation();
+                              handleDeleteArticle(e, article);
+                            }}
                             sx={{
                               position: 'absolute',
                               top: 16,
@@ -842,6 +850,7 @@ export default function Articles({ user }) {
                     <Box sx={{ display: 'flex', gap: 1.5, mb: 2 }}>
                       <Button
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleApprove(article._id);
                         }}
@@ -862,6 +871,7 @@ export default function Articles({ user }) {
                       </Button>
                       <Button
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleReject(article._id);
                         }}
@@ -1048,8 +1058,8 @@ export default function Articles({ user }) {
                 },
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
             <Typography variant="caption" sx={{ mt: 1, color: '#666', fontStyle: 'italic' }}>
               {editLanguage === 'en'
@@ -1316,10 +1326,11 @@ export default function Articles({ user }) {
                       size="small"
                       color="error"
                       onClick={async (e) => {
-                        e.stopPropagation();
+                        e.preventDefault();
+                          e.stopPropagation();
                         if (window.confirm("Are you sure you want to delete this article?")) {
                           try {
-                            const res = await fetch(`/api/articles/${article._id}`, {
+                            const res = await fetch(`${API_BASE_URL}/api/articles/${article._id}`, {
                               method: 'DELETE',
                               credentials: 'include',
                             });

@@ -443,6 +443,7 @@ export default function Clothing({ user }) {
                     >
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleEdit(item);
                         }}
@@ -464,6 +465,7 @@ export default function Clothing({ user }) {
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleDelete(item._id);
                         }}

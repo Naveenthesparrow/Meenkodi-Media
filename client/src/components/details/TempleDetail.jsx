@@ -238,7 +238,7 @@ function TempleDetail() {
   const fetchTemple = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/temples/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/temples/${id}`);
       if (!res.ok) {
         throw new Error("Temple not found");
       }
@@ -368,7 +368,7 @@ function TempleDetail() {
         contentSections: formattedContentSections
       };
 
-      const res = await fetch(`/api/temples/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/temples/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -391,7 +391,7 @@ function TempleDetail() {
 
   const handleEditSubmit = async () => {
     try {
-      const res = await fetch(`/api/temples/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/temples/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -422,7 +422,7 @@ function TempleDetail() {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this temple?")) {
       try {
-        const res = await fetch(`/api/temples/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/temples/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -445,7 +445,7 @@ function TempleDetail() {
     }
 
     try {
-      const res = await fetch(`/api/temples/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/temples/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -479,7 +479,7 @@ function TempleDetail() {
     }
 
     try {
-      const res = await fetch(`/api/temples/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/temples/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -515,7 +515,7 @@ function TempleDetail() {
 
     try {
       const res = await fetch(
-        `/api/temples/${id}/comments/${commentId}/replies`,
+        `${API_BASE_URL}/api/temples/${id}/comments/${commentId}/replies`,
         {
           method: "POST",
           credentials: "include",
@@ -561,7 +561,7 @@ function TempleDetail() {
   const handleDeleteComment = async () => {
     try {
       if (deleteType === "comment") {
-        const res = await fetch(`/api/temples/${id}/comments/${itemToDelete}`, {
+        const res = await fetch(`${API_BASE_URL}/api/temples/${id}/comments/${itemToDelete}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -574,7 +574,7 @@ function TempleDetail() {
       } else if (deleteType === "reply") {
         const [commentId, replyId] = itemToDelete.split("-");
         const res = await fetch(
-          `/api/temples/${id}/comments/${commentId}/replies/${replyId}`,
+          `${API_BASE_URL}/api/temples/${id}/comments/${commentId}/replies/${replyId}`,
           {
             method: "DELETE",
             credentials: "include",

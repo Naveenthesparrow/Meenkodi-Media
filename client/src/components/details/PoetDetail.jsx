@@ -42,6 +42,8 @@ import {
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from "react-i18next";
 import SEO from "../common/SEO";
+import API_BASE_URL from '../../utils/api';
+
 
 function PoetDetail({ user: initialUser }) {
   const user = initialUser;
@@ -96,7 +98,7 @@ function PoetDetail({ user: initialUser }) {
   useEffect(() => {
     const fetchPoet = async () => {
       try {
-        const res = await fetch(`/api/poets/${slug}`, {
+        const res = await fetch(`${API_BASE_URL}/api/poets/${slug}`, {
           credentials: "include"
         });
         if (!res.ok) throw new Error("Failed to fetch poet");
@@ -248,7 +250,7 @@ function PoetDetail({ user: initialUser }) {
         }))
       };
 
-      const res = await fetch(`/api/poets/${poet._id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/poets/${poet._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -274,7 +276,7 @@ function PoetDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/poets/${poet._id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/poets/${poet._id}/like`, {
         method: "POST",
         credentials: "include",
       });
@@ -299,7 +301,7 @@ function PoetDetail({ user: initialUser }) {
     if (!newComment.trim()) return;
 
     try {
-      const res = await fetch(`/api/poets/${poet._id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/poets/${poet._id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -327,7 +329,7 @@ function PoetDetail({ user: initialUser }) {
 
     try {
       const res = await fetch(
-        `/api/poets/${poet._id}/comments/${commentId}/replies`,
+        `${API_BASE_URL}/api/poets/${poet._id}/comments/${commentId}/replies`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -351,7 +353,7 @@ function PoetDetail({ user: initialUser }) {
   const handleDeleteComment = async (commentId) => {
     try {
       const res = await fetch(
-        `/api/poets/${poet._id}/comments/${commentId}`,
+        `${API_BASE_URL}/api/poets/${poet._id}/comments/${commentId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -372,7 +374,7 @@ function PoetDetail({ user: initialUser }) {
   const handleDeleteReply = async (commentId, replyId) => {
     try {
       const res = await fetch(
-        `/api/poets/${poet._id}/comments/${commentId}/replies/${replyId}`,
+        `${API_BASE_URL}/api/poets/${poet._id}/comments/${commentId}/replies/${replyId}`,
         {
           method: "DELETE",
           credentials: "include",

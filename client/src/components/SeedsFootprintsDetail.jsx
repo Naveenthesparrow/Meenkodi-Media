@@ -25,6 +25,8 @@ import { ArrowBack, Add, Image as ImageIcon, Edit, DragIndicator, ArrowUpward, A
 import DeleteIcon from '@mui/icons-material/Delete';
 import SEO, { pageSEO } from './common/SEO';
 import OptimizedImage from './common/OptimizedImage';
+import API_BASE_URL from '../utils/api';
+
 
 export default function SeedsFootprintsDetail({ user }) {
     const { id } = useParams();
@@ -194,7 +196,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 setLoading(true);
             }
 
-            fetch(`/api/seedsandfootprints/folders/${id}`)
+            fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`)
                 .then((r) => {
                     if (!r.ok) {
                         return r.text().then(text => {
@@ -392,7 +394,7 @@ export default function SeedsFootprintsDetail({ user }) {
     const handleSaveOrder = async () => {
         try {
             const orderedIds = photoOrder.map(photo => photo._id);
-            const response = await fetch(`/api/seedsandfootprints/folders/${id}/photos/order`, {
+            const response = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}/photos/order`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -404,7 +406,7 @@ export default function SeedsFootprintsDetail({ user }) {
             }
 
             // Reload folder data
-            const r = await fetch(`/api/seedsandfootprints/folders/${id}`);
+            const r = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`);
             if (r.ok) {
                 const data = await r.json();
                 const sortedPhotos = (data.photos || []).slice().sort((a, b) => {
@@ -482,7 +484,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 formData.append('coverPhoto', folderForm.coverPhoto);
             }
 
-            const response = await fetch(`/api/seedsandfootprints/folders/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`, {
                 method: 'PUT',
                 credentials: 'include',
                 body: formData
@@ -509,7 +511,7 @@ export default function SeedsFootprintsDetail({ user }) {
     const refreshPhotos = async () => {
         try {
             setRefreshing(true);
-            const res = await fetch(`/api/seedsandfootprints/folders/${id}`);
+            const res = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`);
             if (!res.ok) return;
             const data = await res.json();
             const sortedPhotos = (data.photos || []).slice().sort((a, b) => {
@@ -538,7 +540,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 const formData = new FormData();
                 formData.append('image', uploadForm.file);
 
-                const uploadRes = await fetch('/api/upload/image', {
+                const uploadRes = await fetch(`${API_BASE_URL}/api/upload/image`, {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'
@@ -559,7 +561,7 @@ export default function SeedsFootprintsDetail({ user }) {
 
             // 2) Create or update photo on this collection
             const isEdit = !!editingPhotoId;
-            const url = isEdit ? `/api/seedsandfootprints/folders/${id}/photos/${editingPhotoId}` : `/api/seedsandfootprints/folders/${id}/photos`;
+            const url = isEdit ? `${API_BASE_URL}/api/seedsandfootprints/folders/${id}/photos/${editingPhotoId}` : `${API_BASE_URL}/api/seedsandfootprints/folders/${id}/photos`;
             const method = isEdit ? 'PUT' : 'POST';
 
             // prepare keywords array
@@ -595,7 +597,7 @@ export default function SeedsFootprintsDetail({ user }) {
             if (!photo) {
                 console.warn('No photo object in response, trying to refresh folder data instead');
                 // Fallback: refresh the entire folder data
-                const refreshRes = await fetch(`/api/seedsandfootprints/folders/${id}`);
+                const refreshRes = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`);
                 if (refreshRes.ok) {
                     const refreshedData = await refreshRes.json();
                     const sortedPhotos = (refreshedData.photos || []).slice().sort((a, b) => {
@@ -647,7 +649,7 @@ export default function SeedsFootprintsDetail({ user }) {
         if (!user || user.role !== 'admin') return;
         if (!window.confirm(t('research.deletePhotoConfirm', 'Delete this photo?'))) return;
         try {
-            const res = await fetch(`/api/seedsandfootprints/folders/${id}/photos/${photoId}`, {
+            const res = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}/photos/${photoId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -693,7 +695,7 @@ export default function SeedsFootprintsDetail({ user }) {
                     formData.append('image', file);
 
                     try {
-                        const uploadRes = await fetch('/api/upload/image', {
+                        const uploadRes = await fetch(`${API_BASE_URL}/api/upload/image`, {
                             method: 'POST',
                             body: formData,
                             credentials: 'include'
@@ -743,7 +745,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 videoLink: ''
             }));
 
-            const bulkRes = await fetch(`/api/seedsandfootprints/folders/${id}/photos/bulk`, {
+            const bulkRes = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}/photos/bulk`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -1131,8 +1133,8 @@ export default function SeedsFootprintsDetail({ user }) {
                                                 },
                                             }}
                                         >
-                                            <ToggleButton value="en">ENGLISH</ToggleButton>
                                             <ToggleButton value="ta">à®¤à®®à®¿à®´à¯</ToggleButton>
+                                            <ToggleButton value="en">ENGLISH</ToggleButton>
                                         </ToggleButtonGroup>
                                     </Box>
 
@@ -1569,8 +1571,8 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     },
                                                 }}
                                             >
-                                                <ToggleButton value="en">ENGLISH</ToggleButton>
                                                 <ToggleButton value="ta">à®¤à®®à®¿à®´à¯</ToggleButton>
+                                                <ToggleButton value="en">ENGLISH</ToggleButton>
                                             </ToggleButtonGroup>
                                         </Box>
 

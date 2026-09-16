@@ -71,6 +71,8 @@ import DirectorsSlider from "./DirectorsSlider";
 import DirectorsAdmin from "./DirectorsAdmin";
 import { useBilingualContent, createBilingualContent } from "../utils/bilingualContent";
 import MeenkodiImage from "../assests/meenkodi.png";
+import API_BASE_URL from '../utils/api';
+
 
 const TEAM_DIRECTORS = [
   {
@@ -919,7 +921,7 @@ export default function Home() {
   // Fetch directors from API
   useEffect(() => {
     setDirectorsLoading(true);
-    fetch('/api/directors', {
+    fetch(`${API_BASE_URL}/api/directors`, {
       credentials: 'include'
     })
       .then(res => res.json())
@@ -1552,7 +1554,8 @@ export default function Home() {
                   src="https://upload.wikimedia.org/wikipedia/ta/9/95/Mee_ye_paa.jpg"
                   alt="Museums Archaeology and Culture book cover"
                   loading="lazy"
-                  onClick={(e) => { e.stopPropagation(); navigate('/resources'); }}
+                  onClick={(e) => { e.preventDefault();
+                          e.stopPropagation(); navigate('/resources'); }}
                   sx={{
                     width: { xs: '70%', sm: '60%', md: '40%' },
                     maxWidth: 380,
@@ -1721,7 +1724,8 @@ export default function Home() {
                 </Typography>
                 <Button
                   variant="outlined"
-                  onClick={(e) => { e.stopPropagation(); navigate('/resources'); }}
+                  onClick={(e) => { e.preventDefault();
+                          e.stopPropagation(); navigate('/resources'); }}
                   sx={{
                     alignSelf: { xs: 'center', md: 'flex-start' },
                     borderRadius: '999px',
@@ -1753,7 +1757,8 @@ export default function Home() {
                   src="https://www.harappa.com/sites/default/files/images/the-indus-robinson.jpg"
                   alt="The Indus civilization book cover"
                   loading="lazy"
-                  onClick={(e) => { e.stopPropagation(); navigate('/resources'); }}
+                  onClick={(e) => { e.preventDefault();
+                          e.stopPropagation(); navigate('/resources'); }}
                   sx={{
                     width: { xs: '72%', sm: '60%', md: '38%' },
                     maxWidth: 370,
@@ -2790,7 +2795,8 @@ export default function Home() {
                           transform: 'translateY(-8px)',
                           transition: 'all 0.3s ease',
                         }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.preventDefault();
+                          e.stopPropagation(); }}
                       >
                         <IconButton
                           size="small"
@@ -2806,7 +2812,8 @@ export default function Home() {
                             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                           }}
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.preventDefault();
+                          e.stopPropagation();
                             saveScrollPosition();
                             navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}?edit=true`);
                           }}
@@ -2827,7 +2834,8 @@ export default function Home() {
                             boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                           }}
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.preventDefault();
+                          e.stopPropagation();
                             console.log('Delete dynasty:', TEAM_MUSEUM[idx]);
                             // TODO: Add delete functionality
                           }}
@@ -2922,7 +2930,8 @@ export default function Home() {
                         transform: 'translateY(-8px)',
                         transition: 'all 0.3s ease',
                       }}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.preventDefault();
+                          e.stopPropagation(); }}
                     >
                       <IconButton
                         size="small"
@@ -2938,6 +2947,7 @@ export default function Home() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                         }}
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           saveScrollPosition();
                           navigate(`/dynasties/${TEAM_MUSEUM[4].slug}?edit=true`);
@@ -2959,6 +2969,7 @@ export default function Home() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                         }}
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           console.log('Delete dynasty:', TEAM_MUSEUM[4]);
                           // TODO: Add delete functionality
@@ -3117,7 +3128,7 @@ export default function Home() {
                 onDelete={async (directorId) => {
                   if (!window.confirm('Are you sure you want to delete this director?')) return;
                   try {
-                    const res = await fetch(`/api/directors/${directorId}`, {
+                    const res = await fetch(`${API_BASE_URL}/api/directors/${directorId}`, {
                       method: 'DELETE',
                       credentials: 'include'
                     });

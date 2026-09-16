@@ -29,6 +29,7 @@ import PageHeading from './common/PageHeading';
 
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
+import API_BASE_URL from '../utils/api';
 
 let cachedResourcesData = null;
 
@@ -45,7 +46,7 @@ export default function Resources({ user }) {
   const [loading, setLoading] = useState(!cachedResourcesData);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [currentResource, setCurrentResource] = useState({
     title_en: '', title_ta: '',
@@ -66,7 +67,7 @@ export default function Resources({ user }) {
   const fetchResources = async () => {
     if (!cachedResourcesData) setLoading(true);
     try {
-      const response = await fetch(`/api/resources`);
+      const response = await fetch(`${API_BASE_URL}/api/resources`);
       if (!response.ok) throw new Error('Failed to fetch resources');
       const data = await response.json();
       setResources(data);
@@ -140,8 +141,8 @@ export default function Resources({ user }) {
     try {
       const method = currentResource._id ? 'PUT' : 'POST';
       const url = currentResource._id
-        ? `/api/resources/${currentResource._id}`
-        : `/api/resources`;
+        ? `${API_BASE_URL}/api/resources/${currentResource._id}`
+        : `${API_BASE_URL}/api/resources`;
 
       const response = await fetch(url, {
         method,
@@ -186,7 +187,7 @@ export default function Resources({ user }) {
     formData.append('image', file);
     try {
       setUploadingThumbnail(true);
-      const response = await fetch('/api/upload/image', {
+      const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -206,7 +207,7 @@ export default function Resources({ user }) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this resource?')) {
       try {
-        const response = await fetch(`/api/resources/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
@@ -744,8 +745,8 @@ export default function Resources({ user }) {
                   },
                 }}
               >
-                <ToggleButton value="en">ENGLISH</ToggleButton>
                 <ToggleButton value="ta">தமிழ்</ToggleButton>
+                <ToggleButton value="en">ENGLISH</ToggleButton>
               </ToggleButtonGroup>
             </Box>
 

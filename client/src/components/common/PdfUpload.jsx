@@ -17,6 +17,7 @@ import {
   OpenInNew,
   LibraryBooks
 } from '@mui/icons-material';
+import API_BASE_URL from '../../utils/api';
 
 export default function PdfUpload({
   pdfUrl = '',
@@ -57,7 +58,7 @@ export default function PdfUpload({
     formData.append('pdf', file);
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload/pdf', true);
+    xhr.open('POST', `${API_BASE_URL}` + '/api/upload/pdf', true);
 
     // Track upload progress
     xhr.upload.onprogress = (event) => {

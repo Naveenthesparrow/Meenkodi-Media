@@ -164,7 +164,7 @@ function LiteratureDetail({ user: initialUser }) {
   const fetchLiterature = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/literature/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/literature/${id}`);
       if (!res.ok) {
         throw new Error("Literature not found");
       }
@@ -194,7 +194,7 @@ function LiteratureDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/literature/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/literature/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -228,7 +228,7 @@ function LiteratureDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/literature/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/literature/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -264,7 +264,7 @@ function LiteratureDetail({ user: initialUser }) {
 
     try {
       const res = await fetch(
-        `/api/literature/${id}/comments/${commentId}/replies`,
+        `${API_BASE_URL}/api/literature/${id}/comments/${commentId}/replies`,
         {
           method: "POST",
           credentials: "include",
@@ -297,7 +297,7 @@ function LiteratureDetail({ user: initialUser }) {
 
     try {
       const res = await fetch(
-        `/api/literature/${id}/comments/${commentId}/reactions`,
+        `${API_BASE_URL}/api/literature/${id}/comments/${commentId}/reactions`,
         {
           method: "POST",
           credentials: "include",
@@ -334,7 +334,7 @@ function LiteratureDetail({ user: initialUser }) {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/literature/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/literature/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -354,7 +354,7 @@ function LiteratureDetail({ user: initialUser }) {
     if (deleteType === "comment") {
       try {
         const res = await fetch(
-          `/api/literature/${id}/comments/${itemToDelete}`,
+          `${API_BASE_URL}/api/literature/${id}/comments/${itemToDelete}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -377,7 +377,7 @@ function LiteratureDetail({ user: initialUser }) {
       try {
         const [commentId, replyId] = itemToDelete.split("-");
         const res = await fetch(
-          `/api/literature/${id}/comments/${commentId}/replies/${replyId}`,
+          `${API_BASE_URL}/api/literature/${id}/comments/${commentId}/replies/${replyId}`,
           {
             method: "DELETE",
             credentials: "include",
@@ -442,7 +442,7 @@ function LiteratureDetail({ user: initialUser }) {
         contentSections: formattedContentSections,
       };
 
-      const res = await fetch(`/api/literature/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/literature/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

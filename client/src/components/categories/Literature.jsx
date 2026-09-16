@@ -55,7 +55,7 @@ export default function Literature({ user }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [formData, setFormData] = useState({
     title_en: "",
     title_ta: "",
@@ -454,6 +454,7 @@ export default function Literature({ user }) {
                     >
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleEdit(literature);
                         }}
@@ -474,6 +475,7 @@ export default function Literature({ user }) {
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleDelete(literature._id);
                         }}
@@ -634,8 +636,8 @@ export default function Literature({ user }) {
                 }
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
           </Box>
           <TextField

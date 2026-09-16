@@ -29,6 +29,8 @@ import { useBilingualContent } from '../utils/bilingualContent';
 import { useTranslation } from 'react-i18next';
 
 import styled from 'styled-components';
+import API_BASE_URL from '../utils/api';
+
 
 let cachedEventsData = null;
 
@@ -45,7 +47,7 @@ export default function Events({ user }) {
   const [loading, setLoading] = useState(!cachedEventsData);
   const [error, setError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [currentEvent, setCurrentEvent] = useState({
     title: { en: '', ta: '' },
     description: { en: '', ta: '' },
@@ -65,7 +67,7 @@ export default function Events({ user }) {
   const fetchEvents = async () => {
     if (!cachedEventsData) setLoading(true);
     try {
-      const response = await fetch(`/api/events`);
+      const response = await fetch(`${API_BASE_URL}/api/events`);
       if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
       setEvents(data);
@@ -128,8 +130,8 @@ export default function Events({ user }) {
     try {
       const method = currentEvent._id ? 'PUT' : 'POST';
       const url = currentEvent._id
-        ? `/api/events/${currentEvent._id}`
-        : `/api/events`;
+        ? `${API_BASE_URL}/api/events/${currentEvent._id}`
+        : `${API_BASE_URL}/api/events`;
 
       const response = await fetch(url, {
         method,
@@ -161,7 +163,7 @@ export default function Events({ user }) {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
-        const response = await fetch(`/api/events/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
@@ -294,12 +296,14 @@ export default function Events({ user }) {
                     {/* Admin Controls */}
                     {user && user.role === "admin" && (
                       <div className="sci" onClick={(e) => {
-                        e.stopPropagation();
+                        e.preventDefault();
+                          e.stopPropagation();
                         e.preventDefault();
                       }}>
                         <IconButton
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.preventDefault();
+                          e.stopPropagation();
                             e.preventDefault();
                             handleEdit(event);
                           }}
@@ -310,7 +314,8 @@ export default function Events({ user }) {
                         </IconButton>
                         <IconButton
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.preventDefault();
+                          e.stopPropagation();
                             e.preventDefault();
                             handleDelete(event._id);
                           }}
@@ -375,8 +380,8 @@ export default function Events({ user }) {
                 }
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
           </Box>
           <TextField

@@ -63,7 +63,7 @@ export default function ResourceDetail({ user }) {
   const [loading, setLoading] = useState(!hasCache);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [title_en, setTitleEn] = useState(() => cachedResourceDetails[id]?.title?.en || "");
   const [title_ta, setTitleTa] = useState(() => cachedResourceDetails[id]?.title?.ta || "");
   const [description_en, setDescriptionEn] = useState(() => cachedResourceDetails[id]?.description?.en || "");
@@ -391,8 +391,8 @@ export default function ResourceDetail({ user }) {
                     onChange={(e, val) => val && setEditLanguage(val)}
                     sx={{ mb: 2 }}
                   >
-                    <ToggleButton value="en">English</ToggleButton>
                     <ToggleButton value="ta">தமிழ்</ToggleButton>
+                    <ToggleButton value="en">English</ToggleButton>
                   </ToggleButtonGroup>
 
                   {editLanguage === 'en' ? (

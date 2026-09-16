@@ -43,7 +43,7 @@ import {
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
 import MediaDisplay from "../common/MediaDisplay";
-import { API_BASE_URL } from "../../utils/api";
+import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 function KingDetail({ user: initialUser }) {
   const user = initialUser;
@@ -223,7 +223,7 @@ function KingDetail({ user: initialUser }) {
   const fetchKing = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/kings/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}`);
       if (!res.ok) {
         throw new Error("King not found");
       }
@@ -249,7 +249,7 @@ function KingDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/kings/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -283,7 +283,7 @@ function KingDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/kings/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -318,7 +318,7 @@ function KingDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/kings/${id}/comments/${commentId}/replies`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}/comments/${commentId}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -363,7 +363,7 @@ function KingDetail({ user: initialUser }) {
   // Confirm delete comment
   const confirmDeleteComment = async () => {
     try {
-      const res = await fetch(`/api/kings/${id}/comments/${itemToDelete}`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}/comments/${itemToDelete}`, {
         method: "DELETE",
         credentials: "include",
         headers: {
@@ -405,7 +405,7 @@ function KingDetail({ user: initialUser }) {
   const confirmDeleteReply = async () => {
     try {
       const { commentId, replyId } = itemToDelete;
-      const res = await fetch(`/api/kings/${id}/comments/${commentId}/replies/${replyId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}/comments/${commentId}/replies/${replyId}`, {
         method: "DELETE",
         credentials: "include",
         headers: {
@@ -534,7 +534,7 @@ function KingDetail({ user: initialUser }) {
         };
       });
 
-      const res = await fetch(`/api/kings/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -573,7 +573,7 @@ function KingDetail({ user: initialUser }) {
         if (!en && !ta) return undefined;
         return { en: en || "", ta: ta || "" };
       };
-      const res = await fetch(`/api/kings/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/kings/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -609,7 +609,7 @@ function KingDetail({ user: initialUser }) {
 
     if (confirmDelete) {
       try {
-        const res = await fetch(`/api/kings/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/kings/${id}`, {
           method: "DELETE",
           credentials: "include",
         });

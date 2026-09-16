@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import API_BASE_URL from '../utils/api';
 
 export default function AdminPortal({ user, logout }) {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ export default function AdminPortal({ user, logout }) {
 
   const fetchUsers = () => {
     axios
-      .get("/api/admin/users", {
+      .get(`${API_BASE_URL}` + "/api/admin/users", {
         withCredentials: true,
       })
       .then((res) => {
@@ -55,7 +56,7 @@ export default function AdminPortal({ user, logout }) {
 
   const handleDelete = async (id) => {
     if (window.confirm(t("adminPortal.deleteConfirm"))) {
-      await axios.delete(`/api/admin/users/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/admin/users/${id}`, {
         withCredentials: true,
       });
       fetchUsers();
@@ -64,7 +65,7 @@ export default function AdminPortal({ user, logout }) {
 
   const handleRoleChange = async (id, newRole) => {
     await axios.put(
-      `/api/admin/users/${id}/role`,
+      `${API_BASE_URL}/api/admin/users/${id}/role`,
       { role: newRole },
       { withCredentials: true }
     );
@@ -81,7 +82,7 @@ export default function AdminPortal({ user, logout }) {
 
   const handleEditSave = async () => {
     await axios.put(
-      `/api/admin/users/${editUser._id}`,
+      `${API_BASE_URL}/api/admin/users/${editUser._id}`,
       { displayName: editName, email: editEmail },
       { withCredentials: true }
     );

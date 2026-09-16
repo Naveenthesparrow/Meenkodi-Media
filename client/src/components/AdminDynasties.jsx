@@ -32,6 +32,8 @@ import {
   Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import { useBilingualContent } from "../utils/bilingualContent";
+import API_BASE_URL from '../utils/api';
+
 
 export default function AdminDynasties({ user }) {
   const { t } = useTranslation();
@@ -42,7 +44,7 @@ export default function AdminDynasties({ user }) {
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDynasty, setEditingDynasty] = useState(null);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [formData, setFormData] = useState({
     name_en: "",
     name_ta: "",
@@ -83,7 +85,7 @@ export default function AdminDynasties({ user }) {
 
   const fetchDynasties = async () => {
     try {
-      const res = await fetch(`/api/dynasties`);
+      const res = await fetch(`${API_BASE_URL}/api/dynasties`);
       if (!res.ok) throw new Error("Failed to fetch dynasties");
       const data = await res.json();
       setDynasties(data);
@@ -198,8 +200,8 @@ export default function AdminDynasties({ user }) {
       };
 
       const url = editingDynasty
-        ? `/api/dynasties/${editingDynasty._id}`
-        : `/api/dynasties`;
+        ? `${API_BASE_URL}/api/dynasties/${editingDynasty._id}`
+        : `${API_BASE_URL}/api/dynasties`;
 
       const method = editingDynasty ? "PUT" : "POST";
 
@@ -226,7 +228,7 @@ export default function AdminDynasties({ user }) {
     }
 
     try {
-      const res = await fetch(`/api/dynasties/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/dynasties/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -400,8 +402,8 @@ export default function AdminDynasties({ user }) {
                 }
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
           </Box>
           <Grid container spacing={2}>

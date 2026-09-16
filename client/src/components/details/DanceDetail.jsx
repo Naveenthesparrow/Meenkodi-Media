@@ -47,7 +47,7 @@ import {
   EmojiEmotions,
 } from "@mui/icons-material";
 import MediaUpload from "../common/MediaUpload";
-import { API_BASE_URL } from "../../utils/api";
+import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
 import SEO from "../common/SEO";
@@ -257,7 +257,7 @@ function DanceDetail({ user: initialUser }) {
         image: editableData.imageUrl || "",
         contentSections: formattedContentSections
       };
-      const res = await fetch(`/api/dance/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/dance/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -278,7 +278,7 @@ function DanceDetail({ user: initialUser }) {
   const fetchDance = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/dance/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/dance/${id}`);
       if (!res.ok) {
         throw new Error("Dance not found");
       }
@@ -304,7 +304,7 @@ function DanceDetail({ user: initialUser }) {
 
     if (confirmDelete) {
       try {
-        const res = await fetch(`/api/dance/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/dance/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -330,7 +330,7 @@ function DanceDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/dance/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/dance/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -383,7 +383,7 @@ function DanceDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/dance/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/dance/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -419,7 +419,7 @@ function DanceDetail({ user: initialUser }) {
 
     try {
       const res = await fetch(
-        `/api/dance/${id}/comments/${commentId}/replies`,
+        `${API_BASE_URL}/api/dance/${id}/comments/${commentId}/replies`,
         {
           method: "POST",
           credentials: "include",

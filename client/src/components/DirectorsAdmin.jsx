@@ -33,6 +33,8 @@ import {
   Image as ImageIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import API_BASE_URL from '../utils/api';
+
 
 const DirectorsAdmin = ({ user, onUpdate, externalEditDirector, externalOpenAdd, onDialogClose }) => {
   const { t, i18n } = useTranslation();
@@ -76,7 +78,7 @@ const DirectorsAdmin = ({ user, onUpdate, externalEditDirector, externalOpenAdd,
   const fetchDirectors = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/directors');
+      const response = await fetch(`${API_BASE_URL}/api/directors`);
       if (response.ok) {
         const data = await response.json();
         setDirectors(data);
@@ -146,7 +148,7 @@ const DirectorsAdmin = ({ user, onUpdate, externalEditDirector, externalOpenAdd,
         slug: formData.slug
       };
 
-      const url = editingId ? `/api/directors/${editingId}` : '/api/directors';
+      const url = editingId ? `${API_BASE_URL}/api/directors/${editingId}` : `${API_BASE_URL}` + '/api/directors';
       const method = editingId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -175,7 +177,7 @@ const DirectorsAdmin = ({ user, onUpdate, externalEditDirector, externalOpenAdd,
     if (!window.confirm('Are you sure you want to delete this director?')) return;
 
     try {
-      const response = await fetch(`/api/directors/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/directors/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -207,7 +209,7 @@ const DirectorsAdmin = ({ user, onUpdate, externalEditDirector, externalOpenAdd,
   const saveOrder = async (orderedDirectors) => {
     try {
       const orderedIds = orderedDirectors.map(d => d._id);
-      const response = await fetch('/api/directors/reorder/all', {
+      const response = await fetch(`${API_BASE_URL}/api/directors/reorder/all`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -317,8 +319,8 @@ const DirectorsAdmin = ({ user, onUpdate, externalEditDirector, externalOpenAdd,
                 }
               }}
             >
-              <ToggleButton value="en">English</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">English</ToggleButton>
             </ToggleButtonGroup>
           </Box>
 

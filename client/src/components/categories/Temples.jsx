@@ -55,7 +55,7 @@ export default function Temples({ user }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [formData, setFormData] = useState({
     name_en: "",
     name_ta: "",
@@ -497,6 +497,7 @@ export default function Temples({ user }) {
                     >
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleEdit(temple);
                         }}
@@ -518,6 +519,7 @@ export default function Temples({ user }) {
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleDelete(temple._id);
                         }}
@@ -694,8 +696,8 @@ export default function Temples({ user }) {
                 }
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
           </Box>
           <TextField

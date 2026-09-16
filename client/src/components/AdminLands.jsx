@@ -20,6 +20,8 @@ import {
 import { Add, Edit, Delete } from "@mui/icons-material";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import API_BASE_URL from '../utils/api';
+
 
 const emptyLand = {
   name: "",
@@ -45,7 +47,7 @@ export default function AdminLands() {
 
   const fetchLands = () => {
     setLoading(true);
-    fetch("/api/lands")
+    fetch(`${API_BASE_URL}` + "/api/lands")
       .then((res) => res.json())
       .then((data) => {
         setLands(data);
@@ -85,7 +87,7 @@ export default function AdminLands() {
     setError("");
     const method = editIdx === -1 ? "POST" : "PUT";
     const url =
-      editIdx === -1 ? "/api/lands" : `/api/lands/${lands[editIdx]._id}`;
+      editIdx === -1 ? `${API_BASE_URL}` + "/api/lands" : `${API_BASE_URL}/api/lands/${lands[editIdx]._id}`;
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
@@ -103,7 +105,7 @@ export default function AdminLands() {
 
   const handleDelete = async (idx) => {
     if (!window.confirm("Delete this land?")) return;
-    await fetch(`/api/lands/${lands[idx]._id}`, {
+    await fetch(`${API_BASE_URL}/api/lands/${lands[idx]._id}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -238,7 +240,7 @@ export default function AdminLands() {
                 if (e.target.files && e.target.files[0]) {
                   const formData = new FormData();
                   formData.append("image", e.target.files[0]);
-                  const res = await fetch("/api/lands/upload-image", {
+                  const res = await fetch(`${API_BASE_URL}` + "/api/lands/upload-image", {
                     method: "POST",
                     body: formData,
                     credentials: "include",

@@ -23,6 +23,8 @@ import MediaDisplay from "./common/MediaDisplay";
 import { useParams, useNavigate } from "react-router-dom";
 import { useBilingualContent } from '../utils/bilingualContent';
 import SEO from "./common/SEO";
+import API_BASE_URL from '../utils/api';
+
 
 const cachedEventDetails = {};
 
@@ -62,7 +64,7 @@ export default function EventDetail({ user }) {
 
   useEffect(() => {
     if (!hasCache) setLoading(true);
-    fetch(`/api/events/${id}`)
+    fetch(`${API_BASE_URL}/api/events/${id}`)
       .then((res) => res.json())
       .then((data) => {
         cachedEventDetails[id] = data;
@@ -92,7 +94,7 @@ export default function EventDetail({ user }) {
       return;
     }
     try {
-      const res = await fetch(`/api/events/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -123,7 +125,7 @@ export default function EventDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
-        await fetch(`/api/events/${id}`, {
+        await fetch(`${API_BASE_URL}/api/events/${id}`, {
           method: "DELETE",
           credentials: "include",
         });

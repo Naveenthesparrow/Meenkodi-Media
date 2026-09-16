@@ -183,7 +183,7 @@ function AncientScienceDetail({ user: initialUser }) {
   const fetchScience = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/ancientscience/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}`);
       console.log("API response status:", res.status);
       if (!res.ok) {
         const errorText = await res.text();
@@ -219,7 +219,7 @@ function AncientScienceDetail({ user: initialUser }) {
   // Update handleInlineSave to include content sections (serialize bilingual)
   const handleInlineSave = async () => {
     try {
-      const res = await fetch(`/api/ancientscience/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -262,7 +262,7 @@ function AncientScienceDetail({ user: initialUser }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this ancient science entry?")) {
       try {
-        const res = await fetch(`/api/ancientscience/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -292,8 +292,8 @@ function AncientScienceDetail({ user: initialUser }) {
     }
 
     try {
-      console.log("Making like request to:", `/api/ancientscience/${id}/like`);
-      const res = await fetch(`/api/ancientscience/${id}/like`, {
+      console.log("Making like request to:", `${API_BASE_URL}/api/ancientscience/${id}/like`);
+      const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -352,7 +352,7 @@ function AncientScienceDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/ancientscience/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -387,7 +387,7 @@ function AncientScienceDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/ancientscience/${id}/comments/${commentId}/replies`, {
+      const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}/comments/${commentId}/replies`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -423,13 +423,13 @@ function AncientScienceDetail({ user: initialUser }) {
     try {
       let res;
       if (deleteType === 'comment') {
-        res = await fetch(`/api/ancientscience/${id}/comments/${itemToDelete}`, {
+        res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}/comments/${itemToDelete}`, {
           method: "DELETE",
           credentials: "include",
         });
       } else if (deleteType === 'reply') {
         const [commentId, replyId] = itemToDelete.split('-');
-        res = await fetch(`/api/ancientscience/${id}/comments/${commentId}/replies/${replyId}`, {
+        res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}/comments/${commentId}/replies/${replyId}`, {
           method: "DELETE",
           credentials: "include",
         });

@@ -147,7 +147,7 @@ function FestivalDetail({ user: initialUser }) {
   const fetchFestival = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`/api/festivals/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}`);
       if (!res.ok) {
         throw new Error("Festival not found");
       }
@@ -221,7 +221,7 @@ function FestivalDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/festivals/${id}/like`, {
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}/like`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -255,7 +255,7 @@ function FestivalDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/festivals/${id}/comments`, {
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}/comments`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -290,7 +290,7 @@ function FestivalDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/festivals/${id}/comments/${commentId}/replies`, {
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}/comments/${commentId}/replies`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -320,7 +320,7 @@ function FestivalDetail({ user: initialUser }) {
     }
 
     try {
-      const res = await fetch(`/api/festivals/${id}/comments/${commentId}/reactions`, {
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}/comments/${commentId}/reactions`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -353,7 +353,7 @@ function FestivalDetail({ user: initialUser }) {
     if (!confirmDelete) return;
 
     try {
-      const res = await fetch(`/api/festivals/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}`, {
         method: "DELETE",
         credentials: "include"
       });
@@ -372,7 +372,7 @@ function FestivalDetail({ user: initialUser }) {
   const handleDeleteConfirmation = async () => {
     if (deleteType === "comment") {
       try {
-        const res = await fetch(`/api/festivals/${id}/comments/${itemToDelete}`, {
+        const res = await fetch(`${API_BASE_URL}/api/festivals/${id}/comments/${itemToDelete}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -390,7 +390,7 @@ function FestivalDetail({ user: initialUser }) {
     } else if (deleteType === "reply") {
       try {
         const [commentId, replyId] = itemToDelete.split("-");
-        const res = await fetch(`/api/festivals/${id}/comments/${commentId}/replies/${replyId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/festivals/${id}/comments/${commentId}/replies/${replyId}`, {
           method: "DELETE",
           credentials: "include"
         });
@@ -454,7 +454,7 @@ function FestivalDetail({ user: initialUser }) {
         contentSections: formattedContentSections,
       };
 
-      const res = await fetch(`/api/festivals/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/festivals/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

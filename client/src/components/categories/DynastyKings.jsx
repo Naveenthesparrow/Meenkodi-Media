@@ -367,7 +367,8 @@ export default function DynastyKings({ user }) {
                         >
                           <IconButton
                             onClick={(e) => {
-                              e.stopPropagation();
+                              e.preventDefault();
+                          e.stopPropagation();
                               handleEdit(king);
                             }}
                             size="small"
@@ -387,7 +388,8 @@ export default function DynastyKings({ user }) {
                           </IconButton>
                           <IconButton
                             onClick={(e) => {
-                              e.stopPropagation();
+                              e.preventDefault();
+                          e.stopPropagation();
                               handleDelete(king._id);
                             }}
                             size="small"

@@ -69,7 +69,7 @@ export default function Festivals({ user }) {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   // Removed filter-related state and methods
   const [formData, setFormData] = useState({
     name_en: "",
@@ -497,6 +497,7 @@ export default function Festivals({ user }) {
                     >
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleEdit(festival);
                         }}
@@ -518,6 +519,7 @@ export default function Festivals({ user }) {
                       </IconButton>
                       <IconButton
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleDelete(festival._id);
                         }}
@@ -691,8 +693,8 @@ export default function Festivals({ user }) {
                 }
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
           </Box>
           <TextField

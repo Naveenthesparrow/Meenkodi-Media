@@ -26,6 +26,8 @@ import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 import SEO from "./common/SEO";
+import API_BASE_URL from '../utils/api';
+
 
 const getCleanAuthorName = (name) => {
   if (!name) return 'Anonymous';
@@ -46,7 +48,7 @@ export default function ArticleDetail({ user }) {
   const [loading, setLoading] = useState(!cachedArticleDetails[id]);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [editLanguage, setEditLanguage] = useState('en');
+  const [editLanguage, setEditLanguage] = useState('ta');
   const [title_en, setTitleEn] = useState(() => cachedArticleDetails[id]?.title?.en || "");
   const [title_ta, setTitleTa] = useState(() => cachedArticleDetails[id]?.title?.ta || "");
   const [content_en, setContentEn] = useState(() => cachedArticleDetails[id]?.content?.en || "");
@@ -120,7 +122,7 @@ export default function ArticleDetail({ user }) {
   };
 
   useEffect(() => {
-    fetch(`/api/articles/${id}`)
+    fetch(`${API_BASE_URL}/api/articles/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch article");
         return res.json();
@@ -160,7 +162,7 @@ export default function ArticleDetail({ user }) {
     });
 
     try {
-      const response = await fetch(`/api/articles/${id}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}/like`, {
         method: "POST",
         credentials: "include",
       });
@@ -189,7 +191,7 @@ export default function ArticleDetail({ user }) {
         videoUrl,
       };
 
-      const res = await fetch(`/api/articles/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -200,7 +202,7 @@ export default function ArticleDetail({ user }) {
 
       const data = await res.json();
       // Refetch to get the full article with all fields
-      const refreshRes = await fetch(`/api/articles/${id}`);
+      const refreshRes = await fetch(`${API_BASE_URL}/api/articles/${id}`);
       const refreshData = await refreshRes.json();
       setArticle(refreshData);
       setTitleEn(refreshData.title?.en || "");
@@ -224,7 +226,7 @@ export default function ArticleDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this article?")) {
       try {
-        await fetch(`/api/articles/${id}`, {
+        await fetch(`${API_BASE_URL}/api/articles/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
@@ -355,8 +357,8 @@ export default function ArticleDetail({ user }) {
                 },
               }}
             >
-              <ToggleButton value="en">ENGLISH</ToggleButton>
               <ToggleButton value="ta">தமிழ்</ToggleButton>
+              <ToggleButton value="en">ENGLISH</ToggleButton>
             </ToggleButtonGroup>
             <Typography variant="caption" sx={{ mt: 2, color: '#666', fontStyle: 'italic', textAlign: 'center', px: 2 }}>
               {editLanguage === 'en'

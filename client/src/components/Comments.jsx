@@ -14,6 +14,7 @@ import {
   Fade,
   Tooltip,
 } from "@mui/material";
+import API_BASE_URL from '../utils/api';
 import {
   Delete as DeleteIcon,
   Send as SendIcon,
@@ -32,7 +33,7 @@ export default function Comments({ relatedType, relatedId, user }) {
 
   const fetchComments = () => {
     setLoading(true);
-    fetch(`/api/comments/${relatedType}/${relatedId}`)
+    fetch(`${API_BASE_URL}/api/comments/${relatedType}/${relatedId}`)
       .then((res) => res.json())
       .then((data) => {
         setComments(data);
@@ -49,7 +50,7 @@ export default function Comments({ relatedType, relatedId, user }) {
     e.preventDefault();
     setSubmitting(true);
     setError("");
-    const res = await fetch("/api/comments", {
+    const res = await fetch(`${API_BASE_URL}` + "/api/comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -67,7 +68,7 @@ export default function Comments({ relatedType, relatedId, user }) {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this comment?")) return;
-    await fetch(`/api/comments/${id}`, {
+    await fetch(`${API_BASE_URL}/api/comments/${id}`, {
       method: "DELETE",
       credentials: "include",
     });

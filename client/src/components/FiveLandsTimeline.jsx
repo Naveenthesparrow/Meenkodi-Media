@@ -49,7 +49,7 @@ export default function FiveLandsTimeline({ ringRadius = 170 }) {
       setLoading(true); setError(null);
       try {
         const langParam = i18n.language === 'en' ? '?lang=en' : '?lang=ta';
-        const lands = await apiRequest(`/api/lands${langParam}`);
+        const lands = await apiRequest(`${API_BASE_URL}/api/lands${langParam}`);
         if (cancelled) return;
         const firstFive = lands.slice(0, 5);
         const mapped = firstFive.map((land, idx) => {

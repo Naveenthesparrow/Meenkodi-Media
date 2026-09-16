@@ -8,6 +8,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { Edit, DragIndicator, ArrowUpward, ArrowDownward, Image as ImageIcon, Share as ShareIcon, Check as CheckIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from './common/SEO';
+import API_BASE_URL from '../utils/api';
+
 
 let cachedSeedsData = null;
 
@@ -79,7 +81,7 @@ export default function SeedsFootprints({ user }) {
     if (!cachedSeedsData) {
       setLoading(true);
     }
-    fetch('/api/seedsandfootprints/folders')
+    fetch(`${API_BASE_URL}/api/seedsandfootprints/folders`)
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -117,7 +119,7 @@ export default function SeedsFootprints({ user }) {
         formData.append('coverPhoto', form.coverPhoto);
       }
 
-      const res = await fetch('/api/seedsandfootprints/folders', {
+      const res = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders`, {
         method: 'POST',
         credentials: 'include',
         body: formData
@@ -141,7 +143,7 @@ export default function SeedsFootprints({ user }) {
     if (!isAdmin) return;
     if (!confirm(t('research.deleteConfirm'))) return;
     try {
-      const res = await fetch(`/api/seedsandfootprints/folders/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok && res.status !== 204) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Server error');
@@ -192,7 +194,7 @@ export default function SeedsFootprints({ user }) {
         formData.append('removeCoverPhoto', 'true');
       }
 
-      const res = await fetch(`/api/seedsandfootprints/folders/${editingFolder._id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${editingFolder._id}`, {
         method: 'PUT',
         credentials: 'include',
         body: formData
@@ -234,7 +236,7 @@ export default function SeedsFootprints({ user }) {
   const handleSaveOrder = async () => {
     try {
       const orderedIds = folderOrder.map(folder => folder._id);
-      const response = await fetch('/api/seedsandfootprints/folders/order', {
+      const response = await fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/order`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

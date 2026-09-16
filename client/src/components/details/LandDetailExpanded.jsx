@@ -330,8 +330,8 @@ export default function LandDetailExpanded({ user }) {
               },
             }}
           >
-            <ToggleButton value="en">{tr("language.english", "English").toUpperCase()}</ToggleButton>
             <ToggleButton value="ta">{tr("language.tamil", "Tamil")}</ToggleButton>
+            <ToggleButton value="en">{tr("language.english", "English").toUpperCase()}</ToggleButton>
           </ToggleButtonGroup>
         </Box>
 

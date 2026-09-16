@@ -91,7 +91,7 @@ const MediaUpload = ({
     formData.append("image", file);
 
     try {
-      const uploadResponse = await fetch("/api/upload/image", {
+      const uploadResponse = await fetch(`${API_BASE_URL}` + "/api/upload/image", {
         method: "POST",
         body: formData,
       });
