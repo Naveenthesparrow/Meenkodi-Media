@@ -20,7 +20,7 @@ export default function SEO({
   const location = useLocation();
   const baseUrl = window.location.origin;
   
-  const rawUrl = url || `${location.pathname}${location.search || ''}`;
+  const rawUrl = url || `${location.pathname}`;
   const fullUrl = (rawUrl.startsWith('http') ? rawUrl : `${baseUrl}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`)
     .replace('https://meenkodi.com', baseUrl);
   const fullTitle = title ? `${title} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
