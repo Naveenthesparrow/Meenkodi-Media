@@ -141,6 +141,7 @@ export default function ArticleComposer({ user, onPostCreated }) {
       const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
 
       const data = await response.json();
