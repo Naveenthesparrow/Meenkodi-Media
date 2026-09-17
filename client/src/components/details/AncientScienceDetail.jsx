@@ -633,7 +633,7 @@ function AncientScienceDetail({ user: initialUser }) {
         description={science ? (getContent(science.description) || `Discover ancient Tamil scientific achievements in ${getContent(science.field) || 'science'} during ${getContent(science.period) || 'ancient period'}.`).slice(0, 160) : 'Explore ancient Tamil astronomy, metallurgy, medicine, and engineering.'}
         keywords={science ? `${getContent(science.name)}, Ancient Tamil Science, ${getContent(science.field) || ''}, Siddha Medicine, Tamil Engineering, Meenkodi` : 'Ancient Tamil Science, Siddha Medicine'}
         image={science?.image || undefined}
-        url={`https://www.meenkodi.com/explore/ancientscience/${id}`}
+        url={`/explore/ancientscience/${id}`}
         type="article"
       />
       {/* Header */}

@@ -257,7 +257,7 @@ export default function ResourceDetail({ user }) {
         description={resource ? (getContent(resource.description) || `Educational materials and research on ${getContent(resource.title)}.`).slice(0, 160) : 'Explore Tamil heritage resources.'}
         keywords={resource ? `${getContent(resource.title)}, ${getContent(resource.author) || ''}, Tamil Resources, Tamil Books, Tamil Manuscripts, Meenkodi` : 'Tamil Resources, Tamil Books'}
         image={resource?.image || undefined}
-        url={`https://www.meenkodi.com/resources/${id}`}
+        url={`/resources/${id}`}
         type="article"
       />
       <Container maxWidth="lg" sx={{ py: 4 }}>

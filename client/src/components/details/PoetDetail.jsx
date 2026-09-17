@@ -759,7 +759,7 @@ function PoetDetail({ user: initialUser }) {
         description={poet ? (getContent(poet.description) || `Explore works and legacy of ${getContent(poet.name)} during ${getContent(poet.period) || 'ancient Tamil period'}.`).slice(0, 160) : 'Discover ancient Tamil poets.'}
         keywords={poet ? `${getContent(poet.name)}, Tamil Poets, Sangam Literature, ${getContent(poet.period) || ''}, Meenkodi` : 'Tamil Poets, Sangam Literature'}
         image={poet?.image || undefined}
-        url={`https://www.meenkodi.com/poets/${slug}`}
+        url={`/poets/${slug}`}
         type="article"
       />
       {/* Hero Section */}

@@ -58,6 +58,68 @@ app.set('trust proxy', 1);
 
 app.use(express.json());
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5000",
+  "https://www.meenkodi.com",
+  "https://meenkodi-media-fd.onrender.com",
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      // In development, allow all localhost origins
+      if (!isProduction) {
+        try {
+          const url = new URL(origin);
+          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+            return callback(null, true);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      // Allow configured origins explicitly
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        return callback(null, true);
+      }
+
+      // In production, allow your domains
+      if (isProduction) {
+        try {
+          const url = new URL(origin);
+          const hostname = url.hostname.toLowerCase();
+
+          if (hostname === 'www.meenkodi.com' || hostname === 'meenkodi.com') {
+            return callback(null, true);
+          }
+
+          if (hostname.endsWith('.onrender.com')) {
+            return callback(null, true);
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["set-cookie"],
+  })
+);
+
+
 // Server-Side In-Memory Cache System for Ultra-Fast API Responses
 const apiResponseCache = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
@@ -199,69 +261,12 @@ if (!mongoUri) {
     });
 }
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:5000",
-  "https://www.meenkodi.com",
-  "https://meenkodi-media-fd.onrender.com",
-  process.env.CLIENT_URL
-].filter(Boolean);
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      // In development, allow all localhost origins
-      if (!isProduction) {
-        try {
-          const url = new URL(origin);
-          if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-            return callback(null, true);
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
-
-      // Allow configured origins explicitly
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        return callback(null, true);
-      }
-
-      // In production, allow your domains
-      if (isProduction) {
-        try {
-          const url = new URL(origin);
-          const hostname = url.hostname.toLowerCase();
-
-          if (hostname === 'www.meenkodi.com' || hostname === 'meenkodi.com') {
-            return callback(null, true);
-          }
-
-          if (hostname.endsWith('.onrender.com')) {
-            return callback(null, true);
-          }
-        } catch (e) {
-          // ignore parse errors
-        }
-      }
-
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["set-cookie"],
-  })
-);
 
 import MongoStore from "connect-mongo";
 
 // Session configuration
-const isProduction = process.env.NODE_ENV === 'production';
+
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || "fallback-secret-key",
   resave: false,

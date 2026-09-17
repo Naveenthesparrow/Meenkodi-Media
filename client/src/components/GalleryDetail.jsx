@@ -193,8 +193,14 @@ export default function GalleryDetail({ user }) {
     // Normal full fetch flow (if cache is missing or item is not in cache)
     setLoading(true);
     fetch(`${API_BASE_URL}/api/gallery/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch gallery item");
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (data.error) throw new Error(data.error);
         setGalleryItem(data);
 
         // Prepare editable data
@@ -531,8 +537,8 @@ export default function GalleryDetail({ user }) {
   const categoryDisplay = galleryItem.category === 'Other' && galleryItem.customCategoryName
     ? getContent(galleryItem.customCategoryName)
     : galleryItem.category;
-  const imageUrl = galleryItem.imageUrl ? (galleryItem.imageUrl.startsWith('http') ? galleryItem.imageUrl : `https://www.meenkodi.com${galleryItem.imageUrl}`) : null;
-  const pageUrl = `https://www.meenkodi.com/gallery/${id}`;
+  const imageUrl = galleryItem.imageUrl ? (galleryItem.imageUrl.startsWith('http') ? galleryItem.imageUrl : `${window.location.origin}${galleryItem.imageUrl}`) : null;
+  const pageUrl = `${window.location.origin}/gallery/${id}`;
   
   const seoTitle = `${itemName} | ${categoryDisplay} | Tamil Heritage Gallery`;
   const seoDescription = itemDescription 
@@ -556,8 +562,8 @@ export default function GalleryDetail({ user }) {
     "url": pageUrl,
     "name": itemName,
     "description": itemDescription || seoDescription,
-    "license": "https://www.meenkodi.com/faq",
-    "acquireLicensePage": "https://www.meenkodi.com/faq",
+    "license": `${window.location.origin}/faq`,
+    "acquireLicensePage": `${window.location.origin}/faq`,
     "creator": {
       "@type": "Organization",
       "name": "Meenkodi Tamil Heritage Foundation"
@@ -570,7 +576,7 @@ export default function GalleryDetail({ user }) {
     "isPartOf": {
       "@type": "CollectionPage",
       "name": `${categoryDisplay} Gallery`,
-      "url": "https://www.meenkodi.com/gallery"
+      "url": `${window.location.origin}/gallery`
     }
   } : null;
 
@@ -705,7 +711,7 @@ export default function GalleryDetail({ user }) {
             )}
 
             <OptimizedImage
-              src={galleryItem.imageUrl}
+              src={toAbsoluteMediaUrl(galleryItem.imageUrl)}
               alt={`${getContent(galleryItem.name)} - ${categoryDisplay} - Tamil Heritage | Meenkodi`}
               sx={{
                 width: '100%',

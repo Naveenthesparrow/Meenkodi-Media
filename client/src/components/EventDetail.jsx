@@ -251,7 +251,7 @@ export default function EventDetail({ user }) {
         description={event ? (getContent(event.description) || `Join us for ${getContent(event.title)} in ${getContent(event.location) || 'Tamil Nadu'}.`).slice(0, 160) : 'Explore Tamil heritage events and workshops.'}
         keywords={event ? `${getContent(event.title)}, ${getContent(event.location) || ''}, Tamil Events, Cultural Workshops, Meenkodi` : 'Tamil Events, Cultural Workshops'}
         image={event?.imageUrl || event?.imageLink || undefined}
-        url={`https://www.meenkodi.com/events/${id}`}
+        url={`/events/${id}`}
         type="article"
       />
       <Box sx={{

@@ -629,7 +629,7 @@ function ClothingDetail({ user: initialUser }) {
         description={clothing ? (getContent(clothing.description) || `Explore historical Tamil clothing ${getContent(clothing.name)} made of ${getContent(clothing.materials) || 'traditional textiles'}.`).slice(0, 160) : 'Discover traditional Tamil textiles, weaving, and attire.'}
         keywords={clothing ? `${getContent(clothing.name)}, Tamil Clothing, ${getContent(clothing.type) || ''}, Kanchipuram Silk, Tamil Attire, Meenkodi` : 'Tamil Clothing, Traditional Attire'}
         image={clothing?.image || undefined}
-        url={`https://www.meenkodi.com/explore/clothing/${id}`}
+        url={`/explore/clothing/${id}`}
         type="article"
       />
       {/* Header */}

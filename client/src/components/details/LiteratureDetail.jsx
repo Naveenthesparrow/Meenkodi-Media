@@ -649,7 +649,7 @@ function LiteratureDetail({ user: initialUser }) {
         description={literature ? (getContent(literature.description) || getContent(literature.summary) || `Explore ${getContent(literature.title)} by ${getContent(literature.author) || 'ancient Tamil poet'}.`).slice(0, 160) : 'Explore Sangam poetry and classical Tamil literature.'}
         keywords={literature ? `${getContent(literature.title)}, ${getContent(literature.author) || ''}, Sangam Literature, Tamil Poetry, Meenkodi` : 'Sangam Literature, Tamil Poetry'}
         image={literature?.image || literature?.imageLink || undefined}
-        url={`https://www.meenkodi.com/explore/literature/${id}`}
+        url={`/explore/literature/${id}`}
         type="article"
       />
       {/* Header */}

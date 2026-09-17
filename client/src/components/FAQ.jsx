@@ -42,7 +42,7 @@ const FAQ = () => {
               title="Frequently Asked Questions (FAQ) - Meenkodi Tamil Heritage"
               description="Find answers to common questions about Meenkodi Tamil Heritage Foundation, Tamil history, ancient dynasties, cultural archives, and resources."
               keywords="Meenkodi FAQ, Tamil Heritage FAQ, Tamil History Questions, Meenkodi Foundation"
-              url="https://www.meenkodi.com/faq"
+              url="/faq"
             />
             {/* Hero Section */}
             <Container maxWidth="lg" sx={{ mb: 6, textAlign: 'center' }}>

@@ -588,7 +588,7 @@ export default function LandDetailExpanded({ user }) {
         description={land ? (description || `Explore ${name} (${land.type}) landscape in Sangam literature and Tamil geography.`).slice(0, 160) : 'Explore Five Ainthinai landscapes of Tamil Sangam age.'}
         keywords={land ? `${name}, Five Ainthinai, ${land.type || ''}, Kurinji, Mullai, Marutham, Neithal, Palai, Meenkodi` : 'Five Ainthinai, Sangam Landscapes'}
         image={land?.image || undefined}
-        url={`https://www.meenkodi.com/lands/${id}`}
+        url={`/lands/${id}`}
         type="article"
       />
       {editDialog}

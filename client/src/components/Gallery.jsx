@@ -998,7 +998,7 @@ export default function Gallery({ user }) {
                 <Card
                   component={Link}
                   to={item.isFolder
-                    ? `/gallery/${slugify(getContent(item.customCategoryName || item.name))}`
+                    ? `/gallery/folder/${slugify(getContent(item.customCategoryName || item.name))}`
                     : `/gallery/${item._id}`
                   }
                   state={item.isFolder ? undefined : {
