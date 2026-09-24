@@ -275,7 +275,7 @@ const sessionConfig = {
     secure: isProduction, // HTTPS only in production
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax', // 'lax' is safer and sufficient for same-origin (frontend served by backend)
+    sameSite: isProduction ? 'none' : 'lax', // 'none' is required for cross-domain API requests in production
     path: '/',
   },
   name: "connect.sid",
