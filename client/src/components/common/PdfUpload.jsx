@@ -59,6 +59,7 @@ export default function PdfUpload({
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `${API_BASE_URL}` + '/api/upload/pdf', true);
+    xhr.withCredentials = true;
 
     // Track upload progress
     xhr.upload.onprogress = (event) => {
@@ -74,7 +75,7 @@ export default function PdfUpload({
         try {
           const res = JSON.parse(xhr.responseText);
           const uploadedUrl = res.url || res.downloadLink;
-          const uploadedName = res.originalName || file.name;
+          const uploadedName = file.name;
           const uploadedSize = res.pdfSize || formatBytes(file.size);
 
           onPdfChange && onPdfChange({

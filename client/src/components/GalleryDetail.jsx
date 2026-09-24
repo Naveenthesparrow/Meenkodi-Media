@@ -600,8 +600,8 @@ export default function GalleryDetail({ user }) {
             const fromFolder = location.state?.fromFolder;
             const folderName = location.state?.folderName;
             if (fromFolder && folderName) {
-              const folderParam = encodeURIComponent(folderName);
-              navigate(`/gallery?folder=${folderParam}`);
+              const folderSlug = slugify(folderName);
+              navigate(`/gallery/folder/${folderSlug}`);
               return;
             }
             navigate('/gallery');

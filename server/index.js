@@ -2297,6 +2297,7 @@ app.post(
         return res.status(400).json({ error: "No PDF file uploaded" });
       }
 
+      if (req.file.originalname) { req.file.originalname = Buffer.from(req.file.originalname, 'latin1').toString('utf8'); }
       tempFilePath = req.file.path;
       const sizeBytes = req.file.size || 0;
       const sizeFormatted = sizeBytes > 1024 * 1024
