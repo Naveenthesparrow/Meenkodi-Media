@@ -81,11 +81,6 @@ export default function GalleryDetail({ user }) {
     let cEn = data.customCategoryName?.en || '';
     let cTa = data.customCategoryName?.ta || '';
 
-    if (data.customCategoryName && (data.customCategoryName.en || data.customCategoryName.ta)) {
-      const base = data.customCategoryName.en || data.customCategoryName.ta;
-      catValue = `CUSTOM:${base.toString().toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`;
-    }
-
     return {
       name_en: data.name?.en || "",
       name_ta: data.name?.ta || "",
@@ -153,11 +148,6 @@ export default function GalleryDetail({ user }) {
         let cEn = data.customCategoryName?.en || '';
         let cTa = data.customCategoryName?.ta || '';
 
-        if (data.customCategoryName && (data.customCategoryName.en || data.customCategoryName.ta)) {
-          const base = data.customCategoryName.en || data.customCategoryName.ta;
-          catValue = `CUSTOM:${slugify(base)}`;
-        }
-
         setEditableData({
           name_en: data.name?.en || "",
           name_ta: data.name?.ta || "",
@@ -207,11 +197,6 @@ export default function GalleryDetail({ user }) {
         let catValue = data.category || "";
         let cEn = data.customCategoryName?.en || '';
         let cTa = data.customCategoryName?.ta || '';
-
-        if (data.customCategoryName && (data.customCategoryName.en || data.customCategoryName.ta)) {
-          const base = data.customCategoryName.en || data.customCategoryName.ta;
-          catValue = `CUSTOM:${slugify(base)}`;
-        }
 
         setEditableData({
           name_en: data.name?.en || "",
@@ -428,9 +413,9 @@ export default function GalleryDetail({ user }) {
                   ))}
                   {galleryItem.customCategoryName && (function () {
                     const base = galleryItem.customCategoryName.en || galleryItem.customCategoryName.ta;
-                    const slug = base.toString().toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                    const slug = slugify(base);
                     return (
-                      <MenuItem key={`custom-${slug}`} value={`CUSTOM:${slug}`}>
+                      <MenuItem key={`custom-${slug}`} value="Other">
                         {getContent(galleryItem.customCategoryName)}
                       </MenuItem>
                     );

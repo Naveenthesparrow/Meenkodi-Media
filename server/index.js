@@ -206,7 +206,7 @@ app.get('/api/health', (req, res) => {
 // Admin: regenerate all sitemaps from live DB data
 app.post('/api/sitemap/refresh', async (req, res) => {
   // Allow only admins; skip auth check if called internally during startup
-  if (req.isAuthenticated && req.isAuthenticated() && req.user && req.user.role !== 'admin') {
+  if (req.isAuthenticated && req.isAuthenticated() && req.user && !['admin', 'superadmin'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Admin only' });
   }
   try {
@@ -318,16 +318,23 @@ passport.use(
       try {
         console.log("Google Strategy callback - Profile:", profile.id);
         let user = await User.findOne({ googleId: profile.id });
+        const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL || '').trim().toLowerCase();
         if (!user) {
           user = await User.create({
             googleId: profile.id,
             displayName: profile.displayName,
             email: profile.emails[0].value,
             photo: profile.photos[0].value,
-            role: "user",
+            role: superAdminEmail && profile.emails?.[0]?.value?.toLowerCase() === superAdminEmail
+              ? "superadmin"
+              : "user",
           });
           console.log("Created new user:", user._id);
         } else {
+          if (superAdminEmail && user.email?.toLowerCase() === superAdminEmail && user.role !== "superadmin") {
+            user.role = "superadmin";
+            await user.save();
+          }
           console.log("Found existing user:", user._id);
         }
         return done(null, user);
@@ -345,9 +352,12 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
-    done(null, user);
+    // Treat deleted or stale session users as logged out instead of turning
+    // the next auth check into a server error.
+    done(null, user || false);
   } catch (err) {
-    done(err, null);
+    console.warn("Ignoring invalid session user:", err.message);
+    done(null, false);
   }
 });
 
@@ -558,11 +568,16 @@ const researchUpload = multer({
 });
 
 function ensureAdmin(req, res, next) {
-  if (req.isAuthenticated() && req.user.role === "admin") return next();
+  if (req.isAuthenticated() && ["admin", "superadmin"].includes(req.user.role)) return next();
   res.status(403).send("Admins only");
 }
 
-app.get("/api/admin/users", ensureAdmin, async (req, res) => {
+function ensureSuperAdmin(req, res, next) {
+  if (req.isAuthenticated() && req.user.role === "superadmin") return next();
+  res.status(403).json({ error: "Super admin access required" });
+}
+
+app.get("/api/admin/users", ensureSuperAdmin, async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
@@ -602,7 +617,7 @@ app.get("/api/articles", async (req, res) => {
   let query = {};
 
   // Admins can see all articles, regular users only see published
-  if (req.user && req.user.role === 'admin') {
+  if (req.user && ['admin', 'superadmin'].includes(req.user.role)) {
     if (status) query.status = status;
   } else {
     query.status = 'published';
@@ -652,7 +667,7 @@ app.get("/api/articles/:id", async (req, res) => {
   // Check permissions
   if (article.status !== 'published') {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
+    if (!['admin', 'superadmin'].includes(req.user.role) && article.authorId?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Forbidden' });
     }
   }
@@ -708,11 +723,11 @@ app.post("/api/articles", ensureAuthenticated, async (req, res) => {
       authorId: req.user._id,
       authorName: req.user.displayName || req.user.email,
       authorEmail: req.user.email,
-      status: req.user.role === 'admin' ? 'published' : 'pending',
+      status: ['admin', 'superadmin'].includes(req.user.role) ? 'published' : 'pending',
       submittedAt: new Date(),
     };
 
-    if (req.user.role === 'admin') {
+    if (['admin', 'superadmin'].includes(req.user.role)) {
       articleData.publishedAt = new Date();
       articleData.approvedBy = req.user._id;
     }
@@ -733,7 +748,7 @@ app.put("/api/articles/:id", ensureAuthenticated, async (req, res) => {
     if (!article) return res.status(404).json({ error: "Article not found" });
 
     // Check permissions: admin or article author
-    if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
+    if (!['admin', 'superadmin'].includes(req.user.role) && article.authorId?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -797,7 +812,7 @@ app.delete("/api/articles/:id", ensureAuthenticated, async (req, res) => {
   if (!article) return res.status(404).json({ error: "Article not found" });
 
   // Check permissions
-  if (req.user.role !== 'admin' && article.authorId?.toString() !== req.user._id.toString()) {
+  if (!['admin', 'superadmin'].includes(req.user.role) && article.authorId?.toString() !== req.user._id.toString()) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -1039,6 +1054,7 @@ app.get('/api/seedsandfootprints/folders/:id', async (req, res) => {
       photos: (folder.photos || []).map((p) => ({
         _id: p._id,
         url: p.url,
+        videoLink: p.videoLink || '',
         caption: {
           en: p.caption?.en || '',
           ta: p.caption?.ta || ''
@@ -1610,11 +1626,16 @@ app.delete("/api/comments/:id", ensureAdmin, async (req, res) => {
 });
 
 // Update user role (admin only)
-app.put("/api/admin/users/:id/role", ensureAdmin, async (req, res) => {
+app.put("/api/admin/users/:id/role", ensureSuperAdmin, async (req, res) => {
   console.log("PUT /api/admin/users/:id/role", req.params.id, req.body);
   const { role } = req.body;
   if (!role || !["admin", "user"].includes(role)) {
     return res.status(400).json({ error: "Invalid role" });
+  }
+  const targetUser = await User.findById(req.params.id);
+  if (!targetUser) return res.status(404).json({ error: "User not found" });
+  if (targetUser.role === "superadmin" || targetUser._id.equals(req.user._id)) {
+    return res.status(403).json({ error: "The superadmin account cannot be changed" });
   }
   const user = await User.findByIdAndUpdate(
     req.params.id,
@@ -1625,9 +1646,14 @@ app.put("/api/admin/users/:id/role", ensureAdmin, async (req, res) => {
   res.json(user);
 });
 // Update user info (admin only)
-app.put("/api/admin/users/:id", ensureAdmin, async (req, res) => {
+app.put("/api/admin/users/:id", ensureSuperAdmin, async (req, res) => {
   console.log("PUT /api/admin/users/:id", req.params.id, req.body);
   const { displayName, email } = req.body;
+  const targetUser = await User.findById(req.params.id);
+  if (!targetUser) return res.status(404).json({ error: "User not found" });
+  if (targetUser.role === "superadmin") {
+    return res.status(403).json({ error: "The superadmin account cannot be changed" });
+  }
   const user = await User.findByIdAndUpdate(
     req.params.id,
     { displayName, email },
@@ -1637,8 +1663,13 @@ app.put("/api/admin/users/:id", ensureAdmin, async (req, res) => {
   res.json(user);
 });
 // Delete user (admin only)
-app.delete("/api/admin/users/:id", ensureAdmin, async (req, res) => {
+app.delete("/api/admin/users/:id", ensureSuperAdmin, async (req, res) => {
   console.log("DELETE /api/admin/users/:id", req.params.id);
+  const targetUser = await User.findById(req.params.id);
+  if (!targetUser) return res.status(404).json({ error: "User not found" });
+  if (targetUser.role === "superadmin") {
+    return res.status(403).json({ error: "The superadmin account cannot be deleted" });
+  }
   const result = await User.findByIdAndDelete(req.params.id);
   if (!result) return res.status(404).json({ error: "User not found" });
   res.status(204).end();
@@ -1974,7 +2005,7 @@ app.post(
     });
 
     // Ensure admin authentication
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
+    if (!req.isAuthenticated() || !["admin", "superadmin"].includes(req.user.role)) {
       return res.status(403).json({
         error: "Unauthorized",
         details: "Only admin users can upload videos",
@@ -2284,7 +2315,7 @@ app.post(
   "/api/upload/pdf",
   ensureAdmin,
   (req, res, next) => {
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
+    if (!req.isAuthenticated() || !["admin", "superadmin"].includes(req.user.role)) {
       return res.status(403).json({ error: "Unauthorized. Admin role required." });
     }
     next();
@@ -2948,7 +2979,7 @@ app.delete("/api/dynasties/:id/comments/:commentId", ensureAuthenticated, async 
     }
 
     // Check if user owns the comment or is admin
-    if (comment.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+    if (comment.user.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
       return res.status(403).json({ error: "Not authorized" });
     }
 
@@ -3028,7 +3059,7 @@ app.delete("/api/dynasties/:id/comments/:commentId/replies/:replyId", ensureAuth
     }
 
     // Check if user owns the reply or is admin
-    if (reply.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+    if (reply.user.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
       return res.status(403).json({ error: "Not authorized" });
     }
 
@@ -3232,7 +3263,7 @@ app.delete("/api/poets/:id/comments/:commentId", ensureAuthenticated, async (req
     }
 
     // Check if user owns the comment or is admin
-    if (comment.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+    if (comment.user.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
       return res.status(403).json({ error: "Not authorized" });
     }
 
@@ -3312,7 +3343,7 @@ app.delete("/api/poets/:id/comments/:commentId/replies/:replyId", ensureAuthenti
     }
 
     // Check if user owns the reply or is admin
-    if (reply.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+    if (reply.user.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
       return res.status(403).json({ error: "Not authorized" });
     }
 

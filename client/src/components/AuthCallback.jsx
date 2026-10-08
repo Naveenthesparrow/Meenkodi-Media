@@ -35,9 +35,12 @@ export default function AuthCallback() {
           // Wait for state to update
           await new Promise(resolve => setTimeout(resolve, 800));
 
-          // Redirect based on user role
-          if (userData.role === 'admin' || userData.role === 'user') {
-            navigate("/profile", { replace: true });
+          const returnPath = sessionStorage.getItem('authReturnPath') || '/';
+          sessionStorage.removeItem('authReturnPath');
+
+          // Return to the page that started the login flow.
+          if (['superadmin', 'admin', 'user'].includes(userData.role)) {
+            navigate(returnPath, { replace: true });
           } else {
             navigate("/", { replace: true });
           }

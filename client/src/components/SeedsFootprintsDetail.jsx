@@ -27,6 +27,7 @@ import SEO, { pageSEO } from './common/SEO';
 import OptimizedImage from './common/OptimizedImage';
 import API_BASE_URL from '../utils/api';
 
+const cachedFolderDetails = {};
 
 export default function SeedsFootprintsDetail({ user }) {
     const { id } = useParams();
@@ -51,6 +52,8 @@ export default function SeedsFootprintsDetail({ user }) {
         videoLink: '',
         editLanguage: 'en'
     });
+    const [existingImageUrl, setExistingImageUrl] = useState('');
+    const [imagePreviewUrl, setImagePreviewUrl] = useState('');
     const [editingPhotoId, setEditingPhotoId] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const [isFormVisible, setIsFormVisible] = useState(false);
@@ -69,6 +72,8 @@ export default function SeedsFootprintsDetail({ user }) {
     // Folder editing states
     const [editingFolder, setEditingFolder] = useState(false);
     const [folderForm, setFolderForm] = useState({
+        nameEn: '',
+        nameTa: '',
         descriptionEn: '',
         descriptionTa: '',
         coverPhoto: null,
@@ -92,6 +97,17 @@ export default function SeedsFootprintsDetail({ user }) {
             document.documentElement.style.overflow = '';
         };
     }, []);
+
+    React.useEffect(() => {
+        if (!uploadForm.file) {
+            setImagePreviewUrl('');
+            return undefined;
+        }
+
+        const previewUrl = URL.createObjectURL(uploadForm.file);
+        setImagePreviewUrl(previewUrl);
+        return () => URL.revokeObjectURL(previewUrl);
+    }, [uploadForm.file]);
 
     const handleDownload = async (imageUrl, filename) => {
         try {
@@ -213,12 +229,6 @@ export default function SeedsFootprintsDetail({ user }) {
                         if (a.order !== b.order) return (a.order || 0) - (b.order || 0);
                         return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
                     });
-                    console.log('📸 Loaded photos:', sortedPhotos.map(p => ({
-                        id: p._id,
-                        hasUrl: !!p.url,
-                        hasVideoLink: !!p.videoLink,
-                        videoLink: p.videoLink
-                    })));
                     cachedFolderDetails[id] = { folder: data, photos: sortedPhotos };
                     setFolder(data);
                     setPhotos(sortedPhotos);
@@ -439,6 +449,7 @@ export default function SeedsFootprintsDetail({ user }) {
     const handleEditPhoto = (photo) => {
         // populate form with existing photo data and open dialog for editing
         setEditingPhotoId(photo._id);
+        setExistingImageUrl(photo.url || '');
         setUploadForm(prev => ({
             ...prev,
             file: null,
@@ -458,6 +469,8 @@ export default function SeedsFootprintsDetail({ user }) {
     // Handle folder editing
     const handleEditFolder = () => {
         setFolderForm({
+            nameEn: getStringValue(folder.name, ''),
+            nameTa: typeof folder.name === 'object' ? folder.name.ta || '' : '',
             descriptionEn: (typeof folder.description === 'object' ? folder.description.en : folder.description) || '',
             descriptionTa: (typeof folder.description === 'object' ? folder.description.ta : '') || '',
             coverPhoto: null,
@@ -495,6 +508,8 @@ export default function SeedsFootprintsDetail({ user }) {
                 setFolder(updatedFolder);
                 setEditingFolder(false);
                 setFolderForm({
+                    nameEn: '',
+                    nameTa: '',
                     descriptionEn: '',
                     descriptionTa: '',
                     coverPhoto: null,
@@ -534,6 +549,10 @@ export default function SeedsFootprintsDetail({ user }) {
             setUploading(true);
             setUploadError('');
 
+            if (!editingPhotoId && !uploadForm.file) {
+                throw new Error('Please select an image before saving a new photo');
+            }
+
             // 1) Upload image to backend (Cloudinary)
             let imageUrl = null;
             if (uploadForm.file) {
@@ -547,8 +566,15 @@ export default function SeedsFootprintsDetail({ user }) {
                 });
 
                 if (!uploadRes.ok) {
-                    const errBody = await uploadRes.json().catch(() => ({}));
-                    throw new Error(errBody.error || 'Image upload failed');
+                    const errorText = await uploadRes.text();
+                    let errorMessage = 'Image upload failed';
+                    try {
+                        const errBody = JSON.parse(errorText);
+                        errorMessage = errBody.error || errBody.details || errorMessage;
+                    } catch {
+                        if (errorText) errorMessage = errorText;
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const uploadJson = await uploadRes.json();
@@ -571,7 +597,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 ...(imageUrl ? { imageUrl } : {}),
                 caption: { en: uploadForm.captionEn, ta: uploadForm.captionTa },
                 credit: uploadForm.credit,
-                name: { en: uploadForm.nameEn, ta: uploadForm.nameTa },
+                name: { en: uploadForm.nameEn || '', ta: uploadForm.nameTa || '' },
                 keywords: keywordsArray,
                 sourceLink: uploadForm.sourceLink,
                 videoLink: uploadForm.videoLink
@@ -636,6 +662,7 @@ export default function SeedsFootprintsDetail({ user }) {
                 editLanguage: 'en'
             });
             setEditingPhotoId(null);
+            setExistingImageUrl('');
             setIsFormVisible(false);
         } catch (err) {
             console.error('Upload error', err);
@@ -833,22 +860,23 @@ export default function SeedsFootprintsDetail({ user }) {
                     sx={{
                         py: { xs: 3, md: 3.5 },
                         position: 'relative',
-                        textAlign: 'center'
+                        textAlign: 'center',
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', md: 'minmax(220px, 1fr) minmax(0, 2fr) minmax(260px, 1fr)' },
+                        alignItems: 'center',
+                        columnGap: { md: 2 },
+                        rowGap: { xs: 2, md: 0 },
                     }}
                 >
                     <Box
                         sx={{
-                            position: { xs: 'static', md: 'absolute' },
-                            left: { md: 0 },
-                            top: { md: '50%' },
-                            transform: { xs: 'none', md: 'translateY(-50%)' },
-                            mb: { xs: 2, md: 0 },
+                            position: 'static',
                             display: 'flex',
                             justifyContent: { xs: 'flex-start', md: 'flex-start' },
                             gap: 1,
                             flexWrap: 'wrap',
-                            zIndex: 10, // Ensure proper layering
-                            maxWidth: { md: '30%' } // Prevent overlap with center content
+                            zIndex: 10,
+                            minWidth: 0,
                         }}
                     >
                         <Button
@@ -912,9 +940,12 @@ export default function SeedsFootprintsDetail({ user }) {
                             fontSize: i18n.language === 'ta'
                                 ? { xs: '1.6rem', md: '2.4rem' }
                                 : { xs: '2rem', md: '3rem' },
+                            lineHeight: 1.18,
                             textAlign: 'center',
-                            maxWidth: { md: '40%' }, // Constrain width to prevent overlap
-                            wordBreak: 'break-word', // Handle long text gracefully
+                            width: '100%',
+                            maxWidth: '100%',
+                            minWidth: 0,
+                            overflowWrap: 'anywhere',
                             '&::before': {
                                 content: '""',
                                 position: 'absolute',
@@ -949,8 +980,8 @@ export default function SeedsFootprintsDetail({ user }) {
                             sx={{
                                 position: 'absolute',
                                 right: { xs: 10, md: 20 },
-                                top: '50%',
-                                transform: 'translateY(-50%)',
+                                top: { xs: 8, md: 12 },
+                                transform: 'none',
                                 zIndex: 5,
                                 bgcolor: 'rgba(255,255,255,0.9)',
                                 color: '#8B0000',
@@ -974,29 +1005,15 @@ export default function SeedsFootprintsDetail({ user }) {
                     {user && user.role === 'admin' && (
                         <Box
                             sx={{
-                                position: { xs: 'static', md: 'absolute' },
-                                right: { md: 0 },
-                                top: { md: '50%' },
-                                transform: { xs: 'none', md: 'translateY(-50%)' },
-                                transition: 'all 0.3s ease',
-                                mt: { xs: 2, md: 0 },
+                                position: 'static',
                                 display: 'flex',
                                 justifyContent: { xs: 'flex-start', md: 'flex-end' },
-                                width: { xs: '100%', md: 'auto' },
-                                zIndex: 10, // Ensure proper layering
-                                maxWidth: { md: '30%' }, // Prevent overlap with center content
-                                // Keep hover effect only on larger screens
-                                '&:hover': {
-                                    '@media (min-width:900px)': {
-                                        transform: 'translateY(-50%) scale(1.05)',
-                                    },
-                                    '& button': {
-                                        '@media (min-width:900px)': {
-                                            boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                                            transform: 'translateY(-3px)',
-                                        }
-                                    }
-                                }
+                                alignItems: 'center',
+                                flexDirection: 'column',
+                                gap: 1,
+                                width: '100%',
+                                minWidth: 0,
+                                zIndex: 10,
                             }}
                         >
                             <Button
@@ -1006,19 +1023,15 @@ export default function SeedsFootprintsDetail({ user }) {
                                 sx={{
                                     bgcolor: "#000",
                                     color: "#fff",
-                                    transition: 'all 0.3s ease',
-                                    "&:hover": {
-                                        bgcolor: "#333",
-                                        boxShadow: '0 8px 15px rgba(0,0,0,0.2)',
-                                        transform: { xs: 'none', md: 'translateY(-3px)' },
-                                    },
                                     borderRadius: 0,
                                     px: { xs: 2, md: 3 },
                                     py: { xs: 0.5, md: 1 },
                                     fontSize: i18n.language === 'ta'
                                         ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
                                         : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
-                                    mr: 1
+                                    mr: 0,
+                                    width: '100%',
+                                    whiteSpace: 'nowrap'
                                 }}
                             >
                                 {t('gallery.addImage', 'Add Image')}
@@ -1030,18 +1043,14 @@ export default function SeedsFootprintsDetail({ user }) {
                                 sx={{
                                     borderColor: "#8B0000",
                                     color: "#8B0000",
-                                    transition: 'all 0.3s ease',
-                                    "&:hover": {
-                                        borderColor: "#6B0000",
-                                        bgcolor: "rgba(139,0,0,0.05)",
-                                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                                    },
                                     borderRadius: 0,
                                     px: { xs: 2, md: 3 },
                                     py: { xs: 0.5, md: 1 },
                                     fontSize: i18n.language === 'ta'
                                         ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
                                         : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+                                    whiteSpace: 'nowrap',
+                                    width: '100%',
                                 }}
                             >
                                 {t('gallery.bulkUpload', 'Bulk Upload')}
@@ -1133,21 +1142,21 @@ export default function SeedsFootprintsDetail({ user }) {
                                                 },
                                             }}
                                         >
-                                            <ToggleButton value="ta">à®¤à®®à®¿à®´à¯</ToggleButton>
-                                            <ToggleButton value="en">ENGLISH</ToggleButton>
+                                            <ToggleButton value="ta">{t('language.tamil', 'Tamil')}</ToggleButton>
+                                            <ToggleButton value="en">{t('language.english', 'English').toUpperCase()}</ToggleButton>
                                         </ToggleButtonGroup>
                                     </Box>
 
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
                                         <TextField
-                                            label={uploadForm.editLanguage === 'en' ? 'Name (English)' : 'à®ªà¯†à®¯à®°à¯ (à®¤à®®à®¿à®´à¯)'}
+                                            label={uploadForm.editLanguage === 'en' ? t('research.nameEn', 'Name (English)') : t('research.nameTa', 'Name (Tamil)')}
                                             fullWidth
                                             variant="outlined"
                                             value={uploadForm.editLanguage === 'en' ? uploadForm.nameEn : uploadForm.nameTa}
                                             onChange={handleUploadFieldChange(uploadForm.editLanguage === 'en' ? 'nameEn' : 'nameTa')}
                                         />
                                         <TextField
-                                            label={uploadForm.editLanguage === 'en' ? 'Caption (English)' : 'à®¤à®²à¯ˆà®ªà¯à®ªà¯ (à®¤à®®à®¿à®´à¯)'}
+                                            label={uploadForm.editLanguage === 'en' ? t('research.captionEn', 'Caption (English)') : t('research.captionTa', 'Caption (Tamil)')}
                                             fullWidth
                                             variant="outlined"
                                             multiline
@@ -1211,6 +1220,19 @@ export default function SeedsFootprintsDetail({ user }) {
                                             <input type="file" accept="image/*" hidden onChange={handleUploadFieldChange('file')} />
                                         </Button>
                                         {uploadForm.file && <Typography variant="body2" sx={{ mt: 1.5, fontSize: { xs: '0.85rem', sm: '0.875rem' }, color: '#666' }}>{t('research.selectedFile', 'Selected')}: {uploadForm.file.name}</Typography>}
+                                        {(imagePreviewUrl || (!uploadForm.file && existingImageUrl)) && (
+                                            <Box sx={{ mt: 2, width: '100%', maxWidth: 320 }}>
+                                                <Typography variant="body2" sx={{ mb: 0.75, color: '#666' }}>
+                                                    {uploadForm.file ? t('research.imagePreview', 'Preview') : t('research.currentImage', 'Current image')}
+                                                </Typography>
+                                                <Box
+                                                    component="img"
+                                                    src={imagePreviewUrl || existingImageUrl}
+                                                    alt={t('research.imagePreview', 'Image preview')}
+                                                    sx={{ width: '100%', maxHeight: 220, objectFit: 'contain', border: '1px solid #ddd', borderRadius: 1, bgcolor: '#f7f7f7' }}
+                                                />
+                                            </Box>
+                                        )}
                                     </Box>
 
                                     {uploadError && <Typography variant="body2" sx={{ color: '#d32f2f', textAlign: 'center', mb: 2 }}>{uploadError}</Typography>}
@@ -1228,7 +1250,7 @@ export default function SeedsFootprintsDetail({ user }) {
                             }}>
                                 <Button 
                                     variant="text" 
-                                    onClick={() => { setUploadForm({ file: null, captionEn: '', captionTa: '', nameEn: '', nameTa: '', keywords: '', credit: '', sourceLink: '', videoLink: '', editLanguage: 'en' }); setEditingPhotoId(null); setIsFormVisible(false); }} 
+                                    onClick={() => { setUploadForm({ file: null, captionEn: '', captionTa: '', nameEn: '', nameTa: '', keywords: '', credit: '', sourceLink: '', videoLink: '', editLanguage: 'en' }); setEditingPhotoId(null); setExistingImageUrl(''); setIsFormVisible(false); }}
                                     sx={{ 
                                         color: '#777',
                                         width: { xs: '100%', sm: 'auto' },
@@ -1425,16 +1447,6 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     height: '100%', 
                                                     bgcolor: '#8B0000',
                                                     transition: 'width 0.5s ease-out',
-                                                    position: 'relative',
-                                                    background: bulkUploadProgress < 100 
-                                                        ? 'linear-gradient(90deg, #8B0000 0%, #c00000 50%, #8B0000 100%)'
-                                                        : '#2e7d32',
-                                                    backgroundSize: '200% 100%',
-                                                    animation: bulkUploadProgress < 100 ? 'shimmer 1.5s infinite' : 'none',
-                                                    '@keyframes shimmer': {
-                                                        '0%': { backgroundPosition: '200% 0' },
-                                                        '100%': { backgroundPosition: '-200% 0' }
-                                                    }
                                                 }} />
                                             </Box>
                                             
@@ -1492,13 +1504,14 @@ export default function SeedsFootprintsDetail({ user }) {
                                 >
                                     {t('actions.cancel', 'Cancel')}
                                 </Button>
-                                <Button 
-                                    variant="contained" 
+                                <Button
+                                    variant="contained"
                                     onClick={handleBulkUpload}
                                     disabled={bulkUploading || bulkFiles.length === 0}
-                                    sx={{ 
+                                    sx={{
                                         bgcolor: '#8B0000',
-                                        '&:hover': { bgcolor: '#6B0000' }
+                                        color: '#fff',
+                                        borderRadius: 0,
                                     }}
                                 >
                                     {bulkUploading ? t('gallery.uploading', 'Uploading...') : t('gallery.uploadAll', 'Upload All')}

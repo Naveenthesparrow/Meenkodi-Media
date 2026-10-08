@@ -24,6 +24,7 @@ import API_BASE_URL from '../utils/api';
 
 export default function AdminPortal({ user, logout }) {
   const { t } = useTranslation();
+  const isSuperAdmin = user?.role === "superadmin";
   const [users, setUsers] = useState([]);
   const [editUser, setEditUser] = useState(null);
   const [editName, setEditName] = useState("");
@@ -51,8 +52,9 @@ export default function AdminPortal({ user, logout }) {
   };
 
   useEffect(() => {
+    if (!isSuperAdmin) return;
     fetchUsers();
-  }, []);
+  }, [isSuperAdmin]);
 
   const handleDelete = async (id) => {
     if (window.confirm(t("adminPortal.deleteConfirm"))) {
@@ -107,7 +109,7 @@ export default function AdminPortal({ user, logout }) {
       }}
     >
       <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
-        {t("adminPortal.title")}
+        {isSuperAdmin ? t("adminPortal.superTitle") : t("adminPortal.title")}
       </Typography>
       <Box 
         sx={{
@@ -133,10 +135,16 @@ export default function AdminPortal({ user, logout }) {
           {t("adminPortal.logout")}
         </Button>
       </Box>
-      <Typography variant="h6" sx={{ mt: { xs: 2, sm: 2 }, mb: 1 }}>
-        {t("adminPortal.allUsers")}
-      </Typography>
-      <List>
+      {!isSuperAdmin ? (
+        <Typography variant="body1" sx={{ mt: 4, color: "text.secondary" }}>
+          {t("adminPortal.adminNotice")}
+        </Typography>
+      ) : (
+      <>
+        <Typography variant="h6" sx={{ mt: { xs: 2, sm: 2 }, mb: 1 }}>
+          {t("adminPortal.allUsers")}
+        </Typography>
+        <List>
         {users.map((u, idx) => (
           <React.Fragment key={u._id}>
             <ListItem
@@ -157,50 +165,26 @@ export default function AdminPortal({ user, logout }) {
                     gap: 1,
                   }}
                 >
-                  <Select
-                    value={u.role}
-                    onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                    size="small"
-                    sx={{ 
-                      width: { xs: '100%', sm: 120 },
-                      minWidth: { xs: '100%', sm: 100 },
-                      height: 36,
-                      mr: { xs: 0, sm: 1 },
-                    }}
-                  >
-                    <MenuItem value="user">{t("roles.user")}</MenuItem>
-                    <MenuItem value="admin">{t("roles.admin")}</MenuItem>
-                  </Select>
-                  <IconButton 
-                    onClick={() => handleEditOpen(u)} 
-                    color="primary"
-                    size="small"
-                    sx={{ 
-                      p: 0.5,
-                      height: 36,
-                      width: 36,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton 
-                    onClick={() => handleDelete(u._id)} 
-                    color="error"
-                    size="small"
-                    sx={{ 
-                      p: 0.5,
-                      height: 36,
-                      width: 36,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {isSuperAdmin && (
+                    <>
+                      <Select
+                        value={u.role === "superadmin" ? "admin" : u.role}
+                        onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                        size="small"
+                        disabled={u.role === "superadmin"}
+                        sx={{ width: { xs: '100%', sm: 120 }, minWidth: { xs: '100%', sm: 100 }, height: 36, mr: { xs: 0, sm: 1 } }}
+                      >
+                        <MenuItem value="user">{t("roles.user")}</MenuItem>
+                        <MenuItem value="admin">{t("roles.admin")}</MenuItem>
+                      </Select>
+                      <IconButton onClick={() => handleEditOpen(u)} color="primary" size="small" sx={{ p: 0.5, height: 36, width: 36 }}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(u._id)} color="error" size="small" sx={{ p: 0.5, height: 36, width: 36 }}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
                 </Box>
               }
             >
@@ -241,7 +225,9 @@ export default function AdminPortal({ user, logout }) {
             {idx < users.length - 1 && <Divider />}
           </React.Fragment>
         ))}
-      </List>
+        </List>
+      </>
+      )}
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{t("adminPortal.editUser")}</DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>{/* Responsive padding */}
@@ -259,14 +245,10 @@ export default function AdminPortal({ user, logout }) {
             fullWidth
             sx={{ mb: 2 }}
           />
-          <Select
-            value={editRole}
-            onChange={(e) => setEditRole(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          >
+          <Select value={editRole} onChange={(e) => setEditRole(e.target.value)} disabled={editUser?.role === "superadmin"} fullWidth sx={{ mb: 2 }}>
             <MenuItem value="user">{t("roles.user")}</MenuItem>
             <MenuItem value="admin">{t("roles.admin")}</MenuItem>
+            <MenuItem value="superadmin">{t("roles.superadmin")}</MenuItem>
           </Select>
         </DialogContent>
         <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>{/* Responsive padding */}

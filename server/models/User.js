@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   displayName: String,
   email: String,
   photo: String,
-  role: { type: String, enum: ["admin", "user"], default: "user" },
+  role: { type: String, enum: ["superadmin", "admin", "user"], default: "user" },
 });
 
 export default mongoose.model("User", userSchema);

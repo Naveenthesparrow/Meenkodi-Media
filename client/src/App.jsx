@@ -112,6 +112,7 @@ function setupResourceErrorLogging() {
 function App() {
   const { t, i18n } = useTranslation();
   const [user, setUser] = React.useState(null);
+  const contentUser = user?.role === "superadmin" ? { ...user, role: "admin" } : user;
   const [loading, setLoading] = React.useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
@@ -119,13 +120,15 @@ function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const fetchUser = React.useCallback(() => {
-    console.log("Fetching user authentication status...");
     fetch(`/auth/user`, {
       credentials: "include",
     })
       .then((res) => {
-        console.log("Auth response status:", res.status);
-        console.log("Auth response headers:", res.headers.get("content-type"));
+        if (res.status === 401) {
+          setUser(null);
+          setLoading(false);
+          return null;
+        }
 
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -140,7 +143,6 @@ function App() {
         return res.json();
       })
       .then((data) => {
-        console.log("User data received:", data);
         setUser(data);
         setLoading(false);
       })
@@ -159,16 +161,17 @@ function App() {
       sessionStorage.removeItem('isAuthenticating');
       setIsAuthenticating(false);
 
-      // If just came from auth, fetch user and redirect to profile
+      // If just came from auth, fetch the user and return to the page they left.
       setTimeout(() => {
         fetch(`/auth/user`, { credentials: "include" })
           .then(res => res.json())
           .then(userData => {
             if (userData && userData._id) {
-              console.log("User authenticated, redirecting to profile");
               setUser(userData);
               setLoading(false);
-              window.location.href = "/profile";
+              const returnPath = sessionStorage.getItem('authReturnPath') || '/';
+              sessionStorage.removeItem('authReturnPath');
+              window.location.href = returnPath;
             }
           })
           .catch(err => console.error("Auth check failed:", err));
@@ -188,11 +191,6 @@ function App() {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
-
-    // Log current URL for debugging
-    console.log("Current URL:", window.location.href);
-    console.log("Pathname:", window.location.pathname);
-    console.log("Search params:", window.location.search);
 
     fetchUser();
 
@@ -275,6 +273,10 @@ function App() {
     console.log("Redirecting to Google OAuth...");
     setIsAuthenticating(true);
     sessionStorage.setItem('isAuthenticating', 'true');
+    sessionStorage.setItem(
+      'authReturnPath',
+      `${window.location.pathname}${window.location.search}${window.location.hash}`
+    );
     window.location.href = `/auth/google`;
   };
 
@@ -698,51 +700,51 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/auth/google/callback" element={<AuthCallback />} />
               <Route path="/auth/failure" element={<AuthFailure />} />
-              <Route path="/articles" element={<Articles user={user} />} />
-              <Route path="/my-articles" element={<MyArticles user={user} />} />
-              <Route path="/gallery" element={<Gallery user={user} />} />
-              <Route path="/gallery/folder/:folderSlug" element={<Gallery user={user} />} />
-              <Route path="/events" element={<Events user={user} />} />
-              <Route path="/resources" element={<Resources user={user} />} />
-              <Route path="/resources/:id" element={<ResourceDetail user={user} />} />
-              <Route path="/seeds-and-footprints" element={<SeedsFootprints user={user} />} />
-              <Route path="/seeds-and-footprints/folders/:id" element={<SeedsFootprintsDetail user={user} />} />
+              <Route path="/articles" element={<Articles user={contentUser} />} />
+              <Route path="/my-articles" element={<MyArticles user={contentUser} />} />
+              <Route path="/gallery" element={<Gallery user={contentUser} />} />
+              <Route path="/gallery/folder/:folderSlug" element={<Gallery user={contentUser} />} />
+              <Route path="/events" element={<Events user={contentUser} />} />
+              <Route path="/resources" element={<Resources user={contentUser} />} />
+              <Route path="/resources/:id" element={<ResourceDetail user={contentUser} />} />
+              <Route path="/seeds-and-footprints" element={<SeedsFootprints user={contentUser} />} />
+              <Route path="/seeds-and-footprints/folders/:id" element={<SeedsFootprintsDetail user={contentUser} />} />
               <Route path="/faq" element={<FAQ />} />
-              <Route path="/explore" element={<Explore user={user} />} />
+              <Route path="/explore" element={<Explore user={contentUser} />} />
               <Route path="/demo/scroll-expand" element={<ScrollExpandDemo />} />
               <Route
                 path="/explore/literature"
-                element={<Literature user={user} />}
+                element={<Literature user={contentUser} />}
               />
-              <Route path="/explore/dance" element={<Dance user={user} />} />
-              <Route path="/explore/temples" element={<Temples user={user} />} />
-              <Route path="/explore/clothing" element={<Clothing user={user} />} />
+              <Route path="/explore/dance" element={<Dance user={contentUser} />} />
+              <Route path="/explore/temples" element={<Temples user={contentUser} />} />
+              <Route path="/explore/clothing" element={<Clothing user={contentUser} />} />
               <Route
                 path="/explore/festivals"
-                element={<Festivals user={user} />}
+                element={<Festivals user={contentUser} />}
               />
-              <Route path="/explore/foods" element={<Foods user={user} />} />
+              <Route path="/explore/foods" element={<Foods user={contentUser} />} />
               <Route
                 path="/explore/ancientscience"
-                element={<AncientScience user={user} />}
+                element={<AncientScience user={contentUser} />}
               />
-              <Route path="/explore/temples/:id" element={<TempleDetail user={user} />} />
-              <Route path="/dynasties/:slug" element={<DynastyDetail user={user} />} />
-              <Route path="/poets/:slug" element={<PoetDetail user={user} />} />
+              <Route path="/explore/temples/:id" element={<TempleDetail user={contentUser} />} />
+              <Route path="/dynasties/:slug" element={<DynastyDetail user={contentUser} />} />
+              <Route path="/poets/:slug" element={<PoetDetail user={contentUser} />} />
               <Route
                 path="/explore/literature/:id"
-                element={<LiteratureDetail user={user} />}
+                element={<LiteratureDetail user={contentUser} />}
               />
-              <Route path="/explore/dance/:id" element={<DanceDetail user={user} />} />
-              <Route path="/explore/foods/:id" element={<FoodDetail user={user} />} />
-              <Route path="/explore/festivals/:id" element={<FestivalDetail user={user} />} />
-              <Route path="/explore/lands/:id" element={<LandDetailExpanded user={user} />} />
-              <Route path="/events/:id" element={<EventDetail user={user} />} />
-              <Route path="/gallery/:id" element={<GalleryDetail user={user} />} />
-              <Route path="/articles/:id" element={<ArticleDetail user={user} />} />
+              <Route path="/explore/dance/:id" element={<DanceDetail user={contentUser} />} />
+              <Route path="/explore/foods/:id" element={<FoodDetail user={contentUser} />} />
+              <Route path="/explore/festivals/:id" element={<FestivalDetail user={contentUser} />} />
+              <Route path="/explore/lands/:id" element={<LandDetailExpanded user={contentUser} />} />
+              <Route path="/events/:id" element={<EventDetail user={contentUser} />} />
+              <Route path="/gallery/:id" element={<GalleryDetail user={contentUser} />} />
+              <Route path="/articles/:id" element={<ArticleDetail user={contentUser} />} />
               <Route
                 path="/resources/:id"
-                element={<ResourceDetail user={user} />}
+                element={<ResourceDetail user={contentUser} />}
               />
               <Route
                 path="/profile"
@@ -766,7 +768,7 @@ function App() {
                     }
                   }}>
                     {user ? (
-                      user.role === "admin" ? (
+                      (user.role === "admin" || user.role === "superadmin") ? (
                         <AdminPortal user={user} logout={logout} />
                       ) : (
                         <UserPortal user={user} logout={logout} />
@@ -794,9 +796,9 @@ function App() {
               />
               <Route
                 path="/explore/ancientscience/:id"
-                element={<AncientScienceDetail user={user} />}
+                element={<AncientScienceDetail user={contentUser} />}
               />
-              <Route path="/explore/clothing/:id" element={<ClothingDetail user={user} />} />
+              <Route path="/explore/clothing/:id" element={<ClothingDetail user={contentUser} />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </React.Suspense>
