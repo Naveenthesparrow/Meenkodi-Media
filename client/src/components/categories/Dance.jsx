@@ -33,24 +33,23 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
-import {
-  MusicNote,
-  TheaterComedy,
-  Groups,
-  Edit,
-  Delete,
-  Add,
-  Star,
-  Schedule,
-  Person,
-  EmojiEvents,
-  LocalActivity,
-  School,
-  Palette,
-  Favorite,
-} from "@mui/icons-material";
+import MusicNote from "@mui/icons-material/MusicNote";
+import TheaterComedy from "@mui/icons-material/TheaterComedy";
+import Groups from "@mui/icons-material/Groups";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Star from "@mui/icons-material/Star";
+import Schedule from "@mui/icons-material/Schedule";
+import Person from "@mui/icons-material/Person";
+import EmojiEvents from "@mui/icons-material/EmojiEvents";
+import LocalActivity from "@mui/icons-material/LocalActivity";
+import School from "@mui/icons-material/School";
+import Palette from "@mui/icons-material/Palette";
+import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedDancesData = null;
 
@@ -414,7 +413,7 @@ export default function Dance({ user }) {
                   {(dance.image || dance.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={dance.image || dance.imageLink}
+                      image={cldImg(dance.image || dance.imageLink, 800)}
                       alt={getContent(dance.name)}
                       className="temple-image"
                       sx={{

@@ -19,25 +19,24 @@ import {
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  ThumbUp,
-  ThumbUpOutlined,
-  Share,
-  Send,
-  Reply,
-  EmojiEmotions,
-  Delete,
-  Favorite,
-  Close,
-  Add
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ThumbUp from "@mui/icons-material/ThumbUp";
+import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
+import Share from "@mui/icons-material/Share";
+import Send from "@mui/icons-material/Send";
+import Reply from "@mui/icons-material/Reply";
+import EmojiEmotions from "@mui/icons-material/EmojiEmotions";
+import Delete from "@mui/icons-material/Delete";
+import Favorite from "@mui/icons-material/Favorite";
+import Close from "@mui/icons-material/Close";
+import Add from "@mui/icons-material/Add";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
+import cldImg from "../../utils/cloudinaryImage";
 
 function TempleDetail() {
   const { id } = useParams();
@@ -1337,7 +1336,7 @@ function TempleDetail() {
                       }}
                     >
                       <img
-                        src={section.imageUrl}
+                        src={cldImg(section.imageUrl, 1600)}
                         alt="Preview"
                         style={{
                           maxWidth: '100%',

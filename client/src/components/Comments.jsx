@@ -15,14 +15,12 @@ import {
   Tooltip,
 } from "@mui/material";
 import API_BASE_URL from '../utils/api';
-import {
-  Delete as DeleteIcon,
-  Send as SendIcon,
-  Person as PersonIcon,
-  ChatBubbleOutline as CommentIcon,
-  FavoriteBorder as LikeIcon,
-  MoreVert as MoreIcon,
-} from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SendIcon from "@mui/icons-material/Send";
+import PersonIcon from "@mui/icons-material/Person";
+import CommentIcon from "@mui/icons-material/ChatBubbleOutline";
+import LikeIcon from "@mui/icons-material/FavoriteBorder";
+import MoreIcon from "@mui/icons-material/MoreVert";
 
 export default function Comments({ relatedType, relatedId, user }) {
   const [comments, setComments] = useState([]);

@@ -21,36 +21,35 @@ import {
   Grid,
   Paper,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  ThumbUp,
-  ThumbUpOutlined,
-  Share,
-  Send,
-  Reply,
-  EmojiEmotions,
-  Delete,
-  Favorite,
-  Close,
-  Add,
-  VolumeUp,
-  VolumeOff,
-  PlayArrow,
-  Pause,
-  ThumbDown,
-  FavoriteBorder,
-  SentimentSatisfied,
-  Person,
-  CommentOutlined,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ThumbUp from "@mui/icons-material/ThumbUp";
+import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
+import Share from "@mui/icons-material/Share";
+import Send from "@mui/icons-material/Send";
+import Reply from "@mui/icons-material/Reply";
+import EmojiEmotions from "@mui/icons-material/EmojiEmotions";
+import Delete from "@mui/icons-material/Delete";
+import Favorite from "@mui/icons-material/Favorite";
+import Close from "@mui/icons-material/Close";
+import Add from "@mui/icons-material/Add";
+import VolumeUp from "@mui/icons-material/VolumeUp";
+import VolumeOff from "@mui/icons-material/VolumeOff";
+import PlayArrow from "@mui/icons-material/PlayArrow";
+import Pause from "@mui/icons-material/Pause";
+import ThumbDown from "@mui/icons-material/ThumbDown";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import SentimentSatisfied from "@mui/icons-material/SentimentSatisfied";
+import Person from "@mui/icons-material/Person";
+import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 import SEO from "../common/SEO";
+import cldImg from "../../utils/cloudinaryImage";
 function LiteratureDetail({ user: initialUser }) {
   const user = initialUser;
   const { id } = useParams();
@@ -1144,7 +1143,7 @@ function LiteratureDetail({ user: initialUser }) {
                 {/* Section Image */}
                 {section.imageUrl && (
                   <img
-                    src={section.imageUrl}
+                    src={cldImg(section.imageUrl, 1600)}
                     alt={section.subtitle || `Section ${index + 1} Image`}
                     style={{
                       maxWidth: '100%',
@@ -1319,7 +1318,7 @@ function LiteratureDetail({ user: initialUser }) {
                       }}
                     >
                       <img
-                        src={section.imageUrl}
+                        src={cldImg(section.imageUrl, 1600)}
                         alt="Preview"
                         style={{
                           maxWidth: '100%',

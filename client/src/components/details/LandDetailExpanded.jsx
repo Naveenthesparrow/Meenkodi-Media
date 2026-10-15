@@ -30,6 +30,7 @@ import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
 import { useTranslation } from "react-i18next";
 import SEO from "../common/SEO";
+import cldImg from "../../utils/cloudinaryImage";
 
 const TINAI = {
   kurinji: {
@@ -626,7 +627,7 @@ export default function LandDetailExpanded({ user }) {
         <Paper elevation={0} sx={{ borderRadius: 0, border: "1px solid rgba(0,0,0,0.15)", overflow: "hidden", bgcolor: "#fff", mb: 3 }}>
           {land.image ? (
             <OptimizedImage
-              src={land.image}
+              src={cldImg(land.image, 1600)}
               alt={name}
               priority
               rootMargin="600px"

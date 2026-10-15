@@ -1,6 +1,9 @@
 import React from 'react';
 import { Box, Container, Grid, Typography, Stack, IconButton, Divider } from '@mui/material';
-import { Instagram, Twitter, Facebook, YouTube } from '@mui/icons-material';
+import Instagram from "@mui/icons-material/Instagram";
+import Twitter from "@mui/icons-material/Twitter";
+import Facebook from "@mui/icons-material/Facebook";
+import YouTube from "@mui/icons-material/YouTube";
 import { useTranslation } from 'react-i18next';
 
 export default function Footer() {

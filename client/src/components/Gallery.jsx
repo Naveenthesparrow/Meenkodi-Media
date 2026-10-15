@@ -29,13 +29,22 @@ import {
   ToggleButtonGroup
 } from '@mui/material';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Add, Edit, Delete, CreateNewFolder, Settings, DragIndicator, ArrowUpward, ArrowDownward, ArrowBack } from '@mui/icons-material';
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import CreateNewFolder from "@mui/icons-material/CreateNewFolder";
+import Settings from "@mui/icons-material/Settings";
+import DragIndicator from "@mui/icons-material/DragIndicator";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import ArrowBack from "@mui/icons-material/ArrowBack";
 import MediaUpload from './common/MediaUpload';
 import PageHeading from './common/PageHeading';
 import OptimizedImage from './common/OptimizedImage';
 import { useTranslation } from 'react-i18next';
 import GalleryDetail from './GalleryDetail';
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 let cachedGalleryData = null;
 
@@ -1079,7 +1088,7 @@ export default function Gallery({ user }) {
                   {/* Image */}
                   {(item.imageUrl || item.imageLink) ? (
                     <OptimizedImage
-                      src={toAbsoluteMediaUrl(item.imageUrl || item.imageLink)}
+                      src={cldImg(toAbsoluteMediaUrl(item.imageUrl || item.imageLink), 800)}
                       alt={`${getContent(item.name)} - Tamil Heritage ${item.category || ''} | Meenkodi`}
                       className="card-image"
                       sx={{

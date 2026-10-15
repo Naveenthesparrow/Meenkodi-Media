@@ -17,7 +17,13 @@ import {
   Grid,
   Container,
 } from "@mui/material";
-import { Favorite, FavoriteBorder, Download, Edit as EditIcon, Delete as DeleteIcon, ChevronLeft, ChevronRight } from '@mui/icons-material';
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import Download from "@mui/icons-material/Download";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ChevronLeft from "@mui/icons-material/ChevronLeft";
+import ChevronRight from "@mui/icons-material/ChevronRight";
 import MediaUpload from "./common/MediaUpload";
 import MediaDisplay from "./common/MediaDisplay";
 import OptimizedImage from "./common/OptimizedImage";
@@ -25,6 +31,7 @@ import API_BASE_URL from '../utils/api';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import SEO from './common/SEO';
+import cldImg from "../utils/cloudinaryImage";
 
 // Base categories (labels are translation keys)
 const BASE_CATEGORIES = [
@@ -696,7 +703,7 @@ export default function GalleryDetail({ user }) {
             )}
 
             <OptimizedImage
-              src={toAbsoluteMediaUrl(galleryItem.imageUrl)}
+              src={cldImg(toAbsoluteMediaUrl(galleryItem.imageUrl), 1600)}
               alt={`${getContent(galleryItem.name)} - ${categoryDisplay} - Tamil Heritage | Meenkodi`}
               sx={{
                 width: '100%',

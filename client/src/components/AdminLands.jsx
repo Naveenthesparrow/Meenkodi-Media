@@ -17,7 +17,9 @@ import {
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-import { Add, Edit, Delete } from "@mui/icons-material";
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import API_BASE_URL from '../utils/api';

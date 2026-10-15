@@ -24,33 +24,32 @@ import {
   Divider,
   Grid,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  PlayArrow,
-  Pause,
-  VolumeUp,
-  VolumeOff,
-  Close,
-  Delete,
-  Add,
-  ThumbUp,
-  ThumbUpOutlined,
-  ThumbDown,
-  Share,
-  Send,
-  Favorite,
-  FavoriteBorder,
-  Reply,
-  SentimentSatisfied,
-  EmojiEmotions,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import PlayArrow from "@mui/icons-material/PlayArrow";
+import Pause from "@mui/icons-material/Pause";
+import VolumeUp from "@mui/icons-material/VolumeUp";
+import VolumeOff from "@mui/icons-material/VolumeOff";
+import Close from "@mui/icons-material/Close";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import ThumbUp from "@mui/icons-material/ThumbUp";
+import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
+import ThumbDown from "@mui/icons-material/ThumbDown";
+import Share from "@mui/icons-material/Share";
+import Send from "@mui/icons-material/Send";
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import Reply from "@mui/icons-material/Reply";
+import SentimentSatisfied from "@mui/icons-material/SentimentSatisfied";
+import EmojiEmotions from "@mui/icons-material/EmojiEmotions";
 import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
 import SEO from "../common/SEO";
+import cldImg from "../../utils/cloudinaryImage";
 
 function DanceDetail({ user: initialUser }) {
   const user = initialUser;
@@ -777,7 +776,7 @@ function DanceDetail({ user: initialUser }) {
         >
           {(isEditing ? editableData.imageUrl : dance.image) ? (
             <img
-              src={isEditing ? editableData.imageUrl : dance.image}
+              src={cldImg(isEditing ? editableData.imageUrl : dance.image, 1600)}
               alt={getContent(dance.name)}
               style={{
                 maxWidth: "100%",
@@ -1278,7 +1277,7 @@ function DanceDetail({ user: initialUser }) {
                     {/* Section Image */}
                     {section.imageUrl && (
                       <img
-                        src={section.imageUrl}
+                        src={cldImg(section.imageUrl, 1600)}
                         alt={section.subtitle || `Section ${index + 1} Image`}
                         style={{
                           maxWidth: '100%',

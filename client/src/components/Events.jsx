@@ -21,7 +21,9 @@ import {
   ToggleButtonGroup
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
 import MediaUpload from './common/MediaUpload';
 import SEO, { pageSEO } from './common/SEO';
 import PageHeading from './common/PageHeading';
@@ -30,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 
 import styled from 'styled-components';
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 
 let cachedEventsData = null;
@@ -284,7 +287,7 @@ export default function Events({ user }) {
                 <Link className="card" to={`/events/${event._id}`}>
                   <b />
                   <img
-                    src={event.imageUrl || event.imageLink || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3ENo Image%3C/text%3E%3C/svg%3E"}
+                    src={cldImg(event.imageUrl || event.imageLink || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3ENo Image%3C/text%3E%3C/svg%3E", 800)}
                     alt={getContent(event.title)}
                   />
                   <div className="content">

@@ -11,18 +11,16 @@ import {
   ToggleButton,
   Paper
 } from '@mui/material';
-import {
-  FormatBold,
-  FormatItalic,
-  FormatUnderlined,
-  Title,
-  FormatListBulleted,
-  FormatListNumbered,
-  Image as ImageIcon,
-  Visibility,
-  Code,
-  Link as LinkIcon
-} from '@mui/icons-material';
+import FormatBold from "@mui/icons-material/FormatBold";
+import FormatItalic from "@mui/icons-material/FormatItalic";
+import FormatUnderlined from "@mui/icons-material/FormatUnderlined";
+import Title from "@mui/icons-material/Title";
+import FormatListBulleted from "@mui/icons-material/FormatListBulleted";
+import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
+import ImageIcon from "@mui/icons-material/Image";
+import Visibility from "@mui/icons-material/Visibility";
+import Code from "@mui/icons-material/Code";
+import LinkIcon from "@mui/icons-material/Link";
 
 export default function ArticleEditor({ value, onChange, language = 'en', placeholder }) {
   const [viewMode, setViewMode] = useState('split'); // split, edit, preview

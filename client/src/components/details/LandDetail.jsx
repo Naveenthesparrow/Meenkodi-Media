@@ -32,6 +32,7 @@ import MediaUpload from "../common/MediaUpload";
 import Comments from "../Comments";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
+import cldImg from "../../utils/cloudinaryImage";
 
 // ─── THEME MAP ────────────────────────────────────────────────────────────────
 const TINAI = {
@@ -449,7 +450,7 @@ export default function LandDetail({ user }) {
                             {land.image && (
                                 <FadeUp delay={0.45}>
                                     <Box sx={{ borderRadius: '20px', overflow: 'hidden', aspectRatio: '16/9', position: 'relative' }}>
-                                        <Box component="img" src={land.image} alt={name} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                        <Box component="img" src={cldImg(land.image, 800)} alt={name} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                         <Box sx={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${tinai.dark}bb 0%, transparent 50%)` }} />
                                         <Box sx={{ position: 'absolute', bottom: 16, left: 20 }}>
                                             <Typography sx={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase' }}>

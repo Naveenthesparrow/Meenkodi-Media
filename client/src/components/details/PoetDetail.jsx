@@ -21,28 +21,27 @@ import {
   Card,
   CardContent,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Close,
-  Favorite,
-  FavoriteBorder,
-  Send,
-  Reply,
-  Delete as DeleteIcon,
-  FormatQuote,
-  MenuBook,
-  Psychology,
-  Star,
-  Place,
-  CalendarToday,
-  AutoStories,
-  EmojiEvents,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import Close from "@mui/icons-material/Close";
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import Send from "@mui/icons-material/Send";
+import Reply from "@mui/icons-material/Reply";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FormatQuote from "@mui/icons-material/FormatQuote";
+import MenuBook from "@mui/icons-material/MenuBook";
+import Psychology from "@mui/icons-material/Psychology";
+import Star from "@mui/icons-material/Star";
+import Place from "@mui/icons-material/Place";
+import CalendarToday from "@mui/icons-material/CalendarToday";
+import AutoStories from "@mui/icons-material/AutoStories";
+import EmojiEvents from "@mui/icons-material/EmojiEvents";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from "react-i18next";
 import SEO from "../common/SEO";
 import API_BASE_URL from '../../utils/api';
+import cldImg from "../../utils/cloudinaryImage";
 
 
 function PoetDetail({ user: initialUser }) {
@@ -805,7 +804,7 @@ function PoetDetail({ user: initialUser }) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3, flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
             {poet.image && (
               <Avatar
-                src={poet.image}
+                src={cldImg(poet.image, 1600)}
                 alt={getContent(poet.name)}
                 sx={{
                   width: { xs: 100, md: 150 },
@@ -1052,7 +1051,7 @@ function PoetDetail({ user: initialUser }) {
                     <Grid item xs={6} key={index}>
                       <Box
                         component="img"
-                        src={img}
+                        src={cldImg(img, 1600)}
                         alt={`${getContent(poet.name)} ${index + 1}`}
                         sx={{
                           width: '100%',

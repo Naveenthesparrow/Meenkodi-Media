@@ -5,10 +5,17 @@ import { Link as RouterLink } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import AddIcon from '@mui/icons-material/Add';
-import { Edit, DragIndicator, ArrowUpward, ArrowDownward, Image as ImageIcon, Share as ShareIcon, Check as CheckIcon } from '@mui/icons-material';
+import Edit from "@mui/icons-material/Edit";
+import DragIndicator from "@mui/icons-material/DragIndicator";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import ImageIcon from "@mui/icons-material/Image";
+import ShareIcon from "@mui/icons-material/Share";
+import CheckIcon from "@mui/icons-material/Check";
 import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 
 let cachedSeedsData = null;
@@ -776,7 +783,7 @@ export default function SeedsFootprints({ user }) {
                         {f.coverPhoto ? (
                           <Box
                             component="img"
-                            src={f.coverPhoto}
+                            src={cldImg(f.coverPhoto, 800)}
                             alt={getContent(f.name)}
                             className="folder-image"
                             sx={{

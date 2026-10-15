@@ -21,10 +21,14 @@ import {
   IconButton,
   Fade,
 } from "@mui/material";
-import { Edit, Delete, Add, Favorite } from "@mui/icons-material";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Favorite from "@mui/icons-material/Favorite";
 import { Link } from "react-router-dom";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedClothingData = null;
 
@@ -353,7 +357,7 @@ export default function Clothing({ user }) {
                   {(item.image || item.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={item.image || item.imageLink}
+                      image={cldImg(item.image || item.imageLink, 800)}
                       alt={getContent(item.name)}
                       className="temple-image"
                       sx={{

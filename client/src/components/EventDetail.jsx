@@ -13,7 +13,9 @@ import {
   Paper,
   IconButton
 } from "@mui/material";
-import { CalendarMonth, LocationOn, ArrowBack } from "@mui/icons-material";
+import CalendarMonth from "@mui/icons-material/CalendarMonth";
+import LocationOn from "@mui/icons-material/LocationOn";
+import ArrowBack from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -24,6 +26,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useBilingualContent } from '../utils/bilingualContent';
 import SEO from "./common/SEO";
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 
 const cachedEventDetails = {};
@@ -281,7 +284,7 @@ export default function EventDetail({ user }) {
               }}>
                 <Box
                   component="img"
-                  src={event.imageUrl}
+                  src={cldImg(event.imageUrl, 1600)}
                   alt={getContent(event.title)}
                   sx={{
                     width: '100%',

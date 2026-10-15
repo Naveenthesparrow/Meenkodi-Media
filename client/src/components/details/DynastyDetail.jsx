@@ -22,25 +22,24 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Close,
-  Edit,
-  Explore,
-  Language,
-  LocalDining,
-  MilitaryTech,
-  Place,
-  Public,
-  TempleHindu,
-  Timeline,
-  Woman,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import Close from "@mui/icons-material/Close";
+import Edit from "@mui/icons-material/Edit";
+import Explore from "@mui/icons-material/Explore";
+import Language from "@mui/icons-material/Language";
+import LocalDining from "@mui/icons-material/LocalDining";
+import MilitaryTech from "@mui/icons-material/MilitaryTech";
+import Place from "@mui/icons-material/Place";
+import Public from "@mui/icons-material/Public";
+import TempleHindu from "@mui/icons-material/TempleHindu";
+import Timeline from "@mui/icons-material/Timeline";
+import Woman from "@mui/icons-material/Woman";
 import SEO from "../common/SEO";
 import MediaUpload from "../common/MediaUpload";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from "react-i18next";
 import API_BASE_URL from '../../utils/api';
+import cldImg from "../../utils/cloudinaryImage";
 
 
 const DYNASTY_DETAILS = {
@@ -733,7 +732,7 @@ export default function DynastyDetail({ user }) {
           <Grid container>
             <Grid item xs={12} md={4}>
               <Box sx={{ height: "100%", minHeight: 210, display: "grid", placeItems: "center", p: 3, bgcolor: "rgba(186,29,22,0.04)" }}>
-                <Box component="img" src={dynasty.image} alt={getContent(dynasty.name)} sx={{ width: 150, height: 150, borderRadius: "50%", objectFit: "cover", border: "3px solid #8B0000", bgcolor: "#fff" }} />
+                <Box component="img" src={cldImg(dynasty.image, 800)} alt={getContent(dynasty.name)} sx={{ width: 150, height: 150, borderRadius: "50%", objectFit: "cover", border: "3px solid #8B0000", bgcolor: "#fff" }} />
               </Box>
             </Grid>
             <Grid item xs={12} md={8}>
@@ -802,7 +801,7 @@ export default function DynastyDetail({ user }) {
               <Stack direction="row" spacing={1.2} sx={{ overflowX: "auto", pb: 0.5 }}>
                 {dynasty.rulers.map((ruler, idx) => (
                   <Box key={`${slug}-ruler-${idx}`} sx={{ minWidth: 250, p: 1.2, borderRadius: 1.8, bgcolor: "rgba(186,29,22,0.04)", border: "1px solid rgba(186,29,22,0.18)", transition: "all 180ms ease", cursor: "pointer", "&:hover": { transform: "translateY(-3px)", boxShadow: "0 12px 24px rgba(0,0,0,0.34)", borderColor: "rgba(243,201,105,0.72)", backgroundColor: "rgba(186,29,22,0.08)" } }} onClick={() => setSelectedKing(ruler)}>
-                    <Box component="img" src={ruler.portrait} alt={ruler.name} sx={{ width: "100%", height: 120, borderRadius: 1.4, objectFit: "cover", mb: 1 }} />
+                    <Box component="img" src={cldImg(ruler.portrait, 800)} alt={ruler.name} sx={{ width: "100%", height: 120, borderRadius: 1.4, objectFit: "cover", mb: 1 }} />
                     <Typography sx={{ fontWeight: 700, color: "#1f140e" }}>{ruler.name}</Typography>
                     <Typography sx={{ color: "#a5231c", fontSize: 13.5, mt: 0.3 }}>{ruler.reign}</Typography>
                     <Typography sx={{ color: "#f3e5cf", fontSize: 14, lineHeight: 1.6, mt: 0.4 }}>{getContent(ruler.note)}</Typography>
@@ -1207,7 +1206,7 @@ export default function DynastyDetail({ user }) {
           <DialogContent sx={{ bgcolor: "#fffaf1", color: "#2b1a17", pt: "16px !important" }}>
             {selectedKing && (
               <Stack spacing={1.1}>
-                <Box component="img" src={selectedKing.portrait} alt={selectedKing.name} sx={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 1.5, border: "1px solid rgba(186,29,22,0.18)" }} />
+                <Box component="img" src={cldImg(selectedKing.portrait, 800)} alt={selectedKing.name} sx={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 1.5, border: "1px solid rgba(186,29,22,0.18)" }} />
                 <Typography sx={{ color: "#8B0000", fontWeight: 700 }}>{selectedKing.reign}</Typography>
                 <Typography sx={{ color: "#f3e5cf" }}>{getContent(selectedKing.note)}</Typography>
                 <Typography sx={{ color: "#eddcc0", lineHeight: 1.7 }}>{getContent(selectedKing.story)}</Typography>

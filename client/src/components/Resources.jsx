@@ -21,7 +21,12 @@ import {
   ToggleButtonGroup
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { Add, Edit, Delete, GetApp, Favorite, AddPhotoAlternate } from '@mui/icons-material';
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import GetApp from "@mui/icons-material/GetApp";
+import Favorite from "@mui/icons-material/Favorite";
+import AddPhotoAlternate from "@mui/icons-material/AddPhotoAlternate";
 import MediaUpload from './common/MediaUpload';
 import PdfUpload from './common/PdfUpload';
 import SEO, { pageSEO } from './common/SEO';
@@ -30,6 +35,7 @@ import PageHeading from './common/PageHeading';
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 let cachedResourcesData = null;
 
@@ -410,7 +416,7 @@ export default function Resources({ user }) {
                     {(resource.image) ? (
                       <CardMedia
                         component="img"
-                        image={resource.image}
+                        image={cldImg(resource.image, 800)}
                         alt={getContent(resource.title)}
                         className="book-image"
                         sx={{
@@ -808,7 +814,7 @@ export default function Resources({ user }) {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1.5, border: '1px solid #ccc', borderRadius: 1, bgcolor: '#f9f9f9' }}>
                   <Box
                     component="img"
-                    src={currentResource.image}
+                    src={cldImg(currentResource.image, 1600)}
                     alt="Thumbnail Preview"
                     sx={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 1, border: '1px solid #ddd' }}
                   />

@@ -34,38 +34,36 @@ import MullaiImage from "../assests/mullai.avif";
 import MaruthamImage from "../assests/marutham.avif";
 import NeithalImage from "../assests/neithal.avif";
 import PalaiImage from "../assests/palai.avif";
-import {
-  AutoAwesome,
-  ArrowForward,
-  Architecture,
-  Landscape,
-  Article,
-  PhotoCamera,
-  Event,
-  MenuBook,
-  Close,
-  Star,
-  LocationOn,
-  ArchiveOutlined,
-  SchoolOutlined,
-  CelebrationOutlined,
-  Instagram,
-  Twitter,
-  Facebook,
-  Language as LanguageIcon,
-  TrendingUp,
-  Museum as MuseumIcon,
-  Science as ScienceIcon,
-  CollectionsBookmark,
-  ScheduleOutlined,
-  FormatQuoteRounded,
-  YouTube,
-  Email,
-  Phone,
-  Add,
-  Edit,
-  Delete,
-} from "@mui/icons-material";
+import AutoAwesome from "@mui/icons-material/AutoAwesome";
+import ArrowForward from "@mui/icons-material/ArrowForward";
+import Architecture from "@mui/icons-material/Architecture";
+import Landscape from "@mui/icons-material/Landscape";
+import Article from "@mui/icons-material/Article";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
+import Event from "@mui/icons-material/Event";
+import MenuBook from "@mui/icons-material/MenuBook";
+import Close from "@mui/icons-material/Close";
+import Star from "@mui/icons-material/Star";
+import LocationOn from "@mui/icons-material/LocationOn";
+import ArchiveOutlined from "@mui/icons-material/ArchiveOutlined";
+import SchoolOutlined from "@mui/icons-material/SchoolOutlined";
+import CelebrationOutlined from "@mui/icons-material/CelebrationOutlined";
+import Instagram from "@mui/icons-material/Instagram";
+import Twitter from "@mui/icons-material/Twitter";
+import Facebook from "@mui/icons-material/Facebook";
+import LanguageIcon from "@mui/icons-material/Language";
+import TrendingUp from "@mui/icons-material/TrendingUp";
+import MuseumIcon from "@mui/icons-material/Museum";
+import ScienceIcon from "@mui/icons-material/Science";
+import CollectionsBookmark from "@mui/icons-material/CollectionsBookmark";
+import ScheduleOutlined from "@mui/icons-material/ScheduleOutlined";
+import FormatQuoteRounded from "@mui/icons-material/FormatQuoteRounded";
+import YouTube from "@mui/icons-material/YouTube";
+import Email from "@mui/icons-material/Email";
+import Phone from "@mui/icons-material/Phone";
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
 import CourseSyllabusSlider from "./CourseSyllabusSlider";
 import DirectorsSlider from "./DirectorsSlider";
 import DirectorsAdmin from "./DirectorsAdmin";
@@ -188,7 +186,7 @@ const SYLLABUS_ITEMS = [
       en: 'Certificate in "Dravidian Temple Architecture"',
       ta: '"திராவிடக் கோவில் கட்டிடம்" சான்றிதழ் பாடநெறி',
     },
-    image: "https://images.unsplash.com/photo-1608889175123-8ee362201f3b?auto=format&fit=crop&w=1600&q=80",
+    image: "https://images.unsplash.com/photo-1608889175123-8ee362201f3b?auto=format&fit=crop&w=800&q=80",
     route: "/explore/temples",
   },
   {
@@ -198,7 +196,7 @@ const SYLLABUS_ITEMS = [
       en: 'Workshop on "Tamil Iconography & Bronze Casting"',
       ta: '"தமிழ் சிலைச் சின்னங்கள் & வெண்கல வடிவ" பட்டறை',
     },
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80",
+    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
     route: "/resources",
   },
   {
@@ -208,7 +206,7 @@ const SYLLABUS_ITEMS = [
       en: 'Intensive "Sangam Literature & Society" Labs',
       ta: '"சங்க இலக்கியமும் சமூகமும்" தீவிர ஆய்வகங்கள்',
     },
-    image: "https://images.unsplash.com/photo-1518780548940-4300a3220c8a?auto=format&fit=crop&w=1600&q=80",
+    image: "https://images.unsplash.com/photo-1518780548940-4300a3220c8a?auto=format&fit=crop&w=800&q=80",
     route: "/explore/literature",
   },
   {
@@ -218,7 +216,7 @@ const SYLLABUS_ITEMS = [
       en: 'Field School: "Tamil Heritage Documentation"',
       ta: 'களப்பள்ளி: "தமிழ் பாரம்பரிய ஆவணப்படுத்தல்"',
     },
-    image: "https://images.unsplash.com/photo-1580742300482-79547dc9b6fe?auto=format&fit=crop&w=1600&q=80",
+    image: "https://images.unsplash.com/photo-1580742300482-79547dc9b6fe?auto=format&fit=crop&w=800&q=80",
     route: "/explore",
   },
   {
@@ -228,7 +226,7 @@ const SYLLABUS_ITEMS = [
       en: 'Advanced Diploma in "Tamil Performing Arts"',
       ta: '"தமிழ் நடிப்பு கலைகள்" மேம்பட்ட டிப்ளமோ',
     },
-    image: "https://images.unsplash.com/photo-1470214304380-aadaedcfff84?auto=format&fit=crop&w=1600&q=80",
+    image: "https://images.unsplash.com/photo-1470214304380-aadaedcfff84?auto=format&fit=crop&w=800&q=80",
     route: "/explore/dance",
   },
 ];

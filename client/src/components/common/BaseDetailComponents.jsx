@@ -15,18 +15,17 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Close,
-  Add,
-  PlayArrow,
-  Pause,
-  VolumeUp,
-  VolumeOff,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Close from "@mui/icons-material/Close";
+import Add from "@mui/icons-material/Add";
+import PlayArrow from "@mui/icons-material/PlayArrow";
+import Pause from "@mui/icons-material/Pause";
+import VolumeUp from "@mui/icons-material/VolumeUp";
+import VolumeOff from "@mui/icons-material/VolumeOff";
 import { useNavigate } from "react-router-dom";
+import cldImg from "../../utils/cloudinaryImage";
 
 // Base styles that can be used across all detail components
 export const detailStyles = {
@@ -149,7 +148,7 @@ export const ContentSection = ({
 
       {section.imageUrl && (
         <img
-          src={section.imageUrl}
+          src={cldImg(section.imageUrl, 1600)}
           alt={section.subtitle || `Section ${index + 1} Image`}
           style={{ maxWidth: "100%", height: "auto", marginTop: 16 }}
         />

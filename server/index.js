@@ -243,6 +243,11 @@ app.get('/sitemap.xml', (req, res) => {
 });
 
 // Serve static files from the client build directory
+// Hashed build files in /assets never change, so browsers can keep them for a year
+app.use("/assets", express.static(path.join(__dirname, "../client/dist/assets"), {
+  maxAge: "1y",
+  immutable: true,
+}));
 app.use(express.static(path.join(__dirname, "../client/dist")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

@@ -13,10 +13,9 @@ import {
   Fade,
   CircularProgress,
 } from "@mui/material";
-import {
-  Add,
-} from "@mui/icons-material";
+import Add from "@mui/icons-material/Add";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 export default function Kings({ user }) {
   const navigate = useNavigate();
@@ -253,7 +252,7 @@ export default function Kings({ user }) {
                   {dynasty.image ? (
                     <CardMedia
                       component="img"
-                      image={dynasty.image}
+                      image={cldImg(dynasty.image, 800)}
                       alt={getContent(dynasty.name)}
                       className="temple-image"
                       sx={{

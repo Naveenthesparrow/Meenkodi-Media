@@ -21,17 +21,15 @@ import {
   Tooltip,
   CircularProgress
 } from '@mui/material';
-import {
-  Add,
-  Edit,
-  Delete,
-  DragIndicator,
-  ArrowUpward,
-  ArrowDownward,
-  Close,
-  Save,
-  Image as ImageIcon
-} from '@mui/icons-material';
+import Add from "@mui/icons-material/Add";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import DragIndicator from "@mui/icons-material/DragIndicator";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import Close from "@mui/icons-material/Close";
+import Save from "@mui/icons-material/Save";
+import ImageIcon from "@mui/icons-material/Image";
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
 

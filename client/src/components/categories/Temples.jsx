@@ -24,19 +24,18 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import {
-  AccountBalance,
-  LocationOn,
-  CalendarToday,
-  Edit,
-  Delete,
-  Add,
-  Architecture,
-  Star,
-  Favorite,
-} from "@mui/icons-material";
+import AccountBalance from "@mui/icons-material/AccountBalance";
+import LocationOn from "@mui/icons-material/LocationOn";
+import CalendarToday from "@mui/icons-material/CalendarToday";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Architecture from "@mui/icons-material/Architecture";
+import Star from "@mui/icons-material/Star";
+import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedTemplesData = null;
 
@@ -386,7 +385,7 @@ export default function Temples({ user }) {
                   {(temple.image || temple.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={temple.image || temple.imageLink}
+                      image={cldImg(temple.image || temple.imageLink, 800)}
                       alt={getContent(temple.name)}
                       className="temple-image"
                       sx={{

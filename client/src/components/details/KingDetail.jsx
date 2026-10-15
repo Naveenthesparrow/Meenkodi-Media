@@ -18,33 +18,32 @@ import {
   Grid,
   Paper,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  PlayArrow,
-  Pause,
-  VolumeUp,
-  VolumeOff,
-  Close,
-  Delete,
-  Add,
-  ThumbUp,
-  ThumbUpOutlined,
-  ThumbDown,
-  Share,
-  Send,
-  Favorite,
-  FavoriteBorder,
-  Reply,
-  SentimentSatisfied,
-  EmojiEmotions,
-  EditNote,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import PlayArrow from "@mui/icons-material/PlayArrow";
+import Pause from "@mui/icons-material/Pause";
+import VolumeUp from "@mui/icons-material/VolumeUp";
+import VolumeOff from "@mui/icons-material/VolumeOff";
+import Close from "@mui/icons-material/Close";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import ThumbUp from "@mui/icons-material/ThumbUp";
+import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
+import ThumbDown from "@mui/icons-material/ThumbDown";
+import Share from "@mui/icons-material/Share";
+import Send from "@mui/icons-material/Send";
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import Reply from "@mui/icons-material/Reply";
+import SentimentSatisfied from "@mui/icons-material/SentimentSatisfied";
+import EmojiEmotions from "@mui/icons-material/EmojiEmotions";
+import EditNote from "@mui/icons-material/EditNote";
 import MediaUpload from "../common/MediaUpload";
 import MediaDisplay from "../common/MediaDisplay";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 function KingDetail({ user: initialUser }) {
   const user = initialUser;
   const { id } = useParams();
@@ -1014,7 +1013,7 @@ function KingDetail({ user: initialUser }) {
                 {section.imageUrl && (
                   <Box sx={{ textAlign: 'center', my: 3 }}>
                     <img
-                      src={section.imageUrl}
+                      src={cldImg(section.imageUrl, 1600)}
                       alt={getContent(section.subtitle) || `Section ${index + 1} Image`}
                       style={{
                         maxWidth: '100%',
@@ -1174,7 +1173,7 @@ function KingDetail({ user: initialUser }) {
                   {section.imageUrl && (
                     <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', border: '1px solid #ddd', borderRadius: 1, p: 2 }}>
                       <img
-                        src={section.imageUrl}
+                        src={cldImg(section.imageUrl, 1600)}
                         alt="Preview"
                         style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }}
                         onError={(e) => {

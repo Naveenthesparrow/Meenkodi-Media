@@ -17,6 +17,7 @@ import { Link as RouterLink } from "react-router-dom";
 import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from "../utils/api";
 import { useTranslation } from 'react-i18next';
+import cldImg from "../utils/cloudinaryImage";
 
 let cachedLandsData = null;
 
@@ -146,7 +147,7 @@ export default function Lands({ user }) {
                 {land.image && (
                   <CardMedia
                     component="img"
-                    image={land.image}
+                    image={cldImg(land.image, 800)}
                     alt={`${display(land.name) || "Land"}`}
                     sx={{
                       height: 220,

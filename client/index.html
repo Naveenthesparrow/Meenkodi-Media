@@ -6,7 +6,6 @@
   
   <!-- Comprehensive Favicon Configuration -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/web-app-manifest-192x192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/web-app-manifest-512x512.png" />
@@ -135,17 +134,14 @@
   <link rel="dns-prefetch" href="https://images.unsplash.com">
   <link rel="dns-prefetch" href="https://images.pexels.com">
 
-  <!-- Google Fonts Import - Optimized with font-display swap -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&family=Roboto:wght@300;400&display=swap"
-    rel="stylesheet">
-  <!-- High-quality Tamil font families - Subset and optimized -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Tangerine:wght@700&family=Great+Vibes&display=swap"
-    rel="stylesheet">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Tiro+Tamil:ital@0;1&family=Hind+Madurai:wght@400;600;700&family=Noto+Serif+Tamil:wght@400;700&display=swap"
-    rel="stylesheet">
+  <!-- Google Fonts: one request, loaded without blocking the first paint.
+       Poppins and Noto Serif Tamil are self-hosted via @fontsource (see src/index.jsx). -->
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&family=Roboto:wght@300;400&family=Playfair+Display:wght@500;600;700&family=Tangerine:wght@700&family=Tiro+Tamil:ital@0;1&family=Hind+Madurai:wght@400;600;700&display=swap">
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&family=Roboto:wght@300;400&family=Playfair+Display:wght@500;600;700&family=Tangerine:wght@700&family=Tiro+Tamil:ital@0;1&family=Hind+Madurai:wght@400;600;700&display=swap">
+  </noscript>
 
   <!-- JSON-LD Schema Markup -->
   <script type="application/ld+json">

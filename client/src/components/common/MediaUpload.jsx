@@ -14,11 +14,9 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import {
-  CloudUpload as UploadIcon,
-  Delete as DeleteIcon,
-  Image as ImageIcon,
-} from "@mui/icons-material";
+import UploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ImageIcon from "@mui/icons-material/Image";
 import API_BASE_URL from "../../utils/api";
 
 const MediaUpload = ({

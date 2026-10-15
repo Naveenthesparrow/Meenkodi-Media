@@ -23,24 +23,23 @@ import {
   Grid,
   Divider,
 } from "@mui/material";
-import {
-  ArrowBack,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  ThumbUp,
-  ThumbUpOutlined,
-  Share,
-  Send,
-  Reply,
-  EmojiEmotions,
-  Delete,
-  Favorite,
-  Close,
-  Add,
-} from "@mui/icons-material";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ThumbUp from "@mui/icons-material/ThumbUp";
+import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
+import Share from "@mui/icons-material/Share";
+import Send from "@mui/icons-material/Send";
+import Reply from "@mui/icons-material/Reply";
+import EmojiEmotions from "@mui/icons-material/EmojiEmotions";
+import Delete from "@mui/icons-material/Delete";
+import Favorite from "@mui/icons-material/Favorite";
+import Close from "@mui/icons-material/Close";
+import Add from "@mui/icons-material/Add";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 import SEO from "../common/SEO";
+import cldImg from "../../utils/cloudinaryImage";
 
 function FoodDetail({ user: initialUser }) {
   const user = initialUser;
@@ -755,7 +754,7 @@ function FoodDetail({ user: initialUser }) {
         >
           {(isEditing ? editableData.imageUrl : (food.image || food.imageUrl)) ? (
             <img
-              src={isEditing ? editableData.imageUrl : (food.image || food.imageUrl)}
+              src={cldImg(isEditing ? editableData.imageUrl : (food.image || food.imageUrl), 1600)}
               alt={getContent(food.name)}
               style={{
                 maxWidth: '100%',
@@ -1140,7 +1139,7 @@ function FoodDetail({ user: initialUser }) {
                   {/* Section Image */}
                   {section.imageUrl && section.imageUrl.trim() !== '' && (
                     <img
-                      src={section.imageUrl}
+                      src={cldImg(section.imageUrl, 1600)}
                       alt={getContent(section.subtitle) || `Section ${index + 1} Image`}
                       style={{
                         maxWidth: '100%',
@@ -1313,7 +1312,7 @@ function FoodDetail({ user: initialUser }) {
                       }}
                     >
                       <img
-                        src={section.imageUrl}
+                        src={cldImg(section.imageUrl, 1600)}
                         alt="Preview"
                         style={{
                           maxWidth: '100%',
@@ -1488,7 +1487,7 @@ function FoodDetail({ user: initialUser }) {
                 {/* Section Image */}
                 {section.imageUrl && (
                   <img
-                    src={section.imageUrl}
+                    src={cldImg(section.imageUrl, 1600)}
                     alt={section.subtitle || `Section ${index + 1} Image`}
                     style={{
                       maxWidth: '100%',

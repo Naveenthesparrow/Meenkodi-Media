@@ -27,6 +27,7 @@ import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 import SEO from "./common/SEO";
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 
 const getCleanAuthorName = (name) => {
@@ -614,7 +615,7 @@ export default function ArticleDetail({ user }) {
             }}>
               <Box
                 component="img"
-                src={article.imageLink || article.image}
+                src={cldImg(article.imageLink || article.image, 1600)}
                 alt={getContent(article.title)}
                 sx={{
                   width: '100%',

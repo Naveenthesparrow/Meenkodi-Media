@@ -29,12 +29,25 @@ import {
 } from '@mui/material';
 import PageHeading from './common/PageHeading';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Cancel, Visibility, Favorite, FavoriteBorder, Edit as EditIcon, Close as CloseIcon, Save as SaveIcon, Delete as DeleteIcon, Settings as SettingsIcon, ArrowUpward, ArrowDownward, DragIndicator } from '@mui/icons-material';
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import Cancel from "@mui/icons-material/Cancel";
+import Visibility from "@mui/icons-material/Visibility";
+import Favorite from "@mui/icons-material/Favorite";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+import EditIcon from "@mui/icons-material/Edit";
+import CloseIcon from "@mui/icons-material/Close";
+import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import DragIndicator from "@mui/icons-material/DragIndicator";
 import ArticleComposer from './ArticleComposer';
 import MediaUpload from './common/MediaUpload';
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 
 const stripMarkdownForSnippet = (text) => {
@@ -575,7 +588,7 @@ export default function Articles({ user }) {
                     <>
                       <CardMedia
                         component="img"
-                        image={article.imageLink || article.image}
+                        image={cldImg(article.imageLink || article.image, 800)}
                         alt={getContent(article.title)}
                         className="article-image"
                         sx={{ 
@@ -1232,7 +1245,7 @@ export default function Articles({ user }) {
                   {/* Thumbnail Avatar */}
                   <Avatar
                     variant="square"
-                    src={toAbsoluteMediaUrl(article.imageLink || article.image)}
+                    src={cldImg(toAbsoluteMediaUrl(article.imageLink || article.image), 800)}
                     sx={{ width: 44, height: 44, border: '1px solid #eee', bgcolor: '#f5f5f5' }}
                   >
                     📝

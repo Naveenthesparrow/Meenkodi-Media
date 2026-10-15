@@ -17,19 +17,17 @@ import {
   Paper,
   Tooltip,
 } from '@mui/material';
-import { 
-  Image as ImageIcon, 
-  VideoLibrary as VideoIcon, 
-  Close as CloseIcon, 
-  Share as ShareIcon,
-  FormatBold,
-  FormatItalic,
-  FormatListBulleted,
-  FormatListNumbered,
-  Link as LinkIcon,
-  Code as CodeIcon,
-  Title as TitleIcon,
-} from '@mui/icons-material';
+import ImageIcon from "@mui/icons-material/Image";
+import VideoIcon from "@mui/icons-material/VideoLibrary";
+import CloseIcon from "@mui/icons-material/Close";
+import ShareIcon from "@mui/icons-material/Share";
+import FormatBold from "@mui/icons-material/FormatBold";
+import FormatItalic from "@mui/icons-material/FormatItalic";
+import FormatListBulleted from "@mui/icons-material/FormatListBulleted";
+import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
+import LinkIcon from "@mui/icons-material/Link";
+import CodeIcon from "@mui/icons-material/Code";
+import TitleIcon from "@mui/icons-material/Title";
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
 

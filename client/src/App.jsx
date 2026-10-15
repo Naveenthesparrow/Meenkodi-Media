@@ -40,7 +40,7 @@ const FestivalDetail = lazyRetry(() => import("./components/details/FestivalDeta
 const PoetDetail = lazyRetry(() => import("./components/details/PoetDetail"));
 const LandDetailExpanded = lazyRetry(() => import("./components/details/LandDetailExpanded"));
 const EventDetail = lazyRetry(() => import("./components/EventDetail"));
-import SeedsFootprints from "./components/SeedsFootprints";
+const SeedsFootprints = lazyRetry(() => import("./components/SeedsFootprints"));
 const SeedsFootprintsDetail = lazyRetry(() => import("./components/SeedsFootprintsDetail.jsx"));
 import {
   BrowserRouter as Router,
@@ -53,12 +53,12 @@ const AdminPortal = lazyRetry(() => import("./components/AdminPortal"));
 const UserPortal = lazyRetry(() => import("./components/UserPortal"));
 const MyArticles = lazyRetry(() => import("./components/MyArticles"));
 import Home from "./components/Home";
-import Articles from "./components/Articles";
-import Gallery from "./components/Gallery";
-import Events from "./components/Events";
-import Resources from "./components/Resources";
+const Articles = lazyRetry(() => import("./components/Articles"));
+const Gallery = lazyRetry(() => import("./components/Gallery"));
+const Events = lazyRetry(() => import("./components/Events"));
+const Resources = lazyRetry(() => import("./components/Resources"));
 const NotFound = lazyRetry(() => import("./components/NotFound"));
-import Explore from "./components/Explore";
+const Explore = lazyRetry(() => import("./components/Explore"));
 const Literature = lazyRetry(() => import("./components/categories/Literature"));
 const Dance = lazyRetry(() => import("./components/categories/Dance"));
 const Temples = lazyRetry(() => import("./components/categories/Temples"));
@@ -67,7 +67,7 @@ const Festivals = lazyRetry(() => import("./components/categories/Festivals"));
 const Foods = lazyRetry(() => import("./components/categories/Foods"));
 const AncientScience = lazyRetry(() => import("./components/categories/AncientScience"));
 const ResourceDetail = lazyRetry(() => import("./components/ResourceDetail"));
-import FAQ from "./components/FAQ";
+const FAQ = lazyRetry(() => import("./components/FAQ"));
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
 import {
@@ -308,21 +308,8 @@ function App() {
       { key: 'nav.login', action: login }
     ];
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <Typography>{t('loading')}</Typography>
-      </Box>
-    );
-  }
-
+  // Don't block the whole site on the auth check (slow when the backend is waking up).
+  // Pages render immediately and receive `user` once /auth/user responds.
   return (
     <HelmetProvider>
       <Router>
@@ -767,7 +754,11 @@ function App() {
                       backgroundSize: { xs: '18px 18px', md: '14px 14px' }
                     }
                   }}>
-                    {user ? (
+                    {loading ? (
+                      <Box sx={{ textAlign: "center", mt: 4 }}>
+                        <Typography>{t('loading')}</Typography>
+                      </Box>
+                    ) : user ? (
                       (user.role === "admin" || user.role === "superadmin") ? (
                         <AdminPortal user={user} logout={logout} />
                       ) : (

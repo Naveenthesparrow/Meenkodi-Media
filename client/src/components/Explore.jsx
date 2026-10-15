@@ -4,15 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from "./common/SEO";
 import PageHeading from './common/PageHeading';
-import {
-  Home,
-  MenuBook,
-  SportsKabaddi,
-  RestaurantMenu,
-  Science,
-  Celebration,
-  Checkroom,
-} from "@mui/icons-material";
+import Home from "@mui/icons-material/Home";
+import MenuBook from "@mui/icons-material/MenuBook";
+import SportsKabaddi from "@mui/icons-material/SportsKabaddi";
+import RestaurantMenu from "@mui/icons-material/RestaurantMenu";
+import Science from "@mui/icons-material/Science";
+import Celebration from "@mui/icons-material/Celebration";
+import Checkroom from "@mui/icons-material/Checkroom";
 import GlowCard from "./common/GlowCard";
 
 function Explore() {

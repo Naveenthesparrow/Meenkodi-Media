@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Box, Typography, IconButton, Card, CardMedia, CardContent, Chip, Button } from "@mui/material";
-import { ArrowBackIosNew, ArrowForwardIos, PlayArrow } from "@mui/icons-material";
+import ArrowBackIosNew from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIos from "@mui/icons-material/ArrowForwardIos";
+import PlayArrow from "@mui/icons-material/PlayArrow";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";

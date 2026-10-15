@@ -9,10 +9,8 @@ import {
   Stack,
   Chip,
 } from "@mui/material";
-import {
-  ArrowBackIosNew,
-  ArrowForwardIos,
-} from "@mui/icons-material";
+import ArrowBackIosNew from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIos from "@mui/icons-material/ArrowForwardIos";
 import { useBilingualContent } from "../utils/bilingualContent";
 
 const AUTO_ADVANCE_MS = 7000;

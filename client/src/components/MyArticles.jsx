@@ -11,13 +11,11 @@ import {
   Container,
   Tooltip,
 } from '@mui/material';
-import {
-  CheckCircle,
-  HourglassEmpty,
-  Cancel,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
-} from '@mui/icons-material';
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import HourglassEmpty from "@mui/icons-material/HourglassEmpty";
+import Cancel from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ViewIcon from "@mui/icons-material/Visibility";
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../utils/api';

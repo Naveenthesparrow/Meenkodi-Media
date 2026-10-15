@@ -21,11 +21,24 @@ import {
     DialogActions
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { ArrowBack, Add, Image as ImageIcon, Edit, DragIndicator, ArrowUpward, ArrowDownward, ArrowForward, Close as CloseIcon, PlayCircleOutline, Download as DownloadIcon, Share as ShareIcon, Check as CheckIcon } from '@mui/icons-material';
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import Add from "@mui/icons-material/Add";
+import ImageIcon from "@mui/icons-material/Image";
+import Edit from "@mui/icons-material/Edit";
+import DragIndicator from "@mui/icons-material/DragIndicator";
+import ArrowUpward from "@mui/icons-material/ArrowUpward";
+import ArrowDownward from "@mui/icons-material/ArrowDownward";
+import ArrowForward from "@mui/icons-material/ArrowForward";
+import CloseIcon from "@mui/icons-material/Close";
+import PlayCircleOutline from "@mui/icons-material/PlayCircleOutline";
+import DownloadIcon from "@mui/icons-material/Download";
+import ShareIcon from "@mui/icons-material/Share";
+import CheckIcon from "@mui/icons-material/Check";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SEO, { pageSEO } from './common/SEO';
 import OptimizedImage from './common/OptimizedImage';
 import API_BASE_URL from '../utils/api';
+import cldImg from "../utils/cloudinaryImage";
 
 const cachedFolderDetails = {};
 
@@ -1847,7 +1860,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     />
 
                                                     <OptimizedImage
-                                                        src={photo.url}
+                                                        src={cldImg(photo.url, 800)}
                                                         alt={getCaption(photo.caption) || folderName}
                                                         className="photo-image"
                                                         sx={{
@@ -2244,7 +2257,7 @@ export default function SeedsFootprintsDetail({ user }) {
                             
                             <Box
                                 component="img"
-                                src={displayPhotos[activeIndex].url}
+                                src={cldImg(displayPhotos[activeIndex].url, 1600)}
                                 alt={getCaption(displayPhotos[activeIndex].caption) || folderName}
                                 sx={{
                                     maxWidth: '100%',
@@ -3171,7 +3184,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                     </Box>
                                     <Box
                                         component="img"
-                                        src={photo.url}
+                                        src={cldImg(photo.url, 800)}
                                         alt={getCaption(photo.caption)}
                                         sx={{
                                             width: 50,

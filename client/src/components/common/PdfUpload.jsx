@@ -9,14 +9,12 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import {
-  PictureAsPdf,
-  CloudUpload,
-  Delete,
-  CheckCircle,
-  OpenInNew,
-  LibraryBooks
-} from '@mui/icons-material';
+import PictureAsPdf from "@mui/icons-material/PictureAsPdf";
+import CloudUpload from "@mui/icons-material/CloudUpload";
+import Delete from "@mui/icons-material/Delete";
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import OpenInNew from "@mui/icons-material/OpenInNew";
+import LibraryBooks from "@mui/icons-material/LibraryBooks";
 import API_BASE_URL from '../../utils/api';
 
 export default function PdfUpload({

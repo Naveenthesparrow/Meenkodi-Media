@@ -32,26 +32,25 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import {
-  Science,
-  MenuBook,
-  LocalHospital,
-  Edit,
-  Delete,
-  Add,
-  Star,
-  Timeline,
-  Psychology,
-  Healing,
-  Architecture,
-  Calculate,
-  Biotech,
-  Favorite,
-} from "@mui/icons-material";
+import Science from "@mui/icons-material/Science";
+import MenuBook from "@mui/icons-material/MenuBook";
+import LocalHospital from "@mui/icons-material/LocalHospital";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Star from "@mui/icons-material/Star";
+import Timeline from "@mui/icons-material/Timeline";
+import Psychology from "@mui/icons-material/Psychology";
+import Healing from "@mui/icons-material/Healing";
+import Architecture from "@mui/icons-material/Architecture";
+import Calculate from "@mui/icons-material/Calculate";
+import Biotech from "@mui/icons-material/Biotech";
+import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 import MediaUpload from "../common/MediaUpload";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedSciencesData = null;
 
@@ -423,7 +422,7 @@ export default function AncientScience({ user }) {
                   {(science.image || science.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={science.image || science.imageLink}
+                      image={cldImg(science.image || science.imageLink, 800)}
                       alt={getContent(science.name)}
                       className="temple-image"
                       sx={{

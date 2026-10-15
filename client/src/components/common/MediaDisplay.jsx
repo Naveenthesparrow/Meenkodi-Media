@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Card, CardMedia, Typography } from "@mui/material";
 import API_BASE_URL from "../../utils/api";
+import cldImg from "../../utils/cloudinaryImage";
 
 const MediaDisplay = ({
   imageUrl,
@@ -99,7 +100,7 @@ const MediaDisplay = ({
       return (
         <CardMedia
           component="img"
-          image={toAbsoluteMediaUrl(imageUrl)}
+          image={cldImg(toAbsoluteMediaUrl(imageUrl), 1600)}
           alt={title || "Image"}
           sx={{
             width: "100%",

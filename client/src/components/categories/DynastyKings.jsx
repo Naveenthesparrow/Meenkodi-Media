@@ -16,15 +16,14 @@ import {
   CircularProgress,
   TextField,
 } from "@mui/material";
-import {
-  Edit,
-  Delete,
-  Favorite,
-  ArrowBack,
-  Search,
-} from "@mui/icons-material";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Favorite from "@mui/icons-material/Favorite";
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import Search from "@mui/icons-material/Search";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 export default function DynastyKings({ user }) {
   const navigate = useNavigate();
@@ -321,7 +320,7 @@ export default function DynastyKings({ user }) {
                     <Box sx={{ position: 'relative', height: 240, overflow: 'hidden', bgcolor: '#f5f5f5' }}>
                       <CardMedia
                         component="img"
-                        image={king.image || king.imageLink}
+                        image={cldImg(king.image || king.imageLink, 800)}
                         alt={getContent(king.name)}
                         className="temple-image"
                         sx={{ 

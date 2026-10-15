@@ -50,6 +50,7 @@ import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 import SEO from "./common/SEO";
+import cldImg from "../utils/cloudinaryImage";
 
 const cachedResourceDetails = {};
 
@@ -302,7 +303,7 @@ export default function ResourceDetail({ user }) {
                     <Box sx={{ position: 'relative', mb: 2, display: 'flex', justifyContent: 'center' }}>
                       <Box
                         component="img"
-                        src={image}
+                        src={cldImg(image, 1600)}
                         alt="Thumbnail"
                         sx={{
                           width: '100%',
@@ -357,7 +358,7 @@ export default function ResourceDetail({ user }) {
                 <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-start' }, alignItems: 'flex-start', width: '100%' }}>
                   <Box
                     component="img"
-                    src={image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect fill='%23f0f0f0' width='300' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E"}
+                    src={cldImg(image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect fill='%23f0f0f0' width='300' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E", 1600)}
                     alt={getContent(resource.title)}
                     sx={{
                       width: "100%",

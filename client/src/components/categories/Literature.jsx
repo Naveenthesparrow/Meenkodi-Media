@@ -24,19 +24,18 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import {
-  MenuBook,
-  Person,
-  CalendarToday,
-  Edit,
-  Delete,
-  Add,
-  Star,
-  Category,
-  Favorite,
-} from "@mui/icons-material";
+import MenuBook from "@mui/icons-material/MenuBook";
+import Person from "@mui/icons-material/Person";
+import CalendarToday from "@mui/icons-material/CalendarToday";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Star from "@mui/icons-material/Star";
+import Category from "@mui/icons-material/Category";
+import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedLiteratureData = null;
 
@@ -388,7 +387,7 @@ export default function Literature({ user }) {
                   {(literature.image || literature.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={literature.image || literature.imageLink}
+                      image={cldImg(literature.image || literature.imageLink, 800)}
                       alt={getContent(literature.title)}
                       className="temple-image"
                       sx={{

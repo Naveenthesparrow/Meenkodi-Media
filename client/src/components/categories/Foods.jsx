@@ -29,18 +29,17 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import {
-  AccessTime,
-  People,
-  LocationOn,
-  Restaurant,
-  Edit,
-  Delete,
-  Add,
-  Favorite,
-} from "@mui/icons-material";
+import AccessTime from "@mui/icons-material/AccessTime";
+import People from "@mui/icons-material/People";
+import LocationOn from "@mui/icons-material/LocationOn";
+import Restaurant from "@mui/icons-material/Restaurant";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedFoodsData = null;
 
@@ -396,7 +395,7 @@ export default function Foods({ user }) {
                   {(food.image || food.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={food.image || food.imageLink}
+                      image={cldImg(food.image || food.imageLink, 800)}
                       alt={getContent(food.name)}
                       className="temple-image"
                       sx={{

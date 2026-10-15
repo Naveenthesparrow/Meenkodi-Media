@@ -33,24 +33,23 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
-import {
-  Festival,
-  CalendarToday,
-  LocationOn,
-  Edit,
-  Delete,
-  Add,
-  Star,
-  People,
-  Church,
-  MusicNote,
-  Restaurant,
-  Palette,
-  Schedule,
-  Favorite,
-} from "@mui/icons-material";
+import Festival from "@mui/icons-material/Festival";
+import CalendarToday from "@mui/icons-material/CalendarToday";
+import LocationOn from "@mui/icons-material/LocationOn";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
+import Star from "@mui/icons-material/Star";
+import People from "@mui/icons-material/People";
+import Church from "@mui/icons-material/Church";
+import MusicNote from "@mui/icons-material/MusicNote";
+import Restaurant from "@mui/icons-material/Restaurant";
+import Palette from "@mui/icons-material/Palette";
+import Schedule from "@mui/icons-material/Schedule";
+import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
 import { useBilingualContent } from "../../utils/bilingualContent";
+import cldImg from "../../utils/cloudinaryImage";
 
 let cachedFestivalsData = null;
 
@@ -407,7 +406,7 @@ export default function Festivals({ user }) {
                   {(festival.image || festival.imageLink) ? (
                     <CardMedia
                       component="img"
-                      image={festival.image || festival.imageLink}
+                      image={cldImg(festival.image || festival.imageLink, 800)}
                       alt={getContent(festival.name)}
                       className="temple-image"
                       sx={{

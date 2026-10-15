@@ -1,9 +1,14 @@
 import React, { useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Box, Typography, Avatar, IconButton } from '@mui/material';
-import { Twitter, AutoAwesome, Edit, Delete, Add } from '@mui/icons-material';
+import Twitter from "@mui/icons-material/Twitter";
+import AutoAwesome from "@mui/icons-material/AutoAwesome";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
+import Add from "@mui/icons-material/Add";
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import cldImg from "../utils/cloudinaryImage";
 
 const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
   const { i18n } = useTranslation();
@@ -158,7 +163,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                 />
 
                 <Avatar
-                  src={member.image}
+                  src={cldImg(member.image, 800)}
                   imgProps={{ loading: 'lazy', decoding: 'async' }}
                   sx={{
                     width: 110,

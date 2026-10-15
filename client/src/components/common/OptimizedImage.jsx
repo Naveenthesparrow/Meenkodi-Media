@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Skeleton } from '@mui/material';
+import cldImg from "../../utils/cloudinaryImage";
 
 /**
  * OptimizedImage Component
@@ -20,7 +21,7 @@ const OptimizedImage = ({
   const [isLoaded, setIsLoaded] = useState(() => {
     if (typeof window !== 'undefined' && src) {
       const img = new Image();
-      img.src = src;
+      img.src = cldImg(src, 1600);
       return img.complete && img.naturalWidth > 0;
     }
     return false;
@@ -69,7 +70,7 @@ const OptimizedImage = ({
       <Box
         component="img"
         ref={imgRef}
-        src={src}
+        src={cldImg(src, 1600)}
         alt={alt}
         loading="eager"
         decoding="async"

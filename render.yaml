@@ -23,3 +23,8 @@ services:
     # gallery/index.html, articles/index.html, articles/:id/index.html etc. into dist/
     buildCommand: cd client && npm install --include=dev && npm run build:ssr
     publishPath: client/dist
+    # Hashed build files never change; let browsers cache them for a year
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

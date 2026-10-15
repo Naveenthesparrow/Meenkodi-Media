@@ -12,6 +12,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import Mermaid from './Mermaid';
 import YouTube from 'react-youtube';
+import cldImg from "../../utils/cloudinaryImage";
 
 const DetailPageTemplate = ({
   title,
@@ -147,7 +148,7 @@ const DetailPageTemplate = ({
             {images.map((img, index) => (
               <Grid item xs={6} md={4} key={index}>
                 <img 
-                  src={img.url} 
+                  src={cldImg(img.url, 800)} 
                   alt={img.alt} 
                   style={{ 
                     width: '100%', 
@@ -196,7 +197,7 @@ const DetailPageTemplate = ({
         <DialogContent>
           {selectedImage && (
             <img 
-              src={selectedImage.url} 
+              src={cldImg(selectedImage.url, 1600)} 
               alt={selectedImage.alt} 
               style={{ 
                 width: '100%', 
