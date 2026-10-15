@@ -1012,15 +1012,28 @@ app.delete("/api/gallery/:id", ensureAdmin, async (req, res) => {
 // Research folders endpoints
 app.get("/api/seedsandfootprints/folders", async (req, res) => {
   try {
-    const lang = resolveLang(req);
-    const folders = await ResearchFolder.find().sort({ order: 1, createdAt: -1 });
+    // The list page only needs each folder's photo count, not every photo
+    // (sending all photos made this response ~2 MB). Count them in MongoDB.
+    const folders = await ResearchFolder.aggregate([
+      { $sort: { order: 1, createdAt: -1 } },
+      {
+        $project: {
+          name: 1,
+          description: 1,
+          coverPhoto: 1,
+          order: 1,
+          createdAt: 1,
+          photoCount: { $size: { $ifNull: ["$photos", []] } },
+        },
+      },
+    ]);
     res.json(folders.map(f => ({
       _id: f._id,
       name: f.name, // Return raw bilingual object
       nameRaw: f.name,
       description: f.description, // Return raw bilingual object
       coverPhoto: f.coverPhoto || null,
-      photos: f.photos || [],
+      photoCount: f.photoCount,
       order: f.order,
       createdAt: f.createdAt
     })));

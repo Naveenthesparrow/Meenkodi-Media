@@ -892,7 +892,7 @@ export default function SeedsFootprints({ user }) {
                               lineHeight: 1
                             }}
                           >
-                            {(f.photos?.length || 0)}
+                            {(f.photoCount ?? f.photos?.length ?? 0)}
                           </Typography>
                         </Box>
                       </Box>
