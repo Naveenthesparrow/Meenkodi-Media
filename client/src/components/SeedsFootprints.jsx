@@ -647,7 +647,8 @@ export default function SeedsFootprints({ user }) {
           <Grid container spacing={4}>
             {folders.map((f, index) => (
               <Grid size={{ xs: 12, sm: 6, md: 4 }} key={f._id}>
-                <Fade in={true} timeout={600 + index * 100}>
+                {/* Cap the stagger so later cards don't take many seconds to appear */}
+                <Fade in={true} timeout={300 + Math.min(index, 8) * 60}>
                   <Box
                     sx={{
                       position: 'relative',
@@ -784,6 +785,8 @@ export default function SeedsFootprints({ user }) {
                           <Box
                             component="img"
                             src={cldImg(f.coverPhoto, 800)}
+                            loading="lazy"
+                            decoding="async"
                             alt={getContent(f.name)}
                             className="folder-image"
                             sx={{
