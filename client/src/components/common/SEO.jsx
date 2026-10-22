@@ -18,11 +18,18 @@ export default function SEO({
   tags = []
 }) {
   const location = useLocation();
-  const baseUrl = window.location.origin;
-  
-  const rawUrl = url || `${location.pathname}`;
-  const fullUrl = (rawUrl.startsWith('http') ? rawUrl : `${baseUrl}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`)
-    .replace('https://meenkodi.com', baseUrl);
+  // Canonical URLs always point at the production domain, whatever host served
+  // the page (localhost, the *.onrender.com address, non-www), and never end in
+  // a slash — so "/articles/" and "/articles" don't compete in Google.
+  const baseUrl = 'https://www.meenkodi.com';
+
+  let path = url || location.pathname;
+  if (path.startsWith('http')) {
+    try { path = new URL(path).pathname; } catch { path = location.pathname; }
+  }
+  if (!path.startsWith('/')) path = `/${path}`;
+  if (path.length > 1) path = path.replace(/\/+$/, '');
+  const fullUrl = `${baseUrl}${path}`;
   const fullTitle = title ? `${title} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
   const defaultDescription = 'Meenkodi preserves and shares 5000+ years of Tamil civilization — history, temples, dynasties (Pandiya, Chola, Chera , Pallava), cultural traditions, and archaeological discoveries. Explore the stories of the Southerns (தென்புலத்தார் / தென்னவர்), Pandiyargal, temple architecture, Sangam literature, festivals, and living heritage across International and the Tamil diaspora.';
   const metaDescription = description || defaultDescription;

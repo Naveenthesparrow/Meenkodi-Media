@@ -841,7 +841,12 @@ export default function SeedsFootprintsDetail({ user }) {
         >
             <SEO
                 title={folderName ? `${folderName} - Seeds & Footprints` : 'Discovery Collection - Seeds & Footprints'}
-                description={folderDescription || `Archaeological discoveries and Tamil heritage traces in ${folderName}. Documenting the footprints of our ancestors and seeds of Tamil civilization.`}
+                description={
+                    // Most folders repeat their name as the description, which gives Google nothing new
+                    folderDescription && folderDescription.trim().toLowerCase() !== folderName.trim().toLowerCase()
+                        ? folderDescription
+                        : `${folderName}: ${photos.length ? `${photos.length} photos of ` : ''}archaeological discoveries and Tamil heritage traces, documenting the footprints of our ancestors and seeds of Tamil civilization.`
+                }
                 keywords={`Tamil Heritage, Archaeological Discoveries, ${folderName}, Heritage Evidence, Tamil History, Cultural Traces, Heritage Documentation`}
                 url={`/seeds-and-footprints/folders/${id}`}
                 type="article"

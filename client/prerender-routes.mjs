@@ -565,7 +565,13 @@ async function main() {
       description: 'Meenkodi preserves 5000+ years of Tamil civilization — Pandiya dynasty history, Chola temples, Sangam literature, and cultural traditions of the Southerns (தென்புலத்தார்).',
       canonicalUrl: `${BASE_URL}/`,
       bodyHtml,
-    });
+    })
+      // dist/index.html is also the SPA fallback served for every route that has
+      // no pre-rendered file, so it must not claim the homepage as canonical —
+      // Google would mark those pages "Alternate page with proper canonical tag".
+      // The <SEO> component adds the correct canonical for each page at runtime.
+      .replace(/\s*<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/gi, '')
+      .replace(/\s*<meta\s+property="(?:og|twitter):url"\s+content="[^"]*"\s*\/?>/gi, '');
     fs.writeFileSync(BASE_HTML, html, 'utf8');
     console.log(`  ✅  / → dist/index.html (homepage updated)`);
   }

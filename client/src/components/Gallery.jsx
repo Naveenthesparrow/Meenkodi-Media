@@ -166,11 +166,13 @@ export default function Gallery({ user }) {
       return {
         title: `${folderDisplayName} | Gallery`,
         description: `Explore photos, history, and media inside the ${folderDisplayName} folder of Meenkodi Tamil Heritage Gallery.`,
-        keywords: `${folderDisplayName}, Tamil Heritage Gallery, ${folderDisplayName} photos, Meenkodi`
+        keywords: `${folderDisplayName}, Tamil Heritage Gallery, ${folderDisplayName} photos, Meenkodi`,
+        // "/gallery?folder=X" and "/gallery/folder/x" show the same folder — point both at the clean URL
+        url: `/gallery/folder/${folderSlug || slugify(selectedFolderName)}`,
       };
     }
     return pageSEO.gallery;
-  }, [viewMode, selectedFolderName, galleryItems, i18n.language]);
+  }, [viewMode, selectedFolderName, folderSlug, galleryItems, i18n.language]);
 
   useEffect(() => {
     fetchGalleryItems();
