@@ -1732,9 +1732,16 @@ app.post("/api/lands", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+// Lands are addressed by database id or by their name (e.g. "marutham"), like GET above
+const landFilter = (id) =>
+  mongoose.Types.ObjectId.isValid(id)
+    ? { _id: id }
+    : { type: { $regex: new RegExp(`^${id.replace(/[^a-z]/gi, "")}$`, "i") } };
+
 app.put("/api/lands/:id", ensureAdmin, async (req, res) => {
   try {
-    const land = await Land.findByIdAndUpdate(req.params.id, req.body, {
+    const { _id, __v, ...update } = req.body || {};
+    const land = await Land.findOneAndUpdate(landFilter(req.params.id), update, {
       new: true,
       runValidators: true,
     });
@@ -1744,13 +1751,19 @@ app.put("/api/lands/:id", ensureAdmin, async (req, res) => {
     if (err.name === "ValidationError") {
       return res.status(400).json({ error: err.message });
     }
+    console.error("Error saving land:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 app.delete("/api/lands/:id", ensureAdmin, async (req, res) => {
-  const result = await Land.findByIdAndDelete(req.params.id);
-  if (!result) return res.status(404).json({ error: "Land not found" });
-  res.status(204).end();
+  try {
+    const result = await Land.findOneAndDelete(landFilter(req.params.id));
+    if (!result) return res.status(404).json({ error: "Land not found" });
+    res.status(204).end();
+  } catch (err) {
+    console.error("Error deleting land:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Multer setup for general file uploads

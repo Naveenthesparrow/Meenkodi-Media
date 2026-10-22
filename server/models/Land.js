@@ -22,6 +22,11 @@ const landSchema = new mongoose.Schema({
   flora: [String],
   fauna: [String],
   people: [String],
+  // Tamil versions of the lists above (optional; the page falls back to English)
+  gods_ta: [String],
+  flora_ta: [String],
+  fauna_ta: [String],
+  people_ta: [String],
   contentSections: [{
     subtitle: bilingual,
     content: bilingual,
