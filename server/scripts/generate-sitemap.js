@@ -17,10 +17,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: new URL('../../server/.env', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1') });
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// fileURLToPath decodes "%20" etc., so this also works when the project path has spaces
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Public directory (where sitemap files live)
 const PUBLIC_DIR = path.resolve(__dirname, '../../client/public');
@@ -90,6 +91,12 @@ export async function generateAllSitemaps() {
     }
   } else if (mongoose.connection.readyState === 1) {
     console.log('  Using existing MongoDB connection');
+  }
+
+  // Without a database every dynamic sitemap would be written empty, wiping the
+  // live URLs from Google's view — refuse instead of overwriting good files.
+  if (mongoose.connection.readyState !== 1) {
+    throw new Error('MongoDB is not connected — sitemaps were NOT regenerated (check MONGO_URI)');
   }
 
   let Article, Gallery, Event, Resource, Land, Temple, Literature, Dance, Food, Festival,
