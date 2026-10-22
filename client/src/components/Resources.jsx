@@ -518,6 +518,8 @@ export default function Resources({ user }) {
                       >
                         <IconButton
                           onClick={(e) => {
+                            // The card is a <Link>; without preventDefault the click also navigates to the resource page
+                            e.preventDefault();
                             e.stopPropagation();
                             handleEdit(resource);
                           }}
@@ -536,6 +538,8 @@ export default function Resources({ user }) {
                         </IconButton>
                         <IconButton
                           onClick={(e) => {
+                            // The card is a <Link>; without preventDefault the click also navigates to the resource page
+                            e.preventDefault();
                             e.stopPropagation();
                             handleDelete(resource._id);
                           }}
