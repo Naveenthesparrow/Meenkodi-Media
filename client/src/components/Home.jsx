@@ -897,12 +897,18 @@ export default function Home() {
   useEffect(() => {
     fetch('/auth/user', { credentials: 'include' })
       .then(res => {
+        // 401 just means the visitor isn't logged in — treat as guest
+        if (res.status === 401) return null;
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
       .then(data => {
+        if (!data) {
+          setUser(null);
+          return;
+        }
         console.log('Home.jsx - User fetched:', data);
         // API returns user object directly, not wrapped
         if (data && data._id) {

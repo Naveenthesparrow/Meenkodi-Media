@@ -30,6 +30,32 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Nav bar pages: lazy-loaded, but prefetched in the background after first load
+// so clicking a nav item doesn't wait for the page code to download.
+const navPageImports = {
+  explore: () => import("./components/Explore"),
+  seedsFootprints: () => import("./components/SeedsFootprints"),
+  events: () => import("./components/Events"),
+  gallery: () => import("./components/Gallery"),
+  articles: () => import("./components/Articles"),
+  resources: () => import("./components/Resources"),
+  faq: () => import("./components/FAQ"),
+};
+
+if (typeof window !== 'undefined') {
+  const prefetchNavPages = () => {
+    // Respect data-saver mode on mobile
+    if (navigator.connection?.saveData) return;
+    Object.values(navPageImports).forEach((load) => load().catch(() => {}));
+  };
+  const scheduleIdle = () =>
+    window.requestIdleCallback
+      ? window.requestIdleCallback(prefetchNavPages, { timeout: 3000 })
+      : setTimeout(prefetchNavPages, 1500);
+  if (document.readyState === 'complete') scheduleIdle();
+  else window.addEventListener('load', scheduleIdle, { once: true });
+}
+
 // Route-split heavier pages and details
 const TempleDetail = lazyRetry(() => import("./components/details/TempleDetail"));
 const DynastyDetail = lazyRetry(() => import("./components/details/DynastyDetail"));
@@ -40,7 +66,7 @@ const FestivalDetail = lazyRetry(() => import("./components/details/FestivalDeta
 const PoetDetail = lazyRetry(() => import("./components/details/PoetDetail"));
 const LandDetailExpanded = lazyRetry(() => import("./components/details/LandDetailExpanded"));
 const EventDetail = lazyRetry(() => import("./components/EventDetail"));
-const SeedsFootprints = lazyRetry(() => import("./components/SeedsFootprints"));
+const SeedsFootprints = lazyRetry(navPageImports.seedsFootprints);
 const SeedsFootprintsDetail = lazyRetry(() => import("./components/SeedsFootprintsDetail.jsx"));
 import {
   BrowserRouter as Router,
@@ -53,12 +79,12 @@ const AdminPortal = lazyRetry(() => import("./components/AdminPortal"));
 const UserPortal = lazyRetry(() => import("./components/UserPortal"));
 const MyArticles = lazyRetry(() => import("./components/MyArticles"));
 import Home from "./components/Home";
-const Articles = lazyRetry(() => import("./components/Articles"));
-const Gallery = lazyRetry(() => import("./components/Gallery"));
-const Events = lazyRetry(() => import("./components/Events"));
-const Resources = lazyRetry(() => import("./components/Resources"));
+const Articles = lazyRetry(navPageImports.articles);
+const Gallery = lazyRetry(navPageImports.gallery);
+const Events = lazyRetry(navPageImports.events);
+const Resources = lazyRetry(navPageImports.resources);
 const NotFound = lazyRetry(() => import("./components/NotFound"));
-const Explore = lazyRetry(() => import("./components/Explore"));
+const Explore = lazyRetry(navPageImports.explore);
 const Literature = lazyRetry(() => import("./components/categories/Literature"));
 const Dance = lazyRetry(() => import("./components/categories/Dance"));
 const Temples = lazyRetry(() => import("./components/categories/Temples"));
@@ -67,7 +93,7 @@ const Festivals = lazyRetry(() => import("./components/categories/Festivals"));
 const Foods = lazyRetry(() => import("./components/categories/Foods"));
 const AncientScience = lazyRetry(() => import("./components/categories/AncientScience"));
 const ResourceDetail = lazyRetry(() => import("./components/ResourceDetail"));
-const FAQ = lazyRetry(() => import("./components/FAQ"));
+const FAQ = lazyRetry(navPageImports.faq);
 import AuthCallback from "./components/AuthCallback";
 import AuthFailure from "./components/AuthFailure";
 import {
