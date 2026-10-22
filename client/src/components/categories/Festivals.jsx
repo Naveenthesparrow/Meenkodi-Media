@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import SEO, { pageSEO } from '../common/SEO';
+import CategoryHeader from '../common/CategoryHeader';
+import ExploreItemDialog from '../common/ExploreItemDialog';
 import {
   Box,
   Typography,
@@ -48,6 +50,8 @@ import Palette from "@mui/icons-material/Palette";
 import Schedule from "@mui/icons-material/Schedule";
 import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
+import { fetchPrefetched } from '../../utils/prefetch';
+import { prefetchExploreItem, preloadExploreDetailPage } from '../../utils/explorePrefetch';
 import { useBilingualContent } from "../../utils/bilingualContent";
 import cldImg from "../../utils/cloudinaryImage";
 
@@ -86,10 +90,21 @@ export default function Festivals({ user }) {
     fetchFestivals();
   }, []);
 
+
+  // Load the detail page's code in the background so opening an item is quick
+
+  useEffect(() => {
+
+    const t = setTimeout(() => preloadExploreDetailPage('festivals'), 1000);
+
+    return () => clearTimeout(t);
+
+  }, []);
+
   const fetchFestivals = async () => {
     if (!cachedFestivalsData) setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/festivals`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/festivals`);
       if (!res.ok) throw new Error("Failed to fetch Festivals data");
       const data = await res.json();
       const processedFestivals = data.map(festival => ({
@@ -220,104 +235,12 @@ export default function Festivals({ user }) {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <SEO {...pageSEO.festivals} />
-      <Box
-        sx={{
-          mb: 6,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 2, md: 0 },
-          position: 'relative',
-        }}
-      >
-        <Box sx={{ flex: 1 }}>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 700,
-              color: "#8B0000",
-              fontFamily: 'Georgia, serif',
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              letterSpacing: 2,
-              mb: { xs: 0.5, md: 1 },
-              position: 'relative',
-              display: 'inline-block',
-              textTransform: 'uppercase',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -8,
-                left: 0,
-                width: '120px',
-                height: '4px',
-                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
-              },
-            }}
-          >
-            {t('festivals.title', 'Festivals')}
-          </Typography>
-        </Box>
-
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: { xs: 'center', md: 'flex-end' },
-          gap: 1
-        }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: '#666',
-              fontStyle: 'italic',
-              fontSize: { xs: '0.95rem', md: '1.05rem' },
-              textAlign: { xs: 'center', md: 'right' },
-              fontFamily: 'Georgia, serif',
-            }}
-          >
-            {t('festivals.subtitle')}
-          </Typography>
-
-          {user && user.role === "admin" && (
-            <Box
-              sx={{
-                transition: 'all 0.3s ease',
-                mt: 1,
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                  '& button': {
-                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                  }
-                }
-              }}
-            >
-              <Button
-                onClick={handleAdd}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{
-                  bgcolor: "#8B0000",
-                  color: "#fff",
-                  transition: 'all 0.3s ease',
-                  "&:hover": {
-                    bgcolor: "#6B0000",
-                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                  },
-                  borderRadius: 0,
-                  px: 3,
-                  py: 1,
-                  fontWeight: 700,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Georgia, serif',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('festivals.add', 'Add Festival')}
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </Box>
+      <CategoryHeader
+        title={t('festivals.title', 'Festivals')}
+        subtitle={t('festivals.subtitle')}
+        addLabel={t('festivals.add', 'Add Festival')}
+        onAdd={user && user.role === "admin" ? handleAdd : undefined}
+      />
 
       {/* Removed Filters */}
 
@@ -347,6 +270,8 @@ export default function Festivals({ user }) {
               <Card
                 component={Link}
                 to={`/explore/festivals/${festival._id}`}
+                onMouseEnter={() => prefetchExploreItem('festivals', festival._id)}
+                onTouchStart={() => prefetchExploreItem('festivals', festival._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -616,6 +541,8 @@ export default function Festivals({ user }) {
                     className="view-button"
                     component={Link}
                     to={`/explore/festivals/${festival._id}`}
+                    onMouseEnter={() => prefetchExploreItem('festivals', festival._id)}
+                    onTouchStart={() => prefetchExploreItem('festivals', festival._id)}
                     variant="outlined"
                     fullWidth
                     sx={{
@@ -644,119 +571,23 @@ export default function Festivals({ user }) {
       </Box>
 
       {/* Edit/Add Dialog */}
-      <Dialog
+      <ExploreItemDialog
         open={editOpen || addOpen}
-        onClose={() => {
-          setEditOpen(false);
-          setAddOpen(false);
-        }}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: 0,
-            border: '3px solid #000',
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            bgcolor: '#000',
-            color: '#fff',
-            textAlign: 'center',
-            fontWeight: 700
-          }}
-        >
-          {editItem ? t('festivals.edit', 'Edit Festival') : t('festivals.addNew', 'Add New Festival')}
-        </DialogTitle>
-        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
-          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <ToggleButtonGroup
-              value={editLanguage}
-              exclusive
-              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 3,
-                  py: 1,
-                  border: '2px solid #000',
-                  color: '#000',
-                  fontWeight: 600,
-                  '&.Mui-selected': {
-                    bgcolor: '#000',
-                    color: '#fff',
-                    '&:hover': {
-                      bgcolor: '#333',
-                    }
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="ta">தமிழ்</ToggleButton>
-              <ToggleButton value="en">ENGLISH</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          <TextField
-            fullWidth
-            label={t('form.name', 'Name')}
-            value={editLanguage === 'en' ? formData.name_en : formData.name_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'name_en' : 'name_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.type', 'Type')}
-            value={editLanguage === 'en' ? formData.type_en : formData.type_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'type_en' : 'type_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.description', 'Description')}
-            value={editLanguage === 'en' ? formData.description_en : formData.description_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'description_en' : 'description_ta']: e.target.value })}
-            multiline
-            minRows={3}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.imageUrl', 'Image URL')}
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-        </DialogContent>
-        <DialogActions
-          sx={{
-            p: 2,
-            justifyContent: 'space-between',
-            bgcolor: '#f0f0f0'
-          }}
-        >
-          <Button
-            onClick={() => {
-              setEditOpen(false);
-              setAddOpen(false);
-            }}
-            sx={{ color: '#000' }}
-          >
-            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            sx={{
-              bgcolor: '#000',
-              color: '#fff',
-              '&:hover': { bgcolor: '#333' },
-              borderRadius: 0,
-            }}
-          >
-            {editItem ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => { setEditOpen(false); setAddOpen(false); }}
+        title={(ft) => (editItem ? ft('festivals.edit', 'Edit Festival') : ft('festivals.addNew', 'Add New Festival'))}
+        isEdit={!!editItem}
+        onSave={handleSave}
+        formData={formData}
+        setFormData={setFormData}
+        language={editLanguage}
+        onLanguageChange={setEditLanguage}
+        imageField="image"
+        fields={[
+          { name: 'name', labelKey: 'form.name', label: 'Name', required: true },
+          { name: 'type', labelKey: 'form.type', label: 'Type' },
+          { name: 'description', labelKey: 'form.description', label: 'Description', multiline: true }
+        ]}
+      />
     </Container>
   );
 }

@@ -55,6 +55,7 @@
 	"research.sourceLinkLabel": "Source Link (optional)",
 	"research.viewSource": "View Source",
 	"research.editFolder": "Edit Discovery Collection",
+	"research.editFolderShort": "Edit Folder",
 	"research.folderNameEn": "Folder Name (English)",
 	"research.folderNameTa": "Folder Name (Tamil)",
 	"research.folderDescriptionEn": "Description (English)",
@@ -494,5 +495,18 @@
 				"answer": "Major archaeological sites include Keeladi (urban settlement from 600 BCE), Adichanallur (Iron Age burial site with 4,000-year-old artifacts), Poompuhar (ancient port city mentioned in Sangam literature), Arikamedu (Roman trade settlement), and numerous megalithic sites. Excavations have revealed Tamil-Brahmi inscriptions, pottery, jewelry, tools, and urban planning evidence that confirm the antiquity and sophistication of Tamil civilization."
 			}
 		]
-	}
+	},
+	"form.image": "Image",
+	"form.uploadImage": "Upload image",
+	"form.replaceImage": "Replace image",
+	"form.removeImage": "Remove",
+	"form.uploading": "Uploading…",
+	"form.waitForUpload": "Uploading image…",
+	"form.imageLinkPlaceholder": "or paste an image link (https://…)",
+	"form.imageHint": "JPG, PNG or WebP, up to 10 MB.",
+	"form.imageTypeError": "Please choose an image file (JPG, PNG, WebP…).",
+	"form.imageSizeError": "Image is too large — maximum 10 MB.",
+	"form.imageUploadError": "Upload failed. Please try again.",
+	"form.editingTamil": "You are filling in the Tamil version",
+	"form.editingEnglish": "You are filling in the English version"
 }

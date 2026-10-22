@@ -46,6 +46,8 @@ import CommentOutlined from "@mui/icons-material/CommentOutlined";
 import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
+import { inlineEditSx } from '../common/formStyles';
+import { fetchPrefetched } from '../../utils/prefetch';
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 import SEO from "../common/SEO";
@@ -163,7 +165,7 @@ function LiteratureDetail({ user: initialUser }) {
   const fetchLiterature = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/literature/${id}`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/literature/${id}`);
       if (!res.ok) {
         throw new Error("Literature not found");
       }
@@ -513,126 +515,9 @@ function LiteratureDetail({ user: initialUser }) {
     );
   }
 
-  // --- ADMIN EDIT VIEW ---
-  if (isEditing) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-              Edit Literature
-            </Typography>
-            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
-          </Box>
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Title (EN)" value={editableData.title_en} onChange={(e) => setEditableData({ ...editableData, title_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Title (TA)" value={editableData.title_ta} onChange={(e) => setEditableData({ ...editableData, title_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Author (EN)" value={editableData.author_en} onChange={(e) => setEditableData({ ...editableData, author_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Author (TA)" value={editableData.author_ta} onChange={(e) => setEditableData({ ...editableData, author_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Genre (EN)" value={editableData.genre_en} onChange={(e) => setEditableData({ ...editableData, genre_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Genre (TA)" value={editableData.genre_ta} onChange={(e) => setEditableData({ ...editableData, genre_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Language (EN)" value={editableData.language_en} onChange={(e) => setEditableData({ ...editableData, language_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Language (TA)" value={editableData.language_ta} onChange={(e) => setEditableData({ ...editableData, language_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Summary (EN)" value={editableData.summary_en} onChange={(e) => setEditableData({ ...editableData, summary_en: e.target.value })} fullWidth multiline rows={3} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Summary (TA)" value={editableData.summary_ta} onChange={(e) => setEditableData({ ...editableData, summary_ta: e.target.value })} fullWidth multiline rows={3} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Content (EN)" value={editableData.content_en} onChange={(e) => setEditableData({ ...editableData, content_en: e.target.value })} fullWidth multiline rows={6} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Content (TA)" value={editableData.content_ta} onChange={(e) => setEditableData({ ...editableData, content_ta: e.target.value })} fullWidth multiline rows={6} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
-                <TextField
-                  label="Image URL"
-                  value={editableData.imageUrl}
-                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <MediaUpload
-                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
-                  currentImage={editableData.imageUrl}
-                  label="Upload Image"
-                  showInputsOnly={true}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                Delete Literature
-              </Button>
-              <Button
-                onClick={handleInlineSave}
-                variant="contained"
-                startIcon={<EditIcon />}
-                sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#333' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                Save Changes
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    );
-  }
 
   return (
+    <Box sx={isEditing ? inlineEditSx : undefined}>
     <Container
       maxWidth="lg"
       sx={{
@@ -1933,6 +1818,7 @@ function LiteratureDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container>
+    </Box>
   );
 }
 

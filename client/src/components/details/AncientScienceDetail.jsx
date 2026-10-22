@@ -40,6 +40,8 @@ import SEO from "../common/SEO";
 
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
+import { inlineEditSx } from '../common/formStyles';
+import { fetchPrefetched } from '../../utils/prefetch';
 import cldImg from "../../utils/cloudinaryImage";
 function AncientScienceDetail({ user: initialUser }) {
   const user = initialUser;
@@ -182,7 +184,7 @@ function AncientScienceDetail({ user: initialUser }) {
   const fetchScience = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/ancientscience/${id}`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/ancientscience/${id}`);
       console.log("API response status:", res.status);
       if (!res.ok) {
         const errorText = await res.text();
@@ -527,105 +529,9 @@ function AncientScienceDetail({ user: initialUser }) {
     );
   }
 
-  // --- ADMIN EDIT VIEW ---
-  if (isEditing) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-              Edit Ancient Science
-            </Typography>
-            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
-          </Box>
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Field (EN)" value={editableData.field_en} onChange={(e) => setEditableData({ ...editableData, field_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Field (TA)" value={editableData.field_ta} onChange={(e) => setEditableData({ ...editableData, field_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Scholar (EN)" value={editableData.scholar_en} onChange={(e) => setEditableData({ ...editableData, scholar_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Scholar (TA)" value={editableData.scholar_ta} onChange={(e) => setEditableData({ ...editableData, scholar_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
-                <TextField
-                  label="Image URL"
-                  value={editableData.imageUrl}
-                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <MediaUpload
-                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
-                  currentImage={editableData.imageUrl}
-                  label="Upload Image"
-                  showInputsOnly={true}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                Delete Item
-              </Button>
-              <Button
-                onClick={handleInlineSave}
-                variant="contained"
-                startIcon={<EditIcon />}
-                sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#333' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                Save Changes
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    );
-  }
 
   return (
+    <Box sx={isEditing ? inlineEditSx : undefined}>
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <SEO 
         title={science ? `${getContent(science.name)} - Ancient Tamil Science & Innovation` : 'Ancient Tamil Science'}
@@ -1901,6 +1807,7 @@ function AncientScienceDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container>
+    </Box>
   );
 }
 

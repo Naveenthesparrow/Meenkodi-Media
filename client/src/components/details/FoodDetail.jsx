@@ -1,4 +1,6 @@
 import API_BASE_URL from "../../utils/api";
+import { inlineEditSx } from '../common/formStyles';
+import { fetchPrefetched } from '../../utils/prefetch';
 import React, { useState, useEffect } from "react";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
@@ -40,6 +42,20 @@ import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 import SEO from "../common/SEO";
 import cldImg from "../../utils/cloudinaryImage";
+
+// Read the English / Tamil part of a bilingual field. Module-level so both the
+// data loader and the edit button can use them (the edit button used to crash).
+const toStr = (val) => {
+  if (!val) return "";
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') return val.en || val.ta || "";
+  return "";
+};
+const toTa = (val) => {
+  if (!val) return "";
+  if (typeof val === 'object') return val.ta || "";
+  return "";
+};
 
 function FoodDetail({ user: initialUser }) {
   const user = initialUser;
@@ -144,24 +160,13 @@ function FoodDetail({ user: initialUser }) {
   const fetchFood = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/foods/${id}`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/foods/${id}`);
       if (!res.ok) {
         throw new Error("Food not found");
       }
       const data = await res.json();
       setFood(data);
       // Prime bilingual edit state (support legacy string or object)
-      const toStr = (val) => {
-        if (!val) return "";
-        if (typeof val === 'string') return val;
-        if (typeof val === 'object') return val.en || val.ta || "";
-        return "";
-      };
-      const toTa = (val) => {
-        if (!val) return "";
-        if (typeof val === 'object') return val.ta || "";
-        return "";
-      };
       setEditableData({
         name_en: toStr(data.name),
         name_ta: toTa(data.name),
@@ -511,119 +516,9 @@ function FoodDetail({ user: initialUser }) {
     );
   }
 
-  // --- ADMIN EDIT VIEW ---
-  if (isEditing) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-              Edit Food
-            </Typography>
-            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
-          </Box>
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Region (EN)" value={editableData.region_en} onChange={(e) => setEditableData({ ...editableData, region_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e) => setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Type (EN)" value={editableData.type_en} onChange={(e) => setEditableData({ ...editableData, type_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e) => setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Ingredients (EN)" value={editableData.ingredients_en} onChange={(e) => setEditableData({ ...editableData, ingredients_en: e.target.value })} fullWidth multiline rows={3} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Ingredients (TA)" value={editableData.ingredients_ta} onChange={(e) => setEditableData({ ...editableData, ingredients_ta: e.target.value })} fullWidth multiline rows={3} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Recipe (EN)" value={editableData.recipe_en} onChange={(e) => setEditableData({ ...editableData, recipe_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Recipe (TA)" value={editableData.recipe_ta} onChange={(e) => setEditableData({ ...editableData, recipe_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Occasion (EN)" value={editableData.occasion_en} onChange={(e) => setEditableData({ ...editableData, occasion_en: e.target.value })} fullWidth multiline rows={2} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Occasion (TA)" value={editableData.occasion_ta} onChange={(e) => setEditableData({ ...editableData, occasion_ta: e.target.value })} fullWidth multiline rows={2} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
-                <TextField
-                  label="Image URL"
-                  value={editableData.imageUrl}
-                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <MediaUpload
-                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
-                  currentImage={editableData.imageUrl}
-                  label="Upload Image"
-                  showInputsOnly={true}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                Delete Food
-              </Button>
-              <Button
-                onClick={handleInlineSave}
-                variant="contained"
-                startIcon={<EditIcon />}
-                sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#333' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                Save Changes
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    );
-  }
 
   return (
+    <Box sx={isEditing ? inlineEditSx : undefined}>
     <Container
       maxWidth="lg"
       sx={{
@@ -1892,6 +1787,7 @@ function FoodDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container>
+    </Box>
   );
 }
 

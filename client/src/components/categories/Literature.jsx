@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import SEO, { pageSEO } from '../common/SEO';
+import CategoryHeader from '../common/CategoryHeader';
+import ExploreItemDialog from '../common/ExploreItemDialog';
 import {
   Box,
   Typography,
@@ -34,6 +36,8 @@ import Star from "@mui/icons-material/Star";
 import Category from "@mui/icons-material/Category";
 import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
+import { fetchPrefetched } from '../../utils/prefetch';
+import { prefetchExploreItem, preloadExploreDetailPage } from '../../utils/explorePrefetch';
 import { useBilingualContent } from "../../utils/bilingualContent";
 import cldImg from "../../utils/cloudinaryImage";
 
@@ -72,7 +76,7 @@ export default function Literature({ user }) {
   const fetchLiterature = async () => {
     if (!cachedLiteratureData) setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/literature`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/literature`);
       if (!res.ok) throw new Error("Failed to fetch literature");
       const data = await res.json();
       setLiterature(data);
@@ -86,6 +90,17 @@ export default function Literature({ user }) {
 
   useEffect(() => {
     fetchLiterature();
+  }, []);
+
+
+  // Load the detail page's code in the background so opening an item is quick
+
+  useEffect(() => {
+
+    const t = setTimeout(() => preloadExploreDetailPage('literature'), 1000);
+
+    return () => clearTimeout(t);
+
   }, []);
 
   const toStr = (val) => {
@@ -202,104 +217,12 @@ export default function Literature({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.literature} />
       {/* Unique Heading Section */}
-      <Box
-        sx={{
-          mb: 6,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 2, md: 0 },
-          position: 'relative',
-        }}
-      >
-        <Box sx={{ flex: 1 }}>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 700,
-              color: "#8B0000",
-              fontFamily: 'Georgia, serif',
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              letterSpacing: 2,
-              mb: { xs: 0.5, md: 1 },
-              position: 'relative',
-              display: 'inline-block',
-              textTransform: 'uppercase',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -8,
-                left: 0,
-                width: '120px',
-                height: '4px',
-                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
-              },
-            }}
-          >
-            {t('literature.title', 'Literature')}
-          </Typography>
-        </Box>
-
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: { xs: 'center', md: 'flex-end' },
-          gap: 1
-        }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: '#666',
-              fontStyle: 'italic',
-              fontSize: { xs: '0.95rem', md: '1.05rem' },
-              textAlign: { xs: 'center', md: 'right' },
-              fontFamily: 'Georgia, serif',
-            }}
-          >
-            {t('literature.subtitle', 'Timeless Tamil Literary Works')}
-          </Typography>
-
-          {user && user.role === "admin" && (
-            <Box
-              sx={{
-                transition: 'all 0.3s ease',
-                mt: 1,
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                  '& button': {
-                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                  }
-                }
-              }}
-            >
-              <Button
-                onClick={handleAdd}
-                variant="contained"
-                startIcon={<Add />}
-                sx={{
-                  bgcolor: "#8B0000",
-                  color: "#fff",
-                  transition: 'all 0.3s ease',
-                  "&:hover": {
-                    bgcolor: "#6B0000",
-                    boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                  },
-                  borderRadius: 0,
-                  px: 3,
-                  py: 1,
-                  fontWeight: 700,
-                  letterSpacing: 0.5,
-                  fontFamily: 'Georgia, serif',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('literature.add', 'Add Literature')}
-              </Button>
-            </Box>
-          )}
-        </Box>
-      </Box>
+      <CategoryHeader
+        title={t('literature.title', 'Literature')}
+        subtitle={t('literature.subtitle', 'Timeless Tamil Literary Works')}
+        addLabel={t('literature.add', 'Add Literature')}
+        onAdd={user && user.role === "admin" ? handleAdd : undefined}
+      />
 
       <Box
         sx={{
@@ -327,6 +250,8 @@ export default function Literature({ user }) {
               <Card
                 component={Link}
                 to={`/explore/literature/${literature._id}`}
+                onMouseEnter={() => prefetchExploreItem('literature', literature._id)}
+                onTouchStart={() => prefetchExploreItem('literature', literature._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -557,6 +482,8 @@ export default function Literature({ user }) {
                   <Button
                     component={Link}
                     to={`/explore/literature/${literature._id}`}
+                    onMouseEnter={() => prefetchExploreItem('literature', literature._id)}
+                    onTouchStart={() => prefetchExploreItem('literature', literature._id)}
                     variant="outlined"
                     fullWidth
                     className="view-button"
@@ -587,117 +514,23 @@ export default function Literature({ user }) {
       </Box>
 
       {/* Edit/Add Dialog */}
-      <Dialog
+      <ExploreItemDialog
         open={editOpen || addOpen}
-        onClose={() => {
-          setEditOpen(false);
-          setAddOpen(false);
-        }}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: 0,
-            border: '3px solid #000',
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            bgcolor: '#000',
-            color: '#fff',
-            textAlign: 'center',
-            fontWeight: 700
-          }}
-        >
-          {editItem ? t('literature.edit', 'Edit Literature Work') : t('literature.addNew', 'Add New Literature Work')}
-        </DialogTitle>
-        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
-          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <ToggleButtonGroup
-              value={editLanguage}
-              exclusive
-              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 3,
-                  py: 1,
-                  border: '2px solid #000',
-                  color: '#000',
-                  fontWeight: 600,
-                  '&.Mui-selected': {
-                    bgcolor: '#000',
-                    color: '#fff',
-                    '&:hover': {
-                      bgcolor: '#333',
-                    }
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="ta">தமிழ்</ToggleButton>
-              <ToggleButton value="en">ENGLISH</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          <TextField
-            fullWidth
-            label={t('literature.title', 'Title')}
-            value={editLanguage === 'en' ? formData.title_en : formData.title_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'title_en' : 'title_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.author', 'Author')}
-            value={editLanguage === 'en' ? formData.author_en : formData.author_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'author_en' : 'author_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.period', 'Period')}
-            value={editLanguage === 'en' ? formData.period_en : formData.period_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'period_en' : 'period_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.imageUrl', 'Image URL')}
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-        </DialogContent>
-        <DialogActions
-          sx={{
-            p: 2,
-            justifyContent: 'space-between',
-            bgcolor: '#f0f0f0'
-          }}
-        >
-          <Button
-            onClick={() => {
-              setEditOpen(false);
-              setAddOpen(false);
-            }}
-            sx={{ color: '#000' }}
-          >
-            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            sx={{
-              bgcolor: '#000',
-              color: '#fff',
-              '&:hover': { bgcolor: '#333' },
-              borderRadius: 0,
-            }}
-          >
-            {editItem ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => { setEditOpen(false); setAddOpen(false); }}
+        title={(ft) => (editItem ? ft('literature.edit', 'Edit Literature Work') : ft('literature.addNew', 'Add New Literature Work'))}
+        isEdit={!!editItem}
+        onSave={handleSave}
+        formData={formData}
+        setFormData={setFormData}
+        language={editLanguage}
+        onLanguageChange={setEditLanguage}
+        imageField="image"
+        fields={[
+          { name: 'title', labelKey: 'form.title', label: 'Title', required: true },
+          { name: 'author', labelKey: 'form.author', label: 'Author' },
+          { name: 'period', labelKey: 'form.period', label: 'Period' }
+        ]}
+      />
     </Container>
   );
 }

@@ -36,6 +36,8 @@ import MediaDisplay from "../common/MediaDisplay";
 import MediaUpload from "../common/MediaUpload";
 import { useBilingualContent } from "../../utils/bilingualContent";
 import API_BASE_URL from "../../utils/api";
+import { inlineEditSx } from '../common/formStyles';
+import { fetchPrefetched } from '../../utils/prefetch';
 import cldImg from "../../utils/cloudinaryImage";
 
 function TempleDetail() {
@@ -237,7 +239,7 @@ function TempleDetail() {
   const fetchTemple = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/temples/${id}`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/temples/${id}`);
       if (!res.ok) {
         throw new Error("Temple not found");
       }
@@ -659,6 +661,7 @@ function TempleDetail() {
   }
 
   return (
+    <Box sx={isEditing ? inlineEditSx : undefined}>
     <>
       <SEO 
         title={temple ? `${getContent(temple.name)} - Tamil Temple` : 'Temple Details'}
@@ -2240,6 +2243,7 @@ function TempleDetail() {
       </Box>
     </Container>
     </>
+    </Box>
   );
 }
 

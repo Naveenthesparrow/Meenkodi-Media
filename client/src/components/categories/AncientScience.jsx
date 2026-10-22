@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SEO, { pageSEO } from '../common/SEO';
+import CategoryHeader from '../common/CategoryHeader';
+import ExploreItemDialog from '../common/ExploreItemDialog';
 import {
   Box,
   Typography,
@@ -47,6 +49,8 @@ import Calculate from "@mui/icons-material/Calculate";
 import Biotech from "@mui/icons-material/Biotech";
 import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
+import { fetchPrefetched } from '../../utils/prefetch';
+import { prefetchExploreItem, preloadExploreDetailPage } from '../../utils/explorePrefetch';
 import { useBilingualContent } from "../../utils/bilingualContent";
 import { useTranslation } from 'react-i18next';
 import MediaUpload from "../common/MediaUpload";
@@ -87,10 +91,21 @@ export default function AncientScience({ user }) {
     fetchScience();
   }, []);
 
+
+  // Load the detail page's code in the background so opening an item is quick
+
+  useEffect(() => {
+
+    const t = setTimeout(() => preloadExploreDetailPage('ancientscience'), 1000);
+
+    return () => clearTimeout(t);
+
+  }, []);
+
   const fetchScience = async () => {
     if (!cachedSciencesData) setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/ancientscience`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/ancientscience`);
       if (!res.ok) throw new Error("Failed to fetch Ancient Science data");
       const data = await res.json();
       setSciences(data);
@@ -241,99 +256,12 @@ export default function AncientScience({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.ancientScience} />
       {/* Unique Heading Section */}
-      <Box
-        sx={{
-          mb: 6,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: user && user.role === "admin" ? 'space-between' : 'flex-start',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 2, md: 0 },
-          position: 'relative',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between', gap: 2, flexDirection: { xs: 'column', md: 'row' }, mb: 1, width: user && user.role === "admin" ? 'auto' : '100%' }}>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 700,
-              color: "#8B0000",
-              fontFamily: 'Georgia, serif',
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              letterSpacing: 2,
-              mb: { xs: 0.5, md: 1 },
-              position: 'relative',
-              display: 'inline-block',
-              textTransform: 'uppercase',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -8,
-                left: 0,
-                transform: 'none',
-                width: '120px',
-                height: '4px',
-                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
-              },
-            }}
-          >
-            {t('ancientScience.title', 'Ancient Science')}
-          </Typography>
-
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: '#666',
-              fontStyle: 'italic',
-              fontSize: { xs: '0.95rem', md: '1.05rem' },
-              mt: { xs: 1, md: '-0.15rem' },
-              pr: { md: 12 },
-              textAlign: 'right',
-              fontFamily: 'Georgia, serif',
-            }}
-          >
-            {t('ancientScience.subtitle')}
-          </Typography>
-        </Box>
-
-        {user && user.role === "admin" && (
-          <Box
-            sx={{
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'scale(1.05)',
-                '& button': {
-                  boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                }
-              }
-            }}
-          >
-            <Button
-              onClick={handleAdd}
-              variant="contained"
-              startIcon={<Add />}
-              sx={{
-                bgcolor: "#8B0000",
-                color: "#fff",
-                transition: 'all 0.3s ease',
-                "&:hover": {
-                  bgcolor: "#6B0000",
-                  boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                },
-                borderRadius: 0,
-                px: 3,
-                py: 1,
-                fontWeight: 700,
-                letterSpacing: 0.5,
-                fontFamily: 'Georgia, serif',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t('ancientScience.add', 'Add Science')}
-            </Button>
-          </Box>
-        )}
-      </Box>
+      <CategoryHeader
+        title={t('ancientScience.title', 'Ancient Science')}
+        subtitle={t('ancientScience.subtitle')}
+        addLabel={t('ancientScience.add', 'Add Science')}
+        onAdd={user && user.role === "admin" ? handleAdd : undefined}
+      />
 
       <Box
         sx={{
@@ -361,6 +289,8 @@ export default function AncientScience({ user }) {
               <Card
                 component={Link}
                 to={`/explore/ancientscience/${science._id}`}
+                onMouseEnter={() => prefetchExploreItem('ancientscience', science._id)}
+                onTouchStart={() => prefetchExploreItem('ancientscience', science._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -645,6 +575,8 @@ export default function AncientScience({ user }) {
                   <Button
                     component={Link}
                     to={`/explore/ancientscience/${science._id}`}
+                    onMouseEnter={() => prefetchExploreItem('ancientscience', science._id)}
+                    onTouchStart={() => prefetchExploreItem('ancientscience', science._id)}
                     variant="outlined"
                     fullWidth
                     className="view-button"
@@ -674,81 +606,22 @@ export default function AncientScience({ user }) {
       </Box>
 
       {/* Edit/Add Dialog */}
-      <Dialog
+      <ExploreItemDialog
         open={editOpen || addOpen}
-        onClose={() => {
-          setEditOpen(false);
-          setAddOpen(false);
-        }}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: 0,
-            border: '3px solid #000',
-          }
-        }}
+        onClose={() => { setEditOpen(false); setAddOpen(false); }}
+        title={(ft) => (editItem ? ft('ancientScience.edit', 'Edit Scientific Knowledge') : ft('ancientScience.addNew', 'Add New Scientific Knowledge'))}
+        isEdit={!!editItem}
+        onSave={handleSave}
+        formData={formData}
+        setFormData={setFormData}
+        language={editLanguage}
+        onLanguageChange={setEditLanguage}
+        fields={[
+          { name: 'name', labelKey: 'form.name', label: 'Name', required: true },
+          { name: 'period', labelKey: 'form.period', label: 'Period' },
+          { name: 'description', labelKey: 'form.description', label: 'Description', multiline: true }
+        ]}
       >
-        <DialogTitle
-          sx={{
-            bgcolor: '#000',
-            color: '#fff',
-            textAlign: 'center',
-            fontWeight: 700
-          }}
-        >
-          {editItem ? t('ancientScience.edit', 'Edit Scientific Knowledge') : t('ancientScience.addNew', 'Add New Scientific Knowledge')}
-        </DialogTitle>
-        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
-          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <ToggleButtonGroup
-              value={editLanguage}
-              exclusive
-              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 3,
-                  py: 1,
-                  border: '2px solid #000',
-                  color: '#000',
-                  fontWeight: 600,
-                  '&.Mui-selected': {
-                    bgcolor: '#000',
-                    color: '#fff',
-                    '&:hover': {
-                      bgcolor: '#333',
-                    }
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="ta">தமிழ்</ToggleButton>
-              <ToggleButton value="en">ENGLISH</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          <TextField
-            fullWidth
-            label={t('form.name', 'Name')}
-            value={editLanguage === 'en' ? formData.name_en : formData.name_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'name_en' : 'name_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.period', 'Period')}
-            value={editLanguage === 'en' ? formData.period_en : formData.period_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'period_en' : 'period_ta']: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.description', 'Description')}
-            value={editLanguage === 'en' ? formData.description_en : formData.description_ta}
-            onChange={(e) => setFormData({ ...formData, [editLanguage === 'en' ? 'description_en' : 'description_ta']: e.target.value })}
-            multiline
-            minRows={3}
-            sx={{ mb: 2 }}
-          />
           <MediaUpload
             onImageChange={(imageUrl) => setFormData({ ...formData, image: imageUrl })}
             onImageLinkChange={(imageLink) => setFormData({ ...formData, imageLink: imageLink })}
@@ -787,37 +660,8 @@ export default function AncientScience({ user }) {
               />
             </Box>
           )}
-        </DialogContent>
-        <DialogActions
-          sx={{
-            p: 2,
-            justifyContent: 'space-between',
-            bgcolor: '#f0f0f0'
-          }}
-        >
-          <Button
-            onClick={() => {
-              setEditOpen(false);
-              setAddOpen(false);
-            }}
-            sx={{ color: '#000' }}
-          >
-            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            sx={{
-              bgcolor: '#000',
-              color: '#fff',
-              '&:hover': { bgcolor: '#333' },
-              borderRadius: 0,
-            }}
-          >
-            {editItem ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        
+      </ExploreItemDialog>
     </Container >
   );
 }

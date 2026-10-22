@@ -12,6 +12,7 @@ import Science from "@mui/icons-material/Science";
 import Celebration from "@mui/icons-material/Celebration";
 import Checkroom from "@mui/icons-material/Checkroom";
 import GlowCard from "./common/GlowCard";
+import { preloadExploreCategoryPages, prefetchExploreCategory } from "../utils/explorePrefetch";
 
 function Explore() {
   const navigate = useNavigate();
@@ -67,6 +68,18 @@ function Explore() {
   }, []);
 
   // Ensure browser doesn't horizontally scroll the page during wheel/touch interactions
+
+  // Category pages' code loads in the background once Explore is showing
+  useEffect(() => {
+    const t = setTimeout(preloadExploreCategoryPages, 1000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // The centred card is the one a click opens — start loading its data once it settles
+  useEffect(() => {
+    const t = setTimeout(() => prefetchExploreCategory(categories[centerIndex]?.path), 250);
+    return () => clearTimeout(t);
+  }, [centerIndex, categories]);
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;

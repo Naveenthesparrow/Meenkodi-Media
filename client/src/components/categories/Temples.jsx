@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from "react-router-dom";
 import SEO, { pageSEO } from '../common/SEO';
+import CategoryHeader from '../common/CategoryHeader';
+import ExploreItemDialog from '../common/ExploreItemDialog';
 import {
   Box,
   Typography,
@@ -34,6 +36,8 @@ import Architecture from "@mui/icons-material/Architecture";
 import Star from "@mui/icons-material/Star";
 import Favorite from "@mui/icons-material/Favorite";
 import API_BASE_URL from "../../utils/api";
+import { fetchPrefetched } from '../../utils/prefetch';
+import { prefetchExploreItem, preloadExploreDetailPage } from '../../utils/explorePrefetch';
 import { useBilingualContent } from "../../utils/bilingualContent";
 import cldImg from "../../utils/cloudinaryImage";
 
@@ -72,7 +76,7 @@ export default function Temples({ user }) {
   const fetchTemples = async () => {
     if (!cachedTemplesData) setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/temples`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/temples`);
       if (!res.ok) throw new Error("Failed to fetch temples");
       const data = await res.json();
       setTemples(data);
@@ -86,6 +90,17 @@ export default function Temples({ user }) {
 
   useEffect(() => {
     fetchTemples();
+  }, []);
+
+
+  // Load the detail page's code in the background so opening an item is quick
+
+  useEffect(() => {
+
+    const t = setTimeout(() => preloadExploreDetailPage('temples'), 1000);
+
+    return () => clearTimeout(t);
+
   }, []);
 
   const toStr = (val) => {
@@ -200,103 +215,12 @@ export default function Temples({ user }) {
     <Container maxWidth="lg" sx={{ py: 4, position: 'relative' }}>
       <SEO {...pageSEO.temples} />
       {/* Sacred Temples Heading Section */}
-      <Box
-        sx={{
-          mb: 6,
-          textAlign: 'left',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-
-
-        <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between', gap: 2, flexDirection: { xs: 'column', md: 'row' }, mb: 1 }}>
-          <Typography
-            variant="h2"
-            sx={{
-              fontWeight: 700,
-              color: "#8B0000",
-              fontFamily: 'Georgia, serif',
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
-              letterSpacing: 2,
-              mb: { xs: 0.5, md: 1 },
-              position: 'relative',
-              display: 'inline-block',
-              textTransform: 'uppercase',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: -8,
-                left: 0,
-                transform: 'none',
-                width: '120px',
-                height: '4px',
-                background: 'linear-gradient(90deg, transparent, #DAA520, transparent)',
-              },
-            }}
-          >
-            {t('temples.title', 'Sacred Temples')}
-          </Typography>
-
-          <Typography
-            variant="subtitle1"
-            sx={{
-              color: '#666',
-              fontStyle: 'italic',
-              fontSize: { xs: '0.95rem', md: '1.05rem' },
-              mt: { xs: 1, md: '-0.15rem' },
-              pr: { md: 12 },
-              textAlign: { xs: 'left', md: 'right' },
-              fontFamily: 'Georgia, serif',
-            }}
-          >
-            {t('temples.subtitle', 'Architectural Marvels of Tamil Heritage')}
-          </Typography>
-        </Box>
-
-        {/* Admin Button - Positioned Absolutely */}
-        {user && user.role === "admin" && (
-          <Box
-            sx={{
-              position: { xs: 'static', md: 'absolute' },
-              right: { md: 0 },
-              top: { md: '50%' },
-              transform: { md: 'translateY(-50%)' },
-              mt: { xs: 3, md: 0 },
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: { md: 'translateY(-50%) scale(1.05)' },
-                '& button': {
-                  boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                }
-              }
-            }}
-          >
-            <Button
-              onClick={handleAdd}
-              variant="contained"
-              startIcon={<Add />}
-              sx={{
-                bgcolor: "#8B0000",
-                color: "#fff",
-                transition: 'all 0.3s ease',
-                "&:hover": {
-                  bgcolor: "#6B0000",
-                  boxShadow: '0 8px 20px rgba(139,0,0,0.3)',
-                },
-                borderRadius: 0,
-                px: 3,
-                py: 1,
-                fontWeight: 700,
-                letterSpacing: 0.5,
-                fontFamily: 'Georgia, serif',
-              }}
-            >
-              {t('temples.add', 'Add Temple')}
-            </Button>
-          </Box>
-        )}
-      </Box>
+      <CategoryHeader
+        title={t('temples.title', 'Sacred Temples')}
+        subtitle={t('temples.subtitle', 'Architectural Marvels of Tamil Heritage')}
+        addLabel={t('temples.add', 'Add Temple')}
+        onAdd={user && user.role === "admin" ? handleAdd : undefined}
+      />
 
       <Box
         sx={{
@@ -324,6 +248,8 @@ export default function Temples({ user }) {
               <Card
                 component={Link}
                 to={`/explore/temples/${temple._id}`}
+                onMouseEnter={() => prefetchExploreItem('temples', temple._id)}
+                onTouchStart={() => prefetchExploreItem('temples', temple._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -617,6 +543,8 @@ export default function Temples({ user }) {
                     className="view-button"
                     component={Link}
                     to={`/explore/temples/${temple._id}`}
+                    onMouseEnter={() => prefetchExploreItem('temples', temple._id)}
+                    onTouchStart={() => prefetchExploreItem('temples', temple._id)}
                     variant="outlined"
                     fullWidth
                     endIcon={<Architecture />}
@@ -647,133 +575,23 @@ export default function Temples({ user }) {
 
 
       {/* Edit/Add Dialog */}
-      <Dialog
+      <ExploreItemDialog
         open={editOpen || addOpen}
-        onClose={() => {
-          setEditOpen(false);
-          setAddOpen(false);
-        }}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            borderRadius: 0,
-            border: '3px solid #000',
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            bgcolor: '#000',
-            color: '#fff',
-            textAlign: 'center',
-            fontWeight: 700
-          }}
-        >
-          {editItem ? t('temples.edit', 'Edit Temple') : t('temples.addNew', 'Add New Temple')}
-        </DialogTitle>
-        <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
-          <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <ToggleButtonGroup
-              value={editLanguage}
-              exclusive
-              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 3,
-                  py: 1,
-                  border: '2px solid #000',
-                  color: '#000',
-                  fontWeight: 600,
-                  '&.Mui-selected': {
-                    bgcolor: '#000',
-                    color: '#fff',
-                    '&:hover': {
-                      bgcolor: '#333',
-                    }
-                  }
-                }
-              }}
-            >
-              <ToggleButton value="ta">தமிழ்</ToggleButton>
-              <ToggleButton value="en">ENGLISH</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-          <TextField
-            fullWidth
-            label={t('form.name', 'Name')}
-            value={editLanguage === 'en' ? formData.name_en : formData.name_ta}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              [editLanguage === 'en' ? 'name_en' : 'name_ta']: e.target.value 
-            })}
-            sx={{ mb: 2, mt: 1 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.location', 'Location')}
-            value={editLanguage === 'en' ? formData.location_en : formData.location_ta}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              [editLanguage === 'en' ? 'location_en' : 'location_ta']: e.target.value 
-            })}
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.period', 'Period')}
-            value={editLanguage === 'en' ? formData.period_en : formData.period_ta}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              [editLanguage === 'en' ? 'period_en' : 'period_ta']: e.target.value 
-            })}
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            fullWidth
-            label={t('form.imageUrl', 'Image URL')}
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            sx={{ mb: 2 }}
-            InputLabelProps={{ shrink: true }}
-          />
-        </DialogContent>
-        <DialogActions
-          sx={{
-            p: 2,
-            justifyContent: 'space-between',
-            bgcolor: '#f0f0f0'
-          }}
-        >
-          <Button
-            onClick={() => {
-              setEditOpen(false);
-              setAddOpen(false);
-            }}
-            sx={{ color: '#000' }}
-          >
-            {t('actions.cancel', 'Cancel')} / {t('actions.cancel_ta', 'ரத்துசெய்')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            sx={{
-              bgcolor: '#000',
-              color: '#fff',
-              '&:hover': { bgcolor: '#333' },
-              borderRadius: 0,
-            }}
-          >
-            {editItem 
-              ? `${t('actions.update', 'Update')} / ${t('actions.update_ta', 'புதுப்பி')}` 
-              : `${t('actions.add', 'Add')} / ${t('actions.add_ta', 'சேர்')}`
-            }
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => { setEditOpen(false); setAddOpen(false); }}
+        title={(ft) => (editItem ? ft('temples.edit', 'Edit Temple') : ft('temples.addNew', 'Add New Temple'))}
+        isEdit={!!editItem}
+        onSave={handleSave}
+        formData={formData}
+        setFormData={setFormData}
+        language={editLanguage}
+        onLanguageChange={setEditLanguage}
+        imageField="image"
+        fields={[
+          { name: 'name', labelKey: 'form.name', label: 'Name', required: true },
+          { name: 'location', labelKey: 'form.location', label: 'Location' },
+          { name: 'period', labelKey: 'form.period', label: 'Period' }
+        ]}
+      />
     </Container>
   );
 }

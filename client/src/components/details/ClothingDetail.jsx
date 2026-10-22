@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API_BASE_URL from "../../utils/api";
+import { inlineEditSx } from '../common/formStyles';
+import { fetchPrefetched } from '../../utils/prefetch';
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -143,9 +145,7 @@ function ClothingDetail({ user: initialUser }) {
 
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/clothing/${id}`, {
-        credentials: "include"
-      });
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/clothing/${id}`);
       if (!res.ok) {
         throw new Error("Clothing not found");
       }
@@ -507,112 +507,9 @@ function ClothingDetail({ user: initialUser }) {
     );
   }
 
-  // --- ADMIN EDIT VIEW ---
-  if (isEditing) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-              Edit Clothing Item
-            </Typography>
-            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
-          </Box>
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Type (EN)" value={editableData.type_en} onChange={(e) => setEditableData({ ...editableData, type_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Type (TA)" value={editableData.type_ta} onChange={(e) => setEditableData({ ...editableData, type_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Region (EN)" value={editableData.region_en} onChange={(e) => setEditableData({ ...editableData, region_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Region (TA)" value={editableData.region_ta} onChange={(e) => setEditableData({ ...editableData, region_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Materials (EN)" value={editableData.materials_en} onChange={(e) => setEditableData({ ...editableData, materials_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Materials (TA)" value={editableData.materials_ta} onChange={(e) => setEditableData({ ...editableData, materials_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="History (EN)" value={editableData.history_en} onChange={(e) => setEditableData({ ...editableData, history_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="History (TA)" value={editableData.history_ta} onChange={(e) => setEditableData({ ...editableData, history_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
-                <TextField
-                  label="Image URL"
-                  value={editableData.imageUrl}
-                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <MediaUpload
-                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
-                  currentImage={editableData.imageUrl}
-                  label="Upload Image"
-                  showInputsOnly={true}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleDelete}
-              >
-                Delete Item
-              </Button>
-              <Button
-                onClick={handleInlineSave}
-                variant="contained"
-                startIcon={<EditIcon />}
-                sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#333' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                Save Changes
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    );
-  }
 
   return (
+    <Box sx={isEditing ? inlineEditSx : undefined}>
     <Container
       maxWidth="lg"
       sx={{
@@ -1716,6 +1613,7 @@ function ClothingDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container>
+    </Box>
   );
 }
 

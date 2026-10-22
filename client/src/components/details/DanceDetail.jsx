@@ -46,6 +46,8 @@ import SentimentSatisfied from "@mui/icons-material/SentimentSatisfied";
 import EmojiEmotions from "@mui/icons-material/EmojiEmotions";
 import MediaUpload from "../common/MediaUpload";
 import API_BASE_URL from "../../utils/api";
+import { inlineEditSx } from '../common/formStyles';
+import { fetchPrefetched } from '../../utils/prefetch';
 import { useBilingualContent } from "../../utils/bilingualContent";
 import MediaDisplay from "../common/MediaDisplay";
 import SEO from "../common/SEO";
@@ -277,7 +279,7 @@ function DanceDetail({ user: initialUser }) {
   const fetchDance = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/dance/${id}`);
+      const res = await fetchPrefetched(`${API_BASE_URL}/api/dance/${id}`);
       if (!res.ok) {
         throw new Error("Dance not found");
       }
@@ -567,112 +569,9 @@ function DanceDetail({ user: initialUser }) {
     );
   }
 
-  // --- ADMIN EDIT VIEW ---
-  if (isEditing) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
-              Edit Dance Form
-            </Typography>
-            <IconButton onClick={() => setIsEditing(false)}><Close /></IconButton>
-          </Box>
-
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Style (EN)" value={editableData.style_en} onChange={(e) => setEditableData({ ...editableData, style_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Style (TA)" value={editableData.style_ta} onChange={(e) => setEditableData({ ...editableData, style_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Origin (EN)" value={editableData.origin_en} onChange={(e) => setEditableData({ ...editableData, origin_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Origin (TA)" value={editableData.origin_ta} onChange={(e) => setEditableData({ ...editableData, origin_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField label="Period (EN)" value={editableData.period_en} onChange={(e) => setEditableData({ ...editableData, period_en: e.target.value })} fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField label="Period (TA)" value={editableData.period_ta} onChange={(e) => setEditableData({ ...editableData, period_ta: e.target.value })} fullWidth />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Achievements (EN)" value={editableData.achievements_en} onChange={(e) => setEditableData({ ...editableData, achievements_en: e.target.value })} fullWidth multiline rows={3} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Achievements (TA)" value={editableData.achievements_ta} onChange={(e) => setEditableData({ ...editableData, achievements_ta: e.target.value })} fullWidth multiline rows={3} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
-                <TextField
-                  label="Image URL"
-                  value={editableData.imageUrl}
-                  onChange={(e) => setEditableData({ ...editableData, imageUrl: e.target.value })}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                />
-                <MediaUpload
-                  onImageChange={(url) => setEditableData({ ...editableData, imageUrl: url })}
-                  currentImage={editableData.imageUrl}
-                  label="Upload Image"
-                  showInputsOnly={true}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                Delete Item
-              </Button>
-              <Button
-                onClick={handleSave}
-                variant="contained"
-                startIcon={<EditIcon />}
-                sx={{
-                  bgcolor: '#000',
-                  color: '#fff',
-                  '&:hover': { bgcolor: '#333' },
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2
-                }}
-              >
-                Save Changes
-              </Button>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
-    );
-  }
 
   return (
+    <Box sx={isEditing ? inlineEditSx : undefined}>
     <Container
       maxWidth="lg"
       sx={{
@@ -2067,6 +1966,7 @@ function DanceDetail({ user: initialUser }) {
         </Button>
       </Box>
     </Container >
+    </Box>
   );
 }
 
