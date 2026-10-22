@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Box, Typography, Avatar, IconButton } from '@mui/material';
-import Twitter from "@mui/icons-material/Twitter";
+import { Box, Typography, Avatar, IconButton, Button } from '@mui/material';
+import ArrowForward from "@mui/icons-material/ArrowForward";
 import AutoAwesome from "@mui/icons-material/AutoAwesome";
 import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
@@ -13,7 +13,105 @@ import cldImg from "../utils/cloudinaryImage";
 const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
-  const quantity = directors.length;
+  const CARD_WIDTH = 300;
+  const AUTO_SPEED = 45; // px per second when nobody is touching it
+  const RESUME_AFTER_MS = 2500; // pause after a swipe / drag / wheel before auto-scroll resumes
+
+  // One "lap" of cards must be at least as wide as a large screen; the lap is
+  // rendered twice and the strip slides by exactly one lap, so the loop is seamless.
+  const lap = useMemo(() => {
+    if (!directors.length) return [];
+    const repeats = Math.max(1, Math.ceil(2200 / (directors.length * CARD_WIDTH)));
+    return Array.from({ length: repeats }, () => directors).flat();
+  }, [directors]);
+  // Three laps: we keep the scroll position inside the middle one, so you can
+  // scroll freely in either direction forever.
+  const trackItems = useMemo(() => [...lap, ...lap, ...lap], [lap]);
+
+  const scrollerRef = useRef(null);
+  const hovering = useRef(false);
+  const resumeAt = useRef(0);
+  const mouseDrag = useRef(null); // { x, left, moved }
+  const suppressClick = useRef(false);
+
+  // Auto-scroll + infinite wrap. Native scrolling does the rest (momentum, trackpad, touch).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || !lap.length) return undefined;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lapWidth = () => el.scrollWidth / 3;
+    el.scrollLeft = lapWidth(); // start in the middle lap
+
+    // keep the position inside the middle lap (the laps are identical, so the jump is invisible)
+    const wrap = () => {
+      const w = lapWidth();
+      if (!w) return;
+      if (el.scrollLeft < w * 0.5) el.scrollLeft += w;
+      else if (el.scrollLeft > w * 1.5) el.scrollLeft -= w;
+    };
+    const pauseForUser = () => { resumeAt.current = performance.now() + RESUME_AFTER_MS; };
+
+    let pos = el.scrollLeft;
+    let last = performance.now();
+    let frame = requestAnimationFrame(function step(now) {
+      const dt = Math.min(now - last, 100);
+      last = now;
+      const visible = document.visibilityState === 'visible';
+      if (!reduceMotion && visible && !hovering.current && !mouseDrag.current && now > resumeAt.current) {
+        if (Math.abs(el.scrollLeft - pos) > 2) pos = el.scrollLeft; // the user moved it: continue from there
+        pos += (AUTO_SPEED * dt) / 1000;
+        el.scrollLeft = pos;
+        if (Math.abs(el.scrollLeft - pos) > 2) pos = el.scrollLeft;
+      } else {
+        pos = el.scrollLeft;
+      }
+      frame = requestAnimationFrame(step);
+    });
+
+    el.addEventListener('scroll', wrap, { passive: true });
+    el.addEventListener('wheel', pauseForUser, { passive: true });
+    el.addEventListener('touchstart', pauseForUser, { passive: true });
+    el.addEventListener('touchmove', pauseForUser, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      el.removeEventListener('scroll', wrap);
+      el.removeEventListener('wheel', pauseForUser);
+      el.removeEventListener('touchstart', pauseForUser);
+      el.removeEventListener('touchmove', pauseForUser);
+    };
+  }, [lap]);
+
+  // Mouse: click-and-drag to scroll (touch and trackpads scroll natively)
+  const onPointerDown = (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    mouseDrag.current = { x: e.clientX, left: scrollerRef.current.scrollLeft, moved: false };
+  };
+  const onPointerMove = (e) => {
+    const d = mouseDrag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    if (!d.moved && Math.abs(dx) < 6) return;
+    if (!d.moved) {
+      d.moved = true;
+      scrollerRef.current.classList.add('dragging');
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    }
+    scrollerRef.current.scrollLeft = d.left - dx;
+  };
+  const endMouseDrag = () => {
+    const d = mouseDrag.current;
+    mouseDrag.current = null;
+    if (!d) return;
+    scrollerRef.current.classList.remove('dragging');
+    resumeAt.current = performance.now() + RESUME_AFTER_MS;
+    if (d.moved) {
+      suppressClick.current = true; // the drag shouldn't also open the card under the mouse
+      setTimeout(() => { suppressClick.current = false; }, 0);
+    }
+  };
+  const onClickCapture = (e) => {
+    if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); }
+  };
 
   const handleCardClick = useCallback((slug) => {
     if (slug) {
@@ -31,16 +129,31 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
   ], []);
 
   return (
-    <SliderContainer style={{ '--width': '300px', '--height': '380px', '--quantity': quantity }}>
+    <FadeEdges>
+    <SliderContainer
+      ref={scrollerRef}
+      style={{ '--width': `${CARD_WIDTH}px`, '--height': '400px' }}
+      onMouseEnter={() => { hovering.current = true; }}
+      onMouseLeave={() => { hovering.current = false; endMouseDrag(); }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endMouseDrag}
+      onPointerCancel={endMouseDrag}
+      onClickCapture={onClickCapture}
+    >
       <div className="list">
-        {directors.map((member, index) => (
-          <div className="item" style={{ '--position': index + 1 }} key={member._id || member.slug || index}>
+        {trackItems.map((member, index) => (
+          <div
+            className="item"
+            key={`${member._id || member.slug}-${index}`}
+            aria-hidden={index >= directors.length ? true : undefined}
+          >
             <div 
               className="card" 
               onClick={() => handleCardClick(member.slug)}
               style={{ 
                 cursor: member.slug ? 'pointer' : 'default',
-                '--card-gradient': cardGradients[index % cardGradients.length]
+                '--card-gradient': cardGradients[(index % directors.length) % cardGradients.length]
               }}
             >
               {/* Animated Background Ornament */}
@@ -156,7 +269,6 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                     borderRadius: "50%",
                     border: "2px solid rgba(255, 255, 255, 0.5)",
                     background: "rgba(255, 255, 255, 0.1)",
-                    backdropFilter: "blur(10px)",
                     transition: "transform 0.4s ease"
                   }}
                   className="middle-ring"
@@ -164,7 +276,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
 
                 <Avatar
                   src={cldImg(member.image, 800)}
-                  imgProps={{ loading: 'lazy', decoding: 'async' }}
+                  imgProps={{ loading: 'lazy', decoding: 'async', draggable: false }}
                   sx={{
                     width: 110,
                     height: 110,
@@ -220,6 +332,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                 px: 2,
                 zIndex: 2
               }}>
+                <Box sx={{ minHeight: '3.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Typography
                   variant="h6"
                   sx={{
@@ -243,6 +356,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                 >
                   {member.name[i18n.language] || member.name.en}
                 </Typography>
+                </Box>
 
                 {/* Enhanced Decorative Divider */}
                 <Box sx={{ 
@@ -280,6 +394,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                   }} />
                 </Box>
 
+                <Box sx={{ minHeight: '4.4rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
                 <Typography
                   variant="body2"
                   sx={{
@@ -298,126 +413,120 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                 >
                   {member.title[i18n.language] || member.title.en}
                 </Typography>
+                </Box>
               </Box>
 
-              {/* Social Button */}
-              <Box sx={{ pt: 2, zIndex: 2 }}>
-                <IconButton
-                  size="small"
-                  className="social-btn"
-                  sx={{
-                    background: `var(--card-gradient)`,
-                    color: "#fff",
-                    width: 38,
-                    height: 38,
-                    transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                    boxShadow: "0 4px 15px rgba(139,0,0,0.2)",
-                    "&:hover": {
-                      transform: "translateY(-3px) scale(1.1)",
-                      boxShadow: "0 8px 25px rgba(139,0,0,0.35)"
-                    },
-                  }}
-                >
-                  <Twitter sx={{ fontSize: 18 }} />
-                </IconButton>
-              </Box>
+              {/* Profile link (the whole card is clickable too) */}
+              {member.slug && (
+                <Box sx={{ pt: 1.5, zIndex: 2 }}>
+                  <Button
+                    size="small"
+                    className="profile-btn"
+                    endIcon={<ArrowForward sx={{ fontSize: 16 }} />}
+                    tabIndex={-1}
+                    sx={{
+                      background: `var(--card-gradient)`,
+                      color: "#fff",
+                      borderRadius: 999,
+                      px: 2,
+                      py: 0.5,
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      letterSpacing: 0.3,
+                      textTransform: 'none',
+                      boxShadow: "0 4px 14px rgba(139,0,0,0.18)",
+                      transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                      "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 22px rgba(139,0,0,0.3)" },
+                    }}
+                  >
+                    {i18n.language === 'ta' ? 'மேலும் அறிய' : 'View profile'}
+                  </Button>
+                </Box>
+              )}
             </div>
           </div>
         ))}
       </div>
     </SliderContainer>
+    </FadeEdges>
   );
 };
 
-const autoRun = keyframes`
-  from {
-    left: 100%;
-  }
-  to {
-    left: calc(var(--width) * -1);
-  }
-`;
-
 const shimmer = keyframes`
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
 `;
 
 const float = keyframes`
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(5deg);
-  }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
 `;
 
 const rotate = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+// The soft fade at both edges lives on this still frame, not on the scrolling strip,
+// so the browser can scroll the strip without repainting it every frame.
+const FadeEdges = styled.div`
+  mask-image: linear-gradient(to right, transparent, #000 6% 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6% 94%, transparent);
+  @media (prefers-reduced-motion: reduce) {
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 `;
 
 const SliderContainer = styled.div`
   width: 100%;
-  height: var(--height);
-  overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 10% 90%, transparent);
-  contain: layout paint style;
-  isolation: isolate;
-  
+  /* A real horizontal scroller: swipe, trackpad and drag all move it freely */
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain; /* sideways swipes never trigger browser back/forward */
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  cursor: grab;
+  &.dragging { cursor: grabbing; user-select: none; }
+  padding: 24px 0 32px; /* room for the hover lift and shadows */
+
   .list {
     display: flex;
-    width: 100%;
-    min-width: calc(var(--width) * var(--quantity));
-    position: relative;
+    width: max-content;
   }
 
   .item {
+    flex: 0 0 var(--width);
     width: var(--width);
     height: var(--height);
-    position: absolute;
-    left: 100%;
-    animation: ${autoRun} 35s linear infinite;
-    transition: filter 0.5s;
-    will-change: transform;
-    transform: translate3d(0, 0, 0);
-    contain: layout paint;
-    animation-delay: calc(
-      (35s / var(--quantity)) * (var(--position) - 1) - 35s
-    ) !important;
-    padding: 18px 10px;
+    padding: 0 12px;
+    transition: opacity 0.4s ease;
+  }
+
+  /* gently fade the other cards (opacity is cheap; the old blur filter was not) */
+  &:hover .item:not(:hover) {
+    opacity: 0.6;
   }
 
   .card {
     width: 100%;
     height: 100%;
-    padding: 28px 22px;
+    padding: 28px 20px 24px;
     background: linear-gradient(135deg, #ffffff 0%, #fefdfb 50%, #fff9f0 100%);
     border: 2px solid transparent;
     border-radius: 20px;
-    box-shadow: 
-      0 8px 32px rgba(139, 0, 0, 0.08),
+    box-shadow:
+      0 8px 28px rgba(139, 0, 0, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    justify-content: flex-start;
+    transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.45s ease;
     position: relative;
     overflow: hidden;
-    will-change: transform;
-    transform: translateZ(0);
   }
 
-  /* Animated Background Ornament */
   .bg-ornament {
     position: absolute;
     top: -50%;
@@ -426,12 +535,10 @@ const SliderContainer = styled.div`
     height: 200%;
     background: radial-gradient(circle, var(--card-gradient) 0%, transparent 70%);
     opacity: 0.03;
-    animation: none;
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Top Gradient Strip */
   .top-strip {
     position: absolute;
     top: 0;
@@ -440,25 +547,17 @@ const SliderContainer = styled.div`
     height: 5px;
     background: var(--card-gradient);
     border-radius: 20px 20px 0 0;
-    box-shadow: 0 3px 15px rgba(139, 0, 0, 0.3);
     z-index: 1;
   }
 
-  /* Glassmorphic Border Effect */
   .card::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: 20px;
     padding: 2px;
-    background: linear-gradient(135deg, 
-      rgba(255,255,255,0.8) 0%, 
-      rgba(255,255,255,0.2) 50%, 
-      rgba(255,255,255,0.8) 100%
-    );
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
+    background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.8) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     opacity: 0;
@@ -466,24 +565,15 @@ const SliderContainer = styled.div`
     z-index: 1;
   }
 
-  &:hover .item {
-    animation-play-state: paused !important;
-    filter: grayscale(0.7) blur(1px) brightness(0.7);
-  }
+  /* the profile button sits at the bottom of every card, so all cards line up */
+  .profile-btn { margin-top: auto; }
+  .card > :last-child { margin-top: auto; }
 
-  .item:hover {
-    filter: grayscale(0) blur(0) brightness(1) !important;
-    z-index: 100;
-  }
-  
   .item:hover .card {
-    transform: translateY(-15px) scale(1.02);
-    box-shadow: 
-      0 25px 60px rgba(139, 0, 0, 0.18),
-      0 0 0 1px rgba(255, 255, 255, 0.5),
+    transform: translateY(-10px);
+    box-shadow:
+      0 22px 50px rgba(139, 0, 0, 0.16),
       inset 0 1px 0 rgba(255, 255, 255, 1);
-    border-color: rgba(255, 255, 255, 0.5);
-    background: linear-gradient(135deg, #ffffff 0%, #fffef9 100%);
   }
 
   .item:hover .admin-controls-overlay {
@@ -491,42 +581,11 @@ const SliderContainer = styled.div`
     transform: translateY(0);
   }
 
-  .item:hover .card::after {
-    opacity: 1;
-  }
-
-  .item:hover .top-strip {
-    height: 6px;
-    box-shadow: 0 5px 25px rgba(139, 0, 0, 0.5);
-  }
-
-  .item:hover .bg-ornament {
-    opacity: 0.08;
-    animation: ${rotate} 30s linear infinite;
-  }
-
-  /* Avatar Effects on Hover */
-  .item:hover .glow-ring {
-    opacity: 0.35;
-    filter: blur(20px);
-    inset: -15px;
-  }
-
-  .item:hover .rotating-ring {
-    animation: ${rotate} 3s linear infinite;
-  }
-
-  .item:hover .middle-ring {
-    transform: scale(1.08);
-    border-color: rgba(255, 255, 255, 0.8);
-  }
-
-  .item:hover .avatar {
-    transform: scale(1.05);
-    box-shadow: 
-      0 15px 50px rgba(0,0,0,0.35),
-      inset 0 2px 12px rgba(255,255,255,0.5);
-  }
+  .item:hover .card::after { opacity: 1; }
+  .item:hover .glow-ring { opacity: 0.3; }
+  .item:hover .rotating-ring { animation: ${rotate} 3s linear infinite; }
+  .item:hover .middle-ring { transform: scale(1.06); }
+  .item:hover .avatar { transform: scale(1.04); }
 
   .item:hover .sparkle-1,
   .item:hover .sparkle-2 {
@@ -534,48 +593,21 @@ const SliderContainer = styled.div`
     animation: ${float} 2s ease-in-out infinite;
   }
 
-  /* Social Button Shimmer Effect */
-  .social-btn {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .social-btn::before {
+  .profile-btn { position: relative; overflow: hidden; }
+  .profile-btn::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.3) 50%,
-      transparent 100%
-    );
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
     background-size: 200% 100%;
-    animation: none;
   }
+  .item:hover .profile-btn::before { animation: ${shimmer} 3s infinite; }
 
-  .item:hover .social-btn::before {
-    animation: ${shimmer} 3s infinite;
-  }
-
-  /* Mobile Responsiveness */
   @media (max-width: 768px) {
-    height: calc(var(--height) * 0.9);
-    
-    .item {
-      animation-duration: 40s;
-      animation-delay: calc(
-        (40s / var(--quantity)) * (var(--position) - 1) - 40s
-      ) !important;
-    }
-    
-    .card {
-      padding: 22px 18px;
-    }
+    --width: 260px !important;
+    .card { padding: 22px 16px 20px; }
   }
+
 `;
 
 export default React.memo(DirectorsSlider);

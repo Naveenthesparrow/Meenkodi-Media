@@ -142,7 +142,6 @@ function App() {
   const [loading, setLoading] = React.useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const fetchUser = React.useCallback(() => {
@@ -256,23 +255,27 @@ function App() {
     }
   }
 
-  // Auto-hide navbar on scroll down, show on scroll up
+  // Auto-hide navbar on scroll down, show on scroll up.
+  // The last position lives in a ref and work is batched to one check per frame:
+  // storing it in state re-rendered the whole app on every scroll event (scroll jank).
   useEffect(() => {
-    const handleScroll = () => {
+    let lastScrollY = window.scrollY;
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
       const currentScrollY = window.scrollY;
-
-      // Show navbar when at top of page
       if (currentScrollY < 10) {
-        setNavVisible(true);
+        setNavVisible(true); // at the top of the page
+      } else if (currentScrollY > lastScrollY + 4 && currentScrollY > 100) {
+        setNavVisible(false); // scrolling down (React skips the render if unchanged)
+      } else if (currentScrollY < lastScrollY - 4) {
+        setNavVisible(true); // scrolling up
       }
-      // Hide navbar when scrolling down, show when scrolling up
-      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setNavVisible(false);
-      } else if (currentScrollY < lastScrollY) {
-        setNavVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
+      lastScrollY = currentScrollY;
+    };
+    const handleScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
     };
 
     // Show navbar when mouse is near top of screen
@@ -286,10 +289,11 @@ function App() {
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     return () => {
+      cancelAnimationFrame(frame);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [lastScrollY]);
+  }, []);
 
   const login = () => {
     if (isAuthenticating) {

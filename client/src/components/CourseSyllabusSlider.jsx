@@ -9,6 +9,9 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 const AUTO_INTERVAL = 4500;
+const SLIDE_MS = 550;
+const EASE = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+const DRAG_START_PX = 8; // movement before we decide it's a horizontal swipe
 
 export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute, onNavigate }) {
   const getContent = useBilingualContent();
@@ -16,43 +19,107 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute, 
   const theme = useTheme();
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   const slidesPerView = isMdUp ? 4 : isSmUp ? 2 : 1;
   const preparedSlides = useMemo(() => slides.filter(Boolean), [slides]);
   const slideCount = preparedSlides.length;
 
-  // Create an extended slide array (tripled) for smooth infinite looping
+  // Three copies of the slides so the track can loop forever: we always sit in the
+  // middle copy and silently jump back by one copy after crossing its edges.
   const extendedSlides = useMemo(() => {
     if (!slideCount) return [];
     return [...preparedSlides, ...preparedSlides, ...preparedSlides];
   }, [preparedSlides, slideCount]);
 
-  const middleStart = slideCount; // start index in the middle copy
+  const middleStart = slideCount;
+  const maxIndex = Math.max(slideCount * 3 - slidesPerView, 0);
 
   const [activeIndex, setActiveIndex] = useState(middleStart);
-  const activeIndexRef = React.useRef(activeIndex);
+  const [animate, setAnimate] = useState(true);
+  const [dragPx, setDragPx] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [disableTransition, setDisableTransition] = useState(false);
 
-  // keep ref in sync
-  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
+  const viewportRef = React.useRef(null);
+  const drag = React.useRef(null); // { id, x, y, t, horizontal }
+  const suppressClick = React.useRef(false);
 
-  // Auto-advance continuously
+  const indexRef = React.useRef(activeIndex);
+  indexRef.current = activeIndex;
+  const pendingMove = React.useRef(0);
+
+  // Same card in the middle copy (the three copies look identical)
+  const toMiddle = React.useCallback((i) => {
+    if (!slideCount) return i;
+    return middleStart + ((((i - middleStart) % slideCount) + slideCount) % slideCount);
+  }, [middleStart, slideCount]);
+
+  const moveBy = React.useCallback((steps) => {
+    if (!steps) return;
+    const current = indexRef.current;
+    const centred = toMiddle(current);
+    if (centred !== current) {
+      // A quick repeat before the last move re-centred (fast swipes / clicks):
+      // snap to the identical card in the middle copy first, then move from there,
+      // so the track never runs out of cards on either side.
+      cancelAnimationFrame(pendingMove.current);
+      setAnimate(false);
+      setActiveIndex(centred);
+      pendingMove.current = requestAnimationFrame(() => requestAnimationFrame(() => {
+        setAnimate(true);
+        setActiveIndex(Math.min(Math.max(centred + steps, 0), maxIndex));
+      }));
+      return;
+    }
+    setAnimate(true);
+    setActiveIndex(Math.min(Math.max(current + steps, 0), maxIndex));
+  }, [maxIndex, toMiddle]);
+
+  // Trackpad two-finger sideways swipes: handle them here and stop the browser
+  // from treating them as "go back / forward a page". Needs a non-passive listener.
+  const moveByRef = React.useRef(moveBy);
+  moveByRef.current = moveBy;
+  const wheelLock = React.useRef(0);
   useEffect(() => {
-    if (!slideCount || isPaused) return undefined;
+    const el = viewportRef.current;
+    if (!el) return undefined;
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // vertical: normal page scroll
+      e.preventDefault();
+      if (Math.abs(e.deltaX) < 25) return;
+      const now = Date.now();
+      if (now - wheelLock.current < SLIDE_MS) return;
+      wheelLock.current = now;
+      moveByRef.current(e.deltaX > 0 ? 1 : -1);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [slideCount]);
 
+  // Auto-advance, paused on hover, while dragging, when the tab is hidden,
+  // and for visitors who asked for reduced motion.
+  useEffect(() => {
+    if (!slideCount || slideCount <= slidesPerView || isPaused || isDragging || prefersReducedMotion) return undefined;
     const timer = setTimeout(() => {
-      setActiveIndex((prev) => prev + 1);
+      if (document.visibilityState === "visible") moveBy(1);
     }, AUTO_INTERVAL);
-
     return () => clearTimeout(timer);
-  }, [activeIndex, isPaused, slideCount]);
+  }, [activeIndex, isPaused, isDragging, slideCount, slidesPerView, prefersReducedMotion, moveBy]);
 
-  // When slideCount or slidesPerView changes, ensure we are in the middle chunk
+  // Re-centre when the number of visible cards changes (screen resize)
   useEffect(() => {
+    setAnimate(false);
     setActiveIndex(middleStart);
   }, [middleStart, slidesPerView, slideCount]);
+
+  // After an instant jump, turn the animation back on for the next move
+  useEffect(() => {
+    if (animate) return undefined;
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+    return () => cancelAnimationFrame(id);
+  }, [animate]);
 
   if (!slideCount) {
     return null;
@@ -62,17 +129,73 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute, 
   const showDots = slideCount > slidesPerView;
   const dotCount = Math.max(slideCount - slidesPerView + 1, 1);
 
-  const handlePrev = () => {
-    setActiveIndex((prev) => prev - 1);
-  };
-
-  const handleNext = () => {
-    setActiveIndex((prev) => prev + 1);
-  };
+  const handlePrev = () => moveBy(-1);
+  const handleNext = () => moveBy(1);
 
   const handleDotClick = (index) => {
-    // map dot index to middle chunk index
+    setAnimate(true);
     setActiveIndex(middleStart + index);
+  };
+
+  // Only the track's own transform finishing counts — card hover animations bubble up too
+  const handleTrackTransitionEnd = (e) => {
+    if (e.target !== e.currentTarget || e.propertyName !== "transform") return;
+    if (activeIndex >= middleStart + slideCount) {
+      setAnimate(false);
+      setActiveIndex(activeIndex - slideCount);
+    } else if (activeIndex < middleStart) {
+      setAnimate(false);
+      setActiveIndex(activeIndex + slideCount);
+    }
+  };
+
+  // ---- Swipe / drag (touch, pen and mouse) ----
+  const onPointerDown = (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), horizontal: false };
+  };
+
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
+    if (!d.horizontal) {
+      if (Math.abs(dy) > DRAG_START_PX && Math.abs(dy) > Math.abs(dx)) { drag.current = null; return; } // vertical page scroll
+      if (Math.abs(dx) < DRAG_START_PX) return;
+      d.horizontal = true;
+      cancelAnimationFrame(pendingMove.current);
+      setActiveIndex((i) => toMiddle(i));
+      setIsDragging(true);
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+    }
+    setDragPx(dx);
+  };
+
+  const endDrag = (e) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || !d.horizontal) return;
+    const dx = e.clientX - d.x;
+    const width = (viewportRef.current?.clientWidth || 1) / slidesPerView;
+    const velocity = dx / Math.max(performance.now() - d.t, 1); // px per ms
+    let steps = Math.round(-dx / width);
+    if (steps === 0 && (Math.abs(dx) > width * 0.15 || Math.abs(velocity) > 0.35)) steps = dx < 0 ? 1 : -1;
+    steps = Math.max(-slidesPerView, Math.min(slidesPerView, steps));
+    setIsDragging(false);
+    setDragPx(0);
+    moveBy(steps);
+    if (steps === 0) setAnimate(true);
+    // a drag should never also count as a click on the card under the pointer
+    suppressClick.current = true;
+    setTimeout(() => { suppressClick.current = false; }, 0);
+  };
+
+  const onClickCapture = (e) => {
+    if (suppressClick.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   const handleCourseClick = (route) => {
@@ -156,36 +279,30 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute, 
 
       {/* Slides Container */}
       <Box
+        ref={viewportRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
         sx={{
           overflow: "hidden",
           px: { xs: 0, sm: 0.5 },
+          touchAction: "pan-y", // let the page scroll vertically; we handle sideways swipes
+          overscrollBehaviorX: "contain", // sideways swipes stay in the slider (no browser back/forward)
+          cursor: isDragging ? "grabbing" : "grab",
+          userSelect: isDragging ? "none" : "auto",
         }}
       >
         <Box
-          onTransitionEnd={() => {
-            // Reset without transition when we cross the copies boundary
-            const idx = activeIndexRef.current;
-            if (!slideCount) return;
-
-            if (idx >= middleStart + slideCount) {
-              // moved forward past 2nd copy
-              setDisableTransition(true);
-              setActiveIndex(idx - slideCount);
-              // re-enable transition next tick
-              setTimeout(() => setDisableTransition(false), 40);
-            } else if (idx < middleStart) {
-              // moved backward past 1st copy
-              setDisableTransition(true);
-              setActiveIndex(idx + slideCount);
-              setTimeout(() => setDisableTransition(false), 40);
-            }
-          }}
+          onTransitionEnd={handleTrackTransitionEnd}
           sx={{
             display: "flex",
-            transition: disableTransition ? 'none' : "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
-            transform: `translateX(-${activeIndex * slideWidth}%)`,
+            transition: animate && !isDragging ? `transform ${SLIDE_MS}ms ${EASE}` : "none",
+            transform: `translate3d(calc(${-activeIndex * slideWidth}% + ${dragPx}px), 0, 0)`,
+            willChange: "transform",
           }}
         >
           {extendedSlides.map((slide, index) => {
@@ -241,6 +358,7 @@ export default function CourseSyllabusSlider({ slides = [], ctaLabel, ctaRoute, 
                       image={slide.image}
                       alt={title}
                       loading="lazy"
+                      draggable={false}
                       sx={{
                         position: "absolute",
                         top: 0,
