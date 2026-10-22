@@ -39,6 +39,7 @@ import SEO, { pageSEO } from './common/SEO';
 import OptimizedImage from './common/OptimizedImage';
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
+import { fetchSeedsFolder } from "../utils/seedsFolderPrefetch";
 
 const cachedFolderDetails = {};
 
@@ -225,16 +226,8 @@ export default function SeedsFootprintsDetail({ user }) {
                 setLoading(true);
             }
 
-            fetch(`${API_BASE_URL}/api/seedsandfootprints/folders/${id}`)
-                .then((r) => {
-                    if (!r.ok) {
-                        return r.text().then(text => {
-                            console.error('Folder fetch failed:', r.status, text);
-                            throw new Error(`HTTP ${r.status}: ${text}`);
-                        });
-                    }
-                    return r.json();
-                })
+            // Reuses the request the folder list started on hover/touch, if any
+            fetchSeedsFolder(id)
                 .then((data) => {
                     if (!mounted) return;
                     // Photos come pre-sorted by order from backend; fall back to createdAt
@@ -874,208 +867,116 @@ export default function SeedsFootprintsDetail({ user }) {
                     }
                 }}
             >
-                <Box
-                    sx={{
-                        py: { xs: 3, md: 3.5 },
-                        position: 'relative',
-                        textAlign: 'center',
-                        display: 'grid',
-                        gridTemplateColumns: { xs: '1fr', md: 'minmax(220px, 1fr) minmax(0, 2fr) minmax(260px, 1fr)' },
-                        alignItems: 'center',
-                        columnGap: { md: 2 },
-                        rowGap: { xs: 2, md: 0 },
-                    }}
-                >
-                    <Box
-                        sx={{
-                            position: 'static',
-                            display: 'flex',
-                            justifyContent: { xs: 'flex-start', md: 'flex-start' },
-                            gap: 1,
-                            flexWrap: 'wrap',
-                            zIndex: 10,
-                            minWidth: 0,
-                        }}
-                    >
-                        <Button
-                            component={RouterLink}
-                            to="/seeds-and-footprints"
-                            variant="outlined"
-                            startIcon={<ArrowBack />}
-                            sx={{
-                                borderColor: '#8B0000',
-                                color: '#8B0000',
-                                '&:hover': {
-                                    bgcolor: 'rgba(139,0,0,0.05)',
-                                    borderColor: '#8B0000',
-                                },
-                                fontSize: i18n.language === 'ta'
-                                    ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
-                                    : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
-                                px: { xs: 2, md: 3 },
-                                py: { xs: 0.5, md: 1 },
-                                borderRadius: 0,
-                            }}
-                        >
-                            {t('gallery.backToFolders', 'Back to Folders')}
-                        </Button>
-
-                        {user && user.role === 'admin' && photos.length > 0 && (
-                            <Button
-                                onClick={openReorderDialog}
-                                variant="outlined"
-                                startIcon={<Edit />}
-                                size="small"
+                {(() => {
+                    const isAdmin = user && user.role === 'admin';
+                    // Every header button shares one size so the row lines up
+                    const headerBtnSx = {
+                        borderRadius: 0,
+                        height: { xs: 36, md: 40 },
+                        px: { xs: 1.5, md: 2.25 },
+                        whiteSpace: 'nowrap',
+                        fontSize: i18n.language === 'ta'
+                            ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
+                            : { xs: '0.75rem', sm: '0.8rem', md: '0.85rem' },
+                    };
+                    const outlinedSx = {
+                        ...headerBtnSx,
+                        borderColor: '#8B0000',
+                        color: '#8B0000',
+                        '&:hover': { bgcolor: 'rgba(139,0,0,0.06)', borderColor: '#8B0000' },
+                    };
+                    const goldLineSx = {
+                        flex: '0 0 auto',
+                        width: { sm: 28, md: 44 },
+                        height: '3px',
+                        bgcolor: '#DAA520',
+                        display: { xs: 'none', sm: 'block' },
+                    };
+                    return (
+                        <Box sx={{ py: { xs: 2.5, md: 3.5 } }}>
+                            {/* Toolbar: navigation left, admin actions right */}
+                            <Box
                                 sx={{
-                                    borderColor: '#8B0000',
-                                    color: '#8B0000',
-                                    '&:hover': {
-                                        bgcolor: 'rgba(139,0,0,0.08)',
-                                        borderColor: '#8B0000',
-                                    },
-                                    borderRadius: 0,
-                                    fontSize: i18n.language === 'ta'
-                                        ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
-                                        : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
-                                    px: { xs: 2, md: 3 },
-                                    py: { xs: 0.5, md: 1 },
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 1.5,
+                                    mb: { xs: 2.5, md: 3 },
                                 }}
                             >
-                                {t('gallery.editOrder', 'Edit Order')}
-                            </Button>
-                        )}
-                    </Box>
+                                <Button
+                                    component={RouterLink}
+                                    to="/seeds-and-footprints"
+                                    variant="outlined"
+                                    startIcon={<ArrowBack />}
+                                    sx={outlinedSx}
+                                >
+                                    {t('gallery.backToFolders', 'Back to Folders')}
+                                </Button>
 
-                    <Typography
-                        variant="h2"
-                        sx={{
-                            fontWeight: 700,
-                            color: '#8B0000',
-                            position: 'relative',
-                            display: 'inline-block',
-                            letterSpacing: -1,
-                            padding: { xs: '0 5px', md: '0 10px' },
-                            fontSize: i18n.language === 'ta'
-                                ? { xs: '1.6rem', md: '2.4rem' }
-                                : { xs: '2rem', md: '3rem' },
-                            lineHeight: 1.18,
-                            textAlign: 'center',
-                            width: '100%',
-                            maxWidth: '100%',
-                            minWidth: 0,
-                            overflowWrap: 'anywhere',
-                            '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                top: '50%',
-                                left: { xs: '-30px', md: '-50px' },
-                                width: { xs: '25px', md: '40px' },
-                                height: '3px',
-                                backgroundColor: '#DAA520',
-                                transform: 'translateY(-50%)',
-                                display: { xs: 'none', sm: 'block' } // Hide decorative lines on very small screens
-                            },
-                            '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                top: '50%',
-                                right: { xs: '-30px', md: '-50px' },
-                                width: { xs: '25px', md: '40px' },
-                                height: '3px',
-                                backgroundColor: '#DAA520',
-                                transform: 'translateY(-50%)',
-                                display: { xs: 'none', sm: 'block' } // Hide decorative lines on very small screens
-                            }
-                        }}
-                    >
-                        {folderName}
-                    </Typography>
+                                {isAdmin && (
+                                    <Box
+                                        sx={{
+                                            // Phones: tidy 2-column grid under the back button; larger screens: one row on the right
+                                            display: { xs: 'grid', sm: 'flex' },
+                                            gridTemplateColumns: '1fr 1fr',
+                                            width: { xs: '100%', sm: 'auto' },
+                                            flexWrap: 'wrap',
+                                            gap: 1,
+                                            justifyContent: 'flex-end',
+                                        }}
+                                    >
+                                        <Button onClick={handleEditFolder} variant="outlined" startIcon={<Edit />} sx={outlinedSx}>
+                                            {t('research.editFolderShort', 'Edit Folder')}
+                                        </Button>
+                                        {photos.length > 0 && (
+                                            <Button onClick={openReorderDialog} variant="outlined" startIcon={<DragIndicator />} sx={outlinedSx}>
+                                                {t('gallery.editOrder', 'Edit Order')}
+                                            </Button>
+                                        )}
+                                        <Button onClick={() => setBulkUploadOpen(true)} variant="outlined" startIcon={<ImageIcon />} sx={outlinedSx}>
+                                            {t('gallery.bulkUpload', 'Bulk Upload')}
+                                        </Button>
+                                        <Button
+                                            onClick={() => setIsFormVisible(true)}
+                                            variant="contained"
+                                            disableElevation
+                                            startIcon={<Add />}
+                                            sx={{ ...headerBtnSx, bgcolor: '#8B0000', color: '#fff', '&:hover': { bgcolor: '#6d0000' } }}
+                                        >
+                                            {t('gallery.addImage', 'Add Image')}
+                                        </Button>
+                                    </Box>
+                                )}
+                            </Box>
 
-                    {/* Edit folder icon - positioned near title for admin */}
-                    {user && user.role === 'admin' && (
-                        <IconButton
-                            onClick={handleEditFolder}
-                            sx={{
-                                position: 'absolute',
-                                right: { xs: 10, md: 20 },
-                                top: { xs: 8, md: 12 },
-                                transform: 'none',
-                                zIndex: 5,
-                                bgcolor: 'rgba(255,255,255,0.9)',
-                                color: '#8B0000',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                                '&:hover': {
-                                    bgcolor: '#fff',
-                                    color: '#c00000',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                },
-                                borderRadius: '50%',
-                                p: 0.75,
-                                width: 36,
-                                height: 36,
-                            }}
-                            title={t('research.editFolder', 'Edit Folder')}
-                        >
-                            <Edit fontSize="small" />
-                        </IconButton>
-                    )}
-
-                    {user && user.role === 'admin' && (
-                        <Box
-                            sx={{
-                                position: 'static',
-                                display: 'flex',
-                                justifyContent: { xs: 'flex-start', md: 'flex-end' },
-                                alignItems: 'center',
-                                flexDirection: 'column',
-                                gap: 1,
-                                width: '100%',
-                                minWidth: 0,
-                                zIndex: 10,
-                            }}
-                        >
-                            <Button
-                                onClick={() => setIsFormVisible(true)}
-                                variant="contained"
-                                startIcon={<Add />}
-                                sx={{
-                                    bgcolor: "#000",
-                                    color: "#fff",
-                                    borderRadius: 0,
-                                    px: { xs: 2, md: 3 },
-                                    py: { xs: 0.5, md: 1 },
-                                    fontSize: i18n.language === 'ta'
-                                        ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
-                                        : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
-                                    mr: 0,
-                                    width: '100%',
-                                    whiteSpace: 'nowrap'
-                                }}
-                            >
-                                {t('gallery.addImage', 'Add Image')}
-                            </Button>
-                            <Button
-                                onClick={() => setBulkUploadOpen(true)}
-                                variant="outlined"
-                                startIcon={<ImageIcon />}
-                                sx={{
-                                    borderColor: "#8B0000",
-                                    color: "#8B0000",
-                                    borderRadius: 0,
-                                    px: { xs: 2, md: 3 },
-                                    py: { xs: 0.5, md: 1 },
-                                    fontSize: i18n.language === 'ta'
-                                        ? { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
-                                        : { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
-                                    whiteSpace: 'nowrap',
-                                    width: '100%',
-                                }}
-                            >
-                                {t('gallery.bulkUpload', 'Bulk Upload')}
-                            </Button>
+                            {/* Title with gold rules that stay attached to the text */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: { sm: 2, md: 3 } }}>
+                                <Box sx={goldLineSx} />
+                                <Typography
+                                    variant="h2"
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: '#8B0000',
+                                        letterSpacing: -1,
+                                        fontSize: i18n.language === 'ta'
+                                            ? { xs: '1.6rem', md: '2.4rem' }
+                                            : { xs: '2rem', md: '3rem' },
+                                        lineHeight: 1.18,
+                                        textAlign: 'center',
+                                        maxWidth: 900,
+                                        minWidth: 0,
+                                        overflowWrap: 'anywhere',
+                                    }}
+                                >
+                                    {folderName}
+                                </Typography>
+                                <Box sx={goldLineSx} />
+                            </Box>
                         </Box>
-                    )}
-                </Box>
+                    );
+                })()}
             </Box>
 
             {folderDescription && (

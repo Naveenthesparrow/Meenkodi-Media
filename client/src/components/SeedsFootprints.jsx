@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
+import { prefetchSeedsFolder, loadSeedsFolderPage } from "../utils/seedsFolderPrefetch";
 
 
 let cachedSeedsData = null;
@@ -102,6 +103,13 @@ export default function SeedsFootprints({ user }) {
   useEffect(() => {
     const cleanup = loadFolders();
     return cleanup;
+  }, []);
+
+  // Download the folder page's code in the background so opening a folder
+  // doesn't sit on this page with no feedback while it loads.
+  useEffect(() => {
+    const t = setTimeout(() => loadSeedsFolderPage().catch(() => {}), 1000);
+    return () => clearTimeout(t);
   }, []);
 
   const handleChange = (key) => (e) => setForm((s) => ({ ...s, [key]: e.target.value }));
@@ -662,6 +670,10 @@ export default function SeedsFootprints({ user }) {
                     <Paper
                       component={RouterLink}
                       to={`/seeds-and-footprints/folders/${f._id}`}
+                      // Start loading the folder as soon as the pointer/finger is on it
+                      onMouseEnter={() => prefetchSeedsFolder(f._id)}
+                      onTouchStart={() => prefetchSeedsFolder(f._id)}
+                      onFocus={() => prefetchSeedsFolder(f._id)}
                       elevation={0}
                       sx={{
                         textDecoration: 'none',
