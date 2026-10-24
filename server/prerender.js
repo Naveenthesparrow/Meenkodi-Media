@@ -47,6 +47,104 @@ export function shareImageUrl(url) {
   return u;
 }
 
+// JSON-LD types in index.html that describe the homepage only (site-wide ones
+// such as Organization and WebSite stay on every page)
+const PAGE_SPECIFIC_LD_TYPES = new Set(['BreadcrumbList', 'ItemList', 'Article', 'FAQPage', 'CollectionPage']);
+
+function stripPageSpecificJsonLd(html) {
+  return html.replace(/\s*<script type="application\/ld\+json">([\s\S]*?)<\/script>/g, (block, json) => {
+    try {
+      const data = JSON.parse(json);
+      const types = (data['@graph'] || [data]).map((d) => d['@type']).flat();
+      return types.some((t) => PAGE_SPECIFIC_LD_TYPES.has(t)) ? '' : block;
+    } catch {
+      return block;
+    }
+  });
+}
+
+/** <script> tag for a JSON-LD object ("<" escaped so text can't close the tag) */
+function jsonLdScript(data) {
+  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+}
+
+const PUBLISHER = {
+  '@type': 'Organization',
+  name: 'Meenkodi Tamil Heritage Foundation',
+  url: SITE_URL,
+  logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
+};
+
+/** BreadcrumbList: [{ name, url }] from Home to the current page */
+export function breadcrumbLd(trail) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [{ name: 'Home', url: `${SITE_URL}/` }, ...trail].map((crumb, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: crumb.name,
+      item: crumb.url,
+    })),
+  };
+}
+
+/** Article-type structured data for content pages (articles, temples, poets...) */
+export function articleLd({ url, headline, description, image, datePublished, dateModified, authorName }) {
+  const img = shareImageUrl(image);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    mainEntityOfPage: url,
+    url,
+    headline: String(headline || '').slice(0, 110),
+    ...(description ? { description } : {}),
+    ...(img ? { image: [img] } : {}),
+    ...(datePublished ? { datePublished: new Date(datePublished).toISOString() } : {}),
+    ...(dateModified || datePublished ? { dateModified: new Date(dateModified || datePublished).toISOString() } : {}),
+    author: authorName ? { '@type': 'Person', name: authorName } : PUBLISHER,
+    publisher: PUBLISHER,
+    inLanguage: ['en', 'ta'],
+  };
+}
+
+/** ImageGallery for Seeds folders and gallery listings */
+export function imageGalleryLd({ url, name, description, photos = [] }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
+    url,
+    name,
+    ...(description ? { description } : {}),
+    image: photos.filter((p) => p && /^https?:\/\//i.test(p.url || '')).slice(0, 100).map((p) => ({
+      '@type': 'ImageObject',
+      contentUrl: p.url,
+      name: p.caption || name,
+    })),
+  };
+}
+
+/** CollectionPage + ItemList for section list pages */
+export function collectionLd({ url, name, description, items = [] }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    url,
+    name,
+    ...(description ? { description } : {}),
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: items.length,
+      itemListElement: items.slice(0, 200).map((item, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}${item.href}`,
+        name: item.title,
+      })),
+    },
+  };
+}
+
 /** Replace the content of an existing <meta property|name="key"> tag, or add it before </head> */
 function setMeta(html, key, value) {
   const safe = escapeHtml(value);
@@ -68,8 +166,17 @@ function setMeta(html, key, value) {
  * @param {string}  [opts.type]       - og:type, e.g. "article" for detail pages
  * @returns {string} Modified HTML string
  */
-export function buildPageHtml(baseHtml, { title, description, bodyHtml, canonicalUrl, image, type }) {
+export function buildPageHtml(baseHtml, { title, description, bodyHtml, canonicalUrl, image, type, jsonLd }) {
   let html = baseHtml;
+
+  // Structured data: the base index.html carries homepage-only JSON-LD (an
+  // Article about the Pandiya dynasty, an FAQ, breadcrumbs...). On other pages
+  // replace those with this page's own data.
+  if (Array.isArray(jsonLd)) {
+    html = stripPageSpecificJsonLd(html);
+    const scripts = jsonLd.filter(Boolean).map(jsonLdScript).join('\n  ');
+    if (scripts) html = html.replace('</head>', `  ${scripts}\n</head>`);
+  }
 
   // Link preview tags (WhatsApp/Facebook/X don't run JavaScript, so these must
   // be in the HTML itself). The base index.html carries the homepage values.
@@ -269,18 +376,30 @@ export function buildArticlesBodyHtml({ articles = [] } = {}) {
 export function buildArticleDetailBodyHtml({ article }) {
   if (!article) return '<main><h1>Article — Meenkodi Tamil Heritage</h1></main>';
   const t = pick(article.title);
-  const content = truncate(stripTags(pick(article.content)), 500);
   const author = article.authorName || '';
-  const img = article.image
-    ? `<img src="${escapeHtml(article.image)}" alt="${escapeHtml(t)} — Tamil heritage article cover image" loading="lazy" />`
+  const cover = article.image || article.imageLink;
+  const img = cover
+    ? `<img src="${escapeHtml(cover)}" alt="${escapeHtml(t)} — Tamil heritage article cover image" loading="lazy" />`
     : '';
+  const content = article.content || {};
+  const en = typeof content === 'string' ? content : content.en;
+  const ta = typeof content === 'string' ? '' : content.ta;
+  // Images written inside the article as markdown ![caption](url)
+  const inlineImages = [...`${en || ''}\n${ta || ''}`.matchAll(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g)]
+    .slice(0, 40)
+    .map(([, alt, url]) => `  <figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt || t)}" loading="lazy" />${alt ? `<figcaption>${escapeHtml(alt)}</figcaption>` : ''}</figure>`)
+    .join('\n');
 
   return `
 <main>
-  <h1>${escapeHtml(t)}</h1>
-  ${img}
-  ${author ? `<p>By ${escapeHtml(author)}</p>` : ''}
-  <p>${escapeHtml(content)}</p>
+  <article>
+    <h1>${escapeHtml(t)}</h1>
+    ${img}
+    ${author ? `<p>By ${escapeHtml(author)}</p>` : ''}
+    ${paragraphs(en, 'en')}
+    ${paragraphs(ta, 'ta')}
+    ${inlineImages}
+  </article>
   <p><a href="/articles">← Back to all articles</a></p>
 </main>
 `;
@@ -458,24 +577,63 @@ export function buildExploreBodyHtml() {
  * Hidden SSR body for any content detail page (temple, food, Seeds folder, poet...).
  * photos: optional [{ url, caption }] so each image is indexed with its own name.
  */
-export function buildDetailBodyHtml({ heading, description, image, photos = [], backHref, backLabel }) {
+export function buildDetailBodyHtml({
+  heading, description, image, photos = [], backHref, backLabel,
+  facts = [], sections = [], items = [],
+}) {
   const img = image
     ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(heading)} — Meenkodi Tamil Heritage" loading="lazy" />`
     : '';
+  const factList = facts.filter(f => f && f.value).map(f =>
+    `    <dt>${escapeHtml(f.label)}</dt><dd>${escapeHtml(stripTags(f.value))}</dd>`).join('\n');
+  // Full text of every part of the page, in both languages (Tamil searches too)
+  const sectionHtml = sections.filter(s => s && (s.en || s.ta || s.image)).map(s => {
+    const sectionImg = s.image && /^https?:\/\//i.test(s.image)
+      ? `<img src="${escapeHtml(s.image)}" alt="${escapeHtml(s.heading || heading)}" loading="lazy" />`
+      : '';
+    return `  <section>
+    ${s.heading ? `<h2>${escapeHtml(s.heading)}</h2>` : ''}
+    ${sectionImg}
+    ${paragraphs(s.en, 'en')}
+    ${paragraphs(s.ta, 'ta')}
+  </section>`;
+  }).join('\n');
   const gallery = photos.filter(p => p && p.url).slice(0, 80).map(p => {
     const caption = p.caption || heading;
     return `  <figure><img src="${escapeHtml(p.url)}" alt="${escapeHtml(caption)}" loading="lazy" /><figcaption>${escapeHtml(caption)}</figcaption></figure>`;
+  }).join('\n');
+  // Links to every item of a section, so crawlers can reach them from the list page
+  const itemList = items.filter(i => i && i.href).map(i => {
+    const thumb = i.image && /^https?:\/\//i.test(i.image)
+      ? `<img src="${escapeHtml(i.image)}" alt="${escapeHtml(i.title)}" loading="lazy" />`
+      : '';
+    return `    <li><a href="${escapeHtml(i.href)}">${thumb}${escapeHtml(i.title)}</a></li>`;
   }).join('\n');
 
   return `
 <main>
   <h1>${escapeHtml(heading)}</h1>
   ${img}
-  ${description ? `<p>${escapeHtml(truncate(stripTags(description), 600))}</p>` : ''}
+  ${description ? paragraphs(description) : ''}
+  ${factList ? `<dl>\n${factList}\n  </dl>` : ''}
+  ${sectionHtml}
   ${gallery ? `<section>\n${gallery}\n</section>` : ''}
+  ${itemList ? `<ul>\n${itemList}\n  </ul>` : ''}
   ${backHref ? `<p><a href="${escapeHtml(backHref)}">← ${escapeHtml(backLabel || 'Back')}</a></p>` : ''}
 </main>
 `;
+}
+
+/** Text (plain, markdown or HTML) as escaped <p> paragraphs, capped for size */
+function paragraphs(text, lang) {
+  if (!text) return '';
+  const langAttr = lang ? ` lang="${lang}"` : '';
+  return String(text).slice(0, 12000)
+    .split(/\n\s*\n|<\/p>|<br\s*\/?>/i)
+    .map(p => stripTags(p))
+    .filter(Boolean)
+    .map(p => `<p${langAttr}>${escapeHtml(p)}</p>`)
+    .join('\n    ');
 }
 
 /** Plain-text summary for meta descriptions */

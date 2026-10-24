@@ -49,6 +49,10 @@ import {
   buildExploreBodyHtml,
   buildDetailBodyHtml,
   metaDescription,
+  breadcrumbLd,
+  articleLd,
+  imageGalleryLd,
+  collectionLd,
 } from './prerender.js';
 import { generateAllSitemaps } from './scripts/generate-sitemap.js';
 
@@ -5155,60 +5159,142 @@ if (fs.existsSync(clientIndex)) {
     }
   });
 
+  // ── Shared helpers for page HTML ───────────────────────────────────────────
+  const pickText = (field) => (!field ? '' : typeof field === 'string' ? field : (field.en || field.ta || ''));
+  const mainImage = (doc) => doc.coverPhoto || doc.imageUrl || doc.image || doc.imageLink || '';
+  const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const byId = (Model) => (id) => (mongoose.isValidObjectId(id) ? Model.findById(id).lean() : null);
+
+  // Keys that never hold readable text (ids, links, media, user data)
+  const NON_TEXT_KEY = /^(_id|__v|id|slug|order|image|imageUrl|imageLink|imagePosition|url|link|downloadLink|videoUrl|videoLink|mapEmbed|media|banner|flag|createdAt|updatedAt|user|likes|comments)$/i;
+
+  /** All readable text inside a field ({en, ta}, strings, arrays, nested objects), per language */
+  function langTexts(value) {
+    const out = { en: [], ta: [] };
+    const walk = (v, depth) => {
+      if (v == null || depth > 4 || v instanceof Date || v._bsontype) return;
+      if (typeof v === 'string') {
+        const s = v.trim();
+        if (s && !/^https?:\/\//i.test(s)) out.en.push(s);
+        return;
+      }
+      if (Array.isArray(v)) return v.forEach((item) => walk(item, depth + 1));
+      if (typeof v === 'object') {
+        if ('en' in v || 'ta' in v) {
+          if (v.en) out.en.push(String(v.en));
+          if (v.ta) out.ta.push(String(v.ta));
+          return;
+        }
+        for (const [key, inner] of Object.entries(v)) {
+          if (!NON_TEXT_KEY.test(key)) walk(inner, depth + 1);
+        }
+      }
+    };
+    walk(value, 0);
+    return { en: out.en.join('\n\n'), ta: out.ta.join('\n\n') };
+  }
+
+  // Text parts shown on detail pages, in page order, with their headings
+  const TEXT_FIELDS = [
+    ['description', ''], ['summary', 'Summary'], ['content', ''], ['history', 'History'],
+    ['significance', 'Significance'], ['ingredients', 'Ingredients'], ['recipe', 'Recipe'],
+    ['biography', 'Biography'], ['majorWorks', 'Major works'], ['contributions', 'Contributions'],
+    ['philosophy', 'Philosophy'], ['famousQuotes', 'Famous quotes'], ['achievements', 'Achievements'],
+    ['architecture', 'Architecture'], ['culturalContributions', 'Cultural contributions'],
+    ['tradeAndEconomy', 'Trade and economy'], ['militaryStrength', 'Military strength'],
+    ['rulers', 'Rulers'], ['decline', 'Decline'], ['legacy', 'Legacy'], ['poetry', 'Poetry'],
+    ['gods', 'Deities'], ['flora', 'Flora'], ['fauna', 'Fauna'], ['people', 'People'], ['awards', 'Awards'],
+  ];
+  const FACT_FIELDS = [
+    ['tagline', 'Tagline'], ['location', 'Location'], ['deity', 'Deity'], ['period', 'Period'],
+    ['dynasty', 'Dynasty'], ['builder', 'Built by'], ['capital', 'Capital'], ['region', 'Region'],
+    ['territory', 'Territory'], ['language', 'Language'], ['religion', 'Religion'],
+    ['birthPlace', 'Birth place'], ['field', 'Field'], ['scholar', 'Scholar'], ['author', 'Author'],
+    ['category', 'Category'], ['style', 'Style'], ['origin', 'Origin'],
+  ];
+
+  function pageContent(doc) {
+    const sections = TEXT_FIELDS
+      .map(([key, heading]) => ({ heading, ...langTexts(doc[key]) }))
+      .filter((s) => s.en || s.ta);
+    for (const s of doc.contentSections || []) {
+      sections.push({ heading: pickText(s.subtitle), ...langTexts(s.content), image: s.imageUrl });
+    }
+    const facts = FACT_FIELDS
+      .map(([key, label]) => {
+        const t = langTexts(doc[key]);
+        return { label, value: [t.en, t.ta].filter(Boolean).join(' / ') };
+      })
+      .filter((f) => f.value);
+    return { sections, facts };
+  }
+
   // ── Articles list ─────────────────────────────────────────────────────────
   app.get('/articles', async (req, res) => {
+    const canonicalUrl = `${BASE_URL}/articles`;
+    const title = 'Articles on Tamil Heritage, History & Culture | Meenkodi';
+    const description = 'Read in-depth articles on Tamil civilization, Pandiya dynasty, Sangam literature, temple architecture, and cultural traditions on Meenkodi.';
     try {
       const articles = await Article.find({ status: 'published' })
         .sort({ order: 1, publishedAt: -1, createdAt: -1 })
-        .limit(30)
+        .limit(100)
         .select('title content image authorName _id');
+      const items = articles.map((a) => ({ href: `/articles/${a._id}`, title: pickText(a.title) || 'Article' }));
       sendSsr(res, {
-        title: 'Articles on Tamil Heritage, History & Culture | Meenkodi',
-        description: 'Read in-depth articles on Tamil civilization, Pandiya dynasty, Sangam literature, temple architecture, and cultural traditions on Meenkodi.',
-        canonicalUrl: `${BASE_URL}/articles`,
+        title, description, canonicalUrl,
         bodyHtml: buildArticlesBodyHtml({ articles }),
+        jsonLd: [collectionLd({ url: canonicalUrl, name: title, description, items }), breadcrumbLd([{ name: 'Articles', url: canonicalUrl }])],
       });
     } catch (err) {
       console.error('[SSR] Articles list error:', err);
-      sendSsr(res, { canonicalUrl: `${BASE_URL}/articles`, bodyHtml: buildArticlesBodyHtml() });
+      sendSsr(res, { canonicalUrl, bodyHtml: buildArticlesBodyHtml() });
     }
   });
 
   // ── Article detail ────────────────────────────────────────────────────────
   app.get('/articles/:id', async (req, res) => {
+    const canonicalUrl = `${BASE_URL}/articles/${req.params.id}`;
     try {
-      const article = await Article.findById(req.params.id).select('title content image imageLink authorName status _id');
+      const article = mongoose.isValidObjectId(req.params.id)
+        ? await Article.findById(req.params.id).select('title content image imageLink authorName status publishedAt createdAt updatedAt _id')
+        : null;
       if (article && article.status === 'published') {
         const titleEn = (article.title && (article.title.en || article.title.ta)) || 'Tamil Heritage Article';
         const contentText = article.content && (article.content.en || article.content.ta);
         const descEn = metaDescription(contentText, 'Read this article on Meenkodi — Tamil heritage, history, and culture.');
+        const image = article.image || article.imageLink;
         sendSsr(res, {
           title: `${titleEn} | Meenkodi Tamil Heritage`,
           description: descEn,
-          canonicalUrl: `${BASE_URL}/articles/${req.params.id}`,
-          image: article.image || article.imageLink,
+          canonicalUrl,
+          image,
           type: 'article',
           bodyHtml: buildArticleDetailBodyHtml({ article }),
+          jsonLd: [
+            articleLd({ url: canonicalUrl, headline: titleEn, description: descEn, image, datePublished: article.publishedAt || article.createdAt, dateModified: article.updatedAt, authorName: article.authorName }),
+            breadcrumbLd([{ name: 'Articles', url: `${BASE_URL}/articles` }, { name: titleEn, url: canonicalUrl }]),
+          ],
         });
       } else {
         // Article not found or not published — fall back to articles list meta
         sendSsr(res, {
           title: 'Article | Meenkodi Tamil Heritage',
           description: 'Read articles on Tamil heritage on Meenkodi.',
-          canonicalUrl: `${BASE_URL}/articles/${req.params.id}`,
+          canonicalUrl,
           bodyHtml: '<main><h1>Article — Meenkodi Tamil Heritage</h1><p><a href="/articles">Browse all articles</a></p></main>',
+          jsonLd: [],
         });
       }
     } catch (err) {
       console.error('[SSR] Article detail error:', err);
-      sendSsr(res, { canonicalUrl: `${BASE_URL}/articles/${req.params.id}`, bodyHtml: '<main><h1>Article — Meenkodi Tamil Heritage</h1></main>' });
+      sendSsr(res, { canonicalUrl, bodyHtml: '<main><h1>Article — Meenkodi Tamil Heritage</h1></main>', jsonLd: [] });
     }
   });
 
   async function getGalleryItemsByFolder(folderName) {
     if (!folderName) return getAllGalleryItems();
     // folderName comes from the URL; escape it so "(" etc. can't throw or be abused
-    const queryRegex = new RegExp(String(folderName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const queryRegex = new RegExp(escapeRegex(folderName), 'i');
     const items = await Gallery.find({
       isFolder: { $ne: true },
       $or: [
@@ -5223,7 +5309,8 @@ if (fs.existsSync(clientIndex)) {
     }).sort({ order: 1, createdAt: -1 });
 
     return items.map(item => ({
-      name: (typeof item.name === 'object' ? (item.name.en || item.name.ta) : item.name) || 'Gallery Item',
+      _id: item._id,
+      name: pickText(item.name) || 'Gallery Item',
       imageUrl: item.imageUrl || '',
     }));
   }
@@ -5231,10 +5318,11 @@ if (fs.existsSync(clientIndex)) {
   async function getAllGalleryItems() {
     const items = await Gallery.find({ isFolder: { $ne: true } })
       .sort({ order: 1, createdAt: -1 })
-      .limit(50);
+      .limit(200);
 
     return items.map(item => ({
-      name: (typeof item.name === 'object' ? (item.name.en || item.name.ta) : item.name) || 'Gallery Item',
+      _id: item._id,
+      name: pickText(item.name) || 'Gallery Item',
       imageUrl: item.imageUrl || '',
     }));
   }
@@ -5249,25 +5337,35 @@ if (fs.existsSync(clientIndex)) {
     const title = folder
       ? `${folder} | Meenkodi Gallery`
       : 'Gallery — Tamil Heritage Photos, Kings, Temples & Culture | Meenkodi';
+    const description = folder
+      ? `Photos from ${folder} — Tamil heritage gallery on Meenkodi.`
+      : 'Browse Tamil heritage photos: Pandiya and Chola kings, Dravidian temples, festivals and heritage sites on Meenkodi.';
+    const canonicalUrl = `${BASE_URL}/gallery${folder ? `?folder=${encodeURIComponent(folder)}` : ''}`;
+    const photos = items.map(i => ({ url: i.imageUrl, caption: i.name }));
     sendSsr(res, {
       title,
-      description: folder
-        ? `Photos from ${folder} — Tamil heritage gallery on Meenkodi.`
-        : 'Browse Tamil heritage photos: Pandiya and Chola kings, Dravidian temples, festivals and heritage sites on Meenkodi.',
-      canonicalUrl: `${BASE_URL}/gallery${folder ? `?folder=${encodeURIComponent(folder)}` : ''}`,
+      description,
+      canonicalUrl,
       image: items.find(i => i.imageUrl)?.imageUrl,
       bodyHtml: buildDetailBodyHtml({
         heading: title,
-        photos: items.map(i => ({ url: i.imageUrl, caption: i.name })),
+        items: items.map(i => ({ href: `/gallery/${i._id}`, title: i.name, image: i.imageUrl })),
       }),
+      jsonLd: [
+        imageGalleryLd({ url: canonicalUrl, name: title, description, photos }),
+        breadcrumbLd([{ name: 'Gallery', url: `${BASE_URL}/gallery` }]),
+      ],
     });
   });
 
   // ── Gallery detail ────────────────────────────────────────────────────────
   app.get('/gallery/:id', async (req, res) => {
+    const canonicalUrl = `${BASE_URL}/gallery/${req.params.id}`;
     try {
-      const item = await Gallery.findById(req.params.id)
-        .select('name description imageUrl imageAlt seoTitle seoDescription category era location keywords isFolder _id');
+      const item = mongoose.isValidObjectId(req.params.id)
+        ? await Gallery.findById(req.params.id)
+          .select('name description imageUrl imageAlt seoTitle seoDescription category era location keywords isFolder _id')
+        : null;
       if (item) {
         const nameEn = (item.name && (item.name.en || item.name.ta)) || 'Gallery Item';
         const seoTitleEn = (item.seoTitle && (item.seoTitle.en || item.seoTitle.ta)) || nameEn;
@@ -5277,72 +5375,105 @@ if (fs.existsSync(clientIndex)) {
         sendSsr(res, {
           title: `${seoTitleEn} | Meenkodi Tamil Heritage Gallery`,
           description: seoDescEn.slice(0, 200),
-          canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`,
+          canonicalUrl,
           image: item.imageUrl,
           type: 'article',
           bodyHtml: buildGalleryDetailBodyHtml({ item }),
+          jsonLd: [
+            item.imageUrl ? {
+              '@context': 'https://schema.org',
+              '@type': 'ImageObject',
+              contentUrl: item.imageUrl,
+              url: canonicalUrl,
+              name: seoTitleEn,
+              description: seoDescEn.slice(0, 300),
+            } : null,
+            breadcrumbLd([{ name: 'Gallery', url: `${BASE_URL}/gallery` }, { name: seoTitleEn, url: canonicalUrl }]),
+          ],
         });
       } else {
         sendSsr(res, {
           title: 'Gallery | Meenkodi Tamil Heritage',
           description: 'Explore our Tamil heritage photo gallery on Meenkodi.',
-          canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`,
+          canonicalUrl,
           bodyHtml: '<main><h1>Gallery — Meenkodi</h1><p><a href="/gallery">Back to gallery</a></p></main>',
+          jsonLd: [],
         });
       }
     } catch (err) {
       console.error('[SSR] Gallery detail error:', err);
-      sendSsr(res, { canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`, bodyHtml: '<main><h1>Gallery — Meenkodi Tamil Heritage</h1></main>' });
+      sendSsr(res, { canonicalUrl, bodyHtml: '<main><h1>Gallery — Meenkodi Tamil Heritage</h1></main>', jsonLd: [] });
     }
   });
 
   // ── Events list ───────────────────────────────────────────────────────────
   app.get('/events', async (req, res) => {
+    const canonicalUrl = `${BASE_URL}/events`;
+    const title = 'Tamil Heritage Events & Workshops | Meenkodi';
+    const description = 'Join upcoming Tamil heritage events, cultural workshops, and community gatherings celebrating 5000+ years of Tamil civilization, Pandiya dynasty history, and Sangam literature.';
     try {
       const events = await Event.find()
         .sort({ date: 1, createdAt: -1 })
-        .limit(30)
+        .limit(100)
         .select('title description date location imageUrl _id');
+      const items = events.map((e) => ({ href: `/events/${e._id}`, title: pickText(e.title) || 'Event' }));
       sendSsr(res, {
-        title: 'Tamil Heritage Events & Workshops | Meenkodi',
-        description: 'Join upcoming Tamil heritage events, cultural workshops, and community gatherings celebrating 5000+ years of Tamil civilization, Pandiya dynasty history, and Sangam literature.',
-        canonicalUrl: `${BASE_URL}/events`,
+        title, description, canonicalUrl,
         bodyHtml: buildEventsBodyHtml({ events }),
+        jsonLd: [collectionLd({ url: canonicalUrl, name: title, description, items }), breadcrumbLd([{ name: 'Events', url: canonicalUrl }])],
       });
     } catch (err) {
       console.error('[SSR] Events list error:', err);
-      sendSsr(res, { canonicalUrl: `${BASE_URL}/events`, bodyHtml: buildEventsBodyHtml() });
+      sendSsr(res, { canonicalUrl, bodyHtml: buildEventsBodyHtml() });
     }
   });
 
   // ── Event detail ──────────────────────────────────────────────────────────
   app.get('/events/:id', async (req, res) => {
+    const canonicalUrl = `${BASE_URL}/events/${req.params.id}`;
     try {
-      const event = await Event.findById(req.params.id)
-        .select('title description date location imageUrl _id');
+      const event = mongoose.isValidObjectId(req.params.id)
+        ? await Event.findById(req.params.id).select('title description date location imageUrl _id')
+        : null;
       if (event) {
         const titleEn = (event.title && (event.title.en || event.title.ta)) || 'Tamil Heritage Event';
         const descEn = (event.description && (event.description.en || event.description.ta))
           || `${titleEn} — Tamil heritage event on Meenkodi`;
+        const locationName = pickText(event.location);
         sendSsr(res, {
           title: `${titleEn} | Meenkodi Events`,
           description: descEn.slice(0, 200),
-          canonicalUrl: `${BASE_URL}/events/${req.params.id}`,
+          canonicalUrl,
           image: event.imageUrl,
           type: 'article',
           bodyHtml: buildEventDetailBodyHtml({ event }),
+          jsonLd: [
+            event.date ? {
+              '@context': 'https://schema.org',
+              '@type': 'Event',
+              name: titleEn,
+              description: descEn.slice(0, 300),
+              startDate: new Date(event.date).toISOString(),
+              url: canonicalUrl,
+              ...(event.imageUrl ? { image: [event.imageUrl] } : {}),
+              ...(locationName ? { location: { '@type': 'Place', name: locationName, address: locationName } } : {}),
+              organizer: { '@type': 'Organization', name: 'Meenkodi Tamil Heritage Foundation', url: BASE_URL },
+            } : null,
+            breadcrumbLd([{ name: 'Events', url: `${BASE_URL}/events` }, { name: titleEn, url: canonicalUrl }]),
+          ],
         });
       } else {
         sendSsr(res, {
           title: 'Event | Meenkodi Tamil Heritage',
           description: 'Tamil heritage events on Meenkodi.',
-          canonicalUrl: `${BASE_URL}/events/${req.params.id}`,
+          canonicalUrl,
           bodyHtml: '<main><h1>Event — Meenkodi Tamil Heritage</h1><p><a href="/events">Back to events</a></p></main>',
+          jsonLd: [],
         });
       }
     } catch (err) {
       console.error('[SSR] Event detail error:', err);
-      sendSsr(res, { canonicalUrl: `${BASE_URL}/events/${req.params.id}`, bodyHtml: '<main><h1>Event — Meenkodi Tamil Heritage</h1></main>' });
+      sendSsr(res, { canonicalUrl, bodyHtml: '<main><h1>Event — Meenkodi Tamil Heritage</h1></main>', jsonLd: [] });
     }
   });
 
@@ -5353,15 +5484,11 @@ if (fs.existsSync(clientIndex)) {
       description: 'Explore Tamil heritage across eight categories: Dravidian temples, Sangam literature, classical dance, traditional foods, festivals, clothing, ancient science, and the Five Tamil Lands.',
       canonicalUrl: `${BASE_URL}/explore`,
       bodyHtml: buildExploreBodyHtml(),
+      jsonLd: [breadcrumbLd([{ name: 'Explore', url: `${BASE_URL}/explore` }])],
     });
   });
 
-  // ── Content detail pages (title, description and preview image from the DB) ──
-  const pickText = (field) => (!field ? '' : typeof field === 'string' ? field : (field.en || field.ta || ''));
-  const mainImage = (doc) => doc.coverPhoto || doc.imageUrl || doc.image || doc.imageLink || '';
-  const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const byId = (Model) => (id) => (mongoose.isValidObjectId(id) ? Model.findById(id).lean() : null);
-
+  // ── Content detail pages (full text, preview image and schema from the DB) ──
   const DETAIL_PAGES = [
     {
       path: '/seeds-and-footprints/folders/:id', find: byId(ResearchFolder),
@@ -5382,8 +5509,8 @@ if (fs.existsSync(clientIndex)) {
         ? Land.findById(id).lean()
         : Land.findOne({ type: { $regex: new RegExp(`^${escapeRegex(id)}$`, 'i') } }).lean()),
     },
-    { path: '/dynasties/:id', find: (slug) => Dynasty.findOne({ slug }).lean(), section: 'Tamil Dynasties', back: '/' },
-    { path: '/poets/:id', find: (slug) => Poet.findOne({ slug }).lean(), section: 'Tamil Poets', back: '/' },
+    { path: '/dynasties/:id', find: (slug) => Dynasty.findOne({ slug }).lean(), section: 'Tamil Dynasties' },
+    { path: '/poets/:id', find: (slug) => Poet.findOne({ slug }).lean(), section: 'Tamil Poets' },
     { path: '/resources/:id', find: byId(Resource), section: 'Resources', back: '/resources', name: (d) => pickText(d.title) },
   ];
 
@@ -5397,45 +5524,84 @@ if (fs.existsSync(clientIndex)) {
         console.error(`[SSR] ${page.path} error:`, err);
       }
       if (!doc) {
-        return sendSsr(res, { canonicalUrl, title: `${page.section} | Meenkodi Tamil Heritage` });
+        return sendSsr(res, { canonicalUrl, title: `${page.section} | Meenkodi Tamil Heritage`, jsonLd: [] });
       }
       const name = (page.name ? page.name(doc) : pickText(doc.name)) || page.section;
-      const description = pickText(doc.description);
+      const description = metaDescription(pickText(doc.description), `${name} — ${page.section} on Meenkodi, preserving 5000+ years of Tamil heritage.`);
       const image = page.image ? page.image(doc) : mainImage(doc);
+      const photos = page.photos ? page.photos(doc) : [];
+      const { sections, facts } = pageContent(doc);
+      const trail = page.back
+        ? [{ name: page.section, url: `${BASE_URL}${page.back}` }, { name, url: canonicalUrl }]
+        : [{ name, url: canonicalUrl }];
       sendSsr(res, {
         title: `${name} | ${page.section} | Meenkodi`,
-        description: metaDescription(description, `${name} — ${page.section} on Meenkodi, preserving 5000+ years of Tamil heritage.`),
+        description,
         canonicalUrl,
         image,
         type: 'article',
         bodyHtml: buildDetailBodyHtml({
           heading: name,
-          description,
           image,
-          photos: page.photos ? page.photos(doc) : [],
+          facts,
+          sections,
+          photos,
           backHref: page.back,
           backLabel: page.section,
         }),
+        jsonLd: [
+          page.photos
+            ? imageGalleryLd({ url: canonicalUrl, name, description, photos })
+            : articleLd({ url: canonicalUrl, headline: name, description, image, datePublished: doc.createdAt, dateModified: doc.updatedAt }),
+          breadcrumbLd(trail),
+        ],
       });
     });
   }
 
-  // ── Section list pages ──────────────────────────────────────────────────────
+  // ── Section list pages (with links to every item) ─────────────────────────
   const LIST_PAGES = [
-    ['/seeds-and-footprints', 'Seeds & Footprints — Tamil Heritage Research Collections | Meenkodi', 'Photo collections tracing the seeds and footprints of Tamil people, Pallar and Mallar heritage across Tamil Nadu and the world.'],
-    ['/explore/temples', 'Tamil Temples & Dravidian Architecture | Meenkodi', 'Explore ancient Tamil temples and Dravidian architecture — history, legends and photos on Meenkodi.'],
-    ['/explore/foods', 'Traditional Tamil Foods & Cuisine | Meenkodi', 'Discover traditional Tamil foods, their history and cultural meaning on Meenkodi.'],
-    ['/explore/festivals', 'Tamil Festivals & Celebrations | Meenkodi', 'Tamil festivals and celebrations — Pongal, Chithirai and more — with their history on Meenkodi.'],
-    ['/explore/literature', 'Sangam & Tamil Literature | Meenkodi', 'Explore Sangam literature and classical Tamil works on Meenkodi.'],
-    ['/explore/dance', 'Tamil Dance & Performing Arts | Meenkodi', 'Classical and folk Tamil dance forms and performing arts on Meenkodi.'],
-    ['/explore/clothing', 'Traditional Tamil Clothing | Meenkodi', 'Traditional Tamil clothing and textiles through history on Meenkodi.'],
-    ['/explore/ancientscience', 'Ancient Tamil Science & Technology | Meenkodi', 'Ancient Tamil science, astronomy, medicine and technology on Meenkodi.'],
-    ['/resources', 'Tamil Heritage Books & Resources | Meenkodi', 'Books, PDFs and research resources on Tamil history and heritage on Meenkodi.'],
-    ['/faq', 'FAQ — Tamil Heritage & Meenkodi | Frequently Asked Questions', 'Answers to common questions about Meenkodi and Tamil heritage.'],
+    { path: '/seeds-and-footprints', title: 'Seeds & Footprints — Tamil Heritage Research Collections | Meenkodi', description: 'Photo collections tracing the seeds and footprints of Tamil people, Pallar and Mallar heritage across Tamil Nadu and the world.', name: 'Seeds & Footprints',
+      list: async () => (await ResearchFolder.find().sort({ order: 1, createdAt: -1 }).select('name coverPhoto').lean())
+        .map((f) => ({ href: `/seeds-and-footprints/folders/${f._id}`, title: pickText(f.name), image: f.coverPhoto })) },
+    { path: '/explore/temples', title: 'Tamil Temples & Dravidian Architecture | Meenkodi', description: 'Explore ancient Tamil temples and Dravidian architecture — history, legends and photos on Meenkodi.', name: 'Tamil Temples', model: Temple },
+    { path: '/explore/foods', title: 'Traditional Tamil Foods & Cuisine | Meenkodi', description: 'Discover traditional Tamil foods, their history and cultural meaning on Meenkodi.', name: 'Tamil Foods', model: Food },
+    { path: '/explore/festivals', title: 'Tamil Festivals & Celebrations | Meenkodi', description: 'Tamil festivals and celebrations — Pongal, Chithirai and more — with their history on Meenkodi.', name: 'Tamil Festivals', model: Festival },
+    { path: '/explore/literature', title: 'Sangam & Tamil Literature | Meenkodi', description: 'Explore Sangam literature and classical Tamil works on Meenkodi.', name: 'Tamil Literature', model: Literature },
+    { path: '/explore/dance', title: 'Tamil Dance & Performing Arts | Meenkodi', description: 'Classical and folk Tamil dance forms and performing arts on Meenkodi.', name: 'Tamil Dance', model: Dance },
+    { path: '/explore/clothing', title: 'Traditional Tamil Clothing | Meenkodi', description: 'Traditional Tamil clothing and textiles through history on Meenkodi.', name: 'Traditional Tamil Clothing', model: Clothing },
+    { path: '/explore/ancientscience', title: 'Ancient Tamil Science & Technology | Meenkodi', description: 'Ancient Tamil science, astronomy, medicine and technology on Meenkodi.', name: 'Ancient Tamil Science', model: AncientScience },
+    { path: '/resources', title: 'Tamil Heritage Books & Resources | Meenkodi', description: 'Books, PDFs and research resources on Tamil history and heritage on Meenkodi.', name: 'Resources',
+      list: async () => (await Resource.find().sort({ createdAt: -1 }).select('title image').lean())
+        .map((r) => ({ href: `/resources/${r._id}`, title: pickText(r.title), image: r.image })) },
+    { path: '/faq', title: 'FAQ — Tamil Heritage & Meenkodi | Frequently Asked Questions', description: 'Answers to common questions about Meenkodi and Tamil heritage.', name: 'FAQ' },
   ];
-  for (const [listPath, title, description] of LIST_PAGES) {
-    app.get(listPath, (req, res) => {
-      sendSsr(res, { title, description, canonicalUrl: `${BASE_URL}${listPath}`, bodyHtml: `<main><h1>${title.replace(/&/g, '&amp;')}</h1><p>${description}</p></main>` });
+  for (const page of LIST_PAGES) {
+    app.get(page.path, async (req, res) => {
+      const canonicalUrl = `${BASE_URL}${page.path}`;
+      let items = [];
+      try {
+        if (page.list) {
+          items = await page.list();
+        } else if (page.model) {
+          items = (await page.model.find().sort({ createdAt: -1 }).select('name title image imageUrl imageLink').lean())
+            .map((d) => ({ href: `${page.path}/${d._id}`, title: pickText(d.name) || pickText(d.title), image: mainImage(d) }));
+        }
+      } catch (err) {
+        console.error(`[SSR] ${page.path} list error:`, err);
+      }
+      items = items.filter((i) => i.title);
+      sendSsr(res, {
+        title: page.title,
+        description: page.description,
+        canonicalUrl,
+        image: items.find((i) => i.image)?.image,
+        bodyHtml: buildDetailBodyHtml({ heading: page.title, sections: [{ en: page.description }], items }),
+        jsonLd: [
+          items.length ? collectionLd({ url: canonicalUrl, name: page.title, description: page.description, items }) : null,
+          breadcrumbLd([{ name: page.name, url: canonicalUrl }]),
+        ],
+      });
     });
   }
 
