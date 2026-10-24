@@ -90,10 +90,14 @@ export default function SeedsFootprints({ user }) {
       setLoading(true);
     }
     fetch(`${API_BASE_URL}/api/seedsandfootprints/folders`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (!mounted) return;
-        setFolders(data || []);
+        // Never put an error object into the module cache
+        setFolders(Array.isArray(data) ? data : []);
       })
       .catch((err) => console.error('Failed to fetch research folders', err))
       .finally(() => mounted && setLoading(false));

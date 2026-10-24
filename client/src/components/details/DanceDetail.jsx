@@ -184,7 +184,7 @@ function DanceDetail({ user: initialUser }) {
       const toStr = (val) => {
         if (!val) return "";
         if (typeof val === 'string') return val;
-        if (typeof val === 'object') return val.en || val.ta || "";
+        if (typeof val === 'object') return val.en || "";
         return "";
       };
       const toTa = (val) => {
@@ -244,8 +244,8 @@ function DanceDetail({ user: initialUser }) {
           ...rest,
           subtitle: toBilingual(subtitle_en, subtitle_ta),
           content: toBilingual(content_en, content_ta),
-          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
-          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+          videoTitle: videoTitle_en || videoTitle_ta || "",
+          videoDescription: videoDescription_en || videoDescription_ta || ""
         };
       });
       const updateData = {
@@ -357,8 +357,8 @@ function DanceDetail({ user: initialUser }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: dance.name,
-          text: dance.description,
+          title: getContent(dance.name),
+          text: getContent(dance.description),
           url: window.location.href,
         });
       } catch (err) {
@@ -1349,12 +1349,12 @@ function DanceDetail({ user: initialUser }) {
                 if (navigator.share) {
                   navigator
                     .share({
-                      title: `Learn about ${dance?.name || "this dance"}`,
-                      text: `Check out this fascinating article about ${dance?.name || "this dance"
+                      title: `Learn about ${getContent(dance?.name) || "this dance"}`,
+                      text: `Check out this fascinating article about ${getContent(dance?.name) || "this dance"
                         }`,
                       url: window.location.href,
                     })
-                    .catch(console.error);
+                    .catch(() => {});
                 } else {
                   navigator.clipboard
                     .writeText(window.location.href)

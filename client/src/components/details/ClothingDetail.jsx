@@ -51,6 +51,7 @@ function ClothingDetail({ user: initialUser }) {
   const [clothing, setClothing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -134,17 +135,17 @@ function ClothingDetail({ user: initialUser }) {
 
   // Update userLiked when user data becomes available
   useEffect(() => {
-    if (user && clothing) {
-      const likesArray = Array.isArray(clothing.likes) ? clothing.likes : [];
-      setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
+    if (user && clothing && Array.isArray(clothing.likes)) {
+      setUserLiked(clothing.likes.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
     }
-  }, [user, clothing]);
+  }, [user?._id, clothing]);
 
 
   const fetchClothing = async () => {
 
     try {
       setLoading(true);
+      setError("");
       const res = await fetchPrefetched(`${API_BASE_URL}/api/clothing/${id}`);
       if (!res.ok) {
         throw new Error("Clothing not found");
@@ -152,16 +153,17 @@ function ClothingDetail({ user: initialUser }) {
       const data = await res.json();
       setClothing(data);
       setComments(data.comments || []);
-      // Handle likes - ensure it's an array and check if user liked
-      const likesArray = Array.isArray(data.likes) ? data.likes : [];
-      setLikes(likesArray.length);
-      setUserLiked(likesArray.some(likeId => likeId.toString() === user?._id?.toString()) || false);
+      // Handle likes - server returns a count plus userLiked
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+      setUserLiked(Array.isArray(data.likes) && !data.userLiked
+        ? data.likes.some(likeId => likeId.toString() === user?._id?.toString())
+        : !!data.userLiked);
 
       // Set editable data with all fields including contentSections
       const toStr = (val) => {
         if (!val) return "";
         if (typeof val === 'string') return val;
-        if (typeof val === 'object') return val.en || val.ta || "";
+        if (typeof val === 'object') return val.en || "";
         return "";
       };
       const toTa = (val) => {
@@ -226,8 +228,8 @@ function ClothingDetail({ user: initialUser }) {
       }
 
       const data = await res.json();
-      setLikes(data.likes);
-      setUserLiked(data.userLiked);
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+      setUserLiked(!!data.userLiked);
     } catch (err) {
       console.error("Like error:", err);
       alert("Failed to like the clothing");
@@ -296,7 +298,11 @@ function ClothingDetail({ user: initialUser }) {
       }
 
       const data = await res.json();
-      setComments(data.comments);
+      if (Array.isArray(data.comments)) {
+        setComments(data.comments);
+      } else if (data.comment) {
+        setComments(prev => prev.map(c => c._id === commentId ? data.comment : c));
+      }
       setNewReply("");
       setReplyingTo(null);
     } catch (err) {
@@ -452,9 +458,9 @@ function ClothingDetail({ user: initialUser }) {
       // Refresh data
       await fetchClothing();
       setIsEditing(false);
-      setError("");
+      setSaveError("");
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     }
   };
 
@@ -463,10 +469,10 @@ function ClothingDetail({ user: initialUser }) {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: clothing.name,
-        text: clothing.description,
+        title: getContent(clothing.name),
+        text: getContent(clothing.description),
         url: window.location.href,
-      });
+      }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
@@ -562,7 +568,7 @@ function ClothingDetail({ user: initialUser }) {
                 const toStr = (val) => {
                   if (!val) return "";
                   if (typeof val === 'string') return val;
-                  if (typeof val === 'object') return val.en || val.ta || "";
+                  if (typeof val === 'object') return val.en || "";
                   return "";
                 };
                 const toTa = (val) => {
@@ -1216,6 +1222,11 @@ function ClothingDetail({ user: initialUser }) {
                   Update Clothing
                 </Button>
               </Box>
+              {saveError && (
+                <Alert severity="error" onClose={() => setSaveError("")} sx={{ borderRadius: 0, mt: 2 }}>
+                  {saveError}
+                </Alert>
+              )}
             </Box>
           )}
         </Box>

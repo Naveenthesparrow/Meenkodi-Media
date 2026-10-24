@@ -18,7 +18,8 @@ import {
   CircularProgress,
   Alert,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  Snackbar
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import Add from "@mui/icons-material/Add";
@@ -51,6 +52,9 @@ export default function Resources({ user }) {
   const resources = resourcesRaw;
   const [loading, setLoading] = useState(!cachedResourcesData);
   const [error, setError] = useState(null);
+  // Save errors show inside the dialog (typed data stays); delete errors as a toast
+  const [dialogError, setDialogError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editLanguage, setEditLanguage] = useState('ta');
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
@@ -120,6 +124,7 @@ export default function Resources({ user }) {
       pdfName: '',
       pdfSize: '',
     });
+    setDialogError(null);
     setOpenDialog(true);
   };
 
@@ -140,6 +145,7 @@ export default function Resources({ user }) {
       pdfName: resource.pdfName || '',
       pdfSize: resource.pdfSize || '',
     });
+    setDialogError(null);
     setOpenDialog(true);
   };
 
@@ -182,7 +188,7 @@ export default function Resources({ user }) {
 
       setOpenDialog(false);
     } catch (err) {
-      setError(err.message);
+      setDialogError(err.message);
     }
   };
 
@@ -224,7 +230,7 @@ export default function Resources({ user }) {
 
         setResources(resources.filter(resource => resource._id !== id));
       } catch (err) {
-        setError(err.message);
+        setActionError(err.message);
       }
     }
   };
@@ -721,6 +727,7 @@ export default function Resources({ user }) {
             {currentResource._id ? t('resources.edit', 'Edit Resource') : t('resources.addNew', 'Add New Resource')}
           </DialogTitle>
           <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+            {dialogError && <Alert severity="error" sx={{ mt: 2, mb: 2 }}>{dialogError}</Alert>}
             {/* Language Toggle */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
               <Typography
@@ -901,6 +908,17 @@ export default function Resources({ user }) {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Snackbar
+          open={!!actionError}
+          autoHideDuration={6000}
+          onClose={() => setActionError(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+            {actionError}
+          </Alert>
+        </Snackbar>
 
         {/* Back Button */}
         <Box sx={{ mt: 6, mb: 4, textAlign: 'center' }}>

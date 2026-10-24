@@ -16,6 +16,7 @@ import {
   Paper,
   Grid,
   Container,
+  Snackbar,
 } from "@mui/material";
 import Favorite from "@mui/icons-material/Favorite";
 import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
@@ -66,6 +67,8 @@ export default function GalleryDetail({ user }) {
   });
   const [loading, setLoading] = useState(!hasCachedDetails);
   const [error, setError] = useState(null);
+  // Errors from save/delete/validation: shown as a toast so the page (and unsaved edits) stay
+  const [actionError, setActionError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState(() => {
     const data = cachedAllGalleryItems ? cachedAllGalleryItems.find(item => item._id === id) : null;
@@ -114,6 +117,8 @@ export default function GalleryDetail({ user }) {
   };
 
   useEffect(() => {
+    // Ignore responses that arrive after the user moved to another photo
+    let active = true;
     const resolveSiblings = (allData, currentItem) => {
       const normalize = (value) => (value || '').toString().trim().toLowerCase();
       
@@ -176,14 +181,18 @@ export default function GalleryDetail({ user }) {
 
         // Fetch details silently in background to keep fresh
         fetch(`${API_BASE_URL}/api/gallery/${id}`)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("Failed to fetch gallery item");
+            return res.json();
+          })
           .then(freshData => {
+            if (!active || !cachedAllGalleryItems) return;
             setGalleryItem(freshData);
             // Update item in our cachedAllGalleryItems array
             cachedAllGalleryItems = cachedAllGalleryItems.map(item => item._id === freshData._id ? freshData : item);
           })
           .catch(err => console.error("Silent background refetch failed:", err));
-        return;
+        return () => { active = false; };
       }
     }
 
@@ -198,6 +207,7 @@ export default function GalleryDetail({ user }) {
       })
       .then((data) => {
         if (data.error) throw new Error(data.error);
+        if (!active) return;
         setGalleryItem(data);
 
         // Prepare editable data
@@ -223,7 +233,9 @@ export default function GalleryDetail({ user }) {
         return fetch(`${API_BASE_URL}/api/gallery`)
           .then((res) => res.json())
           .then((allData) => {
+            if (!Array.isArray(allData)) throw new Error("Failed to fetch gallery items");
             cachedAllGalleryItems = allData;
+            if (!active) return;
             const siblings = resolveSiblings(allData, data);
             setSiblingPhotos(siblings);
             setLoading(false);
@@ -231,9 +243,11 @@ export default function GalleryDetail({ user }) {
       })
       .catch((err) => {
         console.error("Error loading gallery item details:", err);
+        if (!active) return;
         setError("Failed to load gallery item details");
         setLoading(false);
       });
+    return () => { active = false; };
   }, [id, i18n.language]);
 
   // Sibling next/prev calculations
@@ -268,9 +282,9 @@ export default function GalleryDetail({ user }) {
 
   const handleSave = async () => {
     setSubmitting(true);
-    setError(null);
+    setActionError(null);
     if (!editableData.name_en.trim()) {
-      setError("Name (English) is required");
+      setActionError("Name (English) is required");
       setSubmitting(false);
       return;
     }
@@ -319,7 +333,7 @@ export default function GalleryDetail({ user }) {
       // Ideally refresh data here
       window.location.reload();
     } catch (err) {
-      setError(err.message || "Failed to update gallery item");
+      setActionError(err.message || "Failed to update gallery item");
     } finally {
       setSubmitting(false);
     }
@@ -328,13 +342,18 @@ export default function GalleryDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this gallery item?")) {
       try {
-        await fetch(`${API_BASE_URL}/api/gallery/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/gallery/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
+        if (!res.ok) throw new Error("Failed to delete gallery item");
+        // Drop it from the cache so prev/next and the cached view don't show it again
+        if (cachedAllGalleryItems) {
+          cachedAllGalleryItems = cachedAllGalleryItems.filter(item => item._id !== id);
+        }
         navigate(`/gallery`);
       } catch {
-        setError("Failed to delete gallery item");
+        setActionError("Failed to delete gallery item");
       }
     }
   };
@@ -364,6 +383,19 @@ export default function GalleryDetail({ user }) {
     // You can add API call here to persist likes to the server
   };
 
+  const actionErrorToast = (
+    <Snackbar
+      open={!!actionError}
+      autoHideDuration={6000}
+      onClose={() => setActionError(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    >
+      <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+        {actionError}
+      </Alert>
+    </Snackbar>
+  );
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '85vh' }}>
@@ -390,6 +422,7 @@ export default function GalleryDetail({ user }) {
   if (isEditing) {
     return (
       <Container maxWidth="lg" sx={{ py: 6 }}>
+        {actionErrorToast}
         <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
             <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
@@ -574,6 +607,7 @@ export default function GalleryDetail({ user }) {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", p: 2 }}>
+      {actionErrorToast}
       {/* SEO Optimization */}
       <SEO 
         title={seoTitle}

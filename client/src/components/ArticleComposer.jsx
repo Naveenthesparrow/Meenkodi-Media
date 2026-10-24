@@ -146,8 +146,13 @@ export default function ArticleComposer({ user, onPostCreated }) {
       if (!response.ok) throw new Error(data.error || 'Upload failed');
 
       const imageUrl = data.imageUrl || data.fullPath;
-      const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
-      setImage(`${API_BASE_URL}${normalizedUrl}`);
+      // Cloudinary returns a full https URL - use it as-is
+      if (/^https?:\/\//i.test(imageUrl)) {
+        setImage(imageUrl);
+      } else {
+        const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
+        setImage(`${API_BASE_URL}${normalizedUrl}`);
+      }
     } catch (err) {
       setError(err.message);
       setImagePreview('');
@@ -321,15 +326,13 @@ export default function ArticleComposer({ user, onPostCreated }) {
   };
 
   const handleSubmit = async () => {
-    const currentTitle = composerLanguage === 'en' ? titleEn : titleTa;
-    const currentContent = composerLanguage === 'en' ? contentEn : contentTa;
-
-    if (!currentTitle.trim()) {
+    // Both languages are sent; at least one of them must be filled in
+    if (!titleEn.trim() && !titleTa.trim()) {
       setError(t('articles.error.titleRequired', 'Title is required'));
       return;
     }
 
-    if (!currentContent.trim()) {
+    if (!contentEn.trim() && !contentTa.trim()) {
       setError(t('articles.error.contentRequired', 'Content is required'));
       return;
     }
@@ -343,14 +346,8 @@ export default function ArticleComposer({ user, onPostCreated }) {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          title: { 
-            en: composerLanguage === 'en' ? titleEn : '', 
-            ta: composerLanguage === 'ta' ? titleTa : '' 
-          },
-          content: { 
-            en: composerLanguage === 'en' ? contentEn : '', 
-            ta: composerLanguage === 'ta' ? contentTa : '' 
-          },
+          title: { en: titleEn, ta: titleTa },
+          content: { en: contentEn, ta: contentTa },
           image,
           videoUrl,
           socialMediaLink,

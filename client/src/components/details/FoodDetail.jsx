@@ -48,7 +48,7 @@ import cldImg from "../../utils/cloudinaryImage";
 const toStr = (val) => {
   if (!val) return "";
   if (typeof val === 'string') return val;
-  if (typeof val === 'object') return val.en || val.ta || "";
+  if (typeof val === 'object') return val.en || "";
   return "";
 };
 const toTa = (val) => {
@@ -65,6 +65,7 @@ function FoodDetail({ user: initialUser }) {
   const [food, setFood] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [saveError, setSaveError] = useState("");
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -150,16 +151,16 @@ function FoodDetail({ user: initialUser }) {
 
   // Update userLiked when user data becomes available
   useEffect(() => {
-    if (user && food) {
-      const likesArray = Array.isArray(food.likes) ? food.likes : [];
-      setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
+    if (user && food && Array.isArray(food.likes)) {
+      setUserLiked(food.likes.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
     }
-  }, [user, food]);
+  }, [user?._id, food]);
 
 
   const fetchFood = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetchPrefetched(`${API_BASE_URL}/api/foods/${id}`);
       if (!res.ok) {
         throw new Error("Food not found");
@@ -201,10 +202,11 @@ function FoodDetail({ user: initialUser }) {
         }))
       });
       setComments(data.comments || []);
-      // Handle likes - ensure it's an array and check if user liked
-      const likesArray = Array.isArray(data.likes) ? data.likes : [];
-      setLikes(likesArray.length);
-      setUserLiked(likesArray.some(likeId => likeId.toString() === user?._id?.toString()) || false);
+      // Handle likes - server returns a count plus userLiked
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+      setUserLiked(Array.isArray(data.likes) && !data.userLiked
+        ? data.likes.some(likeId => likeId.toString() === user?._id?.toString())
+        : !!data.userLiked);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -233,8 +235,8 @@ function FoodDetail({ user: initialUser }) {
       }
 
       const data = await res.json();
-      setLikes(data.likes);
-      setUserLiked(data.userLiked);
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+      setUserLiked(!!data.userLiked);
     } catch (err) {
       console.error("Like error:", err);
       alert("Failed to like the food");
@@ -429,8 +431,8 @@ function FoodDetail({ user: initialUser }) {
         return {
           subtitle: { en: subtitle_en || "", ta: subtitle_ta || "" },
           content: { en: content_en || "", ta: content_ta || "" },
-          videoTitle: (videoTitle_en || videoTitle_ta) ? { en: videoTitle_en || "", ta: videoTitle_ta || "" } : undefined,
-          videoDescription: (videoDescription_en || videoDescription_ta) ? { en: videoDescription_en || "", ta: videoDescription_ta || "" } : undefined,
+          videoTitle: videoTitle_en || videoTitle_ta || "",
+          videoDescription: videoDescription_en || videoDescription_ta || "",
           ...rest
         };
       });
@@ -463,19 +465,19 @@ function FoodDetail({ user: initialUser }) {
       // Update local state with new data
       setFood(prev => ({ ...prev, ...updateData }));
       setIsEditing(false);
-      setError(""); // Clear any previous errors
+      setSaveError(""); // Clear any previous errors
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     }
   };
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: food.name,
-        text: food.description,
+        title: getContent(food.name),
+        text: getContent(food.description),
         url: window.location.href,
-      });
+      }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
@@ -1346,6 +1348,11 @@ function FoodDetail({ user: initialUser }) {
                   Update Food
                 </Button>
               </Box>
+              {saveError && (
+                <Alert severity="error" onClose={() => setSaveError("")} sx={{ borderRadius: 0, mt: 2 }}>
+                  {saveError}
+                </Alert>
+              )}
             </Box>
           )}
 

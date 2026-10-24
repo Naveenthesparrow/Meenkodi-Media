@@ -63,6 +63,8 @@ export default function ResourceDetail({ user }) {
   const [resource, setResource] = useState(() => cachedResourceDetails[id] || null);
   const [loading, setLoading] = useState(!hasCache);
   const [error, setError] = useState(null);
+  // Errors from like/save/delete: shown as a toast so the page (and unsaved edits) stay
+  const [actionError, setActionError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editLanguage, setEditLanguage] = useState('ta');
   const [title_en, setTitleEn] = useState(() => cachedResourceDetails[id]?.title?.en || "");
@@ -163,7 +165,7 @@ export default function ResourceDetail({ user }) {
 
   const handleLike = async () => {
     if (!user) {
-      setError(t('resources.loginToLike', 'Please login to like resources'));
+      setActionError(t('resources.loginToLike', 'Please login to like resources'));
       return;
     }
 
@@ -188,7 +190,7 @@ export default function ResourceDetail({ user }) {
       const data = await response.json();
       setResource((prev) => prev ? { ...prev, likesCount: data.likesCount, userLiked: data.userLiked } : prev);
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     }
   };
 
@@ -219,7 +221,7 @@ export default function ResourceDetail({ user }) {
       setResource(data);
       setEditMode(false);
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -228,13 +230,14 @@ export default function ResourceDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this resource?")) {
       try {
-        await fetch(`${API_BASE_URL}/api/resources/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
+        if (!res.ok) throw new Error("Failed to delete resource");
         navigate(`/resources`);
       } catch {
-        setError("Failed to delete resource");
+        setActionError("Failed to delete resource");
       }
     }
   };
@@ -884,6 +887,16 @@ export default function ResourceDetail({ user }) {
         message={snackbarMsg}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
+      <Snackbar
+        open={!!actionError}
+        autoHideDuration={6000}
+        onClose={() => setActionError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+          {actionError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

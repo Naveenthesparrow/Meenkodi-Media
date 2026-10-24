@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -27,7 +27,6 @@ export default function MyArticles({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [serverReady, setServerReady] = useState(false);
-  const queued = useRef([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,8 +35,6 @@ export default function MyArticles({ user }) {
         const res = await fetch(`${API_BASE_URL}/api/health`, { cache: 'no-cache', credentials: 'include' });
         if (!cancelled && res.ok) {
           setServerReady(true);
-          queued.current.forEach(fn => fn());
-          queued.current = [];
           return;
         }
       } catch (e) {
@@ -71,6 +68,11 @@ export default function MyArticles({ user }) {
       setLoading(false);
     }
   };
+
+  // Load the list once the server is reachable (and again if the user changes)
+  useEffect(() => {
+    if (serverReady && user) fetchMyArticles();
+  }, [serverReady, user]);
 
   const getStatusConfig = (status) => {
     switch (status) {

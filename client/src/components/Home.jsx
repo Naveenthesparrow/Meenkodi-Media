@@ -663,7 +663,7 @@ function getRandomFactIndex() {
   return Math.floor(Math.random() * FACTS.length);
 }
 
-export default function Home() {
+export default function Home({ user = null }) {
   const getContent = useBilingualContent();
 
   // Save scroll position before navigating to detail pages
@@ -710,7 +710,6 @@ export default function Home() {
   const libraryRef = useRef(null);
   const directorsRef = useRef(null);
   const [directors, setDirectors] = useState([]);
-  const [user, setUser] = useState(null);
   const [directorsLoading, setDirectorsLoading] = useState(true);
   const [editingDirector, setEditingDirector] = useState(null);
   const [directorsSectionVisible, setDirectorsSectionVisible] = useState(false);
@@ -884,35 +883,6 @@ export default function Home() {
       setMeenkodiSrc(canvas.toDataURL('image/png'));
     };
     baseImage.onerror = () => setMeenkodiSrc(MeenkodiImage);
-  }, []);
-
-  // Fetch current user for admin functionality
-  useEffect(() => {
-    fetch('/auth/user', { credentials: 'include' })
-      .then(res => {
-        // 401 just means the visitor isn't logged in — treat as guest
-        if (res.status === 401) return null;
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (!data) {
-          setUser(null);
-          return;
-        }
-        console.log('Home.jsx - User fetched:', data);
-        // API returns user object directly, not wrapped
-        if (data && data._id) {
-          setUser(data);
-          console.log('Home.jsx - User role:', data.role);
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching user:', err);
-        setUser(null);
-      });
   }, []);
 
   // Fetch directors from API
@@ -2812,7 +2782,7 @@ export default function Home() {
                             e.preventDefault();
                           e.stopPropagation();
                             saveScrollPosition();
-                            navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}?edit=true`);
+                            navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}`, { state: { openEdit: true } });
                           }}
                         >
                           <Edit fontSize="small" />
@@ -2947,7 +2917,7 @@ export default function Home() {
                           e.preventDefault();
                           e.stopPropagation();
                           saveScrollPosition();
-                          navigate(`/dynasties/${TEAM_MUSEUM[4].slug}?edit=true`);
+                          navigate(`/dynasties/${TEAM_MUSEUM[4].slug}`, { state: { openEdit: true } });
                         }}
                       >
                         <Edit fontSize="small" />

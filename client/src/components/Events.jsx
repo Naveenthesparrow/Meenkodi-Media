@@ -18,7 +18,8 @@ import {
   CircularProgress,
   Alert,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  Snackbar
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import Add from "@mui/icons-material/Add";
@@ -49,6 +50,9 @@ export default function Events({ user }) {
   const events = eventsRaw;
   const [loading, setLoading] = useState(!cachedEventsData);
   const [error, setError] = useState(null);
+  // Save errors show inside the dialog (typed data stays); delete errors as a toast
+  const [dialogError, setDialogError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editLanguage, setEditLanguage] = useState('ta');
   const [currentEvent, setCurrentEvent] = useState({
@@ -121,11 +125,13 @@ export default function Events({ user }) {
       videoLink: '',
       videoUrl: '',
     });
+    setDialogError(null);
     setOpenDialog(true);
   };
 
   const handleEdit = (event) => {
     setCurrentEvent(event);
+    setDialogError(null);
     setOpenDialog(true);
   };
 
@@ -159,7 +165,7 @@ export default function Events({ user }) {
 
       setOpenDialog(false);
     } catch (err) {
-      setError(err.message);
+      setDialogError(err.message);
     }
   };
 
@@ -177,7 +183,7 @@ export default function Events({ user }) {
 
         setEvents(events.filter(event => event._id !== id));
       } catch (err) {
-        setError(err.message);
+        setActionError(err.message);
       }
     }
   };
@@ -361,6 +367,7 @@ export default function Events({ user }) {
           {currentEvent._id ? t('events.edit', 'Edit Event') : t('events.addNew', 'Add New Event')}
         </DialogTitle>
         <DialogContent sx={{ p: 3, maxHeight: '90vh', overflow: 'auto' }}>
+          {dialogError && <Alert severity="error" sx={{ mt: 2 }}>{dialogError}</Alert>}
           <Box sx={{ mb: 4, mt: 2, display: 'flex', justifyContent: 'center' }}>
             <ToggleButtonGroup
               value={editLanguage}
@@ -480,6 +487,17 @@ export default function Events({ user }) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!actionError}
+        autoHideDuration={6000}
+        onClose={() => setActionError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+          {actionError}
+        </Alert>
+      </Snackbar>
 
       {/* Back Button */}
       <Box sx={{ mt: 6, mb: 4, textAlign: 'center' }}>

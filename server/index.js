@@ -1,4 +1,5 @@
 import express from "express";
+import crypto from "crypto";
 import { fileURLToPath } from 'url';
 import session from "express-session";
 import passport from "passport";
@@ -54,6 +55,32 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Express 4 doesn't catch errors thrown by async route handlers, and an
+// unhandled rejection exits Node (e.g. GET /api/articles/abc -> CastError ->
+// whole server down). Route every handler's rejected promise to next(err),
+// which the error handler near app.listen turns into a JSON response.
+const forwardAsyncErrors = (fn) => {
+  // Leave error middleware (4 args) and mounted sub-apps/routers untouched
+  if (typeof fn !== 'function' || fn.length > 3 || fn.handle) return fn;
+  return function (req, res, next) {
+    const result = fn.call(this, req, res, next);
+    if (result && typeof result.catch === 'function') result.catch(next);
+    return result;
+  };
+};
+for (const method of ['get', 'post', 'put', 'patch', 'delete', 'all', 'use']) {
+  const original = app[method].bind(app);
+  app[method] = (...args) => {
+    // app.get('setting') with a single argument reads a setting
+    if (method === 'get' && args.length === 1) return original(...args);
+    return original(...args.map((arg) => (Array.isArray(arg) ? arg.map(forwardAsyncErrors) : forwardAsyncErrors(arg))));
+  };
+}
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+});
+
 app.set('trust proxy', 1);
 
 app.use(express.json());
@@ -65,8 +92,10 @@ const allowedOrigins = [
   "http://localhost:5000",
   "https://www.meenkodi.com",
   "https://meenkodi-media-fd.onrender.com",
-  process.env.CLIENT_URL
-].filter(Boolean);
+  "https://meenkodi-media-layr.onrender.com",
+  process.env.CLIENT_URL,
+  process.env.BACKEND_URL
+].filter(Boolean).map((o) => o.replace(/\/+$/, ''));
 
 app.use(
   cors({
@@ -97,11 +126,9 @@ app.use(
           const url = new URL(origin);
           const hostname = url.hostname.toLowerCase();
 
+          // Only our own hosts. (Any *.onrender.com was allowed before, which let
+          // any site hosted on Render make logged-in requests as our users.)
           if (hostname === 'www.meenkodi.com' || hostname === 'meenkodi.com') {
-            return callback(null, true);
-          }
-
-          if (hostname.endsWith('.onrender.com')) {
             return callback(null, true);
           }
         } catch (e) {
@@ -140,12 +167,20 @@ app.use('/api', (req, res, next) => {
   if (req.method !== 'GET' || req.path.startsWith('/auth') || req.path === '/health') {
     if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
       const pathParts = req.path.split('/').filter(Boolean);
-      if (pathParts.length > 0) {
-        invalidateApiCache(pathParts[0]);
-      } else {
-        invalidateApiCache();
-      }
+      const invalidate = () => (pathParts.length > 0 ? invalidateApiCache(pathParts[0]) : invalidateApiCache());
+      invalidate();
+      // Invalidate again once the write has finished, so a GET that ran during
+      // the write can't keep the old data cached
+      res.on('finish', invalidate);
     }
+    return next();
+  }
+
+  // This runs before session/passport, so login checks haven't happened yet.
+  // Requests with a session cookie can return per-user or admin-only data
+  // (profiles, user lists, drafts, userLiked flags): never cache or share them.
+  if (/(?:^|;\s*)connect\.sid=/.test(req.headers.cookie || '')) {
+    res.setHeader('Cache-Control', 'private, no-store');
     return next();
   }
 
@@ -203,22 +238,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Admin: regenerate all sitemaps from live DB data
-app.post('/api/sitemap/refresh', async (req, res) => {
-  // Allow only admins; skip auth check if called internally during startup
-  if (req.isAuthenticated && req.isAuthenticated() && req.user && !['admin', 'superadmin'].includes(req.user.role)) {
-    return res.status(403).json({ error: 'Admin only' });
-  }
-  try {
-    console.log('[Sitemap] Refresh triggered by', req.user ? req.user.email : 'system');
-    const result = await generateAllSitemaps();
-    res.json({ success: true, generated: result.generated });
-  } catch (err) {
-    console.error('[Sitemap] Refresh error:', err);
-    res.status(500).json({ error: 'Sitemap generation failed', details: err.message });
-  }
-});
-
 // Serve robots.txt and sitemap.xml explicitly from the public folder (fallback + logging)
 app.get('/robots.txt', (req, res) => {
   console.log('Serving robots.txt for', req.hostname, req.originalUrl);
@@ -273,7 +292,12 @@ import MongoStore from "connect-mongo";
 // Session configuration
 
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "fallback-secret-key",
+  // A fixed fallback secret would let anyone forge session cookies, so use a
+  // random one when SESSION_SECRET is missing (sessions then reset on restart)
+  secret: process.env.SESSION_SECRET || (() => {
+    console.warn('⚠️ SESSION_SECRET is not set - using a random secret; logins will reset on every restart');
+    return crypto.randomBytes(32).toString('hex');
+  })(),
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -435,8 +459,6 @@ app.get(
   },
   (req, res) => {
     console.log("=== OAuth callback success ===");
-    console.log("User:", req.user);
-    console.log("Session ID:", req.sessionID);
     console.log("Is Authenticated:", req.isAuthenticated());
 
     // Ensure session is saved before redirect
@@ -459,11 +481,6 @@ app.get(
 
 app.get("/auth/user", (req, res) => {
   console.log("=== AUTH USER REQUEST ===");
-  console.log("Headers Cookie:", req.headers.cookie);
-  console.log("Session ID (req.sessionID):", req.sessionID);
-  console.log("Session Object (req.session):", req.session);
-  console.log("User in session (req.session.passport):", req.session?.passport);
-  console.log("Req.user:", req.user);
   console.log("Is Authenticated:", req.isAuthenticated());
 
   if (req.user) {
@@ -474,7 +491,6 @@ app.get("/auth/user", (req, res) => {
     console.log("✗ No user found in request, sending 401");
     // Check if session exists but user is missing
     if (req.session && !req.user) {
-      console.log("Session exists but passport user is missing. Session data:", req.session);
     }
     res.status(401).json(null);
   }
@@ -506,9 +522,6 @@ app.get("/auth/failure", (req, res) => {
 
 function ensureAuthenticated(req, res, next) {
   console.log("=== ENSURE AUTHENTICATED DEBUG ===");
-  console.log("Session ID:", req.sessionID);
-  console.log("Session:", req.session);
-  console.log("User:", req.user);
   console.log("Is Authenticated:", req.isAuthenticated());
 
   if (req.isAuthenticated()) {
@@ -540,7 +553,7 @@ const researchStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "meenkodi_research_covers", // Folder in Cloudinary for research covers
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp"],
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp", "gif"],
     transformation: [{ width: 800, height: 600, crop: "fill" }], // Cover photo size
   },
 });
@@ -581,6 +594,37 @@ function ensureSuperAdmin(req, res, next) {
   if (req.isAuthenticated() && req.user.role === "superadmin") return next();
   res.status(403).json({ error: "Super admin access required" });
 }
+
+// Like/unlike in one atomic MongoDB update. Reading the doc, changing the
+// array in JS and saving it back lost likes when two people clicked at once.
+// Returns { likes, liked } or null when the document doesn't exist.
+async function toggleLike(Model, id, userId) {
+  const unliked = await Model.findOneAndUpdate(
+    { _id: id, likes: userId },
+    { $pull: { likes: userId } },
+    { new: true, projection: { likes: 1 } }
+  ).lean();
+  if (unliked) return { likes: unliked.likes || [], liked: false };
+
+  const liked = await Model.findOneAndUpdate(
+    { _id: id },
+    { $addToSet: { likes: userId } },
+    { new: true, projection: { likes: 1 } }
+  ).lean();
+  return liked ? { likes: liked.likes || [], liked: true } : null;
+}
+
+// Admin: regenerate all sitemaps from live DB data
+app.post('/api/sitemap/refresh', ensureAdmin, async (req, res) => {
+  try {
+    console.log('[Sitemap] Refresh triggered by', req.user._id);
+    const result = await generateAllSitemaps();
+    res.json({ success: true, generated: result.generated });
+  } catch (err) {
+    console.error('[Sitemap] Refresh error:', err);
+    res.status(500).json({ error: 'Sitemap generation failed', details: err.message });
+  }
+});
 
 app.get("/api/admin/users", ensureSuperAdmin, async (req, res) => {
   const users = await User.find();
@@ -629,11 +673,12 @@ app.get("/api/articles", async (req, res) => {
   }
 
   const articles = await Article.find(query).sort({ order: 1, likesCount: -1, createdAt: -1 });
+  const isAdminUser = req.user && ['admin', 'superadmin'].includes(req.user.role);
   const enriched = articles.map((article) => {
     const obj = article.toObject();
     const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
     const userLiked = req.user ? (obj.likes ? obj.likes.some((id) => id.toString() === req.user._id.toString()) : false) : false;
-    return { ...obj, likesCount, userLiked };
+    return isAdminUser ? { ...obj, likesCount, userLiked } : { ...publicArticleFields(obj), likesCount, userLiked };
   });
 
   res.json(localizeCollection(enriched, 'articles', lang));
@@ -686,45 +731,45 @@ app.get("/api/articles/:id", async (req, res) => {
   const obj = article.toObject();
   const likesCount = obj.likesCount ?? (obj.likes ? obj.likes.length : 0);
   const userLiked = req.user ? (obj.likes ? obj.likes.some((id) => id.toString() === req.user._id.toString()) : false) : false;
-  res.json(localizeSingle({ ...obj, likesCount, userLiked }, 'articles', lang));
+  const isAdminUser = req.user && ['admin', 'superadmin'].includes(req.user.role);
+  const visible = isAdminUser ? obj : publicArticleFields(obj);
+  res.json(localizeSingle({ ...visible, likesCount, userLiked }, 'articles', lang));
 });
 
 // Like/Unlike article
 app.post("/api/articles/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const article = await Article.findById(req.params.id);
+    const article = await Article.findById(req.params.id).select('status').lean();
     if (!article) return res.status(404).json({ error: 'Article not found' });
 
     if (article.status !== 'published') {
       return res.status(403).json({ error: 'Cannot like unpublished article' });
     }
 
-    const likes = article.likes || [];
-    const userLikeIndex = likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
+    const result = await toggleLike(Article, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: 'Article not found' });
+    // Keep the stored count in sync with the array, computed by MongoDB itself
+    await Article.updateOne({ _id: req.params.id }, [{ $set: { likesCount: { $size: { $ifNull: ['$likes', []] } } } }]);
 
-    if (userLikeIndex > -1) {
-      likes.splice(userLikeIndex, 1);
-    } else {
-      likes.push(req.user._id);
-    }
-
-    article.likes = likes;
-    article.likesCount = likes.length;
-    await article.save();
-
-    res.json({ likesCount: article.likesCount, userLiked: userLikeIndex === -1 });
+    res.json({ likesCount: result.likes.length, userLiked: result.liked });
   } catch (err) {
     console.error('Like error:', err);
     res.status(500).json({ error: 'Failed to process like' });
   }
 });
 
+// Public article responses: hide the author's email and the list of user ids who liked it
+const publicArticleFields = ({ authorEmail, likes, ...rest }) => rest;
+
+// Fields a user is allowed to set on their own article
+const ARTICLE_CONTENT_FIELDS = ['title', 'content', 'author', 'image', 'imageLink', 'videoUrl', 'videoLink'];
+const pickArticleContent = (body = {}) =>
+  Object.fromEntries(ARTICLE_CONTENT_FIELDS.filter((key) => key in body).map((key) => [key, body[key]]));
+
 app.post("/api/articles", ensureAuthenticated, async (req, res) => {
   try {
     const articleData = {
-      ...req.body,
+      ...pickArticleContent(req.body),
       authorId: req.user._id,
       authorName: req.user.displayName || req.user.email,
       authorEmail: req.user.email,
@@ -757,9 +802,18 @@ app.put("/api/articles/:id", ensureAuthenticated, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    // Authors may only change the article's content; status, order, likes,
+    // author etc. stay admin-only (otherwise an author could self-publish).
+    const update = ['admin', 'superadmin'].includes(req.user.role)
+      ? { ...req.body }
+      : pickArticleContent(req.body);
+    delete update.likes;
+    delete update.likesCount;
+    delete update.viewCount;
+
     const updatedArticle = await Article.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedAt: new Date() },
+      { ...update, updatedAt: new Date() },
       { new: true, runValidators: true }
     );
 
@@ -1246,7 +1300,9 @@ app.post('/api/seedsandfootprints/folders/:id/photos/bulk', ensureAdmin, async (
 });
 
 // Update a photo's metadata or replace its image (admin only)
-app.put('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res) => {
+app.put('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAdmin, async (req, res, next) => {
+  // "/photos/order" (reorder) is registered further down; let it handle that path
+  if (req.params.photoId === 'order') return next('route');
   try {
     const { folderId, photoId } = req.params;
     const { imageUrl, caption, credit, name, keywords, sourceLink, videoLink } = req.body || {};
@@ -1300,8 +1356,10 @@ app.delete('/api/seedsandfootprints/folders/:folderId/photos/:photoId', ensureAd
     // Optionally delete the file from disk if stored locally under /uploads
     if (photo.url && photo.url.startsWith('/uploads/')) {
       try {
-        const filePath = path.join(process.cwd(), photo.url.replace(/^\//, ''));
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        // Only ever delete inside the uploads folder (block "/uploads/../index.js")
+        const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+        const filePath = path.resolve(process.cwd(), photo.url.replace(/^\//, ''));
+        if (filePath.startsWith(uploadsRoot + path.sep) && fs.existsSync(filePath)) fs.unlinkSync(filePath);
       } catch (e) {
         console.warn('Failed to delete file from disk:', e.message);
       }
@@ -1323,7 +1381,6 @@ app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('
     console.log('=== CREATE RESEARCH FOLDER REQUEST ===');
     console.log('Body:', req.body);
     console.log('File:', req.file);
-    console.log('Headers:', req.headers);
 
     const { nameEn, nameTa, descriptionEn, descriptionTa } = req.body;
 
@@ -1561,31 +1618,11 @@ app.get("/api/resources/:id", async (req, res) => {
 // Like/Unlike Resource
 app.post("/api/resources/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const resource = await Resource.findById(req.params.id);
-    if (!resource) {
-      return res.status(404).json({ error: "Resource not found" });
-    }
-
-    const likes = resource.likes || [];
-    const userLikeIndex = likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      likes.splice(userLikeIndex, 1);
-    } else {
-      likes.push(req.user._id);
-    }
-
-    resource.likes = likes;
-    await resource.save();
-
-    res.json({
-      likesCount: likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(Resource, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Resource not found" });
+    res.json({ likesCount: result.likes.length, userLiked: result.liked });
   } catch (err) {
-    console.error("Resource like error:", err);
+    console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
   }
 });
@@ -1711,7 +1748,8 @@ app.get("/api/lands/:id", async (req, res) => {
     } else {
       // Otherwise, search by 'type' (case-insensitive)
       // e.g. /api/lands/kurinji maps to type: "Kurinji"
-      land = await Land.findOne({ type: { $regex: new RegExp(`^${id}$`, "i") } });
+      const escapedId = String(id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      land = await Land.findOne({ type: { $regex: new RegExp(`^${escapedId}$`, "i") } });
     }
 
     if (!land) return res.status(404).json({ error: 'Land not found' });
@@ -1790,7 +1828,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "meenkodi_gallery", // Folder in Cloudinary
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp"],
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp", "gif"],
     transformation: [{ width: 1200, height: 1200, crop: "limit" }], // Optimize images
   },
 });
@@ -2046,7 +2084,7 @@ app.post(
     next();
   },
   videoUpload.single("video"),
-  (req, res) => {
+  async (req, res) => {
     try {
       console.log("Video Upload Request FULL Details:", {
         file: req.file
@@ -2131,13 +2169,19 @@ app.post(
         });
       }
 
-      // Generate public URL
-      // const publicUrl = `/uploads/gallery/${req.file.filename}`; // This is no longer needed if req.file.path is the Cloudinary URL
+      // The file above is only a temp copy: Render's disk is wiped on restart, so
+      // upload it to Cloudinary (chunked, videos can be large) and return that URL
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_large(
+          fullFilePath,
+          { resource_type: "video", folder: "meenkodi_videos", chunk_size: 20 * 1024 * 1024 },
+          (err, uploaded) => (err ? reject(err) : resolve(uploaded))
+        );
+      }).finally(() => cleanupFile(fullFilePath));
 
       res.json({
-        videoUrl: req.file.path, // Assuming req.file.path now contains the Cloudinary URL
-        // fullPath: fullFilePath, // This is a local path, not needed if using Cloudinary
-        filename: req.file.filename,
+        videoUrl: result.secure_url,
+        filename: result.public_id,
         originalName: req.file.originalname,
       });
     } catch (error) {
@@ -2150,7 +2194,6 @@ app.post(
       res.status(500).json({
         error: "Failed to upload video",
         details: error.message,
-        stack: error.stack,
       });
     }
   }
@@ -2297,7 +2340,9 @@ app.get("/api/resources/pdf/:id", async (req, res) => {
       return res.status(404).send("PDF Book file not found in database");
     }
 
-    const tempFilePath = path.join(cacheDir, `${fileIdStr}.tmp`);
+    // Unique per request, so two first-time downloads of the same PDF don't
+    // write into the same temp file
+    const tempFilePath = path.join(cacheDir, `${fileIdStr}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`);
 
     // Download from GridFS to local temp file
     console.log(`Downloading PDF ${fileIdStr} from MongoDB Atlas to local cache...`);
@@ -2331,7 +2376,10 @@ app.get("/api/resources/pdf/:id", async (req, res) => {
       } catch (renameErr) {
         console.error("Failed to rename temp cache file:", renameErr);
         // Fallback: send the temp file if renaming failed
-        res.sendFile(tempFilePath, () => cleanupFile(tempFilePath));
+        res.sendFile(tempFilePath, (sendErr) => {
+          cleanupFile(tempFilePath);
+          if (sendErr && !res.headersSent) res.status(500).send("Error serving PDF");
+        });
       }
     });
 
@@ -2386,13 +2434,24 @@ app.post(
 
           const readStream = fs.createReadStream(tempFilePath);
 
+          // Fall back at most once, and keep the temp file: the fallback uploads
+          // from it and cleans it up itself.
+          let fellBack = false;
+          const fallBack = () => {
+            if (fellBack || res.headersSent) return;
+            fellBack = true;
+            readStream.destroy();
+            uploadStream.abort().catch(() => {});
+            return uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted);
+          };
+
           readStream.on("error", (readErr) => {
             console.error("Read stream error, falling back to Cloudinary:", readErr);
-            cleanupFile(tempFilePath);
-            return uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted);
+            return fallBack();
           });
 
           uploadStream.on("finish", () => {
+            if (fellBack) return;
             const fileId = uploadStream.id;
             const pdfUrl = `/api/resources/pdf/${fileId}`;
             console.log("✓ PDF Book stored in MongoDB Database GridFS successfully:", fileId, pdfUrl, sizeFormatted);
@@ -2411,8 +2470,7 @@ app.post(
 
           uploadStream.on("error", (gridFsErr) => {
             console.error("GridFS stream error, falling back to Cloudinary:", gridFsErr);
-            cleanupFile(tempFilePath);
-            return uploadToCloudinaryOrDisk(req, res, tempFilePath, uniqueFilename, sizeBytes, sizeFormatted);
+            return fallBack();
           });
 
           readStream.pipe(uploadStream);
@@ -2435,17 +2493,25 @@ app.post(
 
 
 
-// Multer setup for Land images
-const landStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(process.cwd(), "uploads/lands"));
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + "-" + file.fieldname + ext);
+// Multer setup for Land images: stored on Cloudinary (Render's disk is wiped on
+// every restart). Images only; old /uploads/lands files are still served below.
+const landUpload = multer({
+  storage: new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: "meenkodi_lands",
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "bmp", "gif"],
+      transformation: [{ width: 1600, height: 1600, crop: "limit" }],
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Unsupported file type: ${file.mimetype}. Allowed types: JPEG, PNG, GIF, WEBP, BMP`), false);
+    }
   },
 });
-const landUpload = multer({ storage: landStorage });
 
 app.use(
   "/uploads/lands",
@@ -2464,7 +2530,7 @@ app.post(
   landUpload.single("image"),
   (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    res.json({ url: `/uploads/lands/${req.file.filename}` });
+    res.json({ url: req.file.path }); // Cloudinary URL
   }
 );
 
@@ -2634,29 +2700,9 @@ app.delete("/api/kings/:id", ensureAdmin, async (req, res) => {
 // Like a king's article
 app.post("/api/kings/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const king = await King.findById(req.params.id);
-    if (!king) {
-      return res.status(404).json({ error: "King not found" });
-    }
-
-    const userLikeIndex = king.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      // User already liked, so unlike
-      king.likes.splice(userLikeIndex, 1);
-    } else {
-      // User hasn't liked, so like
-      king.likes.push(req.user._id);
-    }
-
-    await king.save();
-
-    res.json({
-      likes: king.likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(King, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "King not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
     console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
@@ -2812,6 +2858,7 @@ app.delete(
         },
       ]);
 
+      const updatedComment = king.comments.id(req.params.commentId);
       res.json({
         comment: updatedComment,
       });
@@ -2937,30 +2984,12 @@ app.delete("/api/dynasties/:id", ensureAdmin, async (req, res) => {
 // Like/Unlike dynasty
 app.post("/api/dynasties/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const dynasty = await Dynasty.findById(req.params.id);
-    if (!dynasty) {
-      return res.status(404).json({ error: "Dynasty not found" });
-    }
-
-    const userLikeIndex = dynasty.likes.indexOf(req.user._id);
-
-    if (userLikeIndex > -1) {
-      // User already liked, so unlike
-      dynasty.likes.splice(userLikeIndex, 1);
-    } else {
-      // User hasn't liked, so add like
-      dynasty.likes.push(req.user._id);
-    }
-
-    await dynasty.save();
-
-    res.json({
-      likes: dynasty.likes,
-      userLiked: dynasty.likes.includes(req.user._id),
-    });
+    const result = await toggleLike(Dynasty, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Dynasty not found" });
+    res.json({ likes: result.likes, userLiked: result.liked });
   } catch (err) {
-    console.error("Like dynasty error:", err);
-    res.status(500).json({ error: "Failed to like dynasty" });
+    console.error("Like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
   }
 });
 
@@ -3221,30 +3250,12 @@ app.delete("/api/poets/:id", ensureAdmin, async (req, res) => {
 // Like/Unlike poet
 app.post("/api/poets/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const poet = await Poet.findById(req.params.id);
-    if (!poet) {
-      return res.status(404).json({ error: "Poet not found" });
-    }
-
-    const userLikeIndex = poet.likes.indexOf(req.user._id);
-
-    if (userLikeIndex > -1) {
-      // User already liked, so unlike
-      poet.likes.splice(userLikeIndex, 1);
-    } else {
-      // User hasn't liked, so add like
-      poet.likes.push(req.user._id);
-    }
-
-    await poet.save();
-
-    res.json({
-      likes: poet.likes,
-      userLiked: poet.likes.includes(req.user._id),
-    });
+    const result = await toggleLike(Poet, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Poet not found" });
+    res.json({ likes: result.likes, userLiked: result.liked });
   } catch (err) {
-    console.error("Like poet error:", err);
-    res.status(500).json({ error: "Failed to like poet" });
+    console.error("Like error:", err);
+    res.status(500).json({ error: "Failed to process like" });
   }
 });
 
@@ -3563,29 +3574,9 @@ app.delete("/api/dance/:id", ensureAdmin, async (req, res) => {
 // Like a dance
 app.post("/api/dance/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const dance = await Dance.findById(req.params.id);
-    if (!dance) {
-      return res.status(404).json({ error: "Dance not found" });
-    }
-
-    const userLikeIndex = dance.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      // User already liked, so unlike
-      dance.likes.splice(userLikeIndex, 1);
-    } else {
-      // User hasn't liked, so like
-      dance.likes.push(req.user._id);
-    }
-
-    await dance.save();
-
-    res.json({
-      likes: dance.likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(Dance, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Dance not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
     console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
@@ -3741,6 +3732,7 @@ app.delete(
         },
       ]);
 
+      const updatedComment = dance.comments.id(req.params.commentId);
       res.json({
         comment: updatedComment,
       });
@@ -4046,20 +4038,11 @@ app.delete("/api/clothing/:id", ensureAdmin, async (req, res) => {
 // Like toggle
 app.post("/api/clothing/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const item = await Clothing.findById(req.params.id);
-    if (!item) return res.status(404).json({ error: "Clothing not found" });
-    const idx = item.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-    if (idx > -1) {
-      item.likes.splice(idx, 1);
-    } else {
-      item.likes.push(req.user._id);
-    }
-    await item.save();
-    res.json({ likes: item.likes.length, userLiked: idx === -1 });
+    const result = await toggleLike(Clothing, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Clothing not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
-    console.error("Clothing like error", err);
+    console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
   }
 });
@@ -4188,29 +4171,11 @@ app.post(
 // Temple likes and comments
 app.post("/api/temples/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const temple = await Temple.findById(req.params.id);
-    if (!temple) {
-      return res.status(404).json({ error: "Temple not found" });
-    }
-
-    const userLikeIndex = temple.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      temple.likes.splice(userLikeIndex, 1);
-    } else {
-      temple.likes.push(req.user._id);
-    }
-
-    await temple.save();
-
-    res.json({
-      likes: temple.likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(Temple, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Temple not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
-    console.error("Temple like error:", err);
+    console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
   }
 });
@@ -4335,29 +4300,11 @@ app.delete(
 // Literature likes and comments
 app.post("/api/literature/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const literature = await Literature.findById(req.params.id);
-    if (!literature) {
-      return res.status(404).json({ error: "Literature not found" });
-    }
-
-    const userLikeIndex = literature.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      literature.likes.splice(userLikeIndex, 1);
-    } else {
-      literature.likes.push(req.user._id);
-    }
-
-    await literature.save();
-
-    res.json({
-      likes: literature.likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(Literature, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Literature not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
-    console.error("Literature like error:", err);
+    console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
   }
 });
@@ -4484,29 +4431,11 @@ app.delete(
 // Festival likes and comments
 app.post("/api/festivals/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const festival = await Festival.findById(req.params.id);
-    if (!festival) {
-      return res.status(404).json({ error: "Festival not found" });
-    }
-
-    const userLikeIndex = festival.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      festival.likes.splice(userLikeIndex, 1);
-    } else {
-      festival.likes.push(req.user._id);
-    }
-
-    await festival.save();
-
-    res.json({
-      likes: festival.likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(Festival, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Festival not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
-    console.error("Festival like error:", err);
+    console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
   }
 });
@@ -4635,29 +4564,11 @@ app.delete(
 // Food likes and comments
 app.post("/api/foods/:id/like", ensureAuthenticated, async (req, res) => {
   try {
-    const food = await Food.findById(req.params.id);
-    if (!food) {
-      return res.status(404).json({ error: "Food not found" });
-    }
-
-    const userLikeIndex = food.likes.findIndex(
-      (likeId) => likeId.toString() === req.user._id.toString()
-    );
-
-    if (userLikeIndex > -1) {
-      food.likes.splice(userLikeIndex, 1);
-    } else {
-      food.likes.push(req.user._id);
-    }
-
-    await food.save();
-
-    res.json({
-      likes: food.likes.length,
-      userLiked: userLikeIndex === -1,
-    });
+    const result = await toggleLike(Food, req.params.id, req.user._id);
+    if (!result) return res.status(404).json({ error: "Food not found" });
+    res.json({ likes: result.likes.length, userLiked: result.liked });
   } catch (err) {
-    console.error("Food like error:", err);
+    console.error("Like error:", err);
     res.status(500).json({ error: "Failed to process like" });
   }
 });
@@ -4786,7 +4697,6 @@ app.delete(
 app.post("/api/clothing/:id/like", ensureAuthenticated, async (req, res) => {
   console.log("=== CLOTHING LIKE DEBUG ===");
   console.log("Request params:", req.params);
-  console.log("Request user:", req.user);
   console.log("Request body:", req.body);
 
   try {
@@ -4958,27 +4868,9 @@ app.post(
   ensureAuthenticated,
   async (req, res) => {
     try {
-      const science = await AncientScience.findById(req.params.id);
-      if (!science) {
-        return res.status(404).json({ error: "Ancient Science not found" });
-      }
-
-      const userLikeIndex = science.likes.findIndex(
-        (likeId) => likeId.toString() === req.user._id.toString()
-      );
-
-      if (userLikeIndex > -1) {
-        science.likes.splice(userLikeIndex, 1);
-      } else {
-        science.likes.push(req.user._id);
-      }
-
-      await science.save();
-
-      res.json({
-        likes: science.likes.length,
-        userLiked: userLikeIndex === -1,
-      });
+      const result = await toggleLike(AncientScience, req.params.id, req.user._id);
+      if (!result) return res.status(404).json({ error: "Ancient Science not found" });
+      res.json({ likes: result.likes.length, userLiked: result.liked });
     } catch (err) {
       console.error("Ancient Science like error:", err);
       res.status(500).json({ error: "Failed to process like" });
@@ -5268,7 +5160,8 @@ if (fs.existsSync(clientIndex)) {
 
   async function getGalleryItemsByFolder(folderName) {
     if (!folderName) return getAllGalleryItems();
-    const queryRegex = new RegExp(folderName, 'i');
+    // folderName comes from the URL; escape it so "(" etc. can't throw or be abused
+    const queryRegex = new RegExp(String(folderName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     const items = await Gallery.find({
       isFolder: { $ne: true },
       $or: [
@@ -5411,8 +5304,9 @@ if (fs.existsSync(clientIndex)) {
 
   // ── Generic SPA catch-all (for all other routes) ──────────────────────────
   // Injects canonical URL only — no DB fetch needed for uncovered routes
-  app.get('*', (req, res) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return;
+  app.get('*', (req, res, next) => {
+    // Let missing API routes / upload files fall through to a 404 instead of hanging
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
     try {
       const canonicalUrl = `${BASE_URL}${req.originalUrl || req.path}`;
       const html = buildPageHtml(getBaseHtml(), {
@@ -5435,6 +5329,28 @@ if (fs.existsSync(clientIndex)) {
   console.log('No client build found at:', clientIndex, "— the Web Service will only serve API routes until you build the client.");
 }
 
+// Unknown /api routes: answer 404 instead of leaving the request hanging
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Final error handler: errors from routes (including async ones, see
+// forwardAsyncErrors) end up here instead of crashing the process.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err?.name === 'CastError') {
+    return res.status(400).json({ error: 'Invalid id' });
+  }
+  if (err?.name === 'ValidationError' || err?.name === 'MulterError') {
+    return res.status(400).json({ error: err.message });
+  }
+  if (err?.message === 'Not allowed by CORS') {
+    return res.status(403).json({ error: 'Origin not allowed' });
+  }
+  console.error('Unhandled route error:', req.method, req.originalUrl, err);
+  res.status(500).json({ error: 'Server error' });
+});
+
 // Start the server immediately - don't wait for MongoDB
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
@@ -5452,10 +5368,10 @@ server.on('error', (err) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    mongoose.connection.close(false, () => {
-      console.log('MongoDB connection closed');
-      process.exit(0);
-    });
+  server.close(async () => {
+    // Mongoose 8 no longer accepts a callback here
+    await mongoose.connection.close().catch(() => {});
+    console.log('MongoDB connection closed');
+    process.exit(0);
   });
 });

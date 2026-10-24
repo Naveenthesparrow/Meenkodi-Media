@@ -140,11 +140,15 @@ function AncientScienceDetail({ user: initialUser }) {
       const likesArray = Array.isArray(science.likes) ? science.likes : [];
       setUserLiked(likesArray.some(likeId => user && user._id && likeId && String(likeId) === String(user._id)));
     }
+  }, [user?._id, science]);
+
+  // Initialise the editor from the loaded item (not from the user object)
+  useEffect(() => {
     if (science) {
       const toStr = (val) => {
         if (!val) return "";
         if (typeof val === 'string') return val;
-        if (typeof val === 'object') return val.en || val.ta || "";
+        if (typeof val === 'object') return val.en || "";
         return "";
       };
       const toTa = (val) => {
@@ -178,7 +182,7 @@ function AncientScienceDetail({ user: initialUser }) {
         })),
       });
     }
-  }, [user, science]);
+  }, [science]);
 
 
   const fetchScience = async () => {

@@ -135,10 +135,55 @@ function setupResourceErrorLogging() {
   });
 }
 
+// The last signed-in user is remembered so the navbar shows "Profile" right away
+// on reload; /auth/user still verifies it in the background (the server enforces roles).
+const CACHED_USER_KEY = 'meenkodi:user';
+const readCachedUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem(CACHED_USER_KEY) || 'null');
+  } catch {
+    return null;
+  }
+};
+const writeCachedUser = (user) => {
+  try {
+    if (user) localStorage.setItem(CACHED_USER_KEY, JSON.stringify(user));
+    else localStorage.removeItem(CACHED_USER_KEY);
+  } catch {
+    // storage unavailable (private mode etc.) - nothing to cache
+  }
+};
+
+// After Google login the server redirects to "/". Put the page the user started
+// from back into the URL before the router mounts, so no second page reload is needed.
+const restoreAuthReturnPath = () => {
+  try {
+    if (!sessionStorage.getItem('isAuthenticating')) return;
+    const returnPath = sessionStorage.getItem('authReturnPath');
+    sessionStorage.removeItem('authReturnPath');
+    // Failed login (/?auth=failed etc.): keep that URL so the auth-error check can read it
+    if (window.location.search.includes('auth=')) return;
+    if (returnPath &&returnPath.startsWith('/') && returnPath !== window.location.pathname) {
+      window.history.replaceState(null, '', returnPath);
+    }
+  } catch {
+    // sessionStorage unavailable - stay on the current page
+  }
+};
+
 function App() {
   const { t, i18n } = useTranslation();
-  const [user, setUser] = React.useState(null);
-  const contentUser = user?.role === "superadmin" ? { ...user, role: "admin" } : user;
+  React.useState(restoreAuthReturnPath); // runs once, before <Router> reads the URL
+  const [user, setUserState] = React.useState(readCachedUser);
+  const setUser = React.useCallback((next) => {
+    writeCachedUser(next && next._id ? next : null);
+    setUserState(next && next._id ? next : null);
+  }, []);
+  // Memoized so pages whose effects depend on `user` don't re-run on every App render
+  const contentUser = React.useMemo(
+    () => (user?.role === "superadmin" ? { ...user, role: "admin" } : user),
+    [user]
+  );
   const [loading, setLoading] = React.useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
@@ -161,46 +206,27 @@ function App() {
 
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-          console.warn("Response is not JSON, likely HTML error page");
-          return null;
+          throw new Error("Response is not JSON, likely HTML error page");
         }
 
-        return res.json();
-      })
-      .then((data) => {
-        setUser(data);
-        setLoading(false);
+        return res.json().then((data) => {
+          setUser(data);
+          setLoading(false);
+        });
       })
       .catch((error) => {
+        // Temporary server/network problem: keep whatever user we already have
         console.error("Auth check failed:", error);
-        setUser(null);
         setLoading(false);
       });
-  }, []);
+  }, [setUser]);
 
   React.useEffect(() => {
-    // Check if we were authenticating and clear the flag
-    const wasAuthenticating = sessionStorage.getItem('isAuthenticating');
-    if (wasAuthenticating) {
-      console.log("Was authenticating, clearing flag and fetching user");
+    // Coming back from Google login: the return page was already restored by
+    // restoreAuthReturnPath(); fetchUser() below loads the signed-in user.
+    if (sessionStorage.getItem('isAuthenticating')) {
       sessionStorage.removeItem('isAuthenticating');
       setIsAuthenticating(false);
-
-      // If just came from auth, fetch the user and return to the page they left.
-      setTimeout(() => {
-        fetch(`/auth/user`, { credentials: "include" })
-          .then(res => res.json())
-          .then(userData => {
-            if (userData && userData._id) {
-              setUser(userData);
-              setLoading(false);
-              const returnPath = sessionStorage.getItem('authReturnPath') || '/';
-              sessionStorage.removeItem('authReturnPath');
-              window.location.href = returnPath;
-            }
-          })
-          .catch(err => console.error("Auth check failed:", err));
-      }, 500);
     }
 
     // Check for auth errors in URL
@@ -312,6 +338,7 @@ function App() {
 
   const logout = () => {
     console.log("Logging out...");
+    writeCachedUser(null);
     window.location.href = `/auth/logout`;
   };
 
@@ -714,7 +741,7 @@ function App() {
         <Box sx={{ pt: { xs: 7, md: 8 } }}>
           <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}><Typography variant="body1">Loading…</Typography></Box>}>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Home user={contentUser} />} />
               <Route path="/auth/google/callback" element={<AuthCallback />} />
               <Route path="/auth/failure" element={<AuthFailure />} />
               <Route path="/articles" element={<Articles user={contentUser} />} />

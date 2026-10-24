@@ -26,9 +26,10 @@ import {
   FormControl,
   InputLabel,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  Snackbar
 } from '@mui/material';
-import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import Add from "@mui/icons-material/Add";
 import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
@@ -42,7 +43,6 @@ import MediaUpload from './common/MediaUpload';
 import PageHeading from './common/PageHeading';
 import OptimizedImage from './common/OptimizedImage';
 import { useTranslation } from 'react-i18next';
-import GalleryDetail from './GalleryDetail';
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
 
@@ -94,6 +94,9 @@ export default function Gallery({ user }) {
     setGalleryItems(newItems);
   };
   const [error, setError] = useState(null);
+  // Dialog errors show inside the open dialog (typed data stays); delete errors as a toast
+  const [dialogError, setDialogError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openCreateCategoryDialog, setOpenCreateCategoryDialog] = useState(false);
   const [newCategoryName_en, setNewCategoryName_en] = useState('');
@@ -412,6 +415,7 @@ export default function Gallery({ user }) {
     }
 
     setCurrentGalleryItem(init);
+    setDialogError(null);
     setOpenDialog(true);
   };
 
@@ -436,6 +440,7 @@ export default function Gallery({ user }) {
     }
 
     setCurrentGalleryItem(state);
+    setDialogError(null);
     setOpenDialog(true);
   };
 
@@ -447,7 +452,7 @@ export default function Gallery({ user }) {
         .filter(k => k);
 
       if (!currentGalleryItem.isFolder && (!currentGalleryItem.category || currentGalleryItem.category === 'All')) {
-        setError("Please select a valid category.");
+        setDialogError("Please select a valid category.");
         return;
       }
 
@@ -525,7 +530,7 @@ export default function Gallery({ user }) {
 
       setOpenDialog(false);
     } catch (err) {
-      setError(err.message);
+      setDialogError(err.message);
     }
   };
 
@@ -543,7 +548,7 @@ export default function Gallery({ user }) {
 
         setGalleryItemsAndCache(galleryItems.filter(item => item._id !== id));
       } catch (err) {
-        setError(err.message);
+        setActionError(err.message);
       }
     }
   };
@@ -563,14 +568,14 @@ export default function Gallery({ user }) {
 
         await fetchGalleryItems();
       } catch (err) {
-        setError(err.message);
+        setActionError(err.message);
       }
     }
   };
 
   const handleCreateCategory = async () => {
     if (!newCategoryName_en.trim() && !newCategoryName_ta.trim()) {
-      setError("Please enter a category name");
+      setDialogError("Please enter a category name");
       return;
     }
 
@@ -615,7 +620,7 @@ export default function Gallery({ user }) {
       setNewCategoryName_en('');
       setNewCategoryName_ta('');
     } catch (err) {
-      setError(err.message);
+      setDialogError(err.message);
     }
   };
 
@@ -698,6 +703,7 @@ export default function Gallery({ user }) {
 
       setFolderOrder(photos);
     }
+    setDialogError(null);
     setOpenOrderDialog(true);
   };
 
@@ -719,7 +725,7 @@ export default function Gallery({ user }) {
       await fetchGalleryItems();
       setOpenOrderDialog(false);
     } catch (err) {
-      setError(err.message);
+      setDialogError(err.message);
     }
   };
 
@@ -732,7 +738,8 @@ export default function Gallery({ user }) {
   };
 
   if (isPhotoItem) {
-    return <GalleryDetail user={user} />;
+    // folderSlug is really a photo _id: send it to the photo's own page
+    return <Navigate to={`/gallery/${folderSlug}`} replace />;
   }
 
   if (loading) {
@@ -812,7 +819,7 @@ export default function Gallery({ user }) {
           }}
           actions={user && user.role === 'admin' && viewMode === 'folders' ? (
             <Button
-              onClick={() => setOpenCreateCategoryDialog(true)}
+              onClick={() => { setDialogError(null); setOpenCreateCategoryDialog(true); }}
               variant="contained"
               startIcon={<Add />}
               sx={{
@@ -1410,6 +1417,7 @@ export default function Gallery({ user }) {
           }}
         >
           <DialogContent sx={{ mt: 3 }}>
+            {dialogError && <Alert severity="error" sx={{ mb: 2 }}>{dialogError}</Alert>}
             {/* Language Toggle */}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
               <Typography 
@@ -1529,6 +1537,7 @@ export default function Gallery({ user }) {
             {t('gallery.createNewFolder', 'Create New Photo Folder')}
           </DialogTitle>
           <DialogContent sx={{ pt: { xs: 1, sm: 2 }, px: { xs: 2, sm: 3 } }}>
+            {dialogError && <Alert severity="error" sx={{ mb: 2 }}>{dialogError}</Alert>}
             <Typography variant="body2" sx={{ mb: { xs: 2, sm: 3 }, color: '#666', fontSize: { xs: '0.85rem', sm: '0.875rem' } }}>
               {t('gallery.folderDescription', 'Create a custom folder to organize your photos. You can upload photos directly to this folder.')}
             </Typography>
@@ -1604,6 +1613,7 @@ export default function Gallery({ user }) {
             {viewMode === 'folders' ? 'Reorder Folders' : 'Reorder Pictures'}
           </DialogTitle>
           <DialogContent sx={{ mt: 2 }}>
+              {dialogError && <Alert severity="error" sx={{ mb: 2 }}>{dialogError}</Alert>}
               <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <DragIndicator sx={{ color: '#8B0000', fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
                 <Typography variant="body2" sx={{ color: '#666', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
@@ -1732,6 +1742,16 @@ export default function Gallery({ user }) {
           </Box>
         )}
       </Container>
+      <Snackbar
+        open={!!actionError}
+        autoHideDuration={6000}
+        onClose={() => setActionError(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+          {actionError}
+        </Alert>
+      </Snackbar>
     </Box>
     </>
   );

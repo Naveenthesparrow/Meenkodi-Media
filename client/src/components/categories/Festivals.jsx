@@ -107,11 +107,8 @@ export default function Festivals({ user }) {
       const res = await fetchPrefetched(`${API_BASE_URL}/api/festivals`);
       if (!res.ok) throw new Error("Failed to fetch Festivals data");
       const data = await res.json();
-      const processedFestivals = data.map(festival => ({
-        ...festival,
-        image: festival.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='240' viewBox='0 0 400 240'%3E%3Crect fill='%23e0e0e0' width='400' height='240'%3E%3C/rect%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='18px' fill='%23999'%3E🎉%3C/text%3E%3C/svg%3E"
-      }));
-      setFestivals(processedFestivals);
+      // Keep the data as stored; missing images get a placeholder at render time only
+      setFestivals(data);
     } catch (err) {
       console.error("Error fetching Festivals data:", err);
       if (!cachedFestivalsData) setFestivals([]);
@@ -122,7 +119,7 @@ export default function Festivals({ user }) {
   const toStr = (val) => {
     if (!val) return "";
     if (typeof val === 'string') return val;
-    if (typeof val === 'object') return val.en || val.ta || "";
+    if (typeof val === 'object') return val.en || "";
     return "";
   };
   const toTa = (val) => {

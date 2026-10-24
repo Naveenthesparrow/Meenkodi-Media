@@ -106,7 +106,7 @@ export default function Temples({ user }) {
   const toStr = (val) => {
     if (!val) return "";
     if (typeof val === 'string') return val;
-    if (typeof val === 'object') return val.en || val.ta || "";
+    if (typeof val === 'object') return val.en || "";
     return "";
   };
   const toTa = (val) => {

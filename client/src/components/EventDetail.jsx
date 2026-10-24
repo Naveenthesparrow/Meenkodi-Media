@@ -11,7 +11,8 @@ import {
   Grid,
   Container,
   Paper,
-  IconButton
+  IconButton,
+  Snackbar
 } from "@mui/material";
 import CalendarMonth from "@mui/icons-material/CalendarMonth";
 import LocationOn from "@mui/icons-material/LocationOn";
@@ -39,6 +40,8 @@ export default function EventDetail({ user }) {
   const [event, setEvent] = useState(() => cachedEventDetails[id] || null);
   const [loading, setLoading] = useState(!hasCache);
   const [error, setError] = useState(null);
+  // Errors from save/delete/validation: shown as a toast so the page (and unsaved edits) stay
+  const [actionError, setActionError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState(() => {
     const cached = cachedEventDetails[id];
@@ -68,8 +71,21 @@ export default function EventDetail({ user }) {
   useEffect(() => {
     if (!hasCache) setLoading(true);
     fetch(`${API_BASE_URL}/api/events/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        // Deleted/unknown event: show "Event Not Found" and forget any stale cache
+        if (res.status === 404) {
+          delete cachedEventDetails[id];
+          return null;
+        }
+        if (!res.ok) throw new Error("Failed to load event details");
+        return res.json();
+      })
       .then((data) => {
+        if (!data) {
+          setEvent(null);
+          setLoading(false);
+          return;
+        }
         cachedEventDetails[id] = data;
         setEvent(data);
         setTitle(typeof data.title === 'object' ? data.title : { en: data.title || '', ta: data.title || '' });
@@ -90,13 +106,13 @@ export default function EventDetail({ user }) {
 
   const handleSave = async () => {
     setSubmitting(true);
-    setError(null);
-    if (!title.trim()) {
-      setError("Title is required");
-      setSubmitting(false);
-      return;
-    }
+    setActionError(null);
     try {
+      // title is { en, ta }; at least one language is required
+      if (!(title.en || '').trim() && !(title.ta || '').trim()) {
+        setActionError("Title is required");
+        return;
+      }
       const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -119,7 +135,7 @@ export default function EventDetail({ user }) {
       setEditMode(false);
       navigate(`/events`);
     } catch (err) {
-      setError(err.message || "Failed to update event");
+      setActionError(err.message || "Failed to update event");
     } finally {
       setSubmitting(false);
     }
@@ -128,16 +144,31 @@ export default function EventDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
-        await fetch(`${API_BASE_URL}/api/events/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
+        if (!res.ok) throw new Error("Failed to delete event");
+        delete cachedEventDetails[id];
         navigate(`/events`);
       } catch {
-        setError("Failed to delete event");
+        setActionError("Failed to delete event");
       }
     }
   };
+
+  const actionErrorToast = (
+    <Snackbar
+      open={!!actionError}
+      autoHideDuration={6000}
+      onClose={() => setActionError(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    >
+      <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+        {actionError}
+      </Alert>
+    </Snackbar>
+  );
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -158,6 +189,7 @@ export default function EventDetail({ user }) {
   if (editMode) {
     return (
       <Container maxWidth="lg" sx={{ py: 6 }}>
+        {actionErrorToast}
         <Paper elevation={0} sx={{ p: 5, border: '1px solid #e0e0e0', borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4, borderBottom: '1px solid #eee', pb: 2 }}>
             <Typography variant="h4" sx={{ fontWeight: 700, fontFamily: '"Playfair Display", serif', color: '#1a1a1a' }}>
@@ -249,6 +281,7 @@ export default function EventDetail({ user }) {
       background: 'linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%)',
       py: { xs: 3, md: 5 },
     }}>
+      {actionErrorToast}
       <SEO 
         title={event ? `${getContent(event.title)} - Tamil Cultural Event` : 'Tamil Cultural Event'}
         description={event ? (getContent(event.description) || `Join us for ${getContent(event.title)} in ${getContent(event.location) || 'Tamil Nadu'}.`).slice(0, 160) : 'Explore Tamil heritage events and workshops.'}

@@ -60,6 +60,7 @@ function LiteratureDetail({ user: initialUser }) {
   const [literature, setLiterature] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [saveError, setSaveError] = useState("");
 
   // Comments and likes states
   const [comments, setComments] = useState([]);
@@ -149,22 +150,20 @@ function LiteratureDetail({ user: initialUser }) {
 
   // Update userLiked when user data becomes available
   useEffect(() => {
-    if (user && literature) {
-      const likesArray = Array.isArray(literature.likes)
-        ? literature.likes
-        : [];
+    if (user && literature && Array.isArray(literature.likes)) {
       setUserLiked(
-        likesArray.some((likeId) =>
+        literature.likes.some((likeId) =>
           user && user._id && likeId && String(likeId) === String(user._id)
         )
       );
     }
-  }, [user, literature]);
+  }, [user?._id, literature]);
 
 
   const fetchLiterature = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await fetchPrefetched(`${API_BASE_URL}/api/literature/${id}`);
       if (!res.ok) {
         throw new Error("Literature not found");
@@ -172,13 +171,14 @@ function LiteratureDetail({ user: initialUser }) {
       const data = await res.json();
       setLiterature(data);
       setComments(data.comments || []);
-      // Handle likes - ensure it's an array and check if user liked
-      const likesArray = Array.isArray(data.likes) ? data.likes : [];
-      setLikes(likesArray.length);
+      // Handle likes - server returns a count plus userLiked
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
       setUserLiked(
-        likesArray.some(
-          (likeId) => user && user._id && likeId && String(likeId) === String(user._id)
-        ) || false
+        Array.isArray(data.likes) && !data.userLiked
+          ? data.likes.some(
+            (likeId) => user && user._id && likeId && String(likeId) === String(user._id)
+          )
+          : !!data.userLiked
       );
     } catch (err) {
       setError(err.message);
@@ -208,8 +208,8 @@ function LiteratureDetail({ user: initialUser }) {
       }
 
       const data = await res.json();
-      setLikes(data.likes);
-      setUserLiked(data.userLiked);
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+      setUserLiked(!!data.userLiked);
     } catch (err) {
       console.error("Like error:", err);
       alert("Failed to like the literature");
@@ -281,7 +281,11 @@ function LiteratureDetail({ user: initialUser }) {
       }
 
       const data = await res.json();
-      setComments(data.comments);
+      if (Array.isArray(data.comments)) {
+        setComments(data.comments);
+      } else if (data.comment) {
+        setComments(prev => prev.map(c => c._id === commentId ? data.comment : c));
+      }
       setNewReply("");
       setReplyingTo(null);
     } catch (err) {
@@ -425,8 +429,8 @@ function LiteratureDetail({ user: initialUser }) {
           ...rest,
           subtitle: toBilingual(subtitle_en, subtitle_ta),
           content: toBilingual(content_en, content_ta),
-          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
-          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+          videoTitle: videoTitle_en || videoTitle_ta || "",
+          videoDescription: videoDescription_en || videoDescription_ta || ""
         };
       });
 
@@ -457,10 +461,10 @@ function LiteratureDetail({ user: initialUser }) {
 
       await fetchLiterature();
       setIsEditing(false);
-      setError("");
+      setSaveError("");
       alert("Literature details updated successfully!");
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
       alert(`Failed to save details: ${err.message}`);
     }
   };
@@ -470,10 +474,10 @@ function LiteratureDetail({ user: initialUser }) {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: literature.title,
-        text: literature.description,
+        title: getContent(literature.title),
+        text: getContent(literature.description),
         url: window.location.href,
-      });
+      }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
@@ -587,7 +591,7 @@ function LiteratureDetail({ user: initialUser }) {
                 const toStr = (val) => {
                   if (!val) return "";
                   if (typeof val === 'string') return val;
-                  if (typeof val === 'object') return val.en || val.ta || "";
+                  if (typeof val === 'object') return val.en || "";
                   return "";
                 };
                 const toTa = (val) => {
@@ -1343,6 +1347,11 @@ function LiteratureDetail({ user: initialUser }) {
                   Update Details
                 </Button>
               </Box>
+              {saveError && (
+                <Alert severity="error" onClose={() => setSaveError("")} sx={{ borderRadius: 0, mt: 2 }}>
+                  {saveError}
+                </Alert>
+              )}
             </Box>
           )}
         </Box>

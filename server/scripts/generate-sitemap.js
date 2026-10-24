@@ -77,11 +77,13 @@ function write(filename, content) {
 
 // ─── Main Generator ───────────────────────────────────────────────────────────
 
-export async function generateAllSitemaps() {
+// standalone: run from the command line, so this script owns the DB connection.
+// Inside the server it must never connect/disconnect the server's shared connection.
+export async function generateAllSitemaps({ standalone = false } = {}) {
   const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
   let connected = false;
 
-  if (mongoUri && mongoose.connection.readyState !== 1) {
+  if (standalone && mongoUri && mongoose.connection.readyState !== 1) {
     try {
       await mongoose.connect(mongoUri);
       connected = true;
@@ -268,7 +270,7 @@ export async function generateAllSitemaps() {
 // Run directly if called as a script
 if (process.argv[1] && process.argv[1].includes('generate-sitemap')) {
   console.log('\n🗺️  Generating sitemaps from live database...\n');
-  generateAllSitemaps()
+  generateAllSitemaps({ standalone: true })
     .then(() => process.exit(0))
     .catch(err => { console.error('Error generating sitemaps:', err); process.exit(1); });
 }

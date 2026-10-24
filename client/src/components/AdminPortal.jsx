@@ -58,20 +58,31 @@ export default function AdminPortal({ user, logout }) {
 
   const handleDelete = async (id) => {
     if (window.confirm(t("adminPortal.deleteConfirm"))) {
-      await axios.delete(`${API_BASE_URL}/api/admin/users/${id}`, {
-        withCredentials: true,
-      });
-      fetchUsers();
+      try {
+        await axios.delete(`${API_BASE_URL}/api/admin/users/${id}`, {
+          withCredentials: true,
+        });
+        fetchUsers();
+      } catch (error) {
+        alert(error.response?.data?.error || "Failed to delete user");
+      }
     }
   };
 
+  // Returns false if the change failed (error already shown)
   const handleRoleChange = async (id, newRole) => {
-    await axios.put(
-      `${API_BASE_URL}/api/admin/users/${id}/role`,
-      { role: newRole },
-      { withCredentials: true }
-    );
-    fetchUsers();
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/admin/users/${id}/role`,
+        { role: newRole },
+        { withCredentials: true }
+      );
+      fetchUsers();
+      return true;
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to change role");
+      return false;
+    }
   };
 
   const handleEditOpen = (u) => {
@@ -83,13 +94,19 @@ export default function AdminPortal({ user, logout }) {
   };
 
   const handleEditSave = async () => {
-    await axios.put(
-      `${API_BASE_URL}/api/admin/users/${editUser._id}`,
-      { displayName: editName, email: editEmail },
-      { withCredentials: true }
-    );
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/admin/users/${editUser._id}`,
+        { displayName: editName, email: editEmail },
+        { withCredentials: true }
+      );
+    } catch (error) {
+      // Keep the dialog open so the typed changes aren't lost
+      alert(error.response?.data?.error || "Failed to save user");
+      return;
+    }
     if (editRole !== editUser.role) {
-      await handleRoleChange(editUser._id, editRole);
+      if (!(await handleRoleChange(editUser._id, editRole))) return;
     } else {
       fetchUsers();
     }

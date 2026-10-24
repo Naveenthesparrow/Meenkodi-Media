@@ -98,7 +98,13 @@ export default function LandDetailExpanded({ user }) {
   });
 
   useEffect(() => {
-    if (!hasCache) setLoading(true);
+    let cancelled = false;
+    // Reset per-land state when navigating to a different land
+    setEditMode(false);
+    setSaveError("");
+    setError(null);
+    setLand(cachedLandDetails[id] || null);
+    setLoading(!hasCache);
     fetch(`${API_BASE_URL}/api/lands/${id}`)
       .then((r) => {
         if (!r.ok) throw new Error(tr("land.notFound", "Land not found"));
@@ -106,6 +112,7 @@ export default function LandDetailExpanded({ user }) {
       })
       .then((d) => {
         cachedLandDetails[id] = d;
+        if (cancelled) return;
         setLand(d);
         setForm({
           name: d.name || { en: "", ta: "" },
@@ -139,9 +146,11 @@ export default function LandDetailExpanded({ user }) {
         setLoading(false);
       })
       .catch((e) => {
+        if (cancelled) return;
         if (!cachedLandDetails[id]) setError(e.message);
         setLoading(false);
       });
+    return () => { cancelled = true; };
   }, [id]);
 
   const handleSave = async () => {

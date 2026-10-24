@@ -32,11 +32,15 @@ export default function Comments({ relatedType, relatedId, user }) {
   const fetchComments = () => {
     setLoading(true);
     fetch(`${API_BASE_URL}/api/comments/${relatedType}/${relatedId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load comments");
+        return res.json();
+      })
       .then((data) => {
-        setComments(data);
-        setLoading(false);
-      });
+        setComments(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -48,20 +52,25 @@ export default function Comments({ relatedType, relatedId, user }) {
     e.preventDefault();
     setSubmitting(true);
     setError("");
-    const res = await fetch(`${API_BASE_URL}` + "/api/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ content, relatedType, relatedId }),
-    });
-    if (res.ok) {
-      setContent("");
-      fetchComments();
-    } else {
-      const data = await res.json();
-      setError(data.error || "Error");
+    try {
+      const res = await fetch(`${API_BASE_URL}` + "/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content, relatedType, relatedId }),
+      });
+      if (res.ok) {
+        setContent("");
+        fetchComments();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Error");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const handleDelete = async (id) => {

@@ -40,11 +40,10 @@ import { inlineEditSx } from '../common/formStyles';
 import { fetchPrefetched } from '../../utils/prefetch';
 import cldImg from "../../utils/cloudinaryImage";
 
-function TempleDetail() {
+function TempleDetail({ user = null }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const getContent = useBilingualContent();
-  const [user, setUser] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
@@ -56,6 +55,7 @@ function TempleDetail() {
   const [temple, setTemple] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   // Edit dialog states
   const [editOpen, setEditOpen] = useState(false);
@@ -182,63 +182,23 @@ function TempleDetail() {
   };
 
   useEffect(() => {
-    const initializeData = async () => {
-      await fetchUser();
-      await fetchTemple();
-    };
-    initializeData();
+    fetchTemple();
   }, [id]);
 
-  // Update userLiked when user data becomes available
+  // Update userLiked when user data becomes available (only when likes is an array)
   useEffect(() => {
-    if (user && temple) {
-      const likesArray = Array.isArray(temple.likes) ? temple.likes : [];
+    if (user && temple && Array.isArray(temple.likes)) {
       setUserLiked(
-        likesArray.some((likeId) => likeId.toString() === user._id.toString())
+        temple.likes.some((likeId) => likeId.toString() === user._id.toString())
       );
     }
-  }, [user, temple]);
+  }, [user?._id, temple]);
 
-  const fetchUser = async () => {
-    try {
-      console.log("Fetching user in TempleDetail...");
-      const res = await fetch(
-        `${API_BASE_URL}/auth/user`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log("User fetch response status:", res.status);
-
-      if (res.status === 401) {
-        console.log("User not authenticated");
-        setUser(null);
-        return;
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch user:", res.status, res.statusText);
-        setUser(null);
-        return;
-      }
-
-      const userData = await res.json();
-      console.log("Fetched User Data:", userData);
-      setUser(userData);
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      setUser(null);
-    }
-  };
 
   const fetchTemple = async () => {
     try {
       setLoading(true);
+      setError("");
       const res = await fetchPrefetched(`${API_BASE_URL}/api/temples/${id}`);
       if (!res.ok) {
         throw new Error("Temple not found");
@@ -246,20 +206,19 @@ function TempleDetail() {
       const data = await res.json();
       setTemple(data);
       setComments(data.comments || []);
-      // Handle likes - ensure it's an array and check if user liked
-      const likesArray = Array.isArray(data.likes) ? data.likes : [];
-      setLikes(likesArray.length);
+      // Handle likes - server returns a count plus userLiked
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
       setUserLiked(
-        likesArray.some(
-          (likeId) => likeId.toString() === user?._id?.toString()
-        ) || false
+        Array.isArray(data.likes) && !data.userLiked
+          ? data.likes.some((likeId) => likeId.toString() === user?._id?.toString())
+          : !!data.userLiked
       );
 
       // Set editable data with all fields including contentSections (bilingual)
       const toStr = (val) => {
         if (!val) return "";
         if (typeof val === 'string') return val;
-        if (typeof val === 'object') return val.en || val.ta || "";
+        if (typeof val === 'object') return val.en || "";
         return "";
       };
       const toTa = (val) => {
@@ -289,7 +248,7 @@ function TempleDetail() {
         festivals_en: toStr(data.festivals),
         festivals_ta: toTa(data.festivals),
         image: data.image || "",
-        imageUrl: data.imageUrl || "",
+        imageUrl: data.imageUrl || data.image || "",
         imageLink: data.imageLink || "",
         videoUrl: data.videoUrl || "",
         videoLink: data.videoLink || "",
@@ -324,7 +283,7 @@ function TempleDetail() {
     setEditDeity(temple.deity);
     setEditArchitecture(temple.architecture);
     setEditDescription(temple.description);
-    setEditImageUrl(temple.imageUrl || "");
+    setEditImageUrl(temple.imageUrl || temple.image || "");
     setEditImageLink(temple.imageLink || "");
     setEditVideoUrl(temple.videoUrl || "");
     setEditVideoLink(temple.videoLink || "");
@@ -346,8 +305,8 @@ function TempleDetail() {
           ...rest,
           subtitle: toBilingual(subtitle_en, subtitle_ta),
           content: toBilingual(content_en, content_ta),
-          videoTitle: toBilingual(videoTitle_en, videoTitle_ta),
-          videoDescription: toBilingual(videoDescription_en, videoDescription_ta)
+          videoTitle: videoTitle_en || videoTitle_ta || "",
+          videoDescription: videoDescription_en || videoDescription_ta || ""
         };
       });
 
@@ -363,6 +322,7 @@ function TempleDetail() {
         significance: toBilingual(editableData.significance_en, editableData.significance_ta),
         festivals: toBilingual(editableData.festivals_en, editableData.festivals_ta),
         imageUrl: editableData.imageUrl,
+        image: editableData.imageUrl,
         imageLink: editableData.imageLink,
         videoUrl: editableData.videoUrl,
         videoLink: editableData.videoLink,
@@ -384,9 +344,9 @@ function TempleDetail() {
       const updatedTemple = await res.json();
       setTemple(updatedTemple);
       setIsEditing(false);
-      setError("");
+      setSaveError("");
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     }
   };
 
@@ -404,6 +364,7 @@ function TempleDetail() {
           architecture: editArchitecture,
           description: editDescription,
           imageUrl: editImageUrl,
+          image: editImageUrl,
           imageLink: editImageLink,
           videoUrl: editVideoUrl,
           videoLink: editVideoLink,
@@ -459,8 +420,8 @@ function TempleDetail() {
       }
 
       const data = await res.json();
-      setLikes(data.likes);
-      setUserLiked(data.userLiked);
+      setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+      setUserLiked(!!data.userLiked);
     } catch (err) {
       console.error("Like error:", err);
       alert("Failed to like the temple");
@@ -612,10 +573,10 @@ function TempleDetail() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: temple.name,
-        text: `Check out this temple: ${temple.name}`,
+        title: getContent(temple.name),
+        text: `Check out this temple: ${getContent(temple.name)}`,
         url: window.location.href,
-      });
+      }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
@@ -718,7 +679,7 @@ function TempleDetail() {
                   const toStr = (val) => {
                     if (!val) return "";
                     if (typeof val === 'string') return val;
-                    if (typeof val === 'object') return val.en || val.ta || "";
+                    if (typeof val === 'object') return val.en || "";
                     return "";
                   };
                   const toTa = (val) => {
@@ -744,7 +705,7 @@ function TempleDetail() {
                     festivals_en: toStr(temple.festivals),
                     festivals_ta: toTa(temple.festivals),
                     image: temple.image || "",
-                    imageUrl: temple.imageUrl || "",
+                    imageUrl: temple.imageUrl || temple.image || "",
                     imageLink: temple.imageLink || "",
                     videoUrl: temple.videoUrl || "",
                     videoLink: temple.videoLink || "",
@@ -821,9 +782,9 @@ function TempleDetail() {
             width: "100%",
           }}
         >
-          {(isEditing ? editableData.imageUrl || editableData.videoUrl || editableData.videoLink : temple.imageUrl || temple.videoUrl || temple.videoLink) ? (
+          {(isEditing ? editableData.imageUrl || editableData.videoUrl || editableData.videoLink : temple.imageUrl || temple.image || temple.imageLink || temple.videoUrl || temple.videoLink) ? (
             <MediaDisplay
-              imageUrl={isEditing ? editableData.imageUrl : temple.imageUrl}
+              imageUrl={isEditing ? editableData.imageUrl : (temple.imageUrl || temple.image || temple.imageLink)}
               videoUrl={isEditing ? editableData.videoUrl : temple.videoUrl}
               videoLink={isEditing ? editableData.videoLink : temple.videoLink}
               title={temple.name}
@@ -1486,6 +1447,11 @@ function TempleDetail() {
                   UPDATE DETAILS
                 </Button>
               </Box>
+              {saveError && (
+                <Alert severity="error" onClose={() => setSaveError("")} sx={{ borderRadius: 0, mt: 2 }}>
+                  {saveError}
+                </Alert>
+              )}
             </Box>
           )}
         </Box>

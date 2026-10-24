@@ -12,7 +12,8 @@ import {
   IconButton,
   ToggleButtonGroup,
   ToggleButton,
-  Divider
+  Divider,
+  Snackbar
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
@@ -40,6 +41,28 @@ const getCleanAuthorName = (name) => {
 
 let cachedArticleDetails = {};
 
+const escapeHtml = (s) => s
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// Only http(s), mailto and site-relative URLs may become links/images
+const safeUrl = (url) => {
+  const u = url.trim();
+  return /^(https?:|mailto:)/i.test(u) || u.startsWith('/') ? u : null;
+};
+
+// Bold, italic and inline code on already-escaped text
+const formatInline = (text) => text
+  // Bold (must be before italic)
+  .replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 700; color: #000;">$1</strong>')
+  // Italic
+  .replace(/\*([^*]+)\*/g, '<em style="font-style: italic; color: #333;">$1</em>')
+  // Code
+  .replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d63384;">$1</code>');
+
 export default function ArticleDetail({ user }) {
   const getContent = useBilingualContent();
   const { t, i18n } = useTranslation();
@@ -48,6 +71,8 @@ export default function ArticleDetail({ user }) {
   const [article, setArticle] = useState(() => cachedArticleDetails[id] || null);
   const [loading, setLoading] = useState(!cachedArticleDetails[id]);
   const [error, setError] = useState(null);
+  // Errors from like/save/delete: shown as a toast so the page (and unsaved edits) stay
+  const [actionError, setActionError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editLanguage, setEditLanguage] = useState('ta');
   const [title_en, setTitleEn] = useState(() => cachedArticleDetails[id]?.title?.en || "");
@@ -72,12 +97,15 @@ export default function ArticleDetail({ user }) {
     
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
-      
+
       // Skip empty lines
       if (!line.trim()) {
         html += '<br />';
         continue;
       }
+
+      // Escape the author's raw text first so it can never become HTML
+      line = escapeHtml(line.replace(/\u0000/g, ''));
       
       // Headers (must be at start of line)
       if (line.match(/^### /)) {
@@ -100,22 +128,27 @@ export default function ArticleDetail({ user }) {
         line = '<p style="margin-bottom: 12px;">' + line + '</p>';
       }
       
-      // Now apply inline formatting (bold, italic, code, links, images)
+      // Now apply inline formatting (bold, italic, code, links, images).
+      // Finished images/links are parked as placeholders so the bold/italic/code
+      // pass can't inject tags into their attributes.
+      const tokens = [];
+      const keep = (tag) => `\u0000${tokens.push(tag) - 1}\u0000`;
+
       // Images (must be before links)
-      line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; margin: 16px 0; border-radius: 8px; display: block;" />');
-      
+      line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, url) => {
+        const src = safeUrl(url);
+        return src ? keep(`<img src="${src}" alt="${alt}" style="max-width: 100%; height: auto; margin: 16px 0; border-radius: 8px; display: block;" />`) : alt;
+      });
+
       // Links
-      line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #8B0000; text-decoration: underline; font-weight: 600;">$1</a>');
-      
-      // Bold (must be before italic)
-      line = line.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 700; color: #000;">$1</strong>');
-      
-      // Italic
-      line = line.replace(/\*([^*]+)\*/g, '<em style="font-style: italic; color: #333;">$1</em>');
-      
-      // Code
-      line = line.replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d63384;">$1</code>');
-      
+      line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
+        const href = safeUrl(url);
+        return href ? keep(`<a href="${href}" style="color: #8B0000; text-decoration: underline; font-weight: 600;">${formatInline(text)}</a>`) : text;
+      });
+
+      line = formatInline(line);
+      line = line.replace(/\u0000(\d+)\u0000/g, (m, n) => tokens[n]);
+
       html += line;
     }
     
@@ -150,7 +183,7 @@ export default function ArticleDetail({ user }) {
 
   const handleLike = async () => {
     if (!user) {
-      setError(t('articles.loginToLike', 'Please login to like articles'));
+      setActionError(t('articles.loginToLike', 'Please login to like articles'));
       return;
     }
 
@@ -175,7 +208,7 @@ export default function ArticleDetail({ user }) {
     } catch (err) {
       // Rollback to original state on network/server error
       setArticle(previousArticle);
-      setError(err.message);
+      setActionError(err.message);
     }
   };
 
@@ -218,7 +251,7 @@ export default function ArticleDetail({ user }) {
       setVideoUrl(refreshData.videoUrl || "");
       setEditMode(false);
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -227,13 +260,14 @@ export default function ArticleDetail({ user }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this article?")) {
       try {
-        await fetch(`${API_BASE_URL}/api/articles/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
           method: "DELETE",
           credentials: "include",
         });
+        if (!res.ok) throw new Error("Failed to delete article");
         navigate(`/articles`);
       } catch {
-        setError("Failed to delete article");
+        setActionError("Failed to delete article");
       }
     }
   };
@@ -252,6 +286,19 @@ export default function ArticleDetail({ user }) {
     setEditLanguage(defaultLang);
     setEditMode(true);
   };
+
+  const actionErrorToast = (
+    <Snackbar
+      open={!!actionError}
+      autoHideDuration={6000}
+      onClose={() => setActionError(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+    >
+      <Alert severity="error" onClose={() => setActionError(null)} sx={{ width: '100%' }}>
+        {actionError}
+      </Alert>
+    </Snackbar>
+  );
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -272,6 +319,7 @@ export default function ArticleDetail({ user }) {
   if (editMode) {
     return (
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 } }}>
+        {actionErrorToast}
         <Paper 
           elevation={0} 
           sx={{ 
@@ -596,6 +644,7 @@ export default function ArticleDetail({ user }) {
         url={`/articles/${id}`}
         type="article"
       />
+      {actionErrorToast}
       <Box sx={{
         maxWidth: 1150,
         mx: "auto",

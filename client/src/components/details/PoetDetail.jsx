@@ -104,8 +104,8 @@ function PoetDetail({ user: initialUser }) {
         const data = await res.json();
         setPoet(data);
         setComments(data.comments || []);
-        setLikes(data.likes?.length || 0);
-        setUserLiked(user && data.likes?.includes(user._id));
+        setLikes(typeof data.likes === 'number' ? data.likes : (data.likes?.length || 0));
+        setUserLiked(!!data.userLiked);
         
         // Initialize editable data
         setEditableData({
@@ -152,8 +152,16 @@ function PoetDetail({ user: initialUser }) {
       }
     };
 
+    setError(null);
     fetchPoet();
-  }, [slug, user]);
+  }, [slug]);
+
+  // Re-check like state when the logged-in user changes (without refetching / resetting edits)
+  useEffect(() => {
+    if (poet && Array.isArray(poet.likes)) {
+      setUserLiked(!!user && poet.likes.some(likeId => String(likeId) === String(user._id)));
+    }
+  }, [user?._id, poet]);
 
   // Add major work
   const addMajorWork = () => {
