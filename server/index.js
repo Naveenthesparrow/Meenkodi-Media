@@ -5058,7 +5058,32 @@ if (fs.existsSync(clientIndex)) {
 
   // Cache base HTML in production; re-read on every request in dev so edits are reflected
   let cachedBaseHtml = null;
+
+  // In production www.meenkodi.com is the Render Static Site, which rewrites page
+  // URLs to this server but serves /assets itself. This server's own client build
+  // has different asset file names, so use the Static Site's index.html as the
+  // template (refreshed every minute, so new frontend deploys are picked up).
+  const STATIC_SITE_URL = (process.env.STATIC_SITE_URL || 'https://meenkodi-media-fd.onrender.com').replace(/\/+$/, '');
+  let staticSiteBaseHtml = null;
+  async function refreshStaticSiteBaseHtml() {
+    try {
+      const response = await fetch(`${STATIC_SITE_URL}/index.html`, { signal: AbortSignal.timeout(10000) });
+      if (!response.ok) return;
+      const html = await response.text();
+      if (!html.includes('id="root"')) return;
+      // Its build already injected the homepage's hidden SEO block; each page adds its own
+      staticSiteBaseHtml = html.replace(/\s*<div id="ssr-content"[\s\S]*?<\/div>\s*(?=<\/body>)/, '\n');
+    } catch (err) {
+      console.warn('[SSR] Could not fetch Static Site index.html:', err.message);
+    }
+  }
+  if (isProduction) {
+    refreshStaticSiteBaseHtml();
+    setInterval(refreshStaticSiteBaseHtml, 60 * 1000).unref();
+  }
+
   function getBaseHtml() {
+    if (isProduction && staticSiteBaseHtml) return staticSiteBaseHtml;
     if (!cachedBaseHtml || process.env.NODE_ENV !== 'production') {
       cachedBaseHtml = fs.readFileSync(clientIndex, 'utf8');
     }
