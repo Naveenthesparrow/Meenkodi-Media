@@ -166,11 +166,11 @@ export async function generateAllSitemaps({ standalone = false, output = writeFi
   let articleUrls = [];
   if (Article) {
     try {
-      const articles = await Article.find({ status: 'published' }).select('_id updatedAt publishedAt title image').lean();
+      const articles = await Article.find({ status: 'published' }).select('_id slug updatedAt publishedAt title image').lean();
       articleUrls = articles.map(a => {
         const lastmod = a.updatedAt || a.publishedAt || new Date();
         const images = a.image ? [{ url: a.image, title: pickText(a.title) || 'Tamil heritage article' }] : [];
-        return urlEntry(`/articles/${a._id}`, { lastmod: new Date(lastmod).toISOString().split('T')[0], changefreq: 'weekly', priority: '0.8', images });
+        return urlEntry(`/articles/${a.slug || a._id}`, { lastmod: new Date(lastmod).toISOString().split('T')[0], changefreq: 'weekly', priority: '0.8', images });
       });
       console.log(`  Articles: ${articleUrls.length}`);
     } catch (e) { console.warn('  Articles error:', e.message); }
@@ -182,10 +182,10 @@ export async function generateAllSitemaps({ standalone = false, output = writeFi
   let eventUrls = [];
   if (Event) {
     try {
-      const events = await Event.find().select('_id updatedAt createdAt title imageUrl').lean();
+      const events = await Event.find().select('_id slug updatedAt createdAt title imageUrl').lean();
       eventUrls = events.map(e => {
         const images = e.imageUrl ? [{ url: e.imageUrl, title: pickText(e.title) || 'Tamil heritage event' }] : [];
-        return urlEntry(`/events/${e._id}`, { lastmod: new Date(e.updatedAt || e.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'weekly', priority: '0.75', images });
+        return urlEntry(`/events/${e.slug || e._id}`, { lastmod: new Date(e.updatedAt || e.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'weekly', priority: '0.75', images });
       });
       console.log(`  Events: ${eventUrls.length}`);
     } catch (e) { console.warn('  Events error:', e.message); }
@@ -197,11 +197,11 @@ export async function generateAllSitemaps({ standalone = false, output = writeFi
   let galleryUrls = [];
   if (Gallery) {
     try {
-      const items = await Gallery.find({ isFolder: { $ne: true } }).select('_id updatedAt createdAt name imageUrl imageAlt').lean();
+      const items = await Gallery.find({ isFolder: { $ne: true } }).select('_id slug updatedAt createdAt name imageUrl imageAlt').lean();
       galleryUrls = items.map(item => {
         const altText = pickText(item.imageAlt) || pickText(item.name) || 'Tamil heritage image';
         const images = item.imageUrl ? [{ url: item.imageUrl, title: altText }] : [];
-        return urlEntry(`/gallery/${item._id}`, { lastmod: new Date(item.updatedAt || item.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: '0.7', images });
+        return urlEntry(`/gallery/${item.slug || item._id}`, { lastmod: new Date(item.updatedAt || item.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: '0.7', images });
       });
       console.log(`  Gallery items: ${galleryUrls.length}`);
     } catch (e) { console.warn('  Gallery error:', e.message); }
@@ -213,8 +213,8 @@ export async function generateAllSitemaps({ standalone = false, output = writeFi
   let resourceUrls = [];
   if (Resource) {
     try {
-      const resources = await Resource.find().select('_id updatedAt createdAt').lean();
-      resourceUrls = resources.map(r => urlEntry(`/resources/${r._id}`, { lastmod: new Date(r.updatedAt || r.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: '0.6' }));
+      const resources = await Resource.find().select('_id slug updatedAt createdAt').lean();
+      resourceUrls = resources.map(r => urlEntry(`/resources/${r.slug || r._id}`, { lastmod: new Date(r.updatedAt || r.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: '0.6' }));
       console.log(`  Resources: ${resourceUrls.length}`);
     } catch (e) { console.warn('  Resources error:', e.message); }
   }
@@ -263,14 +263,14 @@ export async function generateAllSitemaps({ standalone = false, output = writeFi
   const seedUrls = [urlEntry('/seeds-and-footprints', { changefreq: 'weekly', priority: '0.8' })];
   if (ResearchFolder) {
     try {
-      const folders = await ResearchFolder.find().select('_id name coverPhoto photos.url photos.caption photos.name updatedAt createdAt').lean();
+      const folders = await ResearchFolder.find().select('_id slug name coverPhoto photos.url photos.caption photos.name updatedAt createdAt').lean();
       for (const f of folders) {
         const folderName = pickText(f.name) || 'Seeds & Footprints';
         const photos = [
           f.coverPhoto ? { url: f.coverPhoto, title: folderName } : null,
           ...(f.photos || []).map(p => ({ url: p.url, title: pickText(p.caption) || pickText(p.name) || folderName })),
         ].filter(p => p && /^https?:\/\//i.test(p.url || '')).slice(0, 1000); // Google allows 1000 images per URL
-        seedUrls.push(urlEntry(`/seeds-and-footprints/folders/${f._id}`, {
+        seedUrls.push(urlEntry(`/seeds-and-footprints/folders/${f.slug || f._id}`, {
           lastmod: new Date(f.updatedAt || f.createdAt || new Date()).toISOString().split('T')[0],
           changefreq: 'weekly',
           priority: '0.75',

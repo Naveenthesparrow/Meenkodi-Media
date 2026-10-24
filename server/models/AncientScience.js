@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addSlug } from "../utils/slug.js";
 
 const commentSchema = new mongoose.Schema({
   user: {
@@ -64,5 +65,8 @@ const ancientScienceSchema = new mongoose.Schema({
   comments: [commentSchema],
   createdAt: { type: Date, default: Date.now },
 });
+
+// Readable URL (e.g. /explore/temples/meenakshi-amman-temple) instead of the id
+addSlug(ancientScienceSchema);
 
 export default mongoose.model("AncientScience", ancientScienceSchema);

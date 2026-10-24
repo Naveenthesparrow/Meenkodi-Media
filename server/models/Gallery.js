@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addSlug } from "../utils/slug.js";
 
 const bilingual = {
   en: { type: String, trim: true },
@@ -28,5 +29,8 @@ const gallerySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
+
+// Readable URL (e.g. /explore/temples/meenakshi-amman-temple) instead of the id
+addSlug(gallerySchema);
 
 export default mongoose.model("Gallery", gallerySchema);

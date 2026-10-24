@@ -291,7 +291,7 @@ export function buildHomeBodyHtml({ recentArticles = [], recentEvents = [] } = {
     const img = a.image ? `<img src="${escapeHtml(a.image)}" alt="${escapeHtml(t)} - Meenkodi Tamil Heritage article" loading="lazy" />` : '';
     return `
   <article>
-    <h2><a href="/articles/${a._id}">${escapeHtml(t)}</a></h2>
+    <h2><a href="/articles/${a.slug || a._id}">${escapeHtml(t)}</a></h2>
     ${img}
     <p>${escapeHtml(desc)}</p>
   </article>`;
@@ -301,7 +301,7 @@ export function buildHomeBodyHtml({ recentArticles = [], recentEvents = [] } = {
     const t = pick(e.title);
     const loc = pick(e.location);
     const date = e.date ? new Date(e.date).toDateString() : '';
-    return `<li><a href="/events/${e._id}">${escapeHtml(t)}</a>${date ? ` — ${escapeHtml(date)}` : ''}${loc ? ` @ ${escapeHtml(loc)}` : ''}</li>`;
+    return `<li><a href="/events/${e.slug || e._id}">${escapeHtml(t)}</a>${date ? ` — ${escapeHtml(date)}` : ''}${loc ? ` @ ${escapeHtml(loc)}` : ''}</li>`;
   }).join('\n');
 
   return `
@@ -352,7 +352,7 @@ export function buildArticlesBodyHtml({ articles = [] } = {}) {
     const img = a.image ? `<img src="${escapeHtml(a.image)}" alt="${escapeHtml(t)} — Tamil heritage article image" loading="lazy" />` : '';
     return `
   <article>
-    <h2><a href="/articles/${a._id}">${escapeHtml(t)}</a></h2>
+    <h2><a href="/articles/${a.slug || a._id}">${escapeHtml(t)}</a></h2>
     ${img}
     <p>${escapeHtml(desc)}</p>
   </article>`;
@@ -429,8 +429,8 @@ export function buildGalleryBodyHtml({ items = [] } = {}) {
       : '';
     return `
   <figure>
-    <h2><a href="/gallery/${item._id}">${escapeHtml(name)}</a></h2>
-    <a href="/gallery/${item._id}">${img}</a>
+    <h2><a href="/gallery/${item.slug || item._id}">${escapeHtml(name)}</a></h2>
+    <a href="/gallery/${item.slug || item._id}">${img}</a>
     <figcaption>
       <strong>${escapeHtml(name)}</strong>
       <p>${escapeHtml(desc)}</p>
@@ -493,7 +493,7 @@ export function buildEventsBodyHtml({ events = [] } = {}) {
     const img = e.imageUrl ? `<img src="${escapeHtml(e.imageUrl)}" alt="${escapeHtml(t)} — Tamil heritage event" loading="lazy" />` : '';
     return `
   <article>
-    <h2><a href="/events/${e._id}">${escapeHtml(t)}</a></h2>
+    <h2><a href="/events/${e.slug || e._id}">${escapeHtml(t)}</a></h2>
     ${img}
     ${date ? `<time datetime="${e.date ? new Date(e.date).toISOString() : ''}">${escapeHtml(date)}</time>` : ''}
     ${loc ? `<p>Location: ${escapeHtml(loc)}</p>` : ''}

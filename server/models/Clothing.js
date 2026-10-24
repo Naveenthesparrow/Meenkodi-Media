@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addSlug } from "../utils/slug.js";
 
 // Reactions stored per comment: one reaction per user, can update emoji type
 const reactionSchema = new mongoose.Schema(
@@ -68,6 +69,9 @@ const ClothingSchema = new mongoose.Schema({
   comments: [commentSchema],
   createdAt: { type: Date, default: Date.now },
 });
+
+// Readable URL (e.g. /explore/temples/meenakshi-amman-temple) instead of the id
+addSlug(ClothingSchema);
 
 const Clothing = mongoose.model("Clothing", ClothingSchema);
 export default Clothing;

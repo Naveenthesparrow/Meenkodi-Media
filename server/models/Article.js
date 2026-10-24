@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addSlug } from "../utils/slug.js";
 
 const bilingual = {
   en: { type: String, trim: true },
@@ -41,5 +42,8 @@ articleSchema.pre('save', function(next) {
     next();
   }
 });
+
+// Readable URL (e.g. /explore/temples/meenakshi-amman-temple) instead of the id
+addSlug(articleSchema);
 
 export default mongoose.model("Article", articleSchema);

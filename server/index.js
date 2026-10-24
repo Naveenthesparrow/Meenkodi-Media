@@ -647,6 +647,32 @@ async function toggleLike(Model, id, userId) {
   return liked ? { likes: liked.likes || [], liked: true } : null;
 }
 
+// Readable page URLs use slugs ("/explore/temples/meenakshi-amman-temple").
+// Translate a slug in any API URL to the document id before the route runs,
+// so every existing /api/.../:id route accepts both.
+const isObjectIdString = (value) => /^[0-9a-f]{24}$/i.test(String(value));
+const SLUG_MODELS = [
+  ['/api/seedsandfootprints/folders/', ResearchFolder], ['/api/articles/', Article], ['/api/events/', Event],
+  ['/api/gallery/', Gallery], ['/api/resources/', Resource], ['/api/temples/', Temple], ['/api/foods/', Food],
+  ['/api/festivals/', Festival], ['/api/literature/', Literature], ['/api/dance/', Dance],
+  ['/api/clothing/', Clothing], ['/api/ancientscience/', AncientScience],
+];
+async function resolveSlugParam(req, res, next, value, name) {
+  try {
+    if (!req.path.startsWith('/api/') || isObjectIdString(value)) return next();
+    const entry = SLUG_MODELS.find(([prefix]) => req.path.startsWith(prefix));
+    if (entry) {
+      const doc = await entry[1].findOne({ slug: value }).select('_id').lean();
+      if (doc) req.params[name] = String(doc._id);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+app.param('id', resolveSlugParam);
+app.param('folderId', resolveSlugParam);
+
 // Admin: regenerate all sitemaps from live DB data
 app.post('/api/sitemap/refresh', ensureAdmin, async (req, res) => {
   try {
@@ -1106,6 +1132,7 @@ app.get("/api/seedsandfootprints/folders", async (req, res) => {
       {
         $project: {
           name: 1,
+          slug: 1,
           description: 1,
           coverPhoto: 1,
           order: 1,
@@ -1116,6 +1143,7 @@ app.get("/api/seedsandfootprints/folders", async (req, res) => {
     ]);
     res.json(folders.map(f => ({
       _id: f._id,
+      slug: f.slug,
       name: f.name, // Return raw bilingual object
       nameRaw: f.name,
       description: f.description, // Return raw bilingual object
@@ -1150,6 +1178,7 @@ app.get('/api/seedsandfootprints/folders/:id', async (req, res) => {
 
     const response = {
       _id: folder._id,
+      slug: folder.slug,
       name: folder.name, // Return raw bilingual object
       nameRaw: folder.name,
       description: folder.description, // Return raw bilingual object
@@ -5141,11 +5170,11 @@ if (fs.existsSync(clientIndex)) {
         Article.find({ status: 'published' })
           .sort({ publishedAt: -1, createdAt: -1 })
           .limit(8)
-          .select('title content image authorName _id'),
+          .select('title slug content image authorName _id'),
         Event.find()
           .sort({ date: 1, createdAt: -1 })
           .limit(5)
-          .select('title description date location imageUrl _id'),
+          .select('title slug description date location imageUrl _id'),
       ]);
       sendSsr(res, {
         title: 'Meenkodi | Tamil Heritage | Pandiya, Chola, Chera Dynasties | Southerns History | தென்புலத்தார்',
@@ -5163,7 +5192,18 @@ if (fs.existsSync(clientIndex)) {
   const pickText = (field) => (!field ? '' : typeof field === 'string' ? field : (field.en || field.ta || ''));
   const mainImage = (doc) => doc.coverPhoto || doc.imageUrl || doc.image || doc.imageLink || '';
   const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const byId = (Model) => (id) => (mongoose.isValidObjectId(id) ? Model.findById(id).lean() : null);
+  // Pages are addressed by slug; old id links still resolve (and are redirected)
+  const bySlugOrId = (Model) => (value) => (isObjectIdString(value)
+    ? Model.findById(value).lean()
+    : Model.findOne({ slug: value }).lean());
+  const itemPath = (base, doc) => `${base}/${doc.slug || doc._id}`;
+  /** Old id URL of an item that now has a slug -> 301 to the slug URL. Returns true if redirected. */
+  const redirectToSlug = (req, res, base, doc, requested) => {
+    if (!doc || !doc.slug || requested === doc.slug) return false;
+    const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    res.redirect(301, `${base}/${encodeURIComponent(doc.slug)}${query}`);
+    return true;
+  };
 
   // Keys that never hold readable text (ids, links, media, user data)
   const NON_TEXT_KEY = /^(_id|__v|id|slug|order|image|imageUrl|imageLink|imagePosition|url|link|downloadLink|videoUrl|videoLink|mapEmbed|media|banner|flag|createdAt|updatedAt|user|likes|comments)$/i;
@@ -5238,8 +5278,8 @@ if (fs.existsSync(clientIndex)) {
       const articles = await Article.find({ status: 'published' })
         .sort({ order: 1, publishedAt: -1, createdAt: -1 })
         .limit(100)
-        .select('title content image authorName _id');
-      const items = articles.map((a) => ({ href: `/articles/${a._id}`, title: pickText(a.title) || 'Article' }));
+        .select('title slug content image authorName _id');
+      const items = articles.map((a) => ({ href: itemPath('/articles', a), title: pickText(a.title) || 'Article' }));
       sendSsr(res, {
         title, description, canonicalUrl,
         bodyHtml: buildArticlesBodyHtml({ articles }),
@@ -5253,12 +5293,12 @@ if (fs.existsSync(clientIndex)) {
 
   // ── Article detail ────────────────────────────────────────────────────────
   app.get('/articles/:id', async (req, res) => {
-    const canonicalUrl = `${BASE_URL}/articles/${req.params.id}`;
+    let canonicalUrl = `${BASE_URL}/articles/${req.params.id}`;
     try {
-      const article = mongoose.isValidObjectId(req.params.id)
-        ? await Article.findById(req.params.id).select('title content image imageLink authorName status publishedAt createdAt updatedAt _id')
-        : null;
+      const article = await bySlugOrId(Article)(req.params.id);
       if (article && article.status === 'published') {
+        if (redirectToSlug(req, res, '/articles', article, req.params.id)) return;
+        if (article.slug) canonicalUrl = `${BASE_URL}/articles/${article.slug}`;
         const titleEn = (article.title && (article.title.en || article.title.ta)) || 'Tamil Heritage Article';
         const contentText = article.content && (article.content.en || article.content.ta);
         const descEn = metaDescription(contentText, 'Read this article on Meenkodi — Tamil heritage, history, and culture.');
@@ -5310,6 +5350,7 @@ if (fs.existsSync(clientIndex)) {
 
     return items.map(item => ({
       _id: item._id,
+      slug: item.slug,
       name: pickText(item.name) || 'Gallery Item',
       imageUrl: item.imageUrl || '',
     }));
@@ -5322,6 +5363,7 @@ if (fs.existsSync(clientIndex)) {
 
     return items.map(item => ({
       _id: item._id,
+      slug: item.slug,
       name: pickText(item.name) || 'Gallery Item',
       imageUrl: item.imageUrl || '',
     }));
@@ -5349,7 +5391,7 @@ if (fs.existsSync(clientIndex)) {
       image: items.find(i => i.imageUrl)?.imageUrl,
       bodyHtml: buildDetailBodyHtml({
         heading: title,
-        items: items.map(i => ({ href: `/gallery/${i._id}`, title: i.name, image: i.imageUrl })),
+        items: items.map(i => ({ href: itemPath('/gallery', i), title: i.name, image: i.imageUrl })),
       }),
       jsonLd: [
         imageGalleryLd({ url: canonicalUrl, name: title, description, photos }),
@@ -5360,13 +5402,12 @@ if (fs.existsSync(clientIndex)) {
 
   // ── Gallery detail ────────────────────────────────────────────────────────
   app.get('/gallery/:id', async (req, res) => {
-    const canonicalUrl = `${BASE_URL}/gallery/${req.params.id}`;
+    let canonicalUrl = `${BASE_URL}/gallery/${req.params.id}`;
     try {
-      const item = mongoose.isValidObjectId(req.params.id)
-        ? await Gallery.findById(req.params.id)
-          .select('name description imageUrl imageAlt seoTitle seoDescription category era location keywords isFolder _id')
-        : null;
+      const item = await bySlugOrId(Gallery)(req.params.id);
       if (item) {
+        if (redirectToSlug(req, res, '/gallery', item, req.params.id)) return;
+        if (item.slug) canonicalUrl = `${BASE_URL}/gallery/${item.slug}`;
         const nameEn = (item.name && (item.name.en || item.name.ta)) || 'Gallery Item';
         const seoTitleEn = (item.seoTitle && (item.seoTitle.en || item.seoTitle.ta)) || nameEn;
         const seoDescEn = (item.seoDescription && (item.seoDescription.en || item.seoDescription.ta))
@@ -5415,8 +5456,8 @@ if (fs.existsSync(clientIndex)) {
       const events = await Event.find()
         .sort({ date: 1, createdAt: -1 })
         .limit(100)
-        .select('title description date location imageUrl _id');
-      const items = events.map((e) => ({ href: `/events/${e._id}`, title: pickText(e.title) || 'Event' }));
+        .select('title slug description date location imageUrl _id');
+      const items = events.map((e) => ({ href: itemPath('/events', e), title: pickText(e.title) || 'Event' }));
       sendSsr(res, {
         title, description, canonicalUrl,
         bodyHtml: buildEventsBodyHtml({ events }),
@@ -5430,12 +5471,12 @@ if (fs.existsSync(clientIndex)) {
 
   // ── Event detail ──────────────────────────────────────────────────────────
   app.get('/events/:id', async (req, res) => {
-    const canonicalUrl = `${BASE_URL}/events/${req.params.id}`;
+    let canonicalUrl = `${BASE_URL}/events/${req.params.id}`;
     try {
-      const event = mongoose.isValidObjectId(req.params.id)
-        ? await Event.findById(req.params.id).select('title description date location imageUrl _id')
-        : null;
+      const event = await bySlugOrId(Event)(req.params.id);
       if (event) {
+        if (redirectToSlug(req, res, '/events', event, req.params.id)) return;
+        if (event.slug) canonicalUrl = `${BASE_URL}/events/${event.slug}`;
         const titleEn = (event.title && (event.title.en || event.title.ta)) || 'Tamil Heritage Event';
         const descEn = (event.description && (event.description.en || event.description.ta))
           || `${titleEn} — Tamil heritage event on Meenkodi`;
@@ -5491,18 +5532,18 @@ if (fs.existsSync(clientIndex)) {
   // ── Content detail pages (full text, preview image and schema from the DB) ──
   const DETAIL_PAGES = [
     {
-      path: '/seeds-and-footprints/folders/:id', find: byId(ResearchFolder),
+      path: '/seeds-and-footprints/folders/:id', find: bySlugOrId(ResearchFolder),
       section: 'Seeds & Footprints', back: '/seeds-and-footprints',
       image: (d) => d.coverPhoto || (d.photos || []).find((p) => p.url)?.url,
       photos: (d) => (d.photos || []).map((p) => ({ url: p.url, caption: pickText(p.caption) || pickText(p.name) || pickText(d.name) })),
     },
-    { path: '/explore/temples/:id', find: byId(Temple), section: 'Tamil Temples', back: '/explore/temples' },
-    { path: '/explore/foods/:id', find: byId(Food), section: 'Tamil Foods', back: '/explore/foods' },
-    { path: '/explore/festivals/:id', find: byId(Festival), section: 'Tamil Festivals', back: '/explore/festivals' },
-    { path: '/explore/literature/:id', find: byId(Literature), section: 'Tamil Literature', back: '/explore/literature', name: (d) => pickText(d.title) || pickText(d.name) },
-    { path: '/explore/dance/:id', find: byId(Dance), section: 'Tamil Dance', back: '/explore/dance' },
-    { path: '/explore/clothing/:id', find: byId(Clothing), section: 'Traditional Tamil Clothing', back: '/explore/clothing' },
-    { path: '/explore/ancientscience/:id', find: byId(AncientScience), section: 'Ancient Tamil Science', back: '/explore/ancientscience' },
+    { path: '/explore/temples/:id', find: bySlugOrId(Temple), section: 'Tamil Temples', back: '/explore/temples' },
+    { path: '/explore/foods/:id', find: bySlugOrId(Food), section: 'Tamil Foods', back: '/explore/foods' },
+    { path: '/explore/festivals/:id', find: bySlugOrId(Festival), section: 'Tamil Festivals', back: '/explore/festivals' },
+    { path: '/explore/literature/:id', find: bySlugOrId(Literature), section: 'Tamil Literature', back: '/explore/literature', name: (d) => pickText(d.title) || pickText(d.name) },
+    { path: '/explore/dance/:id', find: bySlugOrId(Dance), section: 'Tamil Dance', back: '/explore/dance' },
+    { path: '/explore/clothing/:id', find: bySlugOrId(Clothing), section: 'Traditional Tamil Clothing', back: '/explore/clothing' },
+    { path: '/explore/ancientscience/:id', find: bySlugOrId(AncientScience), section: 'Ancient Tamil Science', back: '/explore/ancientscience' },
     {
       path: '/explore/lands/:id', section: 'Five Tamil Lands', back: '/explore',
       find: (id) => (mongoose.isValidObjectId(id)
@@ -5511,12 +5552,12 @@ if (fs.existsSync(clientIndex)) {
     },
     { path: '/dynasties/:id', find: (slug) => Dynasty.findOne({ slug }).lean(), section: 'Tamil Dynasties' },
     { path: '/poets/:id', find: (slug) => Poet.findOne({ slug }).lean(), section: 'Tamil Poets' },
-    { path: '/resources/:id', find: byId(Resource), section: 'Resources', back: '/resources', name: (d) => pickText(d.title) },
+    { path: '/resources/:id', find: bySlugOrId(Resource), section: 'Resources', back: '/resources', name: (d) => pickText(d.title) },
   ];
 
   for (const page of DETAIL_PAGES) {
     app.get(page.path, async (req, res) => {
-      const canonicalUrl = `${BASE_URL}${req.path.replace(/\/+$/, '')}`;
+      let canonicalUrl = `${BASE_URL}${req.path.replace(/\/+$/, '')}`;
       let doc = null;
       try {
         doc = await page.find(req.params.id);
@@ -5526,6 +5567,9 @@ if (fs.existsSync(clientIndex)) {
       if (!doc) {
         return sendSsr(res, { canonicalUrl, title: `${page.section} | Meenkodi Tamil Heritage`, jsonLd: [] });
       }
+      const basePath = page.path.replace(/\/:id$/, '');
+      if (redirectToSlug(req, res, basePath, doc, req.params.id)) return;
+      if (doc.slug) canonicalUrl = `${BASE_URL}${basePath}/${doc.slug}`;
       const name = (page.name ? page.name(doc) : pickText(doc.name)) || page.section;
       const description = metaDescription(pickText(doc.description), `${name} — ${page.section} on Meenkodi, preserving 5000+ years of Tamil heritage.`);
       const image = page.image ? page.image(doc) : mainImage(doc);
@@ -5562,8 +5606,8 @@ if (fs.existsSync(clientIndex)) {
   // ── Section list pages (with links to every item) ─────────────────────────
   const LIST_PAGES = [
     { path: '/seeds-and-footprints', title: 'Seeds & Footprints — Tamil Heritage Research Collections | Meenkodi', description: 'Photo collections tracing the seeds and footprints of Tamil people, Pallar and Mallar heritage across Tamil Nadu and the world.', name: 'Seeds & Footprints',
-      list: async () => (await ResearchFolder.find().sort({ order: 1, createdAt: -1 }).select('name coverPhoto').lean())
-        .map((f) => ({ href: `/seeds-and-footprints/folders/${f._id}`, title: pickText(f.name), image: f.coverPhoto })) },
+      list: async () => (await ResearchFolder.find().sort({ order: 1, createdAt: -1 }).select('name slug coverPhoto').lean())
+        .map((f) => ({ href: itemPath('/seeds-and-footprints/folders', f), title: pickText(f.name), image: f.coverPhoto })) },
     { path: '/explore/temples', title: 'Tamil Temples & Dravidian Architecture | Meenkodi', description: 'Explore ancient Tamil temples and Dravidian architecture — history, legends and photos on Meenkodi.', name: 'Tamil Temples', model: Temple },
     { path: '/explore/foods', title: 'Traditional Tamil Foods & Cuisine | Meenkodi', description: 'Discover traditional Tamil foods, their history and cultural meaning on Meenkodi.', name: 'Tamil Foods', model: Food },
     { path: '/explore/festivals', title: 'Tamil Festivals & Celebrations | Meenkodi', description: 'Tamil festivals and celebrations — Pongal, Chithirai and more — with their history on Meenkodi.', name: 'Tamil Festivals', model: Festival },
@@ -5572,8 +5616,8 @@ if (fs.existsSync(clientIndex)) {
     { path: '/explore/clothing', title: 'Traditional Tamil Clothing | Meenkodi', description: 'Traditional Tamil clothing and textiles through history on Meenkodi.', name: 'Traditional Tamil Clothing', model: Clothing },
     { path: '/explore/ancientscience', title: 'Ancient Tamil Science & Technology | Meenkodi', description: 'Ancient Tamil science, astronomy, medicine and technology on Meenkodi.', name: 'Ancient Tamil Science', model: AncientScience },
     { path: '/resources', title: 'Tamil Heritage Books & Resources | Meenkodi', description: 'Books, PDFs and research resources on Tamil history and heritage on Meenkodi.', name: 'Resources',
-      list: async () => (await Resource.find().sort({ createdAt: -1 }).select('title image').lean())
-        .map((r) => ({ href: `/resources/${r._id}`, title: pickText(r.title), image: r.image })) },
+      list: async () => (await Resource.find().sort({ createdAt: -1 }).select('title slug image').lean())
+        .map((r) => ({ href: itemPath('/resources', r), title: pickText(r.title), image: r.image })) },
     { path: '/faq', title: 'FAQ — Tamil Heritage & Meenkodi | Frequently Asked Questions', description: 'Answers to common questions about Meenkodi and Tamil heritage.', name: 'FAQ' },
   ];
   for (const page of LIST_PAGES) {
@@ -5584,8 +5628,8 @@ if (fs.existsSync(clientIndex)) {
         if (page.list) {
           items = await page.list();
         } else if (page.model) {
-          items = (await page.model.find().sort({ createdAt: -1 }).select('name title image imageUrl imageLink').lean())
-            .map((d) => ({ href: `${page.path}/${d._id}`, title: pickText(d.name) || pickText(d.title), image: mainImage(d) }));
+          items = (await page.model.find().sort({ createdAt: -1 }).select('name title slug image imageUrl imageLink').lean())
+            .map((d) => ({ href: itemPath(page.path, d), title: pickText(d.name) || pickText(d.title), image: mainImage(d) }));
         }
       } catch (err) {
         console.error(`[SSR] ${page.path} list error:`, err);

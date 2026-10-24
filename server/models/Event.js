@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addSlug } from "../utils/slug.js";
 
 const eventSchema = new mongoose.Schema({
   title: {
@@ -17,5 +18,8 @@ const eventSchema = new mongoose.Schema({
   imageUrl: String,
   createdAt: { type: Date, default: Date.now },
 });
+
+// Readable URL (e.g. /explore/temples/meenakshi-amman-temple) instead of the id
+addSlug(eventSchema);
 
 export default mongoose.model("Event", eventSchema);
