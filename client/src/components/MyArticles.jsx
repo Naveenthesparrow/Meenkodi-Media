@@ -282,7 +282,7 @@ export default function MyArticles({ user }) {
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Tooltip title={i18n.language === 'ta' ? 'காண்க' : 'View'}>
-                  <IconButton onClick={() => navigate(`/articles/${article._id}`)}>
+                  <IconButton onClick={() => navigate(`/articles/${article.slug || article._id}`)}>
                     <ViewIcon sx={{ color: '#8B0000' }} />
                   </IconButton>
                 </Tooltip>

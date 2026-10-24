@@ -139,7 +139,7 @@ export default function Events({ user }) {
     try {
       const method = currentEvent._id ? 'PUT' : 'POST';
       const url = currentEvent._id
-        ? `${API_BASE_URL}/api/events/${currentEvent._id}`
+        ? `${API_BASE_URL}/api/events/${currentEvent.slug || currentEvent._id}`
         : `${API_BASE_URL}/api/events`;
 
       const response = await fetch(url, {
@@ -290,7 +290,7 @@ export default function Events({ user }) {
               }}
             >
               <StyledWrapper>
-                <Link className="card" to={`/events/${event._id}`}>
+                <Link className="card" to={`/events/${event.slug || event._id}`}>
                   <b />
                   <img
                     src={cldImg(event.imageUrl || event.imageLink || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Crect fill='%23cccccc' width='1200' height='600'%3E%3C/rect%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='100px' fill='%23333333'%3ENo Image%3C/text%3E%3C/svg%3E", 800)}

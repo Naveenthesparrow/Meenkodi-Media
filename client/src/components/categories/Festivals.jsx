@@ -266,9 +266,9 @@ export default function Festivals({ user }) {
             >
               <Card
                 component={Link}
-                to={`/explore/festivals/${festival._id}`}
-                onMouseEnter={() => prefetchExploreItem('festivals', festival._id)}
-                onTouchStart={() => prefetchExploreItem('festivals', festival._id)}
+                to={`/explore/festivals/${festival.slug || festival._id}`}
+                onMouseEnter={() => prefetchExploreItem('festivals', festival.slug || festival._id)}
+                onTouchStart={() => prefetchExploreItem('festivals', festival.slug || festival._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -537,9 +537,9 @@ export default function Festivals({ user }) {
                   <Button
                     className="view-button"
                     component={Link}
-                    to={`/explore/festivals/${festival._id}`}
-                    onMouseEnter={() => prefetchExploreItem('festivals', festival._id)}
-                    onTouchStart={() => prefetchExploreItem('festivals', festival._id)}
+                    to={`/explore/festivals/${festival.slug || festival._id}`}
+                    onMouseEnter={() => prefetchExploreItem('festivals', festival.slug || festival._id)}
+                    onTouchStart={() => prefetchExploreItem('festivals', festival.slug || festival._id)}
                     variant="outlined"
                     fullWidth
                     sx={{

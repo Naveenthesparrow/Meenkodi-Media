@@ -256,9 +256,9 @@ export default function Foods({ user }) {
             >
               <Card
                 component={Link}
-                to={`/explore/foods/${food._id}`}
-                onMouseEnter={() => prefetchExploreItem('foods', food._id)}
-                onTouchStart={() => prefetchExploreItem('foods', food._id)}
+                to={`/explore/foods/${food.slug || food._id}`}
+                onMouseEnter={() => prefetchExploreItem('foods', food.slug || food._id)}
+                onTouchStart={() => prefetchExploreItem('foods', food.slug || food._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -529,9 +529,9 @@ export default function Foods({ user }) {
                   <Button
                     className="view-button"
                     component={Link}
-                    to={`/explore/foods/${food._id}`}
-                    onMouseEnter={() => prefetchExploreItem('foods', food._id)}
-                    onTouchStart={() => prefetchExploreItem('foods', food._id)}
+                    to={`/explore/foods/${food.slug || food._id}`}
+                    onMouseEnter={() => prefetchExploreItem('foods', food.slug || food._id)}
+                    onTouchStart={() => prefetchExploreItem('foods', food.slug || food._id)}
                     variant="outlined"
                     fullWidth
                     sx={{

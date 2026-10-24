@@ -274,9 +274,9 @@ export default function Dance({ user }) {
               )}
               <Card
                 component={Link}
-                to={`/explore/dance/${dance._id}`}
-                onMouseEnter={() => prefetchExploreItem('dance', dance._id)}
-                onTouchStart={() => prefetchExploreItem('dance', dance._id)}
+                to={`/explore/dance/${dance.slug || dance._id}`}
+                onMouseEnter={() => prefetchExploreItem('dance', dance.slug || dance._id)}
+                onTouchStart={() => prefetchExploreItem('dance', dance.slug || dance._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -547,9 +547,9 @@ export default function Dance({ user }) {
                   <Button
                     className="view-button"
                     component={Link}
-                    to={`/explore/dance/${dance._id}`}
-                    onMouseEnter={() => prefetchExploreItem('dance', dance._id)}
-                    onTouchStart={() => prefetchExploreItem('dance', dance._id)}
+                    to={`/explore/dance/${dance.slug || dance._id}`}
+                    onMouseEnter={() => prefetchExploreItem('dance', dance.slug || dance._id)}
+                    onTouchStart={() => prefetchExploreItem('dance', dance.slug || dance._id)}
                     variant="outlined"
                     fullWidth
                     sx={{

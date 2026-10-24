@@ -587,7 +587,7 @@ function DanceDetail({ user: initialUser }) {
         description={dance ? (getContent(dance.description) || `Explore classical Tamil dance form ${getContent(dance.name)} from ${getContent(dance.origin) || 'Tamil Nadu'}.`).slice(0, 160) : 'Explore classical Bharatanatyam and Tamil folk dance traditions.'}
         keywords={dance ? `${getContent(dance.name)}, Tamil Dance, ${getContent(dance.style) || ''}, Bharatanatyam, Meenkodi` : 'Tamil Dance, Bharatanatyam'}
         image={dance?.image || undefined}
-        url={`/explore/dance/${id}`}
+        url={`/explore/dance/${dance?.slug || id}`}
         type="article"
       />
       {/* Header */}

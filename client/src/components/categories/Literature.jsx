@@ -249,9 +249,9 @@ export default function Literature({ user }) {
             >
               <Card
                 component={Link}
-                to={`/explore/literature/${literature._id}`}
-                onMouseEnter={() => prefetchExploreItem('literature', literature._id)}
-                onTouchStart={() => prefetchExploreItem('literature', literature._id)}
+                to={`/explore/literature/${literature.slug || literature._id}`}
+                onMouseEnter={() => prefetchExploreItem('literature', literature.slug || literature._id)}
+                onTouchStart={() => prefetchExploreItem('literature', literature.slug || literature._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -481,9 +481,9 @@ export default function Literature({ user }) {
 
                   <Button
                     component={Link}
-                    to={`/explore/literature/${literature._id}`}
-                    onMouseEnter={() => prefetchExploreItem('literature', literature._id)}
-                    onTouchStart={() => prefetchExploreItem('literature', literature._id)}
+                    to={`/explore/literature/${literature.slug || literature._id}`}
+                    onMouseEnter={() => prefetchExploreItem('literature', literature.slug || literature._id)}
+                    onTouchStart={() => prefetchExploreItem('literature', literature.slug || literature._id)}
                     variant="outlined"
                     fullWidth
                     className="view-button"

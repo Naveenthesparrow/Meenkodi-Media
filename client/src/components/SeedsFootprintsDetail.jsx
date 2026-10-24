@@ -841,7 +841,7 @@ export default function SeedsFootprintsDetail({ user }) {
                         : `${folderName}: ${photos.length ? `${photos.length} photos of ` : ''}archaeological discoveries and Tamil heritage traces, documenting the footprints of our ancestors and seeds of Tamil civilization.`
                 }
                 keywords={`Tamil Heritage, Archaeological Discoveries, ${folderName}, Heritage Evidence, Tamil History, Cultural Traces, Heritage Documentation`}
-                url={`/seeds-and-footprints/folders/${id}`}
+                url={`/seeds-and-footprints/folders/${folder?.slug || id}`}
                 type="article"
                 tags={folderName ? [folderName, 'Seeds & Footprints', 'Tamil Heritage', 'Archaeological Discovery'] : ['Seeds & Footprints']}
             />

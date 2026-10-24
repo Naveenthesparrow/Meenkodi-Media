@@ -504,7 +504,7 @@ export default function Gallery({ user }) {
 
       const method = currentGalleryItem._id ? 'PUT' : 'POST';
       const url = currentGalleryItem._id
-        ? (currentGalleryItem.isFolder ? `${API_BASE_URL}/api/gallery/folder/${currentGalleryItem._id}` : `${API_BASE_URL}/api/gallery/${currentGalleryItem._id}`)
+        ? (currentGalleryItem.isFolder ? `${API_BASE_URL}/api/gallery/folder/${currentGalleryItem._id}` : `${API_BASE_URL}/api/gallery/${currentGalleryItem.slug || currentGalleryItem._id}`)
         : `${API_BASE_URL}/api/gallery`;
 
       const response = await fetch(url, {
@@ -1017,7 +1017,7 @@ export default function Gallery({ user }) {
                   component={Link}
                   to={item.isFolder
                     ? `/gallery/folder/${slugify(getContent(item.customCategoryName || item.name))}`
-                    : `/gallery/${item._id}`
+                    : `/gallery/${item.slug || item._id}`
                   }
                   state={item.isFolder ? undefined : {
                     fromFolder: viewMode === 'images',

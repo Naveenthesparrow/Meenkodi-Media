@@ -153,7 +153,7 @@ export default function Resources({ user }) {
     try {
       const method = currentResource._id ? 'PUT' : 'POST';
       const url = currentResource._id
-        ? `${API_BASE_URL}/api/resources/${currentResource._id}`
+        ? `${API_BASE_URL}/api/resources/${currentResource.slug || currentResource._id}`
         : `${API_BASE_URL}/api/resources`;
 
       const response = await fetch(url, {
@@ -344,7 +344,7 @@ export default function Resources({ user }) {
               >
                 <Card
                   component={Link}
-                  to={`/resources/${resource._id}`}
+                  to={`/resources/${resource.slug || resource._id}`}
                   sx={{
                     textDecoration: 'none',
                     width: '100%',
@@ -643,7 +643,7 @@ export default function Resources({ user }) {
                     >
                       <Button
                         component={Link}
-                        to={`/resources/${resource._id}`}
+                        to={`/resources/${resource.slug || resource._id}`}
                         variant="contained"
                         fullWidth
                         sx={{

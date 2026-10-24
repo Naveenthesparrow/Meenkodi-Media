@@ -218,9 +218,9 @@ export default function Clothing({ user }) {
             >
               <Card
                 component={Link}
-                to={`/explore/clothing/${item._id}`}
-                onMouseEnter={() => prefetchExploreItem('clothing', item._id)}
-                onTouchStart={() => prefetchExploreItem('clothing', item._id)}
+                to={`/explore/clothing/${item.slug || item._id}`}
+                onMouseEnter={() => prefetchExploreItem('clothing', item.slug || item._id)}
+                onTouchStart={() => prefetchExploreItem('clothing', item.slug || item._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -495,9 +495,9 @@ export default function Clothing({ user }) {
                   <Button
                     className="view-button"
                     component={Link}
-                    to={`/explore/clothing/${item._id}`}
-                    onMouseEnter={() => prefetchExploreItem('clothing', item._id)}
-                    onTouchStart={() => prefetchExploreItem('clothing', item._id)}
+                    to={`/explore/clothing/${item.slug || item._id}`}
+                    onMouseEnter={() => prefetchExploreItem('clothing', item.slug || item._id)}
+                    onTouchStart={() => prefetchExploreItem('clothing', item.slug || item._id)}
                     variant="outlined"
                     fullWidth
                     sx={{

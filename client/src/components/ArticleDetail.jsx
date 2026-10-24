@@ -641,7 +641,7 @@ export default function ArticleDetail({ user }) {
         description={article ? (getContent(article.content) || `Read ${getContent(article.title)} on Meenkodi Tamil Heritage.`).replace(/<[^>]*>/g, '').slice(0, 160) : 'Read Tamil heritage articles.'}
         keywords={article ? `${getContent(article.title)}, ${getContent(article.author) || ''}, Tamil Articles, Tamil History, Meenkodi` : 'Tamil Articles, Tamil History'}
         image={article?.imageLink || article?.image || undefined}
-        url={`/articles/${id}`}
+        url={`/articles/${article?.slug || id}`}
         type="article"
       />
       {actionErrorToast}

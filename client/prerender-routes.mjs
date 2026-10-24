@@ -171,8 +171,8 @@ function galleryFolderIndexHtml(foldersMap, nonFolders) {
     const count = f.items.length;
     return `
     <li>
-      <h2><a href="/gallery/${slug}">${name}</a></h2>
-      <p><a href="/gallery/${slug}">${name}</a> (${count} items) — Tamil heritage gallery collection on Meenkodi.</p>
+      <h2><a href="/gallery/folder/${slug}">${name}</a></h2>
+      <p><a href="/gallery/folder/${slug}">${name}</a> (${count} items) — Tamil heritage gallery collection on Meenkodi.</p>
     </li>`;
   }).join('\n');
 
@@ -182,7 +182,7 @@ function galleryFolderIndexHtml(foldersMap, nonFolders) {
     const img  = item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${alt}" loading="lazy" />` : '';
     return `
     <figure>
-      <h3><a href="/gallery/${item._id}">${name}</a></h3>
+      <h3><a href="/gallery/${item.slug || item._id}">${name}</a></h3>
       ${img}
       <figcaption>${name} — Tamil heritage gallery photo on Meenkodi.</figcaption>
     </figure>`;
@@ -220,8 +220,8 @@ function galleryFolderPageHtml(folderName, folderSlug, folderItems) {
     const img      = item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${alt}" loading="lazy" />` : '';
     return `
   <figure>
-    <h3><a href="/gallery/${item._id}">${itemName}</a></h3>
-    <a href="/gallery/${item._id}">${img}</a>
+    <h3><a href="/gallery/${item.slug || item._id}">${itemName}</a></h3>
+    <a href="/gallery/${item.slug || item._id}">${img}</a>
     <figcaption>
       <strong>${itemName}</strong>
       <p>${desc}</p>
@@ -277,7 +277,7 @@ function articlesListHtml(articles) {
       : '';
     return `
   <article>
-    <h2><a href="/articles/${a._id}">${title}</a></h2>
+    <h2><a href="/articles/${a.slug || a._id}">${title}</a></h2>
     ${img}
     ${desc ? `<p>${desc}</p>` : ''}
   </article>`;
@@ -322,7 +322,7 @@ function eventsListHtml(events) {
       : '';
     return `
   <article>
-    <h2><a href="/events/${e._id}">${title}</a></h2>
+    <h2><a href="/events/${e.slug || e._id}">${title}</a></h2>
     ${img}
     ${date ? `<time>${escapeHtml(date)}</time>` : ''}
     ${loc ? `<p>Location: ${loc}</p>` : ''}
@@ -525,13 +525,13 @@ async function main() {
       const t = escapeHtml(pick(a.title));
       const d = escapeHtml(truncate(pick(a.content)));
       const img = a.image ? `<img src="${escapeHtml(a.image)}" alt="${escapeHtml(pick(a.title))} — Tamil heritage article" loading="lazy" />` : '';
-      return `<article><h2><a href="/articles/${a._id}">${t}</a></h2>${img}${d ? `<p>${d}</p>` : ''}</article>`;
+      return `<article><h2><a href="/articles/${a.slug || a._id}">${t}</a></h2>${img}${d ? `<p>${d}</p>` : ''}</article>`;
     }).join('\n');
 
     const evtRows = evtList.map(e => {
       const t = escapeHtml(pick(e.title));
       const d = e.date ? new Date(e.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-      return `<li><a href="/events/${e._id}">${t}</a>${d ? ` — ${d}` : ''}</li>`;
+      return `<li><a href="/events/${e.slug || e._id}">${t}</a>${d ? ` — ${d}` : ''}</li>`;
     }).join('\n');
 
     const bodyHtml = `
@@ -631,10 +631,10 @@ async function main() {
       const folderHtml = inject(baseHtml, {
         title: `${folder.name} | Meenkodi Gallery`,
         description: `Photos and heritage documentation for ${folder.name} on Meenkodi.`,
-        canonicalUrl: `${BASE_URL}/gallery/${slug}`,
+        canonicalUrl: `${BASE_URL}/gallery/folder/${slug}`,
         bodyHtml: galleryFolderPageHtml(folder.name, slug, folder.items),
       });
-      writeRoute(`/gallery/${slug}`, folderHtml);
+      writeRoute(`/gallery/folder/${slug}`, folderHtml);
     }
 
     // 3. Write detail pages dist/gallery/[id]/index.html for each photo
@@ -646,10 +646,10 @@ async function main() {
       const html    = inject(baseHtml, {
         title: `${seoT} | Meenkodi Tamil Heritage Gallery`,
         description: seoD,
-        canonicalUrl: `${BASE_URL}/gallery/${item._id}`,
+        canonicalUrl: `${BASE_URL}/gallery/${item.slug || item._id}`,
         bodyHtml: galleryDetailHtml(item),
       });
-      writeRoute(`/gallery/${item._id}`, html);
+      writeRoute(`/gallery/${item.slug || item._id}`, html);
     }
   }
 
@@ -674,10 +674,10 @@ async function main() {
       const html = inject(baseHtml, {
         title: `${title} | Meenkodi Tamil Heritage`,
         description: content || `${title} — read on Meenkodi, the Tamil heritage portal.`,
-        canonicalUrl: `${BASE_URL}/articles/${article._id}`,
+        canonicalUrl: `${BASE_URL}/articles/${article.slug || article._id}`,
         bodyHtml: articleDetailHtml(article),
       });
-      writeRoute(`/articles/${article._id}`, html);
+      writeRoute(`/articles/${article.slug || article._id}`, html);
     }
   }
 
@@ -700,10 +700,10 @@ async function main() {
       const html = inject(baseHtml, {
         title: `${title} | Meenkodi Events`,
         description: desc,
-        canonicalUrl: `${BASE_URL}/events/${event._id}`,
+        canonicalUrl: `${BASE_URL}/events/${event.slug || event._id}`,
         bodyHtml: eventDetailHtml(event),
       });
-      writeRoute(`/events/${event._id}`, html);
+      writeRoute(`/events/${event.slug || event._id}`, html);
     }
   }
 

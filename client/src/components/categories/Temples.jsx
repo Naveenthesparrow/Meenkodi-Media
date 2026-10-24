@@ -247,9 +247,9 @@ export default function Temples({ user }) {
             >
               <Card
                 component={Link}
-                to={`/explore/temples/${temple._id}`}
-                onMouseEnter={() => prefetchExploreItem('temples', temple._id)}
-                onTouchStart={() => prefetchExploreItem('temples', temple._id)}
+                to={`/explore/temples/${temple.slug || temple._id}`}
+                onMouseEnter={() => prefetchExploreItem('temples', temple.slug || temple._id)}
+                onTouchStart={() => prefetchExploreItem('temples', temple.slug || temple._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -542,9 +542,9 @@ export default function Temples({ user }) {
                   <Button
                     className="view-button"
                     component={Link}
-                    to={`/explore/temples/${temple._id}`}
-                    onMouseEnter={() => prefetchExploreItem('temples', temple._id)}
-                    onTouchStart={() => prefetchExploreItem('temples', temple._id)}
+                    to={`/explore/temples/${temple.slug || temple._id}`}
+                    onMouseEnter={() => prefetchExploreItem('temples', temple.slug || temple._id)}
+                    onTouchStart={() => prefetchExploreItem('temples', temple.slug || temple._id)}
                     variant="outlined"
                     fullWidth
                     endIcon={<Architecture />}

@@ -61,9 +61,9 @@ export default function GalleryDetail({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
-  const hasCachedDetails = !!(cachedAllGalleryItems && cachedAllGalleryItems.some(item => item._id === id));
+  const hasCachedDetails = !!(cachedAllGalleryItems && cachedAllGalleryItems.some(item => (item._id === id || item.slug === id)));
   const [galleryItem, setGalleryItem] = useState(() => {
-    return cachedAllGalleryItems ? cachedAllGalleryItems.find(item => item._id === id) || null : null;
+    return cachedAllGalleryItems ? cachedAllGalleryItems.find(item => (item._id === id || item.slug === id)) || null : null;
   });
   const [loading, setLoading] = useState(!hasCachedDetails);
   const [error, setError] = useState(null);
@@ -71,7 +71,7 @@ export default function GalleryDetail({ user }) {
   const [actionError, setActionError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState(() => {
-    const data = cachedAllGalleryItems ? cachedAllGalleryItems.find(item => item._id === id) : null;
+    const data = cachedAllGalleryItems ? cachedAllGalleryItems.find(item => (item._id === id || item.slug === id)) : null;
     if (!data) {
       return {
         name_en: "",
@@ -151,7 +151,7 @@ export default function GalleryDetail({ user }) {
 
     if (cachedAllGalleryItems) {
       // Find current item in cache
-      const data = cachedAllGalleryItems.find(item => item._id === id);
+      const data = cachedAllGalleryItems.find(item => (item._id === id || item.slug === id));
       if (data) {
         setGalleryItem(data);
         
@@ -251,7 +251,7 @@ export default function GalleryDetail({ user }) {
   }, [id, i18n.language]);
 
   // Sibling next/prev calculations
-  const currentIndex = siblingPhotos.findIndex(item => item._id === id);
+  const currentIndex = siblingPhotos.findIndex(item => (item._id === id || item.slug === id));
   const prevPhoto = currentIndex > 0 ? siblingPhotos[currentIndex - 1] : null;
   const nextPhoto = currentIndex >= 0 && currentIndex < siblingPhotos.length - 1 ? siblingPhotos[currentIndex + 1] : null;
 
@@ -259,9 +259,9 @@ export default function GalleryDetail({ user }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft' && prevPhoto) {
-        navigate(`/gallery/${prevPhoto._id}`, { state: location.state });
+        navigate(`/gallery/${prevPhoto.slug || prevPhoto._id}`, { state: location.state });
       } else if (e.key === 'ArrowRight' && nextPhoto) {
-        navigate(`/gallery/${nextPhoto._id}`, { state: location.state });
+        navigate(`/gallery/${nextPhoto.slug || nextPhoto._id}`, { state: location.state });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -270,13 +270,13 @@ export default function GalleryDetail({ user }) {
 
   const handlePrevClick = () => {
     if (prevPhoto) {
-      navigate(`/gallery/${prevPhoto._id}`, { state: location.state });
+      navigate(`/gallery/${prevPhoto.slug || prevPhoto._id}`, { state: location.state });
     }
   };
 
   const handleNextClick = () => {
     if (nextPhoto) {
-      navigate(`/gallery/${nextPhoto._id}`, { state: location.state });
+      navigate(`/gallery/${nextPhoto.slug || nextPhoto._id}`, { state: location.state });
     }
   };
 
@@ -349,7 +349,7 @@ export default function GalleryDetail({ user }) {
         if (!res.ok) throw new Error("Failed to delete gallery item");
         // Drop it from the cache so prev/next and the cached view don't show it again
         if (cachedAllGalleryItems) {
-          cachedAllGalleryItems = cachedAllGalleryItems.filter(item => item._id !== id);
+          cachedAllGalleryItems = cachedAllGalleryItems.filter(item => (item._id !== id && item.slug !== id));
         }
         navigate(`/gallery`);
       } catch {
@@ -563,7 +563,7 @@ export default function GalleryDetail({ user }) {
     ? getContent(galleryItem.customCategoryName)
     : galleryItem.category;
   const imageUrl = galleryItem.imageUrl ? (galleryItem.imageUrl.startsWith('http') ? galleryItem.imageUrl : `${window.location.origin}${galleryItem.imageUrl}`) : null;
-  const pageUrl = `${window.location.origin}/gallery/${id}`;
+  const pageUrl = `${window.location.origin}/gallery/${galleryItem?.slug || id}`;
   
   const seoTitle = `${itemName} | ${categoryDisplay} | Tamil Heritage Gallery`;
   const seoDescription = itemDescription 

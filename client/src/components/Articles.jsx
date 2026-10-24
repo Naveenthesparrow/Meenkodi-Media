@@ -170,7 +170,7 @@ export default function Articles({ user }) {
                           e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this article?")) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/articles/${article._id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/articles/${article.slug || article._id}`, {
           method: 'DELETE',
           credentials: 'include',
         });
@@ -520,7 +520,7 @@ export default function Articles({ user }) {
             >
               <Card
                 component={Link}
-                to={`/articles/${article._id}`}
+                to={`/articles/${article.slug || article._id}`}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -952,7 +952,7 @@ export default function Articles({ user }) {
 
                       <Button
                         component={Link}
-                        to={`/articles/${article._id}`}
+                        to={`/articles/${article.slug || article._id}`}
                         className="read-more-btn"
                         variant="text"
                         size="small"
@@ -1343,7 +1343,7 @@ export default function Articles({ user }) {
                           e.stopPropagation();
                         if (window.confirm("Are you sure you want to delete this article?")) {
                           try {
-                            const res = await fetch(`${API_BASE_URL}/api/articles/${article._id}`, {
+                            const res = await fetch(`${API_BASE_URL}/api/articles/${article.slug || article._id}`, {
                               method: 'DELETE',
                               credentials: 'include',
                             });

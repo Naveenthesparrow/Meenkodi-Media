@@ -288,9 +288,9 @@ export default function AncientScience({ user }) {
             >
               <Card
                 component={Link}
-                to={`/explore/ancientscience/${science._id}`}
-                onMouseEnter={() => prefetchExploreItem('ancientscience', science._id)}
-                onTouchStart={() => prefetchExploreItem('ancientscience', science._id)}
+                to={`/explore/ancientscience/${science.slug || science._id}`}
+                onMouseEnter={() => prefetchExploreItem('ancientscience', science.slug || science._id)}
+                onTouchStart={() => prefetchExploreItem('ancientscience', science.slug || science._id)}
                 sx={{
                   textDecoration: 'none',
                   width: '100%',
@@ -574,9 +574,9 @@ export default function AncientScience({ user }) {
                   {/* Read More Button */}
                   <Button
                     component={Link}
-                    to={`/explore/ancientscience/${science._id}`}
-                    onMouseEnter={() => prefetchExploreItem('ancientscience', science._id)}
-                    onTouchStart={() => prefetchExploreItem('ancientscience', science._id)}
+                    to={`/explore/ancientscience/${science.slug || science._id}`}
+                    onMouseEnter={() => prefetchExploreItem('ancientscience', science.slug || science._id)}
+                    onTouchStart={() => prefetchExploreItem('ancientscience', science.slug || science._id)}
                     variant="outlined"
                     fullWidth
                     className="view-button"

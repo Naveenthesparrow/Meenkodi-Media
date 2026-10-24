@@ -62,7 +62,7 @@ export default function SeedsFootprints({ user }) {
     e.preventDefault();
     e.stopPropagation();
     
-    const folderUrl = `${window.location.origin}/seeds-and-footprints/folders/${folder._id}`;
+    const folderUrl = `${window.location.origin}/seeds-and-footprints/folders/${folder.slug || folder._id}`;
     const folderName = getContent(folder.name) || 'Tamil Heritage Folder';
     
     const shareData = {
@@ -673,11 +673,11 @@ export default function SeedsFootprints({ user }) {
                   >
                     <Paper
                       component={RouterLink}
-                      to={`/seeds-and-footprints/folders/${f._id}`}
+                      to={`/seeds-and-footprints/folders/${f.slug || f._id}`}
                       // Start loading the folder as soon as the pointer/finger is on it
-                      onMouseEnter={() => prefetchSeedsFolder(f._id)}
-                      onTouchStart={() => prefetchSeedsFolder(f._id)}
-                      onFocus={() => prefetchSeedsFolder(f._id)}
+                      onMouseEnter={() => prefetchSeedsFolder(f.slug || f._id)}
+                      onTouchStart={() => prefetchSeedsFolder(f.slug || f._id)}
+                      onFocus={() => prefetchSeedsFolder(f.slug || f._id)}
                       elevation={0}
                       sx={{
                         textDecoration: 'none',
