@@ -47,6 +47,8 @@ import {
   buildEventsBodyHtml,
   buildEventDetailBodyHtml,
   buildExploreBodyHtml,
+  buildDetailBodyHtml,
+  metaDescription,
 } from './prerender.js';
 import { generateAllSitemaps } from './scripts/generate-sitemap.js';
 
@@ -267,7 +269,10 @@ app.use("/assets", express.static(path.join(__dirname, "../client/dist/assets"),
   maxAge: "1y",
   immutable: true,
 }));
-app.use(express.static(path.join(__dirname, "../client/dist")));
+// index: false / redirect: false so page URLs ("/", "/gallery") reach the SSR
+// routes below (page-specific title and link-preview tags) instead of the
+// generic index.html or a /gallery -> /gallery/ redirect.
+app.use(express.static(path.join(__dirname, "../client/dist"), { index: false, redirect: false }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -5048,7 +5053,8 @@ const clientIndex = path.join(clientDist, 'index.html');
 if (fs.existsSync(clientIndex)) {
   console.log('Client build detected at:', clientDist, '— serving static client with SSR injection from Express.');
   // Serve static assets (JS/CSS/images) with long-term immutable caching
-  app.use(express.static(clientDist, { maxAge: '1y', immutable: true }));
+  // (HTML pages are not served from here: index/redirect off, see the SSR routes)
+  app.use(express.static(clientDist, { maxAge: '1y', immutable: true, index: false, redirect: false }));
 
   // Cache base HTML in production; re-read on every request in dev so edits are reflected
   let cachedBaseHtml = null;
@@ -5122,16 +5128,17 @@ if (fs.existsSync(clientIndex)) {
   // ── Article detail ────────────────────────────────────────────────────────
   app.get('/articles/:id', async (req, res) => {
     try {
-      const article = await Article.findById(req.params.id).select('title content image authorName status _id');
+      const article = await Article.findById(req.params.id).select('title content image imageLink authorName status _id');
       if (article && article.status === 'published') {
-        const titleEn = (article.title && article.title.en) || 'Tamil Heritage Article';
-        const descEn = article.content && article.content.en
-          ? article.content.en.replace(/<[^>]+>/g, ' ').trim().slice(0, 200)
-          : 'Read this article on Meenkodi — Tamil heritage, history, and culture.';
+        const titleEn = (article.title && (article.title.en || article.title.ta)) || 'Tamil Heritage Article';
+        const contentText = article.content && (article.content.en || article.content.ta);
+        const descEn = metaDescription(contentText, 'Read this article on Meenkodi — Tamil heritage, history, and culture.');
         sendSsr(res, {
           title: `${titleEn} | Meenkodi Tamil Heritage`,
           description: descEn,
           canonicalUrl: `${BASE_URL}/articles/${req.params.id}`,
+          image: article.image || article.imageLink,
+          type: 'article',
           bodyHtml: buildArticleDetailBodyHtml({ article }),
         });
       } else {
@@ -5148,15 +5155,6 @@ if (fs.existsSync(clientIndex)) {
       sendSsr(res, { canonicalUrl: `${BASE_URL}/articles/${req.params.id}`, bodyHtml: '<main><h1>Article — Meenkodi Tamil Heritage</h1></main>' });
     }
   });
-
-  function renderPage(opts) {
-    return buildPageHtml(getBaseHtml(), {
-      canonicalUrl: opts.canonicalUrl || `${BASE_URL}/gallery`,
-      title: opts.title || '',
-      description: opts.description || '',
-      bodyHtml: opts.bodyHtml || '',
-    });
-  }
 
   async function getGalleryItemsByFolder(folderName) {
     if (!folderName) return getAllGalleryItems();
@@ -5199,18 +5197,21 @@ if (fs.existsSync(clientIndex)) {
       ? await getGalleryItemsByFolder(folder)
       : await getAllGalleryItems();
 
-    const bodyHtml = items.map(item => `
-    <h3>${item.name}</h3>
-    <img src="${item.imageUrl}" alt="${item.name}" />
-    <p>${item.name} — part of the ${folder || 'Meenkodi'} heritage collection.</p>
-  `).join('');
-
-    const html = renderPage({
-      title: folder ? `${folder} | Meenkodi Gallery` : 'Gallery | Meenkodi',
-      description: folder ? `Photos from ${folder}` : 'Meenkodi photo gallery',
-      bodyHtml
+    const title = folder
+      ? `${folder} | Meenkodi Gallery`
+      : 'Gallery — Tamil Heritage Photos, Kings, Temples & Culture | Meenkodi';
+    sendSsr(res, {
+      title,
+      description: folder
+        ? `Photos from ${folder} — Tamil heritage gallery on Meenkodi.`
+        : 'Browse Tamil heritage photos: Pandiya and Chola kings, Dravidian temples, festivals and heritage sites on Meenkodi.',
+      canonicalUrl: `${BASE_URL}/gallery${folder ? `?folder=${encodeURIComponent(folder)}` : ''}`,
+      image: items.find(i => i.imageUrl)?.imageUrl,
+      bodyHtml: buildDetailBodyHtml({
+        heading: title,
+        photos: items.map(i => ({ url: i.imageUrl, caption: i.name })),
+      }),
     });
-    res.send(html);
   });
 
   // ── Gallery detail ────────────────────────────────────────────────────────
@@ -5219,15 +5220,17 @@ if (fs.existsSync(clientIndex)) {
       const item = await Gallery.findById(req.params.id)
         .select('name description imageUrl imageAlt seoTitle seoDescription category era location keywords isFolder _id');
       if (item) {
-        const nameEn = (item.name && item.name.en) || 'Gallery Item';
-        const seoTitleEn = (item.seoTitle && item.seoTitle.en) || nameEn;
-        const seoDescEn = (item.seoDescription && item.seoDescription.en)
-          || (item.description && item.description.en)
+        const nameEn = (item.name && (item.name.en || item.name.ta)) || 'Gallery Item';
+        const seoTitleEn = (item.seoTitle && (item.seoTitle.en || item.seoTitle.ta)) || nameEn;
+        const seoDescEn = (item.seoDescription && (item.seoDescription.en || item.seoDescription.ta))
+          || (item.description && (item.description.en || item.description.ta))
           || `${nameEn} — Tamil heritage gallery on Meenkodi`;
         sendSsr(res, {
           title: `${seoTitleEn} | Meenkodi Tamil Heritage Gallery`,
           description: seoDescEn.slice(0, 200),
           canonicalUrl: `${BASE_URL}/gallery/${req.params.id}`,
+          image: item.imageUrl,
+          type: 'article',
           bodyHtml: buildGalleryDetailBodyHtml({ item }),
         });
       } else {
@@ -5269,13 +5272,15 @@ if (fs.existsSync(clientIndex)) {
       const event = await Event.findById(req.params.id)
         .select('title description date location imageUrl _id');
       if (event) {
-        const titleEn = (event.title && event.title.en) || 'Tamil Heritage Event';
-        const descEn = (event.description && event.description.en)
+        const titleEn = (event.title && (event.title.en || event.title.ta)) || 'Tamil Heritage Event';
+        const descEn = (event.description && (event.description.en || event.description.ta))
           || `${titleEn} — Tamil heritage event on Meenkodi`;
         sendSsr(res, {
           title: `${titleEn} | Meenkodi Events`,
           description: descEn.slice(0, 200),
           canonicalUrl: `${BASE_URL}/events/${req.params.id}`,
+          image: event.imageUrl,
+          type: 'article',
           bodyHtml: buildEventDetailBodyHtml({ event }),
         });
       } else {
@@ -5301,6 +5306,89 @@ if (fs.existsSync(clientIndex)) {
       bodyHtml: buildExploreBodyHtml(),
     });
   });
+
+  // ── Content detail pages (title, description and preview image from the DB) ──
+  const pickText = (field) => (!field ? '' : typeof field === 'string' ? field : (field.en || field.ta || ''));
+  const mainImage = (doc) => doc.coverPhoto || doc.imageUrl || doc.image || doc.imageLink || '';
+  const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const byId = (Model) => (id) => (mongoose.isValidObjectId(id) ? Model.findById(id).lean() : null);
+
+  const DETAIL_PAGES = [
+    {
+      path: '/seeds-and-footprints/folders/:id', find: byId(ResearchFolder),
+      section: 'Seeds & Footprints', back: '/seeds-and-footprints',
+      image: (d) => d.coverPhoto || (d.photos || []).find((p) => p.url)?.url,
+      photos: (d) => (d.photos || []).map((p) => ({ url: p.url, caption: pickText(p.caption) || pickText(p.name) || pickText(d.name) })),
+    },
+    { path: '/explore/temples/:id', find: byId(Temple), section: 'Tamil Temples', back: '/explore/temples' },
+    { path: '/explore/foods/:id', find: byId(Food), section: 'Tamil Foods', back: '/explore/foods' },
+    { path: '/explore/festivals/:id', find: byId(Festival), section: 'Tamil Festivals', back: '/explore/festivals' },
+    { path: '/explore/literature/:id', find: byId(Literature), section: 'Tamil Literature', back: '/explore/literature', name: (d) => pickText(d.title) || pickText(d.name) },
+    { path: '/explore/dance/:id', find: byId(Dance), section: 'Tamil Dance', back: '/explore/dance' },
+    { path: '/explore/clothing/:id', find: byId(Clothing), section: 'Traditional Tamil Clothing', back: '/explore/clothing' },
+    { path: '/explore/ancientscience/:id', find: byId(AncientScience), section: 'Ancient Tamil Science', back: '/explore/ancientscience' },
+    {
+      path: '/explore/lands/:id', section: 'Five Tamil Lands', back: '/explore',
+      find: (id) => (mongoose.isValidObjectId(id)
+        ? Land.findById(id).lean()
+        : Land.findOne({ type: { $regex: new RegExp(`^${escapeRegex(id)}$`, 'i') } }).lean()),
+    },
+    { path: '/dynasties/:id', find: (slug) => Dynasty.findOne({ slug }).lean(), section: 'Tamil Dynasties', back: '/' },
+    { path: '/poets/:id', find: (slug) => Poet.findOne({ slug }).lean(), section: 'Tamil Poets', back: '/' },
+    { path: '/resources/:id', find: byId(Resource), section: 'Resources', back: '/resources', name: (d) => pickText(d.title) },
+  ];
+
+  for (const page of DETAIL_PAGES) {
+    app.get(page.path, async (req, res) => {
+      const canonicalUrl = `${BASE_URL}${req.path.replace(/\/+$/, '')}`;
+      let doc = null;
+      try {
+        doc = await page.find(req.params.id);
+      } catch (err) {
+        console.error(`[SSR] ${page.path} error:`, err);
+      }
+      if (!doc) {
+        return sendSsr(res, { canonicalUrl, title: `${page.section} | Meenkodi Tamil Heritage` });
+      }
+      const name = (page.name ? page.name(doc) : pickText(doc.name)) || page.section;
+      const description = pickText(doc.description);
+      const image = page.image ? page.image(doc) : mainImage(doc);
+      sendSsr(res, {
+        title: `${name} | ${page.section} | Meenkodi`,
+        description: metaDescription(description, `${name} — ${page.section} on Meenkodi, preserving 5000+ years of Tamil heritage.`),
+        canonicalUrl,
+        image,
+        type: 'article',
+        bodyHtml: buildDetailBodyHtml({
+          heading: name,
+          description,
+          image,
+          photos: page.photos ? page.photos(doc) : [],
+          backHref: page.back,
+          backLabel: page.section,
+        }),
+      });
+    });
+  }
+
+  // ── Section list pages ──────────────────────────────────────────────────────
+  const LIST_PAGES = [
+    ['/seeds-and-footprints', 'Seeds & Footprints — Tamil Heritage Research Collections | Meenkodi', 'Photo collections tracing the seeds and footprints of Tamil people, Pallar and Mallar heritage across Tamil Nadu and the world.'],
+    ['/explore/temples', 'Tamil Temples & Dravidian Architecture | Meenkodi', 'Explore ancient Tamil temples and Dravidian architecture — history, legends and photos on Meenkodi.'],
+    ['/explore/foods', 'Traditional Tamil Foods & Cuisine | Meenkodi', 'Discover traditional Tamil foods, their history and cultural meaning on Meenkodi.'],
+    ['/explore/festivals', 'Tamil Festivals & Celebrations | Meenkodi', 'Tamil festivals and celebrations — Pongal, Chithirai and more — with their history on Meenkodi.'],
+    ['/explore/literature', 'Sangam & Tamil Literature | Meenkodi', 'Explore Sangam literature and classical Tamil works on Meenkodi.'],
+    ['/explore/dance', 'Tamil Dance & Performing Arts | Meenkodi', 'Classical and folk Tamil dance forms and performing arts on Meenkodi.'],
+    ['/explore/clothing', 'Traditional Tamil Clothing | Meenkodi', 'Traditional Tamil clothing and textiles through history on Meenkodi.'],
+    ['/explore/ancientscience', 'Ancient Tamil Science & Technology | Meenkodi', 'Ancient Tamil science, astronomy, medicine and technology on Meenkodi.'],
+    ['/resources', 'Tamil Heritage Books & Resources | Meenkodi', 'Books, PDFs and research resources on Tamil history and heritage on Meenkodi.'],
+    ['/faq', 'FAQ — Tamil Heritage & Meenkodi | Frequently Asked Questions', 'Answers to common questions about Meenkodi and Tamil heritage.'],
+  ];
+  for (const [listPath, title, description] of LIST_PAGES) {
+    app.get(listPath, (req, res) => {
+      sendSsr(res, { title, description, canonicalUrl: `${BASE_URL}${listPath}`, bodyHtml: `<main><h1>${title.replace(/&/g, '&amp;')}</h1><p>${description}</p></main>` });
+    });
+  }
 
   // ── Generic SPA catch-all (for all other routes) ──────────────────────────
   // Injects canonical URL only — no DB fetch needed for uncovered routes

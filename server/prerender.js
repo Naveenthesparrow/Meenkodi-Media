@@ -26,6 +26,35 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+const SITE_URL = 'https://www.meenkodi.com';
+
+/**
+ * Turn an image URL into one that link previews (WhatsApp, Facebook, X) show
+ * as a large card: absolute URL, and for Cloudinary a 1200x630 JPEG.
+ */
+export function shareImageUrl(url) {
+  if (!url || typeof url !== 'string') return '';
+  let u = url.trim();
+  if (u.startsWith('/')) u = `${SITE_URL}${u}`;
+  if (!/^https?:\/\//i.test(u)) return '';
+  // WhatsApp and Facebook can't show AVIF/SVG previews; let the logo be used instead
+  if (/\.(avif|svg)(\?|$)/i.test(u) && !u.includes('res.cloudinary.com')) return '';
+  const marker = '/image/upload/';
+  if (u.includes('res.cloudinary.com') && u.includes(marker) && !/\.(pdf|svg)(\?|$)/i.test(u)) {
+    const i = u.indexOf(marker) + marker.length;
+    u = `${u.slice(0, i)}c_fill,g_auto,w_1200,h_630,f_jpg,q_auto/${u.slice(i)}`;
+  }
+  return u;
+}
+
+/** Replace the content of an existing <meta property|name="key"> tag, or add it before </head> */
+function setMeta(html, key, value) {
+  const safe = escapeHtml(value);
+  const re = new RegExp(`(<meta\\s+(?:property|name)="${key.replace(/[.:]/g, '\\$&')}"\\s+content=")[^"]*(")`);
+  if (re.test(html)) return html.replace(re, `$1${safe}$2`);
+  return html.replace('</head>', `  <meta property="${key}" content="${safe}" />\n</head>`);
+}
+
 /**
  * Build a full HTML page with injected SSR content.
  *
@@ -35,10 +64,35 @@ function escapeHtml(str) {
  * @param {string}  opts.description  - <meta description> to inject
  * @param {string}  opts.bodyHtml     - Raw HTML for the hidden #ssr-content div
  * @param {string}  opts.canonicalUrl - Canonical URL for this page
+ * @param {string}  [opts.image]      - Page image used for link previews (og:image)
+ * @param {string}  [opts.type]       - og:type, e.g. "article" for detail pages
  * @returns {string} Modified HTML string
  */
-export function buildPageHtml(baseHtml, { title, description, bodyHtml, canonicalUrl }) {
+export function buildPageHtml(baseHtml, { title, description, bodyHtml, canonicalUrl, image, type }) {
   let html = baseHtml;
+
+  // Link preview tags (WhatsApp/Facebook/X don't run JavaScript, so these must
+  // be in the HTML itself). The base index.html carries the homepage values.
+  if (canonicalUrl) {
+    html = setMeta(html, 'og:url', canonicalUrl);
+    html = setMeta(html, 'twitter:url', canonicalUrl);
+  }
+  if (title) {
+    html = setMeta(html, 'twitter:title', title);
+    html = setMeta(html, 'og:image:alt', title);
+    html = setMeta(html, 'twitter:image:alt', title);
+  }
+  if (description) html = setMeta(html, 'twitter:description', description);
+  const previewImage = shareImageUrl(image);
+  if (previewImage) {
+    html = setMeta(html, 'og:image', previewImage);
+    html = setMeta(html, 'twitter:image', previewImage);
+    if (previewImage.includes('w_1200,h_630')) {
+      html = setMeta(html, 'og:image:width', '1200');
+      html = setMeta(html, 'og:image:height', '630');
+    }
+  }
+  if (type) html = setMeta(html, 'og:type', type);
 
   // 1. Inject canonical URL
   const canonicalTag = `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`;
@@ -99,9 +153,18 @@ function pick(field) {
   return field.en || field.ta || '';
 }
 
-/** Strip HTML tags from a string (for content previews) */
+/** Strip HTML tags and markdown syntax from a string (for content previews) */
 function stripTags(str) {
-  return str ? String(str).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  return str
+    ? String(str)
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')        // markdown images
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')       // markdown links -> their text
+      .replace(/^\s*#{1,6}\s+/gm, '')                // headings
+      .replace(/(\*\*|__|\*|`)/g, '')                // bold / italic / code marks
+      .replace(/\s+/g, ' ')
+      .trim()
+    : '';
 }
 
 /** Truncate text to maxLen characters */
@@ -389,6 +452,36 @@ export function buildExploreBodyHtml() {
   </nav>
 </main>
 `;
+}
+
+/**
+ * Hidden SSR body for any content detail page (temple, food, Seeds folder, poet...).
+ * photos: optional [{ url, caption }] so each image is indexed with its own name.
+ */
+export function buildDetailBodyHtml({ heading, description, image, photos = [], backHref, backLabel }) {
+  const img = image
+    ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(heading)} — Meenkodi Tamil Heritage" loading="lazy" />`
+    : '';
+  const gallery = photos.filter(p => p && p.url).slice(0, 80).map(p => {
+    const caption = p.caption || heading;
+    return `  <figure><img src="${escapeHtml(p.url)}" alt="${escapeHtml(caption)}" loading="lazy" /><figcaption>${escapeHtml(caption)}</figcaption></figure>`;
+  }).join('\n');
+
+  return `
+<main>
+  <h1>${escapeHtml(heading)}</h1>
+  ${img}
+  ${description ? `<p>${escapeHtml(truncate(stripTags(description), 600))}</p>` : ''}
+  ${gallery ? `<section>\n${gallery}\n</section>` : ''}
+  ${backHref ? `<p><a href="${escapeHtml(backHref)}">← ${escapeHtml(backLabel || 'Back')}</a></p>` : ''}
+</main>
+`;
+}
+
+/** Plain-text summary for meta descriptions */
+export function metaDescription(text, fallback, maxLen = 200) {
+  const s = truncate(stripTags(text || ''), maxLen);
+  return s || fallback;
 }
 
 /**
