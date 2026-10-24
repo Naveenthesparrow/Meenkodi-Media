@@ -34,6 +34,13 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
+/** English text of a bilingual {en, ta} field, falling back to Tamil */
+function pickText(field) {
+  if (!field) return '';
+  if (typeof field === 'string') return field;
+  return field.en || field.ta || '';
+}
+
 function escapeXml(str) {
   if (!str) return '';
   return String(str)
@@ -69,7 +76,7 @@ function wrapUrlset(urls, includeImageNs = false) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset ${ns}>\n${urls.join('\n')}\n</urlset>`;
 }
 
-function write(filename, content) {
+function writeFile(filename, content) {
   const filePath = path.join(PUBLIC_DIR, filename);
   fs.writeFileSync(filePath, content, 'utf8');
   console.log(`  ✅ Written: ${filename} (${content.length} bytes)`);
@@ -79,7 +86,10 @@ function write(filename, content) {
 
 // standalone: run from the command line, so this script owns the DB connection.
 // Inside the server it must never connect/disconnect the server's shared connection.
-export async function generateAllSitemaps({ standalone = false } = {}) {
+// output(filename, xml): where each sitemap goes. The server passes an in-memory
+// collector so sitemaps are served live from the DB; the CLI writes files.
+export async function generateAllSitemaps({ standalone = false, output = writeFile } = {}) {
+  const write = output;
   const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
   let connected = false;
 
@@ -102,7 +112,7 @@ export async function generateAllSitemaps({ standalone = false } = {}) {
   }
 
   let Article, Gallery, Event, Resource, Land, Temple, Literature, Dance, Food, Festival,
-      AncientScience, Clothing, Dynasty, Poet;
+      AncientScience, Clothing, Dynasty, Poet, ResearchFolder;
 
   try {
     ({ default: Article }        = await import('../models/Article.js'));
@@ -119,6 +129,7 @@ export async function generateAllSitemaps({ standalone = false } = {}) {
     ({ default: Clothing }       = await import('../models/Clothing.js'));
     ({ default: Dynasty }        = await import('../models/Dynasty.js'));
     ({ default: Poet }           = await import('../models/Poet.js'));
+    ({ default: ResearchFolder } = await import('../models/ResearchFolder.js'));
   } catch (e) {
     console.warn('  Could not load all models:', e.message);
   }
@@ -158,7 +169,7 @@ export async function generateAllSitemaps({ standalone = false } = {}) {
       const articles = await Article.find({ status: 'published' }).select('_id updatedAt publishedAt title image').lean();
       articleUrls = articles.map(a => {
         const lastmod = a.updatedAt || a.publishedAt || new Date();
-        const images = a.image ? [{ url: a.image, title: (a.title && a.title.en) || 'Tamil heritage article' }] : [];
+        const images = a.image ? [{ url: a.image, title: pickText(a.title) || 'Tamil heritage article' }] : [];
         return urlEntry(`/articles/${a._id}`, { lastmod: new Date(lastmod).toISOString().split('T')[0], changefreq: 'weekly', priority: '0.8', images });
       });
       console.log(`  Articles: ${articleUrls.length}`);
@@ -173,7 +184,7 @@ export async function generateAllSitemaps({ standalone = false } = {}) {
     try {
       const events = await Event.find().select('_id updatedAt createdAt title imageUrl').lean();
       eventUrls = events.map(e => {
-        const images = e.imageUrl ? [{ url: e.imageUrl, title: (e.title && e.title.en) || 'Tamil heritage event' }] : [];
+        const images = e.imageUrl ? [{ url: e.imageUrl, title: pickText(e.title) || 'Tamil heritage event' }] : [];
         return urlEntry(`/events/${e._id}`, { lastmod: new Date(e.updatedAt || e.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'weekly', priority: '0.75', images });
       });
       console.log(`  Events: ${eventUrls.length}`);
@@ -188,7 +199,7 @@ export async function generateAllSitemaps({ standalone = false } = {}) {
     try {
       const items = await Gallery.find({ isFolder: { $ne: true } }).select('_id updatedAt createdAt name imageUrl imageAlt').lean();
       galleryUrls = items.map(item => {
-        const altText = (item.imageAlt && item.imageAlt.en) || (item.name && item.name.en) || 'Tamil heritage image';
+        const altText = pickText(item.imageAlt) || pickText(item.name) || 'Tamil heritage image';
         const images = item.imageUrl ? [{ url: item.imageUrl, title: altText }] : [];
         return urlEntry(`/gallery/${item._id}`, { lastmod: new Date(item.updatedAt || item.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: '0.7', images });
       });
@@ -233,20 +244,44 @@ export async function generateAllSitemaps({ standalone = false } = {}) {
     let urls = [];
     if (col.model) {
       try {
-        const items = await col.model.find().select('_id slug updatedAt').lean();
-        urls = items.map(i => urlEntry(col.path(i), { lastmod: new Date(i.updatedAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: col.priority }));
+        const items = await col.model.find().select('_id slug updatedAt name title image imageUrl imageLink').lean();
+        urls = items.map(i => {
+          // Image entry so Google Images shows this page (and its name) for the picture
+          const imageUrl = i.imageUrl || i.image || i.imageLink;
+          const name = pickText(i.name) || pickText(i.title);
+          const images = /^https?:\/\//i.test(imageUrl || '') ? [{ url: imageUrl, title: name || col.label }] : [];
+          return urlEntry(col.path(i), { lastmod: new Date(i.updatedAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: col.priority, images });
+        });
         console.log(`  ${col.label}: ${urls.length}`);
       } catch (e) { console.warn(`  ${col.label} error:`, e.message); }
     }
-    write(col.file, wrapUrlset(urls));
+    write(col.file, wrapUrlset(urls, true));
     generated.push(col.file);
   }
 
-  // Static placeholder sitemaps
-  write('sitemap-seeds.xml', wrapUrlset([urlEntry('/seeds-and-footprints', { changefreq: 'weekly', priority: '0.75' })]));
-  write('sitemap-kings.xml', wrapUrlset([]));
-  write('sitemap-images.xml', wrapUrlset([])); // images are now inside individual sitemaps
-  generated.push('sitemap-seeds.xml', 'sitemap-kings.xml', 'sitemap-images.xml');
+  // Seeds & Footprints: every folder, with its photos as image entries
+  const seedUrls = [urlEntry('/seeds-and-footprints', { changefreq: 'weekly', priority: '0.8' })];
+  if (ResearchFolder) {
+    try {
+      const folders = await ResearchFolder.find().select('_id name coverPhoto photos.url photos.caption photos.name updatedAt createdAt').lean();
+      for (const f of folders) {
+        const folderName = pickText(f.name) || 'Seeds & Footprints';
+        const photos = [
+          f.coverPhoto ? { url: f.coverPhoto, title: folderName } : null,
+          ...(f.photos || []).map(p => ({ url: p.url, title: pickText(p.caption) || pickText(p.name) || folderName })),
+        ].filter(p => p && /^https?:\/\//i.test(p.url || '')).slice(0, 1000); // Google allows 1000 images per URL
+        seedUrls.push(urlEntry(`/seeds-and-footprints/folders/${f._id}`, {
+          lastmod: new Date(f.updatedAt || f.createdAt || new Date()).toISOString().split('T')[0],
+          changefreq: 'weekly',
+          priority: '0.75',
+          images: photos,
+        }));
+      }
+      console.log(`  Seeds folders: ${folders.length}`);
+    } catch (e) { console.warn('  Seeds error:', e.message); }
+  }
+  write('sitemap-seeds.xml', wrapUrlset(seedUrls, true));
+  generated.push('sitemap-seeds.xml');
 
   // Sitemap Index
   const sitemapIndexEntries = generated.map(filename => `

@@ -252,15 +252,39 @@ app.get('/robots.txt', (req, res) => {
   });
 });
 
-app.get('/sitemap.xml', (req, res) => {
-  console.log('Serving sitemap.xml for', req.hostname, req.originalUrl);
-  res.type('application/xml');
-  res.sendFile(path.join(__dirname, '../client/public/sitemap.xml'), (err) => {
-    if (err) {
-      console.error('Failed to serve sitemap.xml', err);
-      if (!res.headersSent) res.status(500).send('Server error');
-    }
-  });
+// Sitemaps are generated live from the database (kept in memory for an hour),
+// so new articles, Seeds folders, photos etc. reach Google without a redeploy.
+const SITEMAP_TTL_MS = 60 * 60 * 1000;
+const sitemapCache = { at: 0, files: null, pending: null };
+function getSitemaps({ force = false } = {}) {
+  if (!force && sitemapCache.files && Date.now() - sitemapCache.at < SITEMAP_TTL_MS) {
+    return Promise.resolve(sitemapCache.files);
+  }
+  if (!sitemapCache.pending) {
+    const files = {};
+    sitemapCache.pending = generateAllSitemaps({ output: (name, xml) => { files[name] = xml; } })
+      .then(() => {
+        sitemapCache.files = files;
+        sitemapCache.at = Date.now();
+        return files;
+      })
+      .finally(() => { sitemapCache.pending = null; });
+  }
+  return sitemapCache.pending;
+}
+
+app.get(/^\/sitemap(-[a-z]+)?\.xml$/, async (req, res) => {
+  const name = req.path.slice(1);
+  try {
+    const xml = (await getSitemaps())[name];
+    if (!xml) return res.status(404).type('text/plain').send('Sitemap not found');
+    res.type('application/xml');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(xml);
+  } catch (err) {
+    console.error(`[Sitemap] Failed to build ${name}:`, err.message);
+    res.status(503).type('text/plain').send('Sitemap temporarily unavailable');
+  }
 });
 
 // Serve static files from the client build directory
@@ -623,8 +647,8 @@ async function toggleLike(Model, id, userId) {
 app.post('/api/sitemap/refresh', ensureAdmin, async (req, res) => {
   try {
     console.log('[Sitemap] Refresh triggered by', req.user._id);
-    const result = await generateAllSitemaps();
-    res.json({ success: true, generated: result.generated });
+    const files = await getSitemaps({ force: true });
+    res.json({ success: true, generated: Object.keys(files) });
   } catch (err) {
     console.error('[Sitemap] Refresh error:', err);
     res.status(500).json({ error: 'Sitemap generation failed', details: err.message });

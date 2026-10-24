@@ -1,24 +1,11 @@
 User-agent: *
 Allow: /
 
-# Main Sitemap Index
-Sitemap: https://www.meenkodi.com/sitemap-index.xml
+# Personal / login pages and the data API are not useful in search results
+Disallow: /profile
+Disallow: /my-articles
+Disallow: /auth/
+Disallow: /api/
 
-# Individual Sitemaps
-Sitemap: https://www.meenkodi.com/sitemap.xml
-Sitemap: https://www.meenkodi.com/sitemap-articles.xml
-Sitemap: https://www.meenkodi.com/sitemap-events.xml
-Sitemap: https://www.meenkodi.com/sitemap-resources.xml
-Sitemap: https://www.meenkodi.com/sitemap-lands.xml
-Sitemap: https://www.meenkodi.com/sitemap-gallery.xml
-Sitemap: https://www.meenkodi.com/sitemap-seeds.xml
-Sitemap: https://www.meenkodi.com/sitemap-kings.xml
-Sitemap: https://www.meenkodi.com/sitemap-poets.xml
-Sitemap: https://www.meenkodi.com/sitemap-literature.xml
-Sitemap: https://www.meenkodi.com/sitemap-dance.xml
-Sitemap: https://www.meenkodi.com/sitemap-temples.xml
-Sitemap: https://www.meenkodi.com/sitemap-foods.xml
-Sitemap: https://www.meenkodi.com/sitemap-festivals.xml
-Sitemap: https://www.meenkodi.com/sitemap-clothing.xml
-Sitemap: https://www.meenkodi.com/sitemap-science.xml
-Sitemap: https://www.meenkodi.com/sitemap-dynasties.xml
+# Sitemap index (lists every section sitemap; generated live from the database)
+Sitemap: https://www.meenkodi.com/sitemap-index.xml
