@@ -54,6 +54,8 @@ import {
   imageGalleryLd,
   collectionLd,
 } from './prerender.js';
+import { bilingualName, byLanguage } from './utils/text.js';
+import { slugify } from './utils/slug.js';
 import { generateAllSitemaps } from './scripts/generate-sitemap.js';
 
 dotenv.config();
@@ -5189,7 +5191,11 @@ if (fs.existsSync(clientIndex)) {
   });
 
   // ── Shared helpers for page HTML ───────────────────────────────────────────
-  const pickText = (field) => (!field ? '' : typeof field === 'string' ? field : (field.en || field.ta || ''));
+  // Names in every form people search: English (or Tamil in English letters) | Tamil,
+  // whichever box the admin typed them into
+  const pickText = (field) => bilingualName(field);
+  // Descriptions in both languages when both exist
+  const bothText = (field) => { const { en, ta } = byLanguage(field); return [en, ta].filter(Boolean).join(' — '); };
   const mainImage = (doc) => doc.coverPhoto || doc.imageUrl || doc.image || doc.imageLink || '';
   const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // Pages are addressed by slug; old id links still resolve (and are redirected)
@@ -5299,7 +5305,7 @@ if (fs.existsSync(clientIndex)) {
       if (article && article.status === 'published') {
         if (redirectToSlug(req, res, '/articles', article, req.params.id)) return;
         if (article.slug) canonicalUrl = `${BASE_URL}/articles/${article.slug}`;
-        const titleEn = (article.title && (article.title.en || article.title.ta)) || 'Tamil Heritage Article';
+        const titleEn = bilingualName(article.title) || 'Tamil Heritage Article';
         const contentText = article.content && (article.content.en || article.content.ta);
         const descEn = metaDescription(contentText, 'Read this article on Meenkodi — Tamil heritage, history, and culture.');
         const image = article.image || article.imageLink;
@@ -5400,6 +5406,48 @@ if (fs.existsSync(clientIndex)) {
     });
   });
 
+  // ── Gallery folder pages (/gallery/folder/:folderSlug) ─────────────────────
+  // Photos belong to a folder by their customCategoryName; links use the same
+  // slugify() as the client. The old link format (it dropped Tamil letters) is
+  // still accepted.
+  const legacyFolderSlug = (str) => String(str || '').toLowerCase().trim().normalize('NFKD')
+    .replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
+  const folderKeys = (field) => {
+    const names = typeof field === 'string' ? [field] : [field?.en, field?.ta];
+    return names.filter(Boolean).flatMap((n) => [slugify(n), legacyFolderSlug(n)]).filter(Boolean);
+  };
+
+  app.get('/gallery/folder/:folderSlug', async (req, res) => {
+    const wanted = String(req.params.folderSlug).toLowerCase();
+    const all = await Gallery.find().sort({ order: 1, createdAt: -1 }).lean();
+    const folder = all.find((i) => i.isFolder && folderKeys(i.customCategoryName || i.name).includes(wanted));
+    const photos = all.filter((i) => !i.isFolder && i.customCategoryName && folderKeys(i.customCategoryName).includes(wanted));
+    const nameField = folder ? (folder.customCategoryName || folder.name) : photos[0]?.customCategoryName;
+    const folderName = pickText(nameField) || wanted;
+    const canonicalUrl = `${BASE_URL}/gallery/folder/${slugify(byLanguage(nameField).en || byLanguage(nameField).ta) || wanted}`;
+    const title = `${folderName} — ${photos.length} photo${photos.length === 1 ? '' : 's'} | Meenkodi Gallery`;
+    const description = metaDescription(bothText(folder?.description),
+      `${folderName}: ${photos.length} photos in the Meenkodi Tamil Heritage Gallery.`);
+    const photoList = photos.map((p) => ({ url: p.imageUrl, caption: `${pickText(p.name)} — ${folderName}` }));
+    sendSsr(res, {
+      title,
+      description,
+      canonicalUrl,
+      image: folder?.imageUrl || photos.find((p) => p.imageUrl)?.imageUrl,
+      bodyHtml: buildDetailBodyHtml({
+        heading: folderName,
+        sections: folder?.description ? [{ ...byLanguage(folder.description) }] : [],
+        items: photos.map((p) => ({ href: itemPath('/gallery', p), title: pickText(p.name), image: p.imageUrl })),
+        backHref: '/gallery',
+        backLabel: 'Gallery',
+      }),
+      jsonLd: [
+        imageGalleryLd({ url: canonicalUrl, name: folderName, description, photos: photoList }),
+        breadcrumbLd([{ name: 'Gallery', url: `${BASE_URL}/gallery` }, { name: folderName, url: canonicalUrl }]),
+      ],
+    });
+  });
+
   // ── Gallery detail ────────────────────────────────────────────────────────
   app.get('/gallery/:id', async (req, res) => {
     let canonicalUrl = `${BASE_URL}/gallery/${req.params.id}`;
@@ -5408,11 +5456,12 @@ if (fs.existsSync(clientIndex)) {
       if (item) {
         if (redirectToSlug(req, res, '/gallery', item, req.params.id)) return;
         if (item.slug) canonicalUrl = `${BASE_URL}/gallery/${item.slug}`;
-        const nameEn = (item.name && (item.name.en || item.name.ta)) || 'Gallery Item';
-        const seoTitleEn = (item.seoTitle && (item.seoTitle.en || item.seoTitle.ta)) || nameEn;
-        const seoDescEn = (item.seoDescription && (item.seoDescription.en || item.seoDescription.ta))
-          || (item.description && (item.description.en || item.description.ta))
-          || `${nameEn} — Tamil heritage gallery on Meenkodi`;
+        const nameEn = bilingualName(item.name) || 'Gallery Item';
+        const seoTitleEn = bilingualName(item.seoTitle) || nameEn;
+        const folderName = bilingualName(item.customCategoryName) || (item.category !== 'Other' ? item.category : '');
+        const seoDescEn = bothText(item.seoDescription)
+          || bothText(item.description)
+          || `${nameEn} — photo${folderName ? ` from the ${folderName} collection` : ''} in the Meenkodi Tamil Heritage Gallery.`;
         sendSsr(res, {
           title: `${seoTitleEn} | Meenkodi Tamil Heritage Gallery`,
           description: seoDescEn.slice(0, 200),
@@ -5477,8 +5526,8 @@ if (fs.existsSync(clientIndex)) {
       if (event) {
         if (redirectToSlug(req, res, '/events', event, req.params.id)) return;
         if (event.slug) canonicalUrl = `${BASE_URL}/events/${event.slug}`;
-        const titleEn = (event.title && (event.title.en || event.title.ta)) || 'Tamil Heritage Event';
-        const descEn = (event.description && (event.description.en || event.description.ta))
+        const titleEn = bilingualName(event.title) || 'Tamil Heritage Event';
+        const descEn = bothText(event.description)
           || `${titleEn} — Tamil heritage event on Meenkodi`;
         const locationName = pickText(event.location);
         sendSsr(res, {
@@ -5571,7 +5620,7 @@ if (fs.existsSync(clientIndex)) {
       if (redirectToSlug(req, res, basePath, doc, req.params.id)) return;
       if (doc.slug) canonicalUrl = `${BASE_URL}${basePath}/${doc.slug}`;
       const name = (page.name ? page.name(doc) : pickText(doc.name)) || page.section;
-      const description = metaDescription(pickText(doc.description), `${name} — ${page.section} on Meenkodi, preserving 5000+ years of Tamil heritage.`);
+      const description = metaDescription(bothText(doc.description), `${name} — ${page.section} on Meenkodi, preserving 5000+ years of Tamil heritage.`);
       const image = page.image ? page.image(doc) : mainImage(doc);
       const photos = page.photos ? page.photos(doc) : [];
       const { sections, facts } = pageContent(doc);

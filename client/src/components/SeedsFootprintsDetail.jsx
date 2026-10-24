@@ -39,6 +39,7 @@ import SEO, { pageSEO } from './common/SEO';
 import OptimizedImage from './common/OptimizedImage';
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
+import { withRomanized } from '../utils/tamilText';
 import { fetchSeedsFolder } from "../utils/seedsFolderPrefetch";
 
 const cachedFolderDetails = {};
@@ -1767,7 +1768,7 @@ export default function SeedsFootprintsDetail({ user }) {
 
                                                     <OptimizedImage
                                                         src={cldImg(photo.url, 800)}
-                                                        alt={getCaption(photo.caption) || folderName}
+                                                        alt={withRomanized(getCaption(photo.caption) || folderName)}
                                                         className="photo-image"
                                                         sx={{
                                                             height: '90%',
@@ -2164,7 +2165,7 @@ export default function SeedsFootprintsDetail({ user }) {
                             <Box
                                 component="img"
                                 src={cldImg(displayPhotos[activeIndex].url, 1600)}
-                                alt={getCaption(displayPhotos[activeIndex].caption) || folderName}
+                                alt={withRomanized(getCaption(displayPhotos[activeIndex].caption) || folderName)}
                                 sx={{
                                     maxWidth: '100%',
                                     maxHeight: 'calc(100vh - 80px)',
@@ -3091,7 +3092,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                     <Box
                                         component="img"
                                         src={cldImg(photo.url, 800)}
-                                        alt={getCaption(photo.caption)}
+                                        alt={withRomanized(getCaption(photo.caption) || folderName)}
                                         sx={{
                                             width: 50,
                                             height: 50,

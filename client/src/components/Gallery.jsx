@@ -45,11 +45,13 @@ import OptimizedImage from './common/OptimizedImage';
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
+import { slugify, withRomanized } from '../utils/tamilText';
 
 let cachedGalleryData = null;
 
-// helper to create stable slug from category names (supports unicode characters like Tamil)
-const slugify = (str) => {
+// Previous folder-link format: it dropped Tamil letters, so Tamil folder names
+// gave empty links. Still accepted so old shared folder links keep working.
+const legacySlugify = (str) => {
   if (!str) return '';
   return str
     .toString()
@@ -158,7 +160,7 @@ export default function Gallery({ user }) {
         item.name?.en,
         item.name?.ta,
       ].filter(Boolean);
-      return candidates.some(name => normalize(name) === target || slugify(name) === target);
+      return candidates.some(name => normalize(name) === target || slugify(name) === target || legacySlugify(name) === target);
     });
     return folder ? resolveName(folder.customCategoryName || folder.name) : selectedFolderName;
   };
@@ -212,7 +214,7 @@ export default function Gallery({ user }) {
         item.name?.en,
         item.name?.ta,
       ].filter(Boolean);
-      return candidates.some(name => slugify(name) === folderSlug.toLowerCase() || name.toLowerCase().trim() === folderSlug.toLowerCase().trim());
+      return candidates.some(name => slugify(name) === folderSlug.toLowerCase() || legacySlugify(name) === folderSlug.toLowerCase() || name.toLowerCase().trim() === folderSlug.toLowerCase().trim());
     });
     if (!folderExists && galleryItems.some(item => item._id === folderSlug)) {
       return true;
@@ -1098,7 +1100,7 @@ export default function Gallery({ user }) {
                   {(item.imageUrl || item.imageLink) ? (
                     <OptimizedImage
                       src={cldImg(toAbsoluteMediaUrl(item.imageUrl || item.imageLink), 800)}
-                      alt={`${getContent(item.name)} - Tamil Heritage ${item.category || ''} | Meenkodi`}
+                      alt={`${withRomanized(getContent(item.name))} - ${getContent(item.customCategoryName) || item.category || ''} - Tamil Heritage | Meenkodi`}
                       className="card-image"
                       sx={{
                         width: '100%',

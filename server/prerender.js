@@ -26,6 +26,8 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+import { bilingualName, langOf } from './utils/text.js';
+
 const SITE_URL = 'https://www.meenkodi.com';
 
 /**
@@ -286,7 +288,7 @@ function truncate(str, maxLen = 200) {
  */
 export function buildHomeBodyHtml({ recentArticles = [], recentEvents = [] } = {}) {
   const articleLinks = recentArticles.slice(0, 8).map(a => {
-    const t = pick(a.title);
+    const t = bilingualName(a.title);
     const desc = truncate(stripTags(pick(a.content)), 150);
     const img = a.image ? `<img src="${escapeHtml(a.image)}" alt="${escapeHtml(t)} - Meenkodi Tamil Heritage article" loading="lazy" />` : '';
     return `
@@ -298,7 +300,7 @@ export function buildHomeBodyHtml({ recentArticles = [], recentEvents = [] } = {
   }).join('\n');
 
   const eventLinks = recentEvents.slice(0, 5).map(e => {
-    const t = pick(e.title);
+    const t = bilingualName(e.title);
     const loc = pick(e.location);
     const date = e.date ? new Date(e.date).toDateString() : '';
     return `<li><a href="/events/${e.slug || e._id}">${escapeHtml(t)}</a>${date ? ` — ${escapeHtml(date)}` : ''}${loc ? ` @ ${escapeHtml(loc)}` : ''}</li>`;
@@ -347,7 +349,7 @@ export function buildHomeBodyHtml({ recentArticles = [], recentEvents = [] } = {
  */
 export function buildArticlesBodyHtml({ articles = [] } = {}) {
   const items = articles.slice(0, 20).map(a => {
-    const t = pick(a.title);
+    const t = bilingualName(a.title);
     const desc = truncate(stripTags(pick(a.content)), 160);
     const img = a.image ? `<img src="${escapeHtml(a.image)}" alt="${escapeHtml(t)} — Tamil heritage article image" loading="lazy" />` : '';
     return `
@@ -375,7 +377,7 @@ export function buildArticlesBodyHtml({ articles = [] } = {}) {
  */
 export function buildArticleDetailBodyHtml({ article }) {
   if (!article) return '<main><h1>Article — Meenkodi Tamil Heritage</h1></main>';
-  const t = pick(article.title);
+  const t = bilingualName(article.title) || pick(article.title);
   const author = article.authorName || '';
   const cover = article.image || article.imageLink;
   const img = cover
@@ -396,8 +398,8 @@ export function buildArticleDetailBodyHtml({ article }) {
     <h1>${escapeHtml(t)}</h1>
     ${img}
     ${author ? `<p>By ${escapeHtml(author)}</p>` : ''}
-    ${paragraphs(en, 'en')}
-    ${paragraphs(ta, 'ta')}
+    ${paragraphs(en)}
+    ${paragraphs(ta)}
     ${inlineImages}
   </article>
   <p><a href="/articles">← Back to all articles</a></p>
@@ -458,7 +460,7 @@ export function buildGalleryBodyHtml({ items = [] } = {}) {
  */
 export function buildGalleryDetailBodyHtml({ item }) {
   if (!item) return '<main><h1>Gallery — Meenkodi Tamil Heritage</h1></main>';
-  const name = pick(item.name);
+  const name = bilingualName(item.name);
   const desc = pick(item.description);
   const seoTitle = pick(item.seoTitle) || name;
   const seoDesc = pick(item.seoDescription) || desc;
@@ -486,7 +488,7 @@ export function buildGalleryDetailBodyHtml({ item }) {
  */
 export function buildEventsBodyHtml({ events = [] } = {}) {
   const items = events.slice(0, 20).map(e => {
-    const t = pick(e.title);
+    const t = bilingualName(e.title);
     const desc = truncate(pick(e.description), 160);
     const loc = pick(e.location);
     const date = e.date ? new Date(e.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
@@ -519,7 +521,7 @@ export function buildEventsBodyHtml({ events = [] } = {}) {
  */
 export function buildEventDetailBodyHtml({ event }) {
   if (!event) return '<main><h1>Event — Meenkodi Tamil Heritage</h1></main>';
-  const t = pick(event.title);
+  const t = bilingualName(event.title);
   const desc = pick(event.description);
   const loc = pick(event.location);
   const date = event.date
@@ -594,8 +596,8 @@ export function buildDetailBodyHtml({
     return `  <section>
     ${s.heading ? `<h2>${escapeHtml(s.heading)}</h2>` : ''}
     ${sectionImg}
-    ${paragraphs(s.en, 'en')}
-    ${paragraphs(s.ta, 'ta')}
+    ${paragraphs(s.en)}
+    ${paragraphs(s.ta)}
   </section>`;
   }).join('\n');
   const gallery = photos.filter(p => p && p.url).slice(0, 80).map(p => {
@@ -625,14 +627,13 @@ export function buildDetailBodyHtml({
 }
 
 /** Text (plain, markdown or HTML) as escaped <p> paragraphs, capped for size */
-function paragraphs(text, lang) {
+function paragraphs(text) {
   if (!text) return '';
-  const langAttr = lang ? ` lang="${lang}"` : '';
   return String(text).slice(0, 12000)
     .split(/\n\s*\n|<\/p>|<br\s*\/?>/i)
     .map(p => stripTags(p))
     .filter(Boolean)
-    .map(p => `<p${langAttr}>${escapeHtml(p)}</p>`)
+    .map(p => `<p lang="${langOf(p)}">${escapeHtml(p)}</p>`)
     .join('\n    ');
 }
 

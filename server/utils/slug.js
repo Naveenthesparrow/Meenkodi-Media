@@ -8,9 +8,11 @@
  * - Set once and never changed afterwards, so shared links keep working.
  */
 
+// Everyday English spelling of Tamil (Meenkodi, Pandiyan, Kalvettu, Ayyampettai):
+// short vowels single, ீ/ூ as "ee"/"oo".
 const TA_VOWELS = {
-  'அ': 'a', 'ஆ': 'aa', 'இ': 'i', 'ஈ': 'ii', 'உ': 'u', 'ஊ': 'uu', 'எ': 'e', 'ஏ': 'ee',
-  'ஐ': 'ai', 'ஒ': 'o', 'ஓ': 'oo', 'ஔ': 'au', 'ஃ': 'h',
+  'அ': 'a', 'ஆ': 'a', 'இ': 'i', 'ஈ': 'ee', 'உ': 'u', 'ஊ': 'oo', 'எ': 'e', 'ஏ': 'e',
+  'ஐ': 'ai', 'ஒ': 'o', 'ஓ': 'o', 'ஔ': 'au', 'ஃ': 'h',
 };
 const TA_CONSONANTS = {
   'க': 'k', 'ங': 'ng', 'ச': 's', 'ஞ': 'nj', 'ட': 't', 'ண': 'n', 'த': 'th', 'ந': 'n',
@@ -18,42 +20,52 @@ const TA_CONSONANTS = {
   'ற': 'r', 'ன': 'n', 'ஜ': 'j', 'ஷ': 'sh', 'ஸ': 's', 'ஹ': 'h',
 };
 const TA_SIGNS = {
-  'ா': 'aa', 'ி': 'i', 'ீ': 'ii', 'ு': 'u', 'ூ': 'uu', 'ெ': 'e', 'ே': 'ee', 'ை': 'ai',
-  'ொ': 'o', 'ோ': 'oo', 'ௌ': 'au', '்': '',
+  'ா': 'a', 'ி': 'i', 'ீ': 'ee', 'ு': 'u', 'ூ': 'oo', 'ெ': 'e', 'ே': 'e', 'ை': 'ai',
+  'ொ': 'o', 'ோ': 'o', 'ௌ': 'au', '்': '',
 };
 
-/** Tamil script -> simple Latin letters (other characters are kept) */
+/** Tamil script -> English letters (other characters are kept) */
 export function transliterateTamil(text) {
   const chars = [...String(text || '')];
   let out = '';
-  let tamil = ''; // current run of transliterated Tamil
-  // Common everyday spelling for Tamil words only: single vowels ("sekaran",
-  // not "seekaran"), "ng" for ங்க and "th" for த்த
-  const flush = () => {
-    out += tamil
-      .replace(/aa/g, 'a').replace(/ii/g, 'i').replace(/uu/g, 'u').replace(/ee/g, 'e').replace(/oo/g, 'o')
-      .replace(/ngk/g, 'ng').replace(/thth/g, 'th');
-    tamil = '';
-  };
+  let prevConsonant = null; // consonant of the previous Tamil letter
+  let prevDead = false;     // previous letter had ் (no vowel)
+  let prevVowelSound = false;
   for (let i = 0; i < chars.length; i++) {
     const ch = chars[i];
     if (TA_CONSONANTS[ch] !== undefined) {
+      let sound = TA_CONSONANTS[ch];
+      if (ch === 'ட') {
+        // "d" between vowels and after ண (kodi, Pandiyan); "t" at the start, without a
+        // vowel (ட்) and when doubled (Kalvettu, Porattam)
+        const dead = chars[i + 1] === '்';
+        if (!dead && prevDead && prevConsonant === 'ண') sound = 'd';
+        else if (!dead && !(prevDead && prevConsonant === 'ட') && prevVowelSound) sound = 'd';
+      }
       const next = chars[i + 1];
       if (next !== undefined && TA_SIGNS[next] !== undefined) {
-        tamil += TA_CONSONANTS[ch] + TA_SIGNS[next];
+        out += sound + TA_SIGNS[next];
+        prevDead = next === '்';
         i++;
       } else {
-        tamil += `${TA_CONSONANTS[ch]}a`; // consonant with its inherent "a"
+        out += `${sound}a`; // consonant with its inherent "a"
+        prevDead = false;
       }
+      prevConsonant = ch;
+      prevVowelSound = !prevDead;
     } else if (TA_VOWELS[ch] !== undefined) {
-      tamil += TA_VOWELS[ch];
+      out += TA_VOWELS[ch];
+      prevConsonant = null;
+      prevDead = false;
+      prevVowelSound = true;
     } else if (TA_SIGNS[ch] === undefined) {
-      flush();
       out += ch;
+      prevConsonant = null;
+      prevDead = false;
+      prevVowelSound = false;
     }
   }
-  flush();
-  return out;
+  return out.replace(/ngk/g, 'ng').replace(/thth/g, 'th');
 }
 
 /** Text -> "lowercase-words-with-hyphens", at most ~70 characters */

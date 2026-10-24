@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { withRomanized } from '../../utils/tamilText';
 
 /**
  * SEO Component - Dynamically updates meta tags for each page using react-helmet-async
@@ -30,7 +31,9 @@ export default function SEO({
   if (!path.startsWith('/')) path = `/${path}`;
   if (path.length > 1) path = path.replace(/\/+$/, '');
   const fullUrl = `${baseUrl}${path}`;
-  const fullTitle = title ? `${title} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
+  // Tamil titles also in English letters, so searches typed either way match
+  // ("Thiyaki Imanuvel Sekaran ... | தியாகி இமானுவேல் சேகரன்")
+  const fullTitle = title ? `${withRomanized(title)} | Meenkodi Tamil Heritage` : 'Meenkodi - Tamil Heritage Foundation | 5000+ Years of Tamil Culture';
   const defaultDescription = 'Meenkodi preserves and shares 5000+ years of Tamil civilization — history, temples, dynasties (Pandiya, Chola, Chera , Pallava), cultural traditions, and archaeological discoveries. Explore the stories of the Southerns (தென்புலத்தார் / தென்னவர்), Pandiyargal, temple architecture, Sangam literature, festivals, and living heritage across International and the Tamil diaspora.';
   const metaDescription = description || defaultDescription;
   const metaImage = (image || `${baseUrl}/logo.png`).replace('https://meenkodi.com', baseUrl);

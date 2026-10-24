@@ -33,6 +33,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import SEO from './common/SEO';
 import cldImg from "../utils/cloudinaryImage";
+import { withRomanized } from '../utils/tamilText';
 
 // Base categories (labels are translation keys)
 const BASE_CATEGORIES = [
@@ -738,7 +739,7 @@ export default function GalleryDetail({ user }) {
 
             <OptimizedImage
               src={cldImg(toAbsoluteMediaUrl(galleryItem.imageUrl), 1600)}
-              alt={`${getContent(galleryItem.name)} - ${categoryDisplay} - Tamil Heritage | Meenkodi`}
+              alt={`${withRomanized(getContent(galleryItem.name))} - ${categoryDisplay} - Tamil Heritage | Meenkodi`}
               sx={{
                 width: '100%',
                 maxWidth: { xs: '100%', md: '70%', lg: '60%' },

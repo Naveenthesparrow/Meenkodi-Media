@@ -16,6 +16,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { bilingualName } from '../utils/text.js';
+import { slugify } from '../utils/slug.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,12 +36,8 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
-/** English text of a bilingual {en, ta} field, falling back to Tamil */
-function pickText(field) {
-  if (!field) return '';
-  if (typeof field === 'string') return field;
-  return field.en || field.ta || '';
-}
+/** Image/page names in every form people search: English (or Tamil in English letters) | Tamil */
+const pickText = (field) => bilingualName(field);
 
 function escapeXml(str) {
   if (!str) return '';
@@ -197,13 +195,31 @@ export async function generateAllSitemaps({ standalone = false, output = writeFi
   let galleryUrls = [];
   if (Gallery) {
     try {
-      const items = await Gallery.find({ isFolder: { $ne: true } }).select('_id slug updatedAt createdAt name imageUrl imageAlt').lean();
+      const items = await Gallery.find({ isFolder: { $ne: true } }).select('_id slug updatedAt createdAt name imageUrl imageAlt customCategoryName').lean();
       galleryUrls = items.map(item => {
         const altText = pickText(item.imageAlt) || pickText(item.name) || 'Tamil heritage image';
         const images = item.imageUrl ? [{ url: item.imageUrl, title: altText }] : [];
         return urlEntry(`/gallery/${item.slug || item._id}`, { lastmod: new Date(item.updatedAt || item.createdAt || new Date()).toISOString().split('T')[0], changefreq: 'monthly', priority: '0.7', images });
       });
       console.log(`  Gallery items: ${galleryUrls.length}`);
+
+      // Folder pages (/gallery/folder/<name>), each with its photos as image entries
+      const folders = await Gallery.find({ isFolder: true }).select('customCategoryName name updatedAt createdAt').lean();
+      for (const folder of folders) {
+        const nameField = folder.customCategoryName || folder.name;
+        const folderSlug = slugify((nameField && (nameField.en || nameField.ta)) || '');
+        if (!folderSlug) continue;
+        const folderTitle = pickText(nameField);
+        const photos = items.filter(item => item.customCategoryName
+          && [item.customCategoryName.en, item.customCategoryName.ta].some(n => n && slugify(n) === folderSlug));
+        galleryUrls.push(urlEntry(`/gallery/folder/${folderSlug}`, {
+          lastmod: new Date(folder.updatedAt || folder.createdAt || new Date()).toISOString().split('T')[0],
+          changefreq: 'weekly',
+          priority: '0.75',
+          images: photos.filter(p => p.imageUrl).map(p => ({ url: p.imageUrl, title: `${pickText(p.name)} — ${folderTitle}` })),
+        }));
+      }
+      console.log(`  Gallery folders: ${folders.length}`);
     } catch (e) { console.warn('  Gallery error:', e.message); }
   }
   write('sitemap-gallery.xml', wrapUrlset(galleryUrls, true));

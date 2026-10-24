@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import SEO, { pageSEO } from './common/SEO';
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
+import { withRomanized } from '../utils/tamilText';
 import { prefetchSeedsFolder, loadSeedsFolderPage } from "../utils/seedsFolderPrefetch";
 
 
@@ -803,7 +804,7 @@ export default function SeedsFootprints({ user }) {
                             src={cldImg(f.coverPhoto, 800)}
                             loading="lazy"
                             decoding="async"
-                            alt={getContent(f.name)}
+                            alt={withRomanized(getContent(f.name))}
                             className="folder-image"
                             sx={{
                               width: '100%',
