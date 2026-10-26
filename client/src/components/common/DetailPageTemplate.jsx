@@ -146,7 +146,7 @@ const DetailPageTemplate = ({
           </Typography>
           <Grid container spacing={2}>
             {images.map((img, index) => (
-              <Grid item xs={6} md={4} key={index}>
+              <Grid size={{ xs: 6, md: 4 }} key={index}>
                 <img 
                   src={cldImg(img.url, 800)} 
                   alt={img.alt} 

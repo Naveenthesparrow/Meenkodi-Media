@@ -19,6 +19,8 @@ const resourceSchema = new mongoose.Schema({
   // read through the embedded archive.org reader, nothing stored in our database
   archiveId: { type: String, trim: true },
   format: { type: String, default: "PDF" },
+  // Display order set by admins ("Arrange order"); new books (0) show first
+  order: { type: Number, default: 0 },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now },
 });

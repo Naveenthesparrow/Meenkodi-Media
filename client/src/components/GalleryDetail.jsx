@@ -433,15 +433,15 @@ export default function GalleryDetail({ user }) {
           </Box>
 
           <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Name (EN)" value={editableData.name_en} onChange={(e) => setEditableData({ ...editableData, name_en: e.target.value })} fullWidth />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Name (TA)" value={editableData.name_ta} onChange={(e) => setEditableData({ ...editableData, name_ta: e.target.value })} fullWidth />
             </Grid>
 
             {/* Category */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth>
                 <InputLabel>Category</InputLabel>
                 <Select
@@ -467,7 +467,7 @@ export default function GalleryDetail({ user }) {
 
             {(editableData.category === 'Other' || (typeof editableData.category === 'string' && editableData.category.startsWith('CUSTOM:'))) && (
               <>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label={t('gallery.form.customCategoryEn')}
                     value={editableData.custom_en}
@@ -475,7 +475,7 @@ export default function GalleryDetail({ user }) {
                     fullWidth
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label={t('gallery.form.customCategoryTa')}
                     value={editableData.custom_ta}
@@ -486,21 +486,21 @@ export default function GalleryDetail({ user }) {
               </>
             )}
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Era / Period" value={editableData.era} onChange={(e) => setEditableData({ ...editableData, era: e.target.value })} fullWidth />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Keywords (comma separated)" value={editableData.keywords} onChange={(e) => setEditableData({ ...editableData, keywords: e.target.value })} fullWidth />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField label="Description (EN)" value={editableData.description_en} onChange={(e) => setEditableData({ ...editableData, description_en: e.target.value })} fullWidth multiline rows={4} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField label="Description (TA)" value={editableData.description_ta} onChange={(e) => setEditableData({ ...editableData, description_ta: e.target.value })} fullWidth multiline rows={4} />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media</Typography>
                 <TextField
@@ -522,7 +522,7 @@ export default function GalleryDetail({ user }) {
               </Box>
             </Grid>
 
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+            <Grid size={{ xs: 12 }} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
               <Button
                 variant="outlined"
                 color="error"

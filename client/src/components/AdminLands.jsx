@@ -135,7 +135,7 @@ export default function AdminLands() {
       ) : (
         <Grid container spacing={3}>
           {lands.map((land, idx) => (
-            <Grid item xs={12} sm={6} md={4} key={land._id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={land._id}>
               <Card sx={{ boxShadow: 3, borderRadius: 3 }}>
                 {land.image && (
                   <CardMedia

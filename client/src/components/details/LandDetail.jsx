@@ -218,16 +218,16 @@ export default function LandDetail({ user }) {
                     <IconButton onClick={() => setEditMode(false)}><CloseIcon /></IconButton>
                 </Box>
                 <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}><TextField fullWidth label="Name (EN)" value={formData.name.en} onChange={e => setFormData({...formData, name:{...formData.name,en:e.target.value}})}/></Grid>
-                    <Grid item xs={12} sm={6}><TextField fullWidth label="Name (TA)" value={formData.name.ta} onChange={e => setFormData({...formData, name:{...formData.name,ta:e.target.value}})}/></Grid>
-                    <Grid item xs={12}><TextField fullWidth label="Description (EN)" multiline rows={5} value={formData.description.en} onChange={e => setFormData({...formData, description:{...formData.description,en:e.target.value}})}/></Grid>
-                    <Grid item xs={12}><TextField fullWidth label="Description (TA)" multiline rows={5} value={formData.description.ta} onChange={e => setFormData({...formData, description:{...formData.description,ta:e.target.value}})}/></Grid>
-                    <Grid item xs={6}><TextField fullWidth label="Gods" value={formData.gods} onChange={e => setFormData({...formData,gods:e.target.value})} helperText="comma-separated"/></Grid>
-                    <Grid item xs={6}><TextField fullWidth label="People" value={formData.people} onChange={e => setFormData({...formData,people:e.target.value})} helperText="comma-separated"/></Grid>
-                    <Grid item xs={6}><TextField fullWidth label="Flora" value={formData.flora} onChange={e => setFormData({...formData,flora:e.target.value})} helperText="comma-separated"/></Grid>
-                    <Grid item xs={6}><TextField fullWidth label="Fauna" value={formData.fauna} onChange={e => setFormData({...formData,fauna:e.target.value})} helperText="comma-separated"/></Grid>
-                    <Grid item xs={12}><TextField fullWidth label="Poetry" multiline rows={6} value={formData.poetry} onChange={e => setFormData({...formData,poetry:e.target.value})}/><Box sx={{mt:2}}><MediaUpload onImageChange={url=>setFormData({...formData,image:url})} currentImage={formData.image} label="Hero Image" showInputsOnly/></Box></Grid>
-                    <Grid item xs={12} sx={{display:'flex',gap:2,justifyContent:'flex-end'}}>
+                    <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Name (EN)" value={formData.name.en} onChange={e => setFormData({...formData, name:{...formData.name,en:e.target.value}})}/></Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth label="Name (TA)" value={formData.name.ta} onChange={e => setFormData({...formData, name:{...formData.name,ta:e.target.value}})}/></Grid>
+                    <Grid size={{ xs: 12 }}><TextField fullWidth label="Description (EN)" multiline rows={5} value={formData.description.en} onChange={e => setFormData({...formData, description:{...formData.description,en:e.target.value}})}/></Grid>
+                    <Grid size={{ xs: 12 }}><TextField fullWidth label="Description (TA)" multiline rows={5} value={formData.description.ta} onChange={e => setFormData({...formData, description:{...formData.description,ta:e.target.value}})}/></Grid>
+                    <Grid size={{ xs: 6 }}><TextField fullWidth label="Gods" value={formData.gods} onChange={e => setFormData({...formData,gods:e.target.value})} helperText="comma-separated"/></Grid>
+                    <Grid size={{ xs: 6 }}><TextField fullWidth label="People" value={formData.people} onChange={e => setFormData({...formData,people:e.target.value})} helperText="comma-separated"/></Grid>
+                    <Grid size={{ xs: 6 }}><TextField fullWidth label="Flora" value={formData.flora} onChange={e => setFormData({...formData,flora:e.target.value})} helperText="comma-separated"/></Grid>
+                    <Grid size={{ xs: 6 }}><TextField fullWidth label="Fauna" value={formData.fauna} onChange={e => setFormData({...formData,fauna:e.target.value})} helperText="comma-separated"/></Grid>
+                    <Grid size={{ xs: 12 }}><TextField fullWidth label="Poetry" multiline rows={6} value={formData.poetry} onChange={e => setFormData({...formData,poetry:e.target.value})}/><Box sx={{mt:2}}><MediaUpload onImageChange={url=>setFormData({...formData,image:url})} currentImage={formData.image} label="Hero Image" showInputsOnly/></Box></Grid>
+                    <Grid size={{ xs: 12 }} sx={{display:'flex',gap:2,justifyContent:'flex-end'}}>
                         <Button variant="outlined" color="error" startIcon={<DeleteIcon/>} onClick={handleDelete}>Delete</Button>
                         <Button variant="contained" startIcon={<SaveIcon/>} onClick={handleSave} disabled={submitting}>{submitting?'Saving…':'Save'}</Button>
                     </Grid>
@@ -374,7 +374,7 @@ export default function LandDetail({ user }) {
                 <Grid container spacing={{ xs: 6, lg: 10 }}>
 
                     {/* Left: Narrative */}
-                    <Grid item xs={12} lg={7}>
+                    <Grid size={{ xs: 12, lg: 7 }}>
 
                         <FadeUp delay={0.1}>
                             <Typography sx={{
@@ -421,7 +421,7 @@ export default function LandDetail({ user }) {
                     </Grid>
 
                     {/* Right: Attributes */}
-                    <Grid item xs={12} lg={5}>
+                    <Grid size={{ xs: 12, lg: 5 }}>
                         <Box sx={{ position: 'sticky', top: 80 }}>
 
                             <FadeUp delay={0.3}>

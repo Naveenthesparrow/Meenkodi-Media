@@ -1270,10 +1270,10 @@ export default function Home({ user = null }) {
             alignItems="center"
             justifyContent={{ xs: 'center', md: 'center' }}
           >
-            <Grid
-              item
-              xs={12}
-              md={5.2}
+            <Grid size={{ xs: 12, md: 5.2 }}
+             
+             
+             
               order={{ xs: 1, md: 2 }}
               sx={{
                 display: 'flex',
@@ -1357,10 +1357,10 @@ export default function Home({ user = null }) {
               </Box>
             </Grid>
 
-            <Grid
-              item
-              xs={12}
-              md={6.8}
+            <Grid size={{ xs: 12, md: 6.8 }}
+             
+             
+             
               order={{ xs: 2, md: 1 }}
               sx={{
                 display: 'flex',
@@ -1770,7 +1770,7 @@ export default function Home({ user = null }) {
           ))}
           <Grid container spacing={4} justifyContent="center">
             <Grid container spacing={4} justifyContent="center" sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-              <Grid item xs={6} md={3}>
+              <Grid size={{ xs: 6, md: 3 }}>
                 <Box sx={{ textAlign: "center", py: 2 }}>
                   <Typography
                     variant="h1"
@@ -1789,7 +1789,7 @@ export default function Home({ user = null }) {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={6} md={3}>
+              <Grid size={{ xs: 6, md: 3 }}>
                 <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
                   fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
                   color: "#DAA520",
@@ -1803,7 +1803,7 @@ export default function Home({ user = null }) {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={6} md={3}>
+              <Grid size={{ xs: 6, md: 3 }}>
                 <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
                   fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
                   color: "#DAA520",
@@ -1817,7 +1817,7 @@ export default function Home({ user = null }) {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={6} md={3}>
+              <Grid size={{ xs: 6, md: 3 }}>
                 <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
                   fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
                   color: "#DAA520",
@@ -2705,7 +2705,7 @@ export default function Home({ user = null }) {
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} justifyContent="center">
               {/* Top row: 4 dynasties */}
               {[0, 1, 2, 3].map(idx => (
-                <Grid item xs={12} sm={6} md={3} key={TEAM_MUSEUM[idx].name.en} sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={TEAM_MUSEUM[idx].name.en} sx={{ display: 'flex', justifyContent: 'center' }}>
                   <Card
                     elevation={0}
                     onClick={() => { saveScrollPosition(); navigate(`/dynasties/${TEAM_MUSEUM[idx].slug}`); }}
@@ -2854,7 +2854,7 @@ export default function Home({ user = null }) {
                 </Grid>
               ))}
               {/* Bottom row: LTTE centered */}
-              <Grid item xs={12} sm={8} md={4} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 0.5, md: -1 } }}>
+              <Grid size={{ xs: 12, sm: 8, md: 4 }} sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 0.5, md: -1 } }}>
                 <Card
                   elevation={0}
                   onClick={() => { saveScrollPosition(); navigate(`/dynasties/${TEAM_MUSEUM[4].slug}`); }}

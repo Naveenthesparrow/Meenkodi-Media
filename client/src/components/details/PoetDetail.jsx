@@ -434,7 +434,7 @@ function PoetDetail({ user: initialUser }) {
           </Box>
 
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Name (EN)"
                 value={editableData.name_en}
@@ -442,7 +442,7 @@ function PoetDetail({ user: initialUser }) {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Name (TA)"
                 value={editableData.name_ta}
@@ -451,7 +451,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Title (EN)"
                 value={editableData.title_en}
@@ -459,7 +459,7 @@ function PoetDetail({ user: initialUser }) {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Title (TA)"
                 value={editableData.title_ta}
@@ -468,7 +468,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Period (EN)"
                 value={editableData.period_en}
@@ -476,7 +476,7 @@ function PoetDetail({ user: initialUser }) {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Period (TA)"
                 value={editableData.period_ta}
@@ -485,7 +485,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Birth Place (EN)"
                 value={editableData.birthPlace_en}
@@ -493,7 +493,7 @@ function PoetDetail({ user: initialUser }) {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Birth Place (TA)"
                 value={editableData.birthPlace_ta}
@@ -502,7 +502,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Image URL"
                 value={editableData.image}
@@ -511,7 +511,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Description (EN)"
                 value={editableData.description_en}
@@ -521,7 +521,7 @@ function PoetDetail({ user: initialUser }) {
                 rows={4}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Description (TA)"
                 value={editableData.description_ta}
@@ -532,7 +532,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Biography (EN)"
                 value={editableData.biography_en}
@@ -542,7 +542,7 @@ function PoetDetail({ user: initialUser }) {
                 rows={5}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Biography (TA)"
                 value={editableData.biography_ta}
@@ -553,7 +553,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Contributions (EN)"
                 value={editableData.contributions_en}
@@ -563,7 +563,7 @@ function PoetDetail({ user: initialUser }) {
                 rows={4}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Contributions (TA)"
                 value={editableData.contributions_ta}
@@ -574,7 +574,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Philosophy (EN)"
                 value={editableData.philosophy_en}
@@ -584,7 +584,7 @@ function PoetDetail({ user: initialUser }) {
                 rows={4}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Philosophy (TA)"
                 value={editableData.philosophy_ta}
@@ -595,7 +595,7 @@ function PoetDetail({ user: initialUser }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Legacy (EN)"
                 value={editableData.legacy_en}
@@ -605,7 +605,7 @@ function PoetDetail({ user: initialUser }) {
                 rows={4}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 label="Legacy (TA)"
                 value={editableData.legacy_ta}
@@ -617,7 +617,7 @@ function PoetDetail({ user: initialUser }) {
             </Grid>
 
             {/* Major Works Section */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 2 }} />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" fontWeight={600}>Major Works</Typography>
@@ -635,7 +635,7 @@ function PoetDetail({ user: initialUser }) {
                     </IconButton>
                   </Box>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Title (EN)"
                         value={work.title_en}
@@ -644,7 +644,7 @@ function PoetDetail({ user: initialUser }) {
                         size="small"
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Title (TA)"
                         value={work.title_ta}
@@ -653,7 +653,7 @@ function PoetDetail({ user: initialUser }) {
                         size="small"
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Description (EN)"
                         value={work.description_en}
@@ -664,7 +664,7 @@ function PoetDetail({ user: initialUser }) {
                         rows={2}
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Description (TA)"
                         value={work.description_ta}
@@ -681,7 +681,7 @@ function PoetDetail({ user: initialUser }) {
             </Grid>
 
             {/* Famous Quotes Section */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 2 }} />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" fontWeight={600}>Famous Quotes</Typography>
@@ -699,7 +699,7 @@ function PoetDetail({ user: initialUser }) {
                     </IconButton>
                   </Box>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Quote (EN)"
                         value={quote.quote_en}
@@ -710,7 +710,7 @@ function PoetDetail({ user: initialUser }) {
                         rows={2}
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Quote (TA)"
                         value={quote.quote_ta}
@@ -721,7 +721,7 @@ function PoetDetail({ user: initialUser }) {
                         rows={2}
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Source (EN)"
                         value={quote.source_en}
@@ -730,7 +730,7 @@ function PoetDetail({ user: initialUser }) {
                         size="small"
                       />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Source (TA)"
                         value={quote.source_ta}
@@ -914,7 +914,7 @@ function PoetDetail({ user: initialUser }) {
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Grid container spacing={4}>
           {/* Main Column */}
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             {/* Description */}
             {poet.description && (
               <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
@@ -953,7 +953,7 @@ function PoetDetail({ user: initialUser }) {
                 </Box>
                 <Grid container spacing={2}>
                   {poet.majorWorks.map((work, index) => (
-                    <Grid item xs={12} sm={6} key={index}>
+                    <Grid size={{ xs: 12, sm: 6 }} key={index}>
                       <Card elevation={0} sx={{ bgcolor: colorScheme.secondary, height: '100%' }}>
                         <CardContent>
                           <Typography variant="h6" fontWeight={600} sx={{ color: colorScheme.primary, mb: 1 }}>
@@ -1047,7 +1047,7 @@ function PoetDetail({ user: initialUser }) {
           </Grid>
 
           {/* Sidebar */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             {/* Gallery */}
             {poet.gallery && poet.gallery.length > 0 && (
               <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
@@ -1056,7 +1056,7 @@ function PoetDetail({ user: initialUser }) {
                 </Typography>
                 <Grid container spacing={1}>
                   {poet.gallery.map((img, index) => (
-                    <Grid item xs={6} key={index}>
+                    <Grid size={{ xs: 6 }} key={index}>
                       <Box
                         component="img"
                         src={cldImg(img, 1600)}

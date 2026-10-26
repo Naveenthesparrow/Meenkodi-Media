@@ -122,7 +122,7 @@ export default function Lands({ user }) {
       ) : (
         <Grid container spacing={4}>
           {lands.map((land) => (
-            <Grid item xs={12} sm={4} key={land._id}>
+            <Grid size={{ xs: 12, sm: 4 }} key={land._id}>
               <Card
                 component={RouterLink}
                 to={`/explore/lands/${land._id}`}

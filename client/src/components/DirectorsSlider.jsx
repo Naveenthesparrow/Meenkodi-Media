@@ -42,12 +42,25 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
     const lapWidth = () => el.scrollWidth / 3;
     el.scrollLeft = lapWidth(); // start in the middle lap
 
-    // keep the position inside the middle lap (the laps are identical, so the jump is invisible)
+    // Keep the position near the middle lap (the laps are identical, so the jump is
+    // invisible). Thresholds at 0.25/1.75 laps land at 0.75/1.25 after a jump, so
+    // there is plenty of room to swipe either way before the next one.
     const wrap = () => {
       const w = lapWidth();
       if (!w) return;
-      if (el.scrollLeft < w * 0.5) el.scrollLeft += w;
-      else if (el.scrollLeft > w * 1.5) el.scrollLeft -= w;
+      let delta = 0;
+      if (el.scrollLeft < w * 0.25) delta = w;
+      else if (el.scrollLeft > w * 1.75) delta = -w;
+      if (!delta) return;
+      el.scrollLeft += delta;
+      if (mouseDrag.current) mouseDrag.current.left += delta; // keep a mouse drag in step
+    };
+    // While a finger swipe or its momentum is still moving, jumping would stop it,
+    // so wait until scrolling has settled
+    let settleTimer = 0;
+    const wrapWhenSettled = () => {
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(wrap, 150);
     };
     const pauseForUser = () => { resumeAt.current = performance.now() + RESUME_AFTER_MS; };
 
@@ -61,6 +74,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
         if (Math.abs(el.scrollLeft - pos) > 2) pos = el.scrollLeft; // the user moved it: continue from there
         pos += (AUTO_SPEED * dt) / 1000;
         el.scrollLeft = pos;
+        wrap();
         if (Math.abs(el.scrollLeft - pos) > 2) pos = el.scrollLeft;
       } else {
         pos = el.scrollLeft;
@@ -68,13 +82,16 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
       frame = requestAnimationFrame(step);
     });
 
-    el.addEventListener('scroll', wrap, { passive: true });
+    el.addEventListener('scroll', wrapWhenSettled, { passive: true });
+    el.addEventListener('slider-wrap', wrap);
     el.addEventListener('wheel', pauseForUser, { passive: true });
     el.addEventListener('touchstart', pauseForUser, { passive: true });
     el.addEventListener('touchmove', pauseForUser, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
-      el.removeEventListener('scroll', wrap);
+      clearTimeout(settleTimer);
+      el.removeEventListener('scroll', wrapWhenSettled);
+      el.removeEventListener('slider-wrap', wrap);
       el.removeEventListener('wheel', pauseForUser);
       el.removeEventListener('touchstart', pauseForUser);
       el.removeEventListener('touchmove', pauseForUser);
@@ -97,6 +114,7 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
       e.currentTarget.setPointerCapture?.(e.pointerId);
     }
     scrollerRef.current.scrollLeft = d.left - dx;
+    scrollerRef.current.dispatchEvent(new Event('slider-wrap'));
   };
   const endMouseDrag = () => {
     const d = mouseDrag.current;
@@ -235,20 +253,6 @@ const DirectorsSlider = ({ directors, onNavigate, user, onEdit, onDelete }) => {
                   zIndex: 2
                 }}
               >
-                {/* Glowing Outer Ring */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    inset: -8,
-                    borderRadius: "50%",
-                    background: `var(--card-gradient)`,
-                    opacity: 0.15,
-                    filter: "blur(12px)",
-                    transition: "all 0.5s ease"
-                  }}
-                  className="glow-ring"
-                />
-                
                 {/* Rotating Border Ring */}
                 <Box
                   sx={{
@@ -467,15 +471,8 @@ const rotate = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-// The soft fade at both edges lives on this still frame, not on the scrolling strip,
-// so the browser can scroll the strip without repainting it every frame.
+// Plain frame around the slider (the faded edges were removed so every card stays clear)
 const FadeEdges = styled.div`
-  mask-image: linear-gradient(to right, transparent, #000 6% 94%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 6% 94%, transparent);
-  @media (prefers-reduced-motion: reduce) {
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
 `;
 
 const SliderContainer = styled.div`
@@ -501,11 +498,6 @@ const SliderContainer = styled.div`
     height: var(--height);
     padding: 0 12px;
     transition: opacity 0.4s ease;
-  }
-
-  /* gently fade the other cards (opacity is cheap; the old blur filter was not) */
-  &:hover .item:not(:hover) {
-    opacity: 0.6;
   }
 
   .card {
@@ -582,7 +574,6 @@ const SliderContainer = styled.div`
   }
 
   .item:hover .card::after { opacity: 1; }
-  .item:hover .glow-ring { opacity: 0.3; }
   .item:hover .rotating-ring { animation: ${rotate} 3s linear infinite; }
   .item:hover .middle-ring { transform: scale(1.06); }
   .item:hover .avatar { transform: scale(1.04); }

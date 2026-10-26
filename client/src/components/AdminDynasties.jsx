@@ -276,7 +276,7 @@ export default function AdminDynasties({ user }) {
 
       <Grid container spacing={3}>
         {dynasties.map((dynasty) => (
-          <Grid item xs={12} sm={6} md={4} key={dynasty._id}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={dynasty._id}>
             <Card sx={{ height: "100%", display: "flex", flexDirection: "column", boxShadow: 3 }}>
               {dynasty.flag && (
                 <CardMedia
@@ -405,7 +405,7 @@ export default function AdminDynasties({ user }) {
             </ToggleButtonGroup>
           </Box>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('admin.name', 'Dynasty Name')}
@@ -415,7 +415,7 @@ export default function AdminDynasties({ user }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('admin.slug', 'Slug (URL)')}
@@ -426,7 +426,7 @@ export default function AdminDynasties({ user }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('admin.period', 'Period')}
@@ -435,7 +435,7 @@ export default function AdminDynasties({ user }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('admin.capital', 'Capital')}
@@ -444,7 +444,7 @@ export default function AdminDynasties({ user }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('admin.description', 'Description')}
@@ -455,7 +455,7 @@ export default function AdminDynasties({ user }) {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label={t('admin.achievements', 'Achievements')}
@@ -466,7 +466,7 @@ export default function AdminDynasties({ user }) {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('admin.flag', 'Flag URL')}
@@ -474,7 +474,7 @@ export default function AdminDynasties({ user }) {
                 onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={t('admin.image', 'Image URL')}

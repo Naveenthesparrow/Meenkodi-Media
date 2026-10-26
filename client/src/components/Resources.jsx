@@ -19,7 +19,8 @@ import {
   Alert,
   ToggleButton,
   ToggleButtonGroup,
-  Snackbar
+  Snackbar,
+  InputAdornment
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import Add from "@mui/icons-material/Add";
@@ -27,9 +28,13 @@ import Edit from "@mui/icons-material/Edit";
 import Delete from "@mui/icons-material/Delete";
 import GetApp from "@mui/icons-material/GetApp";
 import Favorite from "@mui/icons-material/Favorite";
+import SearchIcon from "@mui/icons-material/Search";
 import AddPhotoAlternate from "@mui/icons-material/AddPhotoAlternate";
 import MediaUpload from './common/MediaUpload';
 import ArchiveBookField from './common/ArchiveBookField';
+import BookCover from './common/BookCover';
+import ReorderDialog from './common/ReorderDialog';
+import SwapVert from "@mui/icons-material/SwapVert";
 import { downloadLinkProps } from '../utils/download';
 import { hasTamil } from '../utils/tamilText';
 import SEO, { pageSEO } from './common/SEO';
@@ -52,6 +57,28 @@ export default function Resources({ user }) {
     } else { cachedResourcesData = val; setResourcesRaw(val); }
   };
   const resources = resourcesRaw;
+  // Search by title/author in either language; the slug also lets people find
+  // Tamil titles by typing them in English letters
+  const [search, setSearch] = useState('');
+  const [openOrder, setOpenOrder] = useState(false);
+
+  // Admin "Arrange order": save the new order, then show it right away
+  const saveBookOrder = async (orderedIds) => {
+    const res = await fetch(`${API_BASE_URL}/api/resources/order`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderedIds }),
+    });
+    if (!res.ok) throw new Error('Could not save the book order');
+    setResources((prev) => orderedIds.map((id, i) => ({ ...prev.find((r) => r._id === id), order: i + 1 })));
+  };
+  const query = search.trim().toLowerCase();
+  const visibleResources = !query ? resources : resources.filter((r) => {
+    const field = (v) => (!v ? '' : typeof v === 'string' ? v : `${v.en || ''} ${v.ta || ''}`);
+    const haystack = `${field(r.title)} ${field(r.author)} ${(r.slug || '').replace(/-/g, ' ')}`.toLowerCase();
+    return query.split(/s+/).every((word) => haystack.includes(word));
+  });
   const [loading, setLoading] = useState(!cachedResourcesData);
   const [error, setError] = useState(null);
   // Save errors show inside the dialog (typed data stays); delete errors as a toast
@@ -285,423 +312,184 @@ export default function Resources({ user }) {
     }}>
       <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 3, md: 3 }, pb: 4, position: 'relative' }}>
         <SEO {...pageSEO.resources} />
-        <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }} actions={user && user.role === 'admin' ? (
-          <Button
-            onClick={handleAdd}
-            variant="contained"
-            startIcon={<Add />}
-            sx={{
-              bgcolor: '#8B0000',
-              color: '#fff',
-              px: 3,
-              py: 1,
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              fontFamily: 'Georgia, serif',
-              borderRadius: 0,
-              boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              '&:hover': {
-                bgcolor: '#6B0000',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {t('resources.add', 'Add Resource')}
-          </Button>
-        ) : null}>
+        <PageHeading typographySx={{ fontSize: { xs: '2.2rem', sm: '2.8rem', md: '3.6rem' } }}>
           {t('resources.title', 'Resources')}
         </PageHeading>
 
-        <Grid
-          container
-          spacing={0}
+        {/* Admin tools: on their own row (left), not over the heading */}
+        {user && user.role === 'admin' && (
+          <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'flex-start', mb: 2.5 }}>
+            <Button
+              onClick={handleAdd}
+              variant="contained"
+              startIcon={<Add />}
+              sx={{ bgcolor: '#8B0000', color: '#fff', borderRadius: 0, px: 2.5, py: 1, fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Georgia, serif', textTransform: 'uppercase', letterSpacing: '0.05em', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', '&:hover': { bgcolor: '#6B0000' } }}
+            >
+              {t('resources.add', 'Add Resource')}
+            </Button>
+            <Button
+              onClick={() => setOpenOrder(true)}
+              variant="outlined"
+              startIcon={<SwapVert />}
+              sx={{ color: '#8B0000', borderColor: '#8B0000', borderRadius: 0, px: 2.5, py: 1, fontSize: '0.85rem', fontWeight: 700, fontFamily: 'Georgia, serif', textTransform: 'uppercase', letterSpacing: '0.05em', '&:hover': { borderColor: '#6B0000', bgcolor: 'rgba(139,0,0,0.05)' } }}
+            >
+              {i18n.language === 'ta' ? 'வரிசையை மாற்று' : 'Arrange order'}
+            </Button>
+          </Box>
+        )}
+
+        {/* Search */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, mb: { xs: 3, md: 4 }, mt: 1 }}>
+          <TextField
+            size="small"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={i18n.language === 'ta' ? 'நூல் அல்லது ஆசிரியர் பெயரைத் தேடுங்கள்…' : 'Search books by title or author…'}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#8B0000' }} /></InputAdornment> }}
+            sx={{
+              flex: '1 1 280px',
+              maxWidth: 520,
+              bgcolor: '#fff',
+              '& .MuiOutlinedInput-root': { borderRadius: 10 },
+              '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#8B0000' },
+            }}
+          />
+          <Typography sx={{ color: '#7a6a55', fontSize: '0.95rem' }}>
+            {visibleResources.length} {i18n.language === 'ta' ? 'நூல்கள்' : (visibleResources.length === 1 ? 'book' : 'books')}
+          </Typography>
+        </Box>
+
+        {visibleResources.length === 0 && (
+          <Typography sx={{ textAlign: 'center', color: '#7a6a55', py: 8 }}>
+            {i18n.language === 'ta' ? 'எந்த நூலும் கிடைக்கவில்லை' : 'No books match your search'}
+          </Typography>
+        )}
+
+        {/* Bookshelf */}
+        <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-            gap: { xs: 4, md: 5 },
-            justifyItems: 'center',
-            alignItems: 'stretch',
-            pt: 2,
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)', lg: 'repeat(5, 1fr)' },
+            columnGap: { xs: 2, md: 3.5 },
+            rowGap: { xs: 4, md: 5 },
+            pb: 4,
           }}
         >
-          {resources.map((resource, index) => (
-            <Fade
-              in={true}
-              timeout={500 + index * 200}
-              key={resource._id}
-            >
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={4}
+          {visibleResources.map((resource) => {
+            const title = getContent(resource.title);
+            const author = getContent(resource.author);
+            const likes = resource.likes ? (Array.isArray(resource.likes) ? resource.likes.length : resource.likes) : 0;
+            return (
+              <Box
+                key={resource._id}
+                component={Link}
+                to={`/resources/${resource.slug || resource._id}`}
                 sx={{
+                  textDecoration: 'none',
+                  color: 'inherit',
                   display: 'flex',
-                  justifyContent: 'center',
-                  transition: 'all 0.3s ease',
-                  alignItems: 'stretch',
-                  px: { xs: 1, md: 1.5 },
-                  boxSizing: 'border-box',
-                  width: '100%',
+                  flexDirection: 'column',
+                  minWidth: 0,
+                  '&:hover .book-cover': { transform: 'translateY(-6px)', boxShadow: '0 18px 34px rgba(0,0,0,0.25)' },
+                  '&:hover .book-title': { color: '#B8860B' },
+                  '&:hover .admin-actions': { opacity: 1 },
                 }}
               >
-                <Card
-                  component={Link}
-                  to={`/resources/${resource.slug || resource._id}`}
-                  sx={{
-                    textDecoration: 'none',
-                    width: '100%',
-                    maxWidth: 370,
-                    height: 540,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    borderRadius: 0,
-                    border: '3px solid transparent',
-                    bgcolor: '#fff',
-                    cursor: 'pointer',
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.08)',
-                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '4px',
-                      background: 'linear-gradient(90deg, #8B0000 0%, #B8860B 100%)',
-                      transform: 'scaleX(0)',
-                      transformOrigin: 'left',
-                      transition: 'transform 0.4s ease',
-                    },
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      top: -8,
-                      left: -8,
-                      right: -8,
-                      bottom: -8,
-                      border: '2px solid #8B0000',
-                      opacity: 0,
-                      transition: 'opacity 0.35s ease',
-                      zIndex: -1,
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-16px)',
-                      boxShadow: '0 25px 50px rgba(0,0,0,0.12)',
-                      '&::before': {
-                        transform: 'scaleX(1)',
-                      },
-                      '&::after': {
-                        opacity: 1,
-                      },
-                      '& .book-image': {
-                        transform: 'scale(1.12)',
-                      },
-                      '& .book-overlay': {
-                        opacity: 1,
-                      },
-                      '& .admin-actions': {
-                        opacity: 1,
-                        transform: 'translateY(0)',
-                      }
-                    },
-                  }}
-                >
-                  {/* Book Cover Image */}
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      height: 300,
-                      overflow: 'hidden',
-                      bgcolor: '#f4f1ea',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      p: 1.5,
-                    }}
-                  >
-                    {(resource.image) ? (
-                      <CardMedia
-                        component="img"
-                        image={cldImg(resource.image, 800)}
-                        alt={getContent(resource.title)}
-                        className="book-image"
-                        sx={{
-                          maxHeight: '100%',
-                          maxWidth: '100%',
-                          width: 'auto',
-                          height: 'auto',
-                          objectFit: 'contain',
-                          borderRadius: 1,
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                          transition: 'transform 0.4s ease',
-                        }}
-                        onError={(e) => {
-                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='370' height='300' viewBox='0 0 370 300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f8f7f5;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23e8e6e0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='370' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia, serif' font-size='36px' fill='%23B8860B' opacity='0.6'%3ENo Image%3C/text%3E%3Ctext x='50%25' y='70%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia, serif' font-size='14px' fill='%23666' font-weight='400'%3ETamil Heritage%3C/text%3E%3C/svg%3E";
-                        }}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          background: 'linear-gradient(135deg, #f8f7f5 0%, #e8e6e0 100%)',
-                        }}
-                      >
-                        <Box sx={{ width: '70%', height: 100, bgcolor: '#eee', borderRadius: 1, mb: 1 }} />
-                      </Box>
-                    )}
-                    {/* Subtle overlay on hover */}
-                    <Box
-                      className="book-overlay"
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)',
-                        opacity: 0,
-                        transition: 'opacity 0.4s ease',
-                      }}
-                    />
+                <Box sx={{ position: 'relative' }}>
+                  <BookCover
+                    className="book-cover"
+                    image={resource.image}
+                    title={title}
+                    author={author}
+                    width={500}
+                    sx={{ transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
+                  />
 
-                    {/* Like Badge */}
-                    <Box
-                      onClick={(e) => e.stopPropagation()}
-                      sx={{
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        bgcolor: '#fff',
-                        border: '1px solid #eee',
-                        px: 1.25,
-                        py: 0.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        borderRadius: 1,
-                        zIndex: 12,
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
-                      }}
-                    >
-                      <Favorite sx={{ color: '#8B0000', fontSize: 18 }} />
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                        {resource.likes ? (Array.isArray(resource.likes) ? resource.likes.length : resource.likes) : 0}
-                      </Typography>
+                  {likes > 0 && (
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(255,255,255,0.92)', px: 0.8, py: 0.2, borderRadius: 5, display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                      <Favorite sx={{ color: '#8B0000', fontSize: 14 }} />
+                      <Typography sx={{ fontWeight: 700, fontSize: '0.75rem' }}>{likes}</Typography>
                     </Box>
-                  </Box>
+                  )}
 
-                  {/* Content Section */}
-                  <CardContent
-                    sx={{
-                      flexGrow: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      p: 3,
-                      position: 'relative',
-                      bgcolor: '#fff',
-                    }}
-                  >
-                    {/* Admin Controls */}
-                    {user && user.role === "admin" && (
-                      <Box
-                        className="admin-actions"
-                        sx={{
-                          position: 'absolute',
-                          top: 16,
-                          right: 16,
-                          display: "flex",
-                          gap: 1,
-                          zIndex: 10,
-                          opacity: 0,
-                          transform: 'translateY(-8px)',
-                          transition: 'all 0.3s ease',
-                        }}
+                  {user && user.role === 'admin' && (
+                    <Box className="admin-actions" sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 0.5, opacity: { xs: 1, md: 0 }, transition: 'opacity 0.2s ease' }}>
+                      <IconButton
+                        size="small"
+                        aria-label="Edit book"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(resource); }}
+                        sx={{ bgcolor: 'rgba(0,0,0,0.75)', color: '#fff', width: 30, height: 30, '&:hover': { bgcolor: '#8B0000' } }}
                       >
-                        <IconButton
-                          onClick={(e) => {
-                            // The card is a <Link>; without preventDefault the click also navigates to the resource page
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleEdit(resource);
-                          }}
-                          size="small"
-                          sx={{
-                            bgcolor: 'rgba(0,0,0,0.8)',
-                            color: '#fff',
-                            width: 32,
-                            height: 32,
-                            '&:hover': {
-                              bgcolor: '#8B0000',
-                            },
-                          }}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          onClick={(e) => {
-                            // The card is a <Link>; without preventDefault the click also navigates to the resource page
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDelete(resource._id);
-                          }}
-                          size="small"
-                          sx={{
-                            bgcolor: 'rgba(0,0,0,0.8)',
-                            color: '#fff',
-                            width: 32,
-                            height: 32,
-                            '&:hover': {
-                              bgcolor: '#8B0000',
-                            },
-                          }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
+                        <Edit sx={{ fontSize: 16 }} />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        aria-label="Delete book"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(resource._id); }}
+                        sx={{ bgcolor: 'rgba(0,0,0,0.75)', color: '#fff', width: 30, height: 30, '&:hover': { bgcolor: '#8B0000' } }}
+                      >
+                        <Delete sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
 
-                    {/* Title */}
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mt: 1.5 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography
-                      variant="h6"
+                      className="book-title"
                       sx={{
                         fontWeight: 700,
                         color: '#8B0000',
-                        mb: 1,
-                        lineHeight: 1.4,
-                        fontSize: '1.15rem',
                         fontFamily: 'Georgia, serif',
+                        fontSize: { xs: '0.92rem', md: '1rem' },
+                        lineHeight: 1.35,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '3.3rem',
-                        position: 'relative',
-                        '&::after': {
-                          content: '""',
-                          position: 'absolute',
-                          bottom: -8,
-                          left: 0,
-                          width: '48px',
-                          height: '3px',
-                          bgcolor: '#DAA520',
-                          borderRadius: 1,
-                        }
+                        transition: 'color 0.2s ease',
                       }}
                     >
-                      {getContent(resource.title)}
+                      {title}
                     </Typography>
-
-                    {/* Author */}
-                    {getContent(resource.author) && (
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#8B0000',
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                          mb: 2,
-                          fontFamily: 'Georgia, serif',
-                        }}
-                      >
-                        {getContent(resource.author)}
+                    {author && (
+                      <Typography sx={{ color: '#6b5b45', fontSize: '0.8rem', mt: 0.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {author}
                       </Typography>
                     )}
-
-                    {/* Description */}
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: '#555',
-                        lineHeight: 1.7,
-                        fontSize: '0.875rem',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '4.5rem',
-                        mb: 3,
-                      }}
+                    {resource.pdfSize && (
+                      <Typography sx={{ color: '#9a8a75', fontSize: '0.72rem', mt: 0.3 }}>
+                        PDF · {resource.pdfSize}
+                      </Typography>
+                    )}
+                  </Box>
+                  {resource.downloadLink && (
+                    <IconButton
+                      {...downloadLinkProps(resource.downloadLink)}
+                      onClick={(e) => e.stopPropagation()}
+                      size="small"
+                      aria-label={i18n.language === 'ta' ? 'பதிவிறக்கு' : 'Download PDF'}
+                      title={i18n.language === 'ta' ? 'பதிவிறக்கு' : 'Download PDF'}
+                      sx={{ color: '#B8860B', border: '1px solid rgba(184,134,11,0.5)', mt: 0.2, '&:hover': { bgcolor: '#B8860B', color: '#fff' } }}
                     >
-                      {getContent(resource.description)}
-                    </Typography>
+                      <GetApp sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
 
-                    {/* Action Buttons */}
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        gap: 2,
-                        pt: 2,
-                        borderTop: '1px solid rgba(0,0,0,0.08)',
-                      }}
-                    >
-                      <Button
-                        component={Link}
-                        to={`/resources/${resource.slug || resource._id}`}
-                        variant="contained"
-                        fullWidth
-                        sx={{
-                          bgcolor: '#8B0000',
-                          color: '#fff',
-                          borderRadius: 0,
-                          py: 1.2,
-                          fontWeight: 600,
-                          fontSize: '0.875rem',
-                          letterSpacing: '0.5px',
-                          textTransform: 'none',
-                          boxShadow: 'none',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            bgcolor: '#6B0000',
-                            boxShadow: '0 4px 12px rgba(139,0,0,0.3)',
-                          },
-                        }}
-                      >
-                        View Details
-                      </Button>
-                      {resource.downloadLink && (
-                        <Button
-                          {...downloadLinkProps(resource.downloadLink)}
-                          variant="outlined"
-                          onClick={(e) => e.stopPropagation()}
-                          sx={{
-                            color: '#B8860B',
-                            borderColor: '#B8860B',
-                            borderRadius: 0,
-                            py: 1.2,
-                            px: 2,
-                            minWidth: 'auto',
-                            fontWeight: 600,
-                            fontSize: '1.1rem',
-                            boxShadow: 'none',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              bgcolor: '#B8860B',
-                              color: '#fff',
-                              borderColor: '#B8860B',
-                            },
-                          }}
-                        > <GetApp /> </Button>
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Fade>
-          ))}
-        </Grid>
+        {/* Arrange order dialog */}
+        <ReorderDialog
+          open={openOrder}
+          onClose={() => setOpenOrder(false)}
+          title={i18n.language === 'ta' ? 'நூல்களின் வரிசை' : 'Arrange books'}
+          items={resources.map((r) => ({ id: r._id, title: getContent(r.title), subtitle: getContent(r.author), image: r.image }))}
+          onSave={saveBookOrder}
+        />
 
         {/* Edit/Add Dialog */}
         <Dialog

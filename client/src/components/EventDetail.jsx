@@ -199,32 +199,32 @@ export default function EventDetail({ user }) {
           </Box>
 
           <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Title (EN)" value={title.en} onChange={(e) => setTitle({ ...title, en: e.target.value })} fullWidth />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Title (TA)" value={title.ta} onChange={(e) => setTitle({ ...title, ta: e.target.value })} fullWidth />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Location (EN)" value={location.en} onChange={(e) => setLocation({ ...location, en: e.target.value })} fullWidth />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField label="Location (TA)" value={location.ta} onChange={(e) => setLocation({ ...location, ta: e.target.value })} fullWidth />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField label="Description (EN)" value={description.en} onChange={(e) => setDescription({ ...description, en: e.target.value })} fullWidth multiline rows={6} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField label="Description (TA)" value={description.ta} onChange={(e) => setDescription({ ...description, ta: e.target.value })} fullWidth multiline rows={6} />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box sx={{ p: 3, bgcolor: '#f9f9f9', borderRadius: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Media Standard</Typography>
                 <MediaUpload
@@ -242,7 +242,7 @@ export default function EventDetail({ user }) {
               </Box>
             </Grid>
 
-            <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+            <Grid size={{ xs: 12 }} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
               <Button
                 variant="outlined"
                 color="error"

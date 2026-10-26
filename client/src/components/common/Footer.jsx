@@ -38,7 +38,7 @@ export default function Footer() {
           }}
         >
           <Grid container spacing={4} alignItems="flex-start">
-            <Grid item xs={12} md={9}>
+            <Grid size={{ xs: 12, md: 9 }}>
               <Typography
                 variant="overline"
                 sx={{
@@ -73,7 +73,7 @@ export default function Footer() {
               <Divider sx={{ borderColor: 'rgba(255,255,255,0.04)', my: 2 }} />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'center' }, alignItems: 'center', height: '100%' }}>
                 <Stack direction="row" spacing={2}>
                   {[{

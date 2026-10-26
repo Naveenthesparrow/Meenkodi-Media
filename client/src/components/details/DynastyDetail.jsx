@@ -730,12 +730,12 @@ export default function DynastyDetail({ user }) {
           }}
         >
           <Grid container>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Box sx={{ height: "100%", minHeight: 210, display: "grid", placeItems: "center", p: 3, bgcolor: "rgba(186,29,22,0.04)" }}>
                 <Box component="img" src={cldImg(dynasty.image, 800)} alt={getContent(dynasty.name)} sx={{ width: 150, height: 150, borderRadius: "50%", objectFit: "cover", border: "3px solid #8B0000", bgcolor: "#fff" }} />
               </Box>
             </Grid>
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
                 <Typography sx={{ color: "#8B0000", fontWeight: 800, fontSize: { xs: 30, md: 38 }, lineHeight: 1.1 }}>
                   {getContent(dynasty.name)}
@@ -768,7 +768,7 @@ export default function DynastyDetail({ user }) {
 
         <Grid container spacing={2.2} sx={{ mb: 3.4 }}>
           {dynasty.facts.map((fact, idx) => (
-            <Grid item xs={12} sm={4} key={`${slug}-fact-${idx}`}>
+            <Grid size={{ xs: 12, sm: 4 }} key={`${slug}-fact-${idx}`}>
               <Card
                 sx={{
                   bgcolor: "#fffaf1",
@@ -793,7 +793,7 @@ export default function DynastyDetail({ user }) {
         </Grid>
 
         <Grid container spacing={2.2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.6 }}>
                 {getContent(dynasty.rulersTitle)}
@@ -811,7 +811,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.6 }}>
                 {i18n.language === "ta" ? "கட்டிடக்கலை & சின்னங்கள்" : "Architecture and Heritage Sites"}
@@ -828,7 +828,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                 <MilitaryTech sx={{ color: "#8B0000" }} />
@@ -862,7 +862,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
                 <Timeline sx={{ color: "#8B0000" }} />
@@ -885,7 +885,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.4 }}>
                 <Place sx={{ color: "#8B0000" }} />
@@ -906,7 +906,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.2 }}>
                 {i18n.language === "ta" ? "கலாசாரம் & வாழ்க்கை" : "Culture and Life"}
@@ -925,7 +925,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.2 }}>
                 {i18n.language === "ta" ? "கடல் வாணிகம் & உலக செல்வாக்கு" : "Trade and Global Influence"}
@@ -951,7 +951,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.2 }}>
                 {i18n.language === "ta" ? "கல்வெட்டுகள் & ஆதாரங்கள்" : "Inscriptions and Evidence"}
@@ -968,7 +968,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)", height: "100%" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.2 }}>
                 {i18n.language === "ta" ? "பாரம்பரிய மரபுச் செல்வம்" : "Legacy"}
@@ -984,7 +984,7 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.2 }}>
                 {i18n.language === "ta" ? "மீடியா அனுபவம்" : "Media Section"}
@@ -1002,14 +1002,14 @@ export default function DynastyDetail({ user }) {
             </Paper>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Paper sx={{ p: 2.2, bgcolor: "#fffaf1", borderRadius: 2.5, border: "1px solid rgba(186,29,22,0.18)" }}>
               <Typography sx={{ fontWeight: 800, color: "#8B0000", mb: 1.2 }}>
                 {i18n.language === "ta" ? "மேலும் ஆராயுங்கள்" : "Explore More"}
               </Typography>
               <Grid container spacing={1.2}>
                 {relatedDynasties.map(([key, entry]) => (
-                  <Grid item xs={12} sm={6} md={3} key={`related-${key}`}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }} key={`related-${key}`}>
                     <Card
                       onClick={() => navigate(`/dynasties/${key}`)}
                       sx={{
@@ -1083,7 +1083,7 @@ export default function DynastyDetail({ user }) {
             </Box>
 
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Name (English)" : "Name (Tamil)"}
@@ -1092,7 +1092,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Tagline (English)" : "Tagline (Tamil)"}
@@ -1101,7 +1101,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Period (English)" : "Period (Tamil)"}
@@ -1110,7 +1110,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Capital (English)" : "Capital (Tamil)"}
@@ -1119,7 +1119,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Region (English)" : "Region (Tamil)"}
@@ -1128,7 +1128,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Language (English)" : "Language (Tamil)"}
@@ -1137,7 +1137,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Religion (English)" : "Religion (Tamil)"}
@@ -1146,7 +1146,7 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   multiline
@@ -1157,14 +1157,14 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <MediaUpload
                   label="Banner Image"
                   currentImage={editableData.banner}
                   onImageChange={(url) => handleEditField("banner", url)}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <MediaUpload
                   label="Dynasty Image / Emblem"
                   currentImage={editableData.image}
@@ -1172,11 +1172,11 @@ export default function DynastyDetail({ user }) {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField fullWidth label="Map Embed URL" value={editableData.mapEmbed} onChange={(e) => handleEditField("mapEmbed", e.target.value)} />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
                   label={editLanguage === "en" ? "Media Label (English)" : "Media Label (Tamil)"}

@@ -50,7 +50,9 @@ import { downloadLinkProps, fixFileName } from "../utils/download";
 import { hasTamil } from "../utils/tamilText";
 import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BookCover from "./common/BookCover";
 import SEO from "./common/SEO";
 import cldImg from "../utils/cloudinaryImage";
 
@@ -83,6 +85,13 @@ export default function ResourceDetail({ user }) {
   const [pdfSize, setPdfSize] = useState(() => cachedResourceDetails[id]?.pdfSize || "");
   const [archiveId, setArchiveId] = useState(() => cachedResourceDetails[id]?.archiveId || "");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  // The archive.org reader shows its own progress; never keep our loading
+  // overlay up for long even if its load event is late
+  useEffect(() => {
+    if (!showPdfViewer || !archiveId) return undefined;
+    const timer = setTimeout(() => setPdfLoading(false), 6000);
+    return () => clearTimeout(timer);
+  }, [showPdfViewer, archiveId]);
   const [numPages, setNumPages] = useState(null);
   const [pdfLoadError, setPdfLoadError] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(true);
@@ -273,12 +282,16 @@ export default function ResourceDetail({ user }) {
         <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, bgcolor: "#fff" }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
             <Box sx={{ flexGrow: 1 }}>
-              {/* Category chip removed */}
+              <Button
+                component={Link}
+                to="/resources"
+                startIcon={<ArrowBackIcon />}
+                sx={{ color: '#8B0000', textTransform: 'none', fontWeight: 600, px: 1 }}
+              >
+                {i18n.language === 'ta' ? 'அனைத்து நூல்கள்' : 'All books'}
+              </Button>
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
-              <IconButton onClick={() => navigate("/resources")} size="small">
-                <CloseIcon />
-              </IconButton>
               {user && user.role === "admin" && (
                 <>
                   {!editMode ? (
@@ -301,7 +314,7 @@ export default function ResourceDetail({ user }) {
           </Box>
 
           <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
-            <Grid item xs={12} sm={5} md={4}>
+            <Grid size={{ xs: 12, sm: 5, md: 4 }}>
               {editMode && user?.role === "admin" ? (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#333' }}>
@@ -363,35 +376,19 @@ export default function ResourceDetail({ user }) {
                   )}
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-start' }, alignItems: 'flex-start', width: '100%' }}>
-                  <Box
-                    component="img"
-                    src={cldImg(image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect fill='%23f0f0f0' width='300' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E", 1600)}
-                    alt={getContent(resource.title)}
-                    sx={{
-                      width: "100%",
-                      maxWidth: { xs: 220, sm: 240, md: 280 },
-                      maxHeight: { xs: 320, sm: 360, md: 400 },
-                      height: "auto",
-                      objectFit: "contain",
-                      borderRadius: 2,
-                      boxShadow: "0 10px 24px rgba(0,0,0,0.14), 0 2px 5px rgba(0,0,0,0.06)",
-                      border: "1px solid rgba(0,0,0,0.08)",
-                      bgcolor: "#faf9f6",
-                      transition: "transform 0.3s ease",
-                      "&:hover": {
-                        transform: "scale(1.02)",
-                      }
-                    }}
-                    onError={(e) => {
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect fill='%23f0f0f0' width='300' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999' font-size='20'%3ENo Image%3C/text%3E%3C/svg%3E";
-                    }}
+                <Box sx={{ display: 'flex', justifyContent: 'center', position: { sm: 'sticky' }, top: { sm: 90 } }}>
+                  <BookCover
+                    image={image}
+                    title={getContent(resource.title)}
+                    author={getContent(resource.author)}
+                    width={800}
+                    sx={{ maxWidth: { xs: 210, sm: 280, md: 320 } }}
                   />
                 </Box>
               )}
             </Grid>
 
-            <Grid item xs={12} sm={7} md={8}>
+            <Grid size={{ xs: 12, sm: 7, md: 8 }}>
               {editMode && user?.role === "admin" ? (
                 <Box>
                   <ToggleButtonGroup
@@ -526,20 +523,6 @@ export default function ResourceDetail({ user }) {
                     </Typography>
                   )}
 
-                  <Divider sx={{ my: 3 }} />
-
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: "#333",
-                      lineHeight: 1.8,
-                      mb: 4,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {getContent(resource.description)}
-                  </Typography>
-
                   {/* PDF Book Actions */}
                   {(downloadLink || archiveId) && (
                     <Paper
@@ -576,6 +559,7 @@ export default function ResourceDetail({ user }) {
                             fontWeight: 700,
                             px: 3,
                             py: 1,
+                            width: { xs: '100%', sm: 'auto' },
                           }}
                         >
                           Read Book Online
@@ -594,6 +578,7 @@ export default function ResourceDetail({ user }) {
                             fontWeight: 700,
                             px: 2.5,
                             py: 1,
+                            width: { xs: '100%', sm: 'auto' },
                           }}
                         >
                           Download PDF Book
@@ -602,6 +587,20 @@ export default function ResourceDetail({ user }) {
                       </Box>
                     </Paper>
                   )}
+
+                  <Divider sx={{ my: 3 }} />
+
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "#333",
+                      lineHeight: 1.8,
+                      mb: 4,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {getContent(resource.description)}
+                  </Typography>
 
                   {/* Immersive Fullscreen PDF Reader Modal */}
                   {(downloadLink || archiveId) && (
@@ -751,11 +750,33 @@ export default function ResourceDetail({ user }) {
 
                         {/* react-pdf Continuous Scroll Renderer */}
                         {pdfLoading && !pdfLoadError && (
-                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 2 }}>
-                            <Box sx={{ fontSize: '3rem', animation: 'pulse 1.5s ease-in-out infinite', '@keyframes pulse': { '0%,100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: 0.6, transform: 'scale(1.08)' } } }}>📖</Box>
-                            <Typography variant="h6" sx={{ color: '#fff', fontFamily: 'Georgia, serif', fontWeight: 700 }}>Opening Book...</Typography>
-                            <Typography variant="body2" sx={{ color: '#aaa' }}>Loading pages, please wait...</Typography>
-                            <CircularProgress sx={{ color: '#8B0000', mt: 1 }} />
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              inset: 0,
+                              zIndex: 2,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 2,
+                              px: 3,
+                              textAlign: 'center',
+                              background: 'radial-gradient(circle at center, #3a2a24 0%, #1c1c1c 70%)',
+                            }}
+                          >
+                            <Box sx={{ width: { xs: 110, sm: 140 }, animation: 'bookPulse 1.8s ease-in-out infinite', '@keyframes bookPulse': { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-6px)' } } }}>
+                              <BookCover image={image} title={title_en || title_ta} author={author_en || author_ta} width={300} />
+                            </Box>
+                            <Typography sx={{ color: '#f5e6c8', fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.25rem' }, maxWidth: 520 }}>
+                              {getContent(resource.title)}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <CircularProgress size={18} sx={{ color: '#DAA520' }} />
+                              <Typography variant="body2" sx={{ color: '#bbb' }}>
+                                {i18n.language === 'ta' ? 'நூல் திறக்கிறது…' : 'Opening the book…'}
+                              </Typography>
+                            </Box>
                           </Box>
                         )}
 
@@ -777,7 +798,19 @@ export default function ResourceDetail({ user }) {
                           </Box>
                         )}
 
+                        {archiveId && !pdfLoadError && (
+                          <Box
+                            component="iframe"
+                            src={`https://archive.org/embed/${archiveId}`}
+                            title={title_en || title_ta || 'Book'}
+                            allowFullScreen
+                            onLoad={() => setPdfLoading(false)}
+                            sx={{ border: 0, width: '100%', flex: 1, minHeight: 0, bgcolor: '#000', display: 'block' }}
+                          />
+                        )}
+
                         {/* Continuous scroll: render ALL pages stacked vertically */}
+                        {!archiveId && (
                         <Box
                           sx={{
                             overflowY: 'auto',
@@ -792,16 +825,6 @@ export default function ResourceDetail({ user }) {
                             bgcolor: '#3a3a3a',
                           }}
                         >
-                          {archiveId ? (
-                            <Box
-                              component="iframe"
-                              src={`https://archive.org/embed/${archiveId}`}
-                              title={title_en || title_ta || 'Book'}
-                              allowFullScreen
-                              onLoad={() => setPdfLoading(false)}
-                              sx={{ border: 0, width: '100%', height: 'calc(100vh - 140px)', bgcolor: '#fff' }}
-                            />
-                          ) : (
                           <Document
                             file={downloadLink}
                             onLoadSuccess={onDocumentLoadSuccess}
@@ -833,8 +856,8 @@ export default function ResourceDetail({ user }) {
                               </Box>
                             ))}
                           </Document>
-                          )}
                         </Box>
+                        )}
                       </Box>
                     </Dialog>
                   )}

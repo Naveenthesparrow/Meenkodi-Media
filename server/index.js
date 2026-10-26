@@ -1660,7 +1660,7 @@ app.delete("/api/events/:id", ensureAdmin, async (req, res) => {
 // Resource routes
 app.get("/api/resources", async (req, res) => {
   const lang = resolveLang(req);
-  const resources = await Resource.find();
+  const resources = await Resource.find().sort({ order: 1, createdAt: -1 });
   res.json(localizeCollection(resources, 'resources', lang));
 });
 app.get("/api/resources/:id", async (req, res) => {
@@ -1746,6 +1746,18 @@ app.post("/api/resources", ensureAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+// Admin "Arrange order" on the books page (must be registered before /:id)
+app.put("/api/resources/order", ensureAdmin, async (req, res) => {
+  const { orderedIds } = req.body || {};
+  if (!Array.isArray(orderedIds) || !orderedIds.every((id) => mongoose.isValidObjectId(id))) {
+    return res.status(400).json({ error: "orderedIds must be an array of ids" });
+  }
+  await Resource.bulkWrite(orderedIds.map((id, index) => ({
+    updateOne: { filter: { _id: id }, update: { $set: { order: index + 1 } } },
+  })));
+  res.json({ success: true });
+});
+
 app.put("/api/resources/:id", ensureAdmin, async (req, res) => {
   try {
     console.log("PUT /api/resources/:id", req.params.id, req.body);
@@ -5744,7 +5756,7 @@ if (fs.existsSync(clientIndex)) {
     { path: '/explore/clothing', title: 'Traditional Tamil Clothing | Meenkodi', description: 'Traditional Tamil clothing and textiles through history on Meenkodi.', name: 'Traditional Tamil Clothing', model: Clothing },
     { path: '/explore/ancientscience', title: 'Ancient Tamil Science & Technology | Meenkodi', description: 'Ancient Tamil science, astronomy, medicine and technology on Meenkodi.', name: 'Ancient Tamil Science', model: AncientScience },
     { path: '/resources', title: 'Tamil Heritage Books & Resources | Meenkodi', description: 'Books, PDFs and research resources on Tamil history and heritage on Meenkodi.', name: 'Resources',
-      list: async () => (await Resource.find().sort({ createdAt: -1 }).select('title slug image').lean())
+      list: async () => (await Resource.find().sort({ order: 1, createdAt: -1 }).select('title slug image').lean())
         .map((r) => ({ href: itemPath('/resources', r), title: pickText(r.title), image: r.image })) },
     { path: '/faq', title: 'FAQ — Tamil Heritage & Meenkodi | Frequently Asked Questions', description: 'Answers to common questions about Meenkodi and Tamil heritage.', name: 'FAQ' },
   ];
