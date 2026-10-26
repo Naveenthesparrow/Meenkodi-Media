@@ -1690,6 +1690,51 @@ app.post("/api/resources/:id/like", ensureAuthenticated, async (req, res) => {
     res.status(500).json({ error: "Failed to process like" });
   }
 });
+// Book details from archive.org (free metadata API) for the admin "Fetch details"
+// button: accepts an archive.org link (details/embed/download URL) or a bare identifier.
+const parseArchiveId = (input) => {
+  const value = String(input || '').trim();
+  const fromUrl = value.match(/archive\.org\/(?:details|embed|download|stream)\/([A-Za-z0-9._-]+)/i);
+  const id = fromUrl ? fromUrl[1] : value;
+  return /^[A-Za-z0-9._-]{3,100}$/.test(id) ? id : null;
+};
+const formatBytes = (bytes) => {
+  const n = Number(bytes) || 0;
+  return n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`;
+};
+app.get("/api/archive/lookup", ensureAdmin, async (req, res) => {
+  const id = parseArchiveId(req.query.url);
+  if (!id) return res.status(400).json({ error: "Paste an archive.org link like https://archive.org/details/your-book-id" });
+  try {
+    const response = await fetch(`https://archive.org/metadata/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(15000) });
+    const data = response.ok ? await response.json() : null;
+    if (!data || !data.metadata) return res.status(404).json({ error: `No archive.org item found for "${id}"` });
+    const m = data.metadata;
+    const first = (v) => (Array.isArray(v) ? v[0] : v) || '';
+    // The original uploaded PDF (not archive.org's derived "_text.pdf" copy) if there is one
+    const pdfs = (data.files || []).filter((f) => /\.pdf$/i.test(f.name));
+    const pdf = pdfs.find((f) => f.source === 'original') || pdfs[0];
+    res.json({
+      archiveId: id,
+      title: first(m.title),
+      author: [].concat(m.creator || []).join(', '),
+      language: first(m.language),
+      year: first(m.date || m.year),
+      description: String(first(m.description)).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      pages: Number(m.imagecount) || null,
+      ready: Boolean(pdf) || Number(m.imagecount) > 0, // false while archive.org is still processing
+      cover: `https://archive.org/services/img/${id}`,
+      downloadLink: pdf ? `https://archive.org/download/${id}/${encodeURIComponent(pdf.name)}` : '',
+      pdfName: pdf ? pdf.name : '',
+      pdfSize: pdf ? formatBytes(pdf.size) : '',
+      embedUrl: `https://archive.org/embed/${id}`,
+    });
+  } catch (err) {
+    console.error("archive.org lookup failed:", err.message);
+    res.status(502).json({ error: "Could not reach archive.org, please try again" });
+  }
+});
+
 app.post("/api/resources", ensureAdmin, async (req, res) => {
   try {
     const resource = await Resource.create(req.body);
@@ -2375,6 +2420,15 @@ function cleanupFile(filePath) {
 }
 
 // Stream PDF directly from MongoDB Database GridFS with local disk caching
+// Uploaded file names were stored as UTF-8 bytes read as Latin-1 ("à®à®¤à¯" instead
+// of Tamil); turn such names back into the real text
+function fixFileNameEncoding(name) {
+  if (!name || !/[À-ÿ]/.test(name)) return name || '';
+  const fixed = Buffer.from(name, 'latin1').toString('utf8');
+  return fixed.includes('�') ? name : fixed;
+}
+const pickTitle = (field) => (!field ? '' : typeof field === 'string' ? field : (field.en || field.ta || ''));
+
 app.get("/api/resources/pdf/:id", async (req, res) => {
   try {
     const db = mongoose.connection.db;
@@ -2385,6 +2439,13 @@ app.get("/api/resources/pdf/:id", async (req, res) => {
       return res.status(400).send("Invalid PDF ID format");
     }
     const fileId = new mongoose.Types.ObjectId(fileIdStr);
+
+    // "Download PDF" button (?download=1): save the file instead of opening it in the browser
+    if (req.query.download) {
+      const resource = await Resource.findOne({ downloadLink: `/api/resources/pdf/${fileIdStr}` }).select('pdfName title').lean();
+      const name = fixFileNameEncoding(resource?.pdfName) || `${pickTitle(resource?.title) || 'meenkodi-book'}.pdf`;
+      res.attachment(name.toLowerCase().endsWith('.pdf') ? name : `${name}.pdf`);
+    }
 
     const cacheDir = path.join(process.cwd(), "uploads/pdf_cache");
     if (!fs.existsSync(cacheDir)) {
@@ -5601,7 +5662,23 @@ if (fs.existsSync(clientIndex)) {
     },
     { path: '/dynasties/:id', find: (slug) => Dynasty.findOne({ slug }).lean(), section: 'Tamil Dynasties' },
     { path: '/poets/:id', find: (slug) => Poet.findOne({ slug }).lean(), section: 'Tamil Poets' },
-    { path: '/resources/:id', find: bySlugOrId(Resource), section: 'Resources', back: '/resources', name: (d) => pickText(d.title) },
+    {
+      path: '/resources/:id', find: bySlugOrId(Resource), section: 'Resources', back: '/resources', name: (d) => pickText(d.title),
+      // Books: schema.org Book, linked to the archive.org copy when the book is hosted there
+      ld: (d, { url, name, description, image }) => ({
+        '@context': 'https://schema.org',
+        '@type': 'Book',
+        url,
+        name,
+        ...(description ? { description } : {}),
+        ...(image ? { image } : {}),
+        ...(pickText(d.author) ? { author: { '@type': 'Person', name: pickText(d.author) } } : {}),
+        bookFormat: 'https://schema.org/EBook',
+        ...(d.archiveId ? { sameAs: `https://archive.org/details/${d.archiveId}` } : {}),
+        isAccessibleForFree: true,
+        publisher: { '@type': 'Organization', name: 'Meenkodi Tamil Heritage Foundation', url: BASE_URL },
+      }),
+    },
   ];
 
   for (const page of DETAIL_PAGES) {
@@ -5643,9 +5720,11 @@ if (fs.existsSync(clientIndex)) {
           backLabel: page.section,
         }),
         jsonLd: [
-          page.photos
-            ? imageGalleryLd({ url: canonicalUrl, name, description, photos })
-            : articleLd({ url: canonicalUrl, headline: name, description, image, datePublished: doc.createdAt, dateModified: doc.updatedAt }),
+          page.ld
+            ? page.ld(doc, { url: canonicalUrl, name, description, image })
+            : page.photos
+              ? imageGalleryLd({ url: canonicalUrl, name, description, photos })
+              : articleLd({ url: canonicalUrl, headline: name, description, image, datePublished: doc.createdAt, dateModified: doc.updatedAt }),
           breadcrumbLd(trail),
         ],
       });

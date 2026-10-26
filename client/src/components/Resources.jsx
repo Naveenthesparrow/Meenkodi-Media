@@ -29,7 +29,9 @@ import GetApp from "@mui/icons-material/GetApp";
 import Favorite from "@mui/icons-material/Favorite";
 import AddPhotoAlternate from "@mui/icons-material/AddPhotoAlternate";
 import MediaUpload from './common/MediaUpload';
-import PdfUpload from './common/PdfUpload';
+import ArchiveBookField from './common/ArchiveBookField';
+import { downloadLinkProps } from '../utils/download';
+import { hasTamil } from '../utils/tamilText';
 import SEO, { pageSEO } from './common/SEO';
 import PageHeading from './common/PageHeading';
 
@@ -67,6 +69,7 @@ export default function Resources({ user }) {
     downloadLink: '',
     pdfName: '',
     pdfSize: '',
+    archiveId: '',
   });
   const navigate = useNavigate();
 
@@ -123,6 +126,7 @@ export default function Resources({ user }) {
       downloadLink: '',
       pdfName: '',
       pdfSize: '',
+      archiveId: '',
     });
     setDialogError(null);
     setOpenDialog(true);
@@ -144,6 +148,7 @@ export default function Resources({ user }) {
       downloadLink: resource.downloadLink || '',
       pdfName: resource.pdfName || '',
       pdfSize: resource.pdfSize || '',
+      archiveId: resource.archiveId || '',
     });
     setDialogError(null);
     setOpenDialog(true);
@@ -169,6 +174,7 @@ export default function Resources({ user }) {
           downloadLink: currentResource.downloadLink,
           pdfName: currentResource.pdfName,
           pdfSize: currentResource.pdfSize,
+          archiveId: currentResource.archiveId || '',
         }),
       });
 
@@ -667,9 +673,7 @@ export default function Resources({ user }) {
                       </Button>
                       {resource.downloadLink && (
                         <Button
-                          href={resource.downloadLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          {...downloadLinkProps(resource.downloadLink)}
                           variant="outlined"
                           onClick={(e) => e.stopPropagation()}
                           sx={{
@@ -800,20 +804,30 @@ export default function Resources({ user }) {
               })}
             />
 
-            {/* PDF Book Upload */}
-            <PdfUpload
-              pdfUrl={currentResource.downloadLink}
-              pdfName={currentResource.pdfName}
-              pdfSize={currentResource.pdfSize}
-              label={editLanguage === 'en' ? "PDF Book File" : "PDF நூல் கோப்பு"}
-              onPdfChange={({ url, name, size }) => {
-                setCurrentResource({
-                  ...currentResource,
-                  downloadLink: url,
-                  pdfName: name,
-                  pdfSize: size
-                });
-              }}
+            {/* Book hosted on archive.org (preferred: free, unlimited, keeps PDFs out of our database) */}
+            <ArchiveBookField
+              archiveId={currentResource.archiveId}
+              language={editLanguage}
+              onFetched={(book) => setCurrentResource((prev) => {
+                // Only fill empty fields; Tamil text goes to the Tamil field
+                const fill = (field, value) => {
+                  if (!value) return {};
+                  const key = `${field}_${hasTamil(value) ? 'ta' : 'en'}`;
+                  return prev[key] ? {} : { [key]: value };
+                };
+                return {
+                  ...prev,
+                  ...fill('title', book.title),
+                  ...fill('author', book.author),
+                  ...fill('description', book.description),
+                  image: prev.image || book.cover,
+                  archiveId: book.archiveId,
+                  downloadLink: book.downloadLink || prev.downloadLink,
+                  pdfName: book.pdfName || prev.pdfName,
+                  pdfSize: book.pdfSize || prev.pdfSize,
+                };
+              })}
+              onClear={() => setCurrentResource((prev) => ({ ...prev, archiveId: '' }))}
             />
 
             {/* Upload Thumbnail Photo Only */}

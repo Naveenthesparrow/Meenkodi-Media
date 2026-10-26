@@ -15,6 +15,9 @@ const resourceSchema = new mongoose.Schema({
   downloadLink: String,
   pdfSize: String,
   pdfName: String,
+  // Book hosted on archive.org (identifier from archive.org/details/<archiveId>):
+  // read through the embedded archive.org reader, nothing stored in our database
+  archiveId: { type: String, trim: true },
   format: { type: String, default: "PDF" },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now },

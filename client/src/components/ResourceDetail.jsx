@@ -45,7 +45,9 @@ import ShareIcon from "@mui/icons-material/Share";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useTranslation } from 'react-i18next';
 import MediaUpload from "./common/MediaUpload";
-import PdfUpload from "./common/PdfUpload";
+import ArchiveBookField from "./common/ArchiveBookField";
+import { downloadLinkProps, fixFileName } from "../utils/download";
+import { hasTamil } from "../utils/tamilText";
 import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
@@ -79,6 +81,7 @@ export default function ResourceDetail({ user }) {
   const [downloadLink, setDownloadLink] = useState(() => cachedResourceDetails[id]?.downloadLink || "");
   const [pdfName, setPdfName] = useState(() => cachedResourceDetails[id]?.pdfName || "");
   const [pdfSize, setPdfSize] = useState(() => cachedResourceDetails[id]?.pdfSize || "");
+  const [archiveId, setArchiveId] = useState(() => cachedResourceDetails[id]?.archiveId || "");
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [numPages, setNumPages] = useState(null);
   const [pdfLoadError, setPdfLoadError] = useState(false);
@@ -155,6 +158,7 @@ export default function ResourceDetail({ user }) {
         setDownloadLink(data.downloadLink || "");
         setPdfName(data.pdfName || "");
         setPdfSize(data.pdfSize || "");
+        setArchiveId(data.archiveId || "");
         setLoading(false);
       })
       .catch((err) => {
@@ -206,6 +210,7 @@ export default function ResourceDetail({ user }) {
         downloadLink,
         pdfName,
         pdfSize,
+        archiveId,
       };
 
       const res = await fetch(`${API_BASE_URL}/api/resources/${id}`, {
@@ -453,16 +458,26 @@ export default function ResourceDetail({ user }) {
                     </>
                   )}
 
-                  <PdfUpload
-                    pdfUrl={downloadLink}
-                    pdfName={pdfName}
-                    pdfSize={pdfSize}
-                    label="PDF Book File"
-                    onPdfChange={({ url, name, size }) => {
-                      setDownloadLink(url);
-                      setPdfName(name);
-                      setPdfSize(size);
+                  <ArchiveBookField
+                    archiveId={archiveId}
+                    onFetched={(book) => {
+                      // Only fill empty fields; Tamil text goes to the Tamil field
+                      const isTa = (v) => hasTamil(v);
+                      if (book.title && isTa(book.title) && !title_ta) setTitleTa(book.title);
+                      if (book.title && !isTa(book.title) && !title_en) setTitleEn(book.title);
+                      if (book.author && isTa(book.author) && !author_ta) setAuthorTa(book.author);
+                      if (book.author && !isTa(book.author) && !author_en) setAuthorEn(book.author);
+                      if (book.description && isTa(book.description) && !description_ta) setDescriptionTa(book.description);
+                      if (book.description && !isTa(book.description) && !description_en) setDescriptionEn(book.description);
+                      if (!image && book.cover) setImage(book.cover);
+                      setArchiveId(book.archiveId);
+                      if (book.downloadLink) {
+                        setDownloadLink(book.downloadLink);
+                        setPdfName(book.pdfName);
+                        setPdfSize(book.pdfSize);
+                      }
                     }}
+                    onClear={() => setArchiveId("")}
                   />
 
                   <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
@@ -526,7 +541,7 @@ export default function ResourceDetail({ user }) {
                   </Typography>
 
                   {/* PDF Book Actions */}
-                  {downloadLink && (
+                  {(downloadLink || archiveId) && (
                     <Paper
                       elevation={0}
                       sx={{
@@ -566,13 +581,11 @@ export default function ResourceDetail({ user }) {
                           Read Book Online
                         </Button>
 
+                        {downloadLink && (
                         <Button
                           variant="outlined"
                           startIcon={<GetAppIcon />}
-                          href={downloadLink}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          {...downloadLinkProps(downloadLink)}
                           sx={{
                             color: '#8B0000',
                             borderColor: '#8B0000',
@@ -585,12 +598,13 @@ export default function ResourceDetail({ user }) {
                         >
                           Download PDF Book
                         </Button>
+                        )}
                       </Box>
                     </Paper>
                   )}
 
                   {/* Immersive Fullscreen PDF Reader Modal */}
-                  {downloadLink && (
+                  {(downloadLink || archiveId) && (
                     <Dialog
                       fullScreen
                       open={showPdfViewer}
@@ -636,7 +650,7 @@ export default function ResourceDetail({ user }) {
                                     display: { xs: 'none', sm: 'block' }
                                   }}
                                 >
-                                  {pdfName}
+                                  {fixFileName(pdfName)}
                                 </Typography>
                               )}
                             </Box>
@@ -693,10 +707,7 @@ export default function ResourceDetail({ user }) {
                               variant="contained"
                               size="small"
                               startIcon={<GetAppIcon />}
-                              href={downloadLink}
-                              download
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              {...downloadLinkProps(downloadLink)}
                               sx={{
                                 bgcolor: '#B8860B',
                                 color: '#fff',
@@ -781,6 +792,16 @@ export default function ResourceDetail({ user }) {
                             bgcolor: '#3a3a3a',
                           }}
                         >
+                          {archiveId ? (
+                            <Box
+                              component="iframe"
+                              src={`https://archive.org/embed/${archiveId}`}
+                              title={title_en || title_ta || 'Book'}
+                              allowFullScreen
+                              onLoad={() => setPdfLoading(false)}
+                              sx={{ border: 0, width: '100%', height: 'calc(100vh - 140px)', bgcolor: '#fff' }}
+                            />
+                          ) : (
                           <Document
                             file={downloadLink}
                             onLoadSuccess={onDocumentLoadSuccess}
@@ -812,6 +833,7 @@ export default function ResourceDetail({ user }) {
                               </Box>
                             ))}
                           </Document>
+                          )}
                         </Box>
                       </Box>
                     </Dialog>
