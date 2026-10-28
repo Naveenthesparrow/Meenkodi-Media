@@ -5199,7 +5199,9 @@ if (fs.existsSync(clientIndex)) {
   let staticSiteBaseHtml = null;
   async function refreshStaticSiteBaseHtml() {
     try {
-      const response = await fetch(`${STATIC_SITE_URL}/index.html`, { signal: AbortSignal.timeout(10000) });
+      // On Cloudflare Pages the template is served at /__template (see client/functions)
+      const templateUrl = process.env.STATIC_TEMPLATE_URL || `${STATIC_SITE_URL}/index.html`;
+      const response = await fetch(templateUrl, { signal: AbortSignal.timeout(10000) });
       if (!response.ok) return;
       const html = await response.text();
       if (!html.includes('id="root"')) return;
