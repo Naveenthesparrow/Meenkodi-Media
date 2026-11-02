@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -256,28 +256,59 @@ export default function GalleryDetail({ user }) {
   const prevPhoto = currentIndex > 0 ? siblingPhotos[currentIndex - 1] : null;
   const nextPhoto = currentIndex >= 0 && currentIndex < siblingPhotos.length - 1 ? siblingPhotos[currentIndex + 1] : null;
 
+  // At the last photo of a folder the arrow carries on into the next folder
+  // (and from the first photo back into the previous one), in the gallery's folder order
+  const folderKeyOf = (item) => {
+    const custom = item?.customCategoryName && (item.customCategoryName.en || item.customCategoryName.ta);
+    return ((item?.category === 'Other' || item?.isFolder) && custom ? custom : item?.category || '').trim().toLowerCase();
+  };
+  const folderLabelOf = (item) => (item?.customCategoryName && getContent(item.customCategoryName)) || item?.category || '';
+  const folderNeighbours = useMemo(() => {
+    const all = cachedAllGalleryItems || [];
+    const groups = new Map();
+    for (const item of all) {
+      if (item.isFolder || (item.name?.en || '').includes(' - Folder') || !(item.imageUrl || item.videoUrl)) continue;
+      const key = folderKeyOf(item);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(item);
+    }
+    for (const list of groups.values()) list.sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
+    const folderOrder = all.filter((i) => i.isFolder).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map(folderKeyOf);
+    const keys = [...new Set([...folderOrder.filter((k) => groups.has(k)), ...groups.keys()])];
+    const at = galleryItem ? keys.indexOf(folderKeyOf(galleryItem)) : -1;
+    if (at < 0) return { next: null, prev: null };
+    const nextList = groups.get(keys[at + 1]);
+    const prevList = groups.get(keys[at - 1]);
+    return { next: nextList ? nextList[0] : null, prev: prevList ? prevList[prevList.length - 1] : null };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siblingPhotos, galleryItem]);
+  const nextTarget = nextPhoto || folderNeighbours.next;
+  const prevTarget = prevPhoto || folderNeighbours.prev;
+  const nextIsNewFolder = !nextPhoto && !!folderNeighbours.next;
+  const prevIsNewFolder = !prevPhoto && !!folderNeighbours.prev;
+
   // Keyboard navigation hook
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft' && prevPhoto) {
-        navigate(`/gallery/${prevPhoto.slug || prevPhoto._id}`, { state: location.state });
-      } else if (e.key === 'ArrowRight' && nextPhoto) {
-        navigate(`/gallery/${nextPhoto.slug || nextPhoto._id}`, { state: location.state });
+      if (e.key === 'ArrowLeft' && prevTarget) {
+        navigate(`/gallery/${prevTarget.slug || prevTarget._id}`, { state: location.state });
+      } else if (e.key === 'ArrowRight' && nextTarget) {
+        navigate(`/gallery/${nextTarget.slug || nextTarget._id}`, { state: location.state });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [prevPhoto, nextPhoto, navigate, location.state]);
+  }, [prevTarget, nextTarget, navigate, location.state]);
 
   const handlePrevClick = () => {
-    if (prevPhoto) {
-      navigate(`/gallery/${prevPhoto.slug || prevPhoto._id}`, { state: location.state });
+    if (prevTarget) {
+      navigate(`/gallery/${prevTarget.slug || prevTarget._id}`, { state: location.state });
     }
   };
 
   const handleNextClick = () => {
-    if (nextPhoto) {
-      navigate(`/gallery/${nextPhoto.slug || nextPhoto._id}`, { state: location.state });
+    if (nextTarget) {
+      navigate(`/gallery/${nextTarget.slug || nextTarget._id}`, { state: location.state });
     }
   };
 
@@ -708,12 +739,31 @@ export default function GalleryDetail({ user }) {
 
       <Box>
 
+        {/* Folder name and position: changes as the arrows move into another folder */}
+        {galleryItem.imageUrl && (
+          // Fixed height and a one-line title, so long titles never push the photo down
+          <Box sx={{ textAlign: 'center', mb: 2, height: { xs: 72, md: 80 }, px: { xs: 1, md: 8 } }}>
+            <Typography noWrap sx={{ color: '#B8860B', fontWeight: 700, letterSpacing: 2, fontSize: '0.8rem', textTransform: 'uppercase' }}>
+              {categoryDisplay}
+            </Typography>
+            <Typography component="h1" noWrap title={itemName} sx={{ color: '#8B0000', fontWeight: 700, fontFamily: 'Georgia, serif', fontSize: { xs: '1.05rem', md: '1.3rem' }, mt: 0.5 }}>
+              {itemName}
+            </Typography>
+            {currentIndex >= 0 && siblingPhotos.length > 1 && (
+              <Typography sx={{ color: '#888', fontSize: '0.85rem', mt: 0.3 }}>
+                {currentIndex + 1} / {siblingPhotos.length}
+              </Typography>
+            )}
+          </Box>
+        )}
+
         {/* Full-size Image Display with Action Buttons */}
         {galleryItem.imageUrl && (
-          <Box sx={{ position: 'relative', mb: 3, backgroundColor: 'transparent', p: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {prevPhoto && (
+          <Box sx={{ position: 'relative', mb: 3, backgroundColor: 'transparent', p: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', height: { xs: '55vh', md: '68vh' } }}>
+            {prevTarget && (
               <IconButton
                 onClick={handlePrevClick}
+                title={prevIsNewFolder ? `Previous folder: ${folderLabelOf(prevTarget)}` : 'Previous photo'}
                 sx={{
                   position: 'absolute',
                   left: { xs: 8, md: '5%', lg: '10%' },
@@ -743,8 +793,7 @@ export default function GalleryDetail({ user }) {
               sx={{
                 width: '100%',
                 maxWidth: { xs: '100%', md: '70%', lg: '60%' },
-                height: 'auto',
-                maxHeight: { xs: '60vh', md: '70vh' },
+                height: '100%',
                 objectFit: 'contain',
                 borderRadius: 0,
                 boxShadow: 'none',
@@ -760,9 +809,10 @@ export default function GalleryDetail({ user }) {
               }}
             />
 
-            {nextPhoto && (
+            {nextTarget && (
               <IconButton
                 onClick={handleNextClick}
+                title={nextIsNewFolder ? `Next folder: ${folderLabelOf(nextTarget)}` : 'Next photo'}
                 sx={{
                   position: 'absolute',
                   right: { xs: 8, md: '5%', lg: '10%' },
@@ -785,6 +835,22 @@ export default function GalleryDetail({ user }) {
                 <ChevronRight sx={{ fontSize: { xs: '1.5rem', md: '2rem' } }} />
               </IconButton>
             )}
+          </Box>
+        )}
+
+        {nextIsNewFolder && galleryItem.imageUrl && (
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Typography sx={{ color: '#888', fontSize: '0.9rem', mb: 1 }}>
+              {i18n.language === 'ta' ? 'இந்தத் தொகுப்பின் கடைசி படம்' : 'Last photo in this folder'}
+            </Typography>
+            <Button
+              onClick={handleNextClick}
+              endIcon={<ChevronRight />}
+              variant="outlined"
+              sx={{ color: '#8B0000', borderColor: '#8B0000', borderRadius: '999px', textTransform: 'none', fontWeight: 700, px: 3, '&:hover': { bgcolor: '#8B0000', color: '#fff', borderColor: '#8B0000' } }}
+            >
+              {i18n.language === 'ta' ? 'அடுத்த தொகுப்பு' : 'Next folder'}: {folderLabelOf(folderNeighbours.next)}
+            </Button>
           </Box>
         )}
 

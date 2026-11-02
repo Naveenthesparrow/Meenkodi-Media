@@ -29,6 +29,7 @@ import {
 import OptimizedImage from "./common/OptimizedImage";
 import DeferredSection from "./common/DeferredSection";
 import HomeGallerySection from "./home/HomeGallerySection";
+import HomeStatsSection from "./home/HomeStatsSection";
 import SEO, { pageSEO } from "./common/SEO";
 import KurnjiImage from "../assests/Kurnji.avif";
 import MullaiImage from "../assests/mullai.avif";
@@ -163,20 +164,6 @@ const LIBRARY_ARCHIVES_DESCRIPTION_SEGMENTS = [
 
 const LIBRARY_ARCHIVES_CTA = { en: 'Know More', ta: 'மேலும் அறிக' };
 
-const STATS_QUOTES = [
-  createBilingualContent(
-    '"We explore the glorious Tamil dynasties.',
-    '"நாம் தமிழ் வம்சங்களை ஆராய்கிறோம்.'
-  ),
-  createBilingualContent(
-    'We preserve southern Tamil civilization.',
-    'நாம் தமிழர் நாகரிகத்தை பாதுகாக்கிறோம்.'
-  ),
-  createBilingualContent(
-    'We celebrate the Meenkodi legacy."',
-    'நாம் மீன்கொடி மரபை கொண்டாடுகிறோம்."'
-  )
-];
 
 
 const SYLLABUS_ITEMS = [
@@ -698,12 +685,6 @@ export default function Home({ user = null }) {
       }, 100);
     }
   }, [state]);
-  const isTamil = (i18n.language || '').startsWith('ta');
-  const statsQuoteFontSize = isTamil
-    ? { xs: '1.5rem', sm: '2.1rem', md: '2.4rem' }
-    : { xs: '1.8rem', sm: '2.5rem', md: '3rem' };
-  const statsQuoteLineHeight = isTamil ? 1.2 : 1.3;
-  const statsQuoteLetterSpacing = isTamil ? 0.4 : 0.1;
   const navigate = useNavigate();
   const [factIndex, setFactIndex] = useState(getRandomFactIndex());
   const [libraryBooksVisible, setLibraryBooksVisible] = useState(false);
@@ -1257,7 +1238,7 @@ export default function Home({ user = null }) {
 
       {/* GALLERY (dark band between the light hero and the light archaeology section) */}
       <DeferredSection fallback="none" rootMargin="300px">
-        <HomeGallerySection />
+        <HomeGallerySection user={user} />
       </DeferredSection>
 
       {/* ARCHAEOLOGY SPOTLIGHT */}
@@ -1751,96 +1732,8 @@ export default function Home({ user = null }) {
       </Box>
 
 
-      {/* STATISTICS SECTION */}
-      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: "#000", color: "#fff", overflow: 'hidden' }}>
-        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 4, md: 6 } }}>
-          {STATS_QUOTES.map((quote, index) => (
-            <Typography
-              key={`stats-quote-${index}`}
-              variant="h2"
-              align="center"
-              sx={{
-                fontWeight: 700,
-                mb: index === STATS_QUOTES.length - 1 ? 6 : 1.5,
-                fontSize: statsQuoteFontSize,
-                color: "#fff",
-                lineHeight: statsQuoteLineHeight,
-                letterSpacing: statsQuoteLetterSpacing,
-                fontStyle: "italic",
-                whiteSpace: { xs: 'normal', md: 'nowrap' },
-                wordBreak: { xs: 'break-word', md: 'normal' }
-              }}
-            >
-              {getContent(quote)}
-            </Typography>
-          ))}
-          <Grid container spacing={4} justifyContent="center">
-            <Grid container spacing={4} justifyContent="center" sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Box sx={{ textAlign: "center", py: 2 }}>
-                  <Typography
-                    variant="h1"
-                    sx={{
-                      fontWeight: 900,
-                      mb: 1,
-                      fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                      color: "#DAA520",
-                      lineHeight: 1
-                    }}
-                  >
-                    <AnimatedCounter end={850} suffix="k+" />
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
-                    {t('home.stats.artifacts')}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
-                  fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                  color: "#DAA520",
-                  lineHeight: 1
-                }}
-                >
-                  <AnimatedCounter end={380} suffix="+" />
-                </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
-                    {t('home.stats.manuscripts')}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
-                  fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                  color: "#DAA520",
-                  lineHeight: 1
-                }}
-                >
-                  <AnimatedCounter end={65} suffix="+" />
-                </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
-                    {t('home.stats.temples')}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 6, md: 3 }}>
-                <Box sx={{ textAlign: "center", py: 2 }}><Typography variant="h1" sx={{
-                  fontWeight: 900, mb: 1, fontSize: { xs: "2.5rem", sm: "3.5rem", md: "4rem" },
-                  color: "#DAA520",
-                  lineHeight: 1
-                }}
-                >
-                  <AnimatedCounter end={150} suffix="+" />
-                </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500, color: "#999", fontSize: { xs: "0.75rem", md: "1rem" }, textTransform: "uppercase", letterSpacing: { xs: 0.5, md: 1 }, whiteSpace: { xs: "normal", md: "nowrap" } }}>
-                    {t('home.stats.scholars')}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+      {/* STATISTICS SECTION (quote + numbers, editable by admins) */}
+      <HomeStatsSection user={user} AnimatedCounter={AnimatedCounter} />
 
 
       {/* Five Lands Atlas */}

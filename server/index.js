@@ -32,6 +32,8 @@ import Clothing from "./models/Clothing.js";
 import Dynasty from "./models/Dynasty.js";
 import Poet from "./models/Poet.js";
 import Director from "./models/Director.js";
+import HomeShowcase from "./models/HomeShowcase.js";
+import SiteContent from "./models/SiteContent.js";
 import { localizeCollection, localizeSingle, resolveLang } from './translationMap.js';
 import researchRoutes from './routes/research.js';
 import directorsRoutes from './routes/directors.js';
@@ -1559,6 +1561,121 @@ app.put("/api/seedsandfootprints/folders/:id/photos/order", ensureAdmin, async (
 
 // Directors & Heritage Specialists API routes
 app.use('/api/directors', directorsRoutes);
+
+// Home page "Heritage in Pictures" photos (chosen by admins, separate from the Gallery)
+const SHOWCASE_MAX = 5;
+app.get("/api/home-showcase", async (req, res) => {
+  const doc = await HomeShowcase.findOne({ key: "home" }).lean();
+  res.json({ photos: doc?.photos || [] });
+});
+// Admin-editable site text blocks. Each key has a cleaner that only keeps the
+// expected fields (so nothing else can be stored).
+const cleanText = (v, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const cleanBilingual = (v, max) => ({ en: cleanText(v?.en, max), ta: cleanText(v?.ta, max) });
+const SITE_CONTENT = {
+  "home-stats": (data) => ({
+    quotes: (Array.isArray(data?.quotes) ? data.quotes : []).slice(0, 4).map((q) => cleanBilingual(q, 160)),
+    stats: (Array.isArray(data?.stats) ? data.stats : []).slice(0, 4).map((st) => ({
+      value: Math.max(0, Math.min(1e9, Math.round(Number(st?.value) || 0))),
+      suffix: cleanText(st?.suffix, 4),
+      label: cleanBilingual(st?.label, 60),
+    })),
+  }),
+};
+app.get("/api/site-content/:key", async (req, res) => {
+  if (!SITE_CONTENT[req.params.key]) return res.status(404).json({ error: "Unknown content" });
+  const doc = await SiteContent.findOne({ key: req.params.key }).lean();
+  res.json({ data: doc?.data || null });
+});
+app.put("/api/site-content/:key", ensureAdmin, async (req, res) => {
+  const clean = SITE_CONTENT[req.params.key];
+  if (!clean) return res.status(404).json({ error: "Unknown content" });
+  const data = clean(req.body?.data);
+  await SiteContent.findOneAndUpdate(
+    { key: req.params.key },
+    { $set: { data, updatedAt: new Date() } },
+    { upsert: true }
+  );
+  res.json({ data });
+});
+
+const SHOWCASE_FOLDER = { en: "Heritage in Pictures", ta: "நம் மரபின் காட்சிகள்" };
+
+// Keep the Gallery folder "Heritage in Pictures" identical to the home photos:
+// add/update one Gallery photo per home photo, delete the ones removed from home
+async function syncShowcaseToGallery(photos, previous) {
+  let folder = await Gallery.findOne({ isFolder: true, "customCategoryName.en": SHOWCASE_FOLDER.en });
+  if (!folder) {
+    const last = await Gallery.findOne({ isFolder: true }).sort({ order: -1 }).select("order").lean();
+    folder = await Gallery.create({
+      isFolder: true,
+      category: "Other",
+      name: SHOWCASE_FOLDER,
+      customCategoryName: SHOWCASE_FOLDER,
+      imageUrl: photos[0]?.image || "",
+      order: (last?.order || 0) + 1,
+    });
+  } else if (photos[0]?.image && folder.imageUrl !== photos[0].image) {
+    folder.imageUrl = photos[0].image;
+    await folder.save();
+  }
+
+  const synced = [];
+  for (const [index, photo] of photos.entries()) {
+    const name = {
+      en: photo.title.en || photo.title.ta || SHOWCASE_FOLDER.en,
+      ta: photo.title.ta || "",
+    };
+    const fields = {
+      name,
+      imageAlt: name,
+      imageUrl: photo.image,
+      category: "Other",
+      customCategoryName: SHOWCASE_FOLDER,
+      order: index + 1,
+      updatedAt: new Date(),
+    };
+    let item = photo.galleryId ? await Gallery.findById(photo.galleryId) : null;
+    if (item) {
+      item.set(fields);
+      await item.save();
+    } else {
+      item = await Gallery.create(fields);
+    }
+    synced.push({ ...photo, galleryId: item._id, gallerySlug: item.slug || "" });
+  }
+
+  const keep = new Set(synced.map((p) => String(p.galleryId)));
+  const removed = (previous || []).map((p) => p.galleryId).filter((id) => id && !keep.has(String(id)));
+  if (removed.length) await Gallery.deleteMany({ _id: { $in: removed }, isFolder: { $ne: true } });
+  invalidateApiCache("gallery");
+  return synced;
+}
+
+app.put("/api/home-showcase", ensureAdmin, async (req, res) => {
+  const input = Array.isArray(req.body?.photos) ? req.body.photos : null;
+  if (!input) return res.status(400).json({ error: "photos must be a list" });
+  const text = (v) => (typeof v === "string" ? v.trim().slice(0, 200) : "");
+  const photos = input
+    .filter((p) => p && /^https?:\/\//i.test(text(p.image)))
+    .slice(0, SHOWCASE_MAX)
+    .map((p) => ({
+      image: text(p.image),
+      title: { en: text(p.title?.en), ta: text(p.title?.ta) },
+      // only links inside the site (or full https links)
+      link: /^(\/|https:\/\/)/.test(text(p.link)) ? text(p.link) : "",
+      focus: /^[a-z0-9 %.-]{1,30}$/i.test(text(p.focus)) ? text(p.focus) : "center 20%",
+      galleryId: mongoose.isValidObjectId(p.galleryId) ? p.galleryId : undefined,
+    }));
+  const previous = (await HomeShowcase.findOne({ key: "home" }).lean())?.photos || [];
+  const synced = await syncShowcaseToGallery(photos, previous);
+  const doc = await HomeShowcase.findOneAndUpdate(
+    { key: "home" },
+    { $set: { photos: synced, updatedAt: new Date() } },
+    { upsert: true, new: true }
+  ).lean();
+  res.json({ photos: doc.photos });
+});
 
 // Event routes
 app.get("/api/events", async (req, res) => {
