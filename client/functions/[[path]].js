@@ -1,7 +1,9 @@
 /**
  * Cloudflare Pages router for www.meenkodi.com (replaces Render's rewrite rules).
  *
- * - /api, /auth, /uploads, sitemaps, robots.txt  -> backend
+ * - /api, /auth, /uploads, sitemaps               -> backend
+ *   (robots.txt is a static file here: if it ever failed to load because the
+ *   backend was waking up, Google would treat the whole site as blocked)
  * - page URLs (/, /gallery, /articles/x ...)     -> backend (page-specific HTML for SEO
  *                                                   and link previews); if the backend is
  *                                                   down, the plain app (index.html) instead
@@ -12,7 +14,7 @@
  * Set BACKEND_ORIGIN in Pages > Settings > Variables, e.g. https://meenkodi-xxxx.onrender.com
  * (_routes.json keeps /assets/* and other static files from running this function at all.)
  */
-const BACKEND_PATHS = /^\/(api|auth|uploads)(\/|$)|^\/(sitemap[^/]*\.xml|robots\.txt)$/;
+const BACKEND_PATHS = /^\/(api|auth|uploads)(\/|$)|^\/sitemap[^/]*\.xml$/;
 
 export async function onRequest({ request, env }) {
   const url = new URL(request.url);
