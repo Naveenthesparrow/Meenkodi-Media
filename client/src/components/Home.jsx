@@ -28,6 +28,7 @@ import {
 } from "@mui/material";
 import OptimizedImage from "./common/OptimizedImage";
 import DeferredSection from "./common/DeferredSection";
+import HomeGallerySection from "./home/HomeGallerySection";
 import SEO, { pageSEO } from "./common/SEO";
 import KurnjiImage from "../assests/Kurnji.avif";
 import MullaiImage from "../assests/mullai.avif";
@@ -1253,6 +1254,11 @@ export default function Home({ user = null }) {
           </Paper>
         </Container>
       </Box>
+
+      {/* GALLERY (dark band between the light hero and the light archaeology section) */}
+      <DeferredSection fallback="none" rootMargin="300px">
+        <HomeGallerySection />
+      </DeferredSection>
 
       {/* ARCHAEOLOGY SPOTLIGHT */}
       <Box sx={{ bgcolor: '#fff', py: { xs: 7, md: 10 } }}>
