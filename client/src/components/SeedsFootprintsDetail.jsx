@@ -91,6 +91,7 @@ export default function SeedsFootprintsDetail({ user }) {
         nameTa: '',
         descriptionEn: '',
         descriptionTa: '',
+        author: '',
         coverPhoto: null,
         editLanguage: 'en'
     });
@@ -480,6 +481,7 @@ export default function SeedsFootprintsDetail({ user }) {
             nameTa: typeof folder.name === 'object' ? folder.name.ta || '' : '',
             descriptionEn: (typeof folder.description === 'object' ? folder.description.en : folder.description) || '',
             descriptionTa: (typeof folder.description === 'object' ? folder.description.ta : '') || '',
+            author: folder.author || '',
             coverPhoto: null,
             editLanguage: 'en'
         });
@@ -498,6 +500,7 @@ export default function SeedsFootprintsDetail({ user }) {
             formData.append('nameTa', folderForm.nameTa);
             formData.append('descriptionEn', folderForm.descriptionEn);
             formData.append('descriptionTa', folderForm.descriptionTa);
+            formData.append('author', folderForm.author);
 
             // Add cover photo if selected
             if (folderForm.coverPhoto) {
@@ -999,6 +1002,12 @@ export default function SeedsFootprintsDetail({ user }) {
                 </Fade>
             )}
 
+            {folder.author && (
+                <Typography sx={{ mt: folderDescription ? -2.5 : 0, mb: 4, color: '#8B0000', fontWeight: 600, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {t('research.folders.authorBy', 'Researcher:')} {folder.author}
+                </Typography>
+            )}
+
             {/* Content Section */}
             <Fade in={true} timeout={800}>
                 <Box sx={{ flex: 1, minHeight: 'auto', width: '100%', pb: 4 }}>
@@ -1036,7 +1045,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                                 fontSize: '0.9rem'
                                             }}
                                         >
-                                            {uploadForm.editLanguage === 'en' ? 'Select Language to Edit:' : 'à®Žà®´à¯à®¤ à®®à¯Šà®´à®¿à®¯à¯ˆà®¤à¯ à®¤à¯‡à®°à¯à®¨à¯à®¤à¯†à®Ÿà¯à®•à¯à®•à®µà¯à®®à¯:'}
+                                            {uploadForm.editLanguage === 'en' ? 'Select Language to Edit:' : 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:'}
                                         </Typography>
                                         <ToggleButtonGroup
                                             value={uploadForm.editLanguage}
@@ -1478,7 +1487,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     fontSize: '0.9rem'
                                                 }}
                                             >
-                                                {folderForm.editLanguage === 'en' ? 'Select Language to Edit:' : 'à®Žà®´à¯à®¤ à®®à¯Šà®´à®¿à®¯à¯ˆà®¤à¯ à®¤à¯‡à®°à¯à®¨à¯à®¤à¯†à®Ÿà¯à®•à¯à®•à®µà¯à®®à¯:'}
+                                                {folderForm.editLanguage === 'en' ? 'Select Language to Edit:' : 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:'}
                                             </Typography>
                                             <ToggleButtonGroup
                                                 value={folderForm.editLanguage}
@@ -1504,14 +1513,14 @@ export default function SeedsFootprintsDetail({ user }) {
                                                     },
                                                 }}
                                             >
-                                                <ToggleButton value="ta">à®¤à®®à®¿à®´à¯</ToggleButton>
+                                                <ToggleButton value="ta">தமிழ்</ToggleButton>
                                                 <ToggleButton value="en">ENGLISH</ToggleButton>
                                             </ToggleButtonGroup>
                                         </Box>
 
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: 3 }}>
                                             <TextField
-                                                label={folderForm.editLanguage === 'en' ? 'Folder Name (English)' : 'à®•à¯‹à®ªà¯à®ªà¯à®±à¯ˆ à®ªà¯†à®¯à®°à¯ (à®¤à®®à®¿à®´à¯)'}
+                                                label={folderForm.editLanguage === 'en' ? 'Folder Name (English)' : 'கோப்புறை பெயர் (தமிழ்)'}
                                                 type="text"
                                                 fullWidth
                                                 required
@@ -1521,7 +1530,7 @@ export default function SeedsFootprintsDetail({ user }) {
                                             />
 
                                             <TextField
-                                                label={folderForm.editLanguage === 'en' ? 'Description (English)' : 'à®µà®¿à®³à®•à¯à®•à®®à¯ (à®¤à®®à®¿à®´à¯)'}
+                                                label={folderForm.editLanguage === 'en' ? 'Description (English)' : 'விளக்கம் (தமிழ்)'}
                                                 type="text"
                                                 fullWidth
                                                 multiline
@@ -1529,6 +1538,14 @@ export default function SeedsFootprintsDetail({ user }) {
                                                 value={folderForm.editLanguage === 'en' ? folderForm.descriptionEn : folderForm.descriptionTa}
                                                 onChange={(e) => setFolderForm({ ...folderForm, [folderForm.editLanguage === 'en' ? 'descriptionEn' : 'descriptionTa']: e.target.value })}
                                                 variant="outlined"
+                                            />
+                                            <TextField
+                                                label={t('research.folders.author', 'Researcher name')}
+                                                fullWidth
+                                                value={folderForm.author}
+                                                onChange={(e) => setFolderForm({ ...folderForm, author: e.target.value })}
+                                                placeholder={t('research.folders.authorPlaceholder', 'Who wrote or collected this')}
+                                                sx={{ mt: 2 }}
                                             />
                                         </Box>
 

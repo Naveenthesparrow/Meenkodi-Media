@@ -15,6 +15,7 @@ import {
   Divider,
   Snackbar
 } from "@mui/material";
+import PhotoLightbox from "./common/PhotoLightbox";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -27,6 +28,8 @@ import MediaDisplay from "./common/MediaDisplay";
 import { useBilingualContent } from "../utils/bilingualContent";
 import { useParams, useNavigate } from "react-router-dom";
 import SEO from "./common/SEO";
+import ArticleComposer from "./ArticleComposer";
+import { renderArticleHtml, articleBodySx } from "../utils/articleRender";
 import API_BASE_URL from '../utils/api';
 import cldImg from "../utils/cloudinaryImage";
 
@@ -41,28 +44,6 @@ const getCleanAuthorName = (name) => {
 
 let cachedArticleDetails = {};
 
-const escapeHtml = (s) => s
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#39;');
-
-// Only http(s), mailto and site-relative URLs may become links/images
-const safeUrl = (url) => {
-  const u = url.trim();
-  return /^(https?:|mailto:)/i.test(u) || u.startsWith('/') ? u : null;
-};
-
-// Bold, italic and inline code on already-escaped text
-const formatInline = (text) => text
-  // Bold (must be before italic)
-  .replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 700; color: #000;">$1</strong>')
-  // Italic
-  .replace(/\*([^*]+)\*/g, '<em style="font-style: italic; color: #333;">$1</em>')
-  // Code
-  .replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d63384;">$1</code>');
-
 export default function ArticleDetail({ user }) {
   const getContent = useBilingualContent();
   const { t, i18n } = useTranslation();
@@ -74,7 +55,7 @@ export default function ArticleDetail({ user }) {
   // Errors from like/save/delete: shown as a toast so the page (and unsaved edits) stay
   const [actionError, setActionError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [editLanguage, setEditLanguage] = useState('ta');
+  const [viewImage, setViewImage] = useState(null); // { list, index }: article photos opened full size
   const [title_en, setTitleEn] = useState(() => cachedArticleDetails[id]?.title?.en || "");
   const [title_ta, setTitleTa] = useState(() => cachedArticleDetails[id]?.title?.ta || "");
   const [content_en, setContentEn] = useState(() => cachedArticleDetails[id]?.content?.en || "");
@@ -85,75 +66,7 @@ export default function ArticleDetail({ user }) {
   const [image, setImage] = useState(() => cachedArticleDetails[id]?.image || "");
   const [videoUrl, setVideoUrl] = useState(() => cachedArticleDetails[id]?.videoUrl || "");
   const [videoLink, setVideoLink] = useState(() => cachedArticleDetails[id]?.videoLink || "");
-  const [submitting, setSubmitting] = useState(false);
 
-  // Parse markdown-like formatting to HTML
-  const parseContent = (content) => {
-    if (!content) return '';
-    
-    // Split content into lines for better processing
-    let lines = content.split('\n');
-    let html = '';
-    
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-
-      // Skip empty lines
-      if (!line.trim()) {
-        html += '<br />';
-        continue;
-      }
-
-      // Escape the author's raw text first so it can never become HTML
-      line = escapeHtml(line.replace(/\u0000/g, ''));
-      
-      // Headers (must be at start of line)
-      if (line.match(/^### /)) {
-        line = line.replace(/^### (.*)$/, '<h3 style="font-size: 1.3rem; font-weight: 600; margin: 16px 0 8px; color: #333;">$1</h3>');
-      } else if (line.match(/^## /)) {
-        line = line.replace(/^## (.*)$/, '<h2 style="font-size: 1.6rem; font-weight: 700; margin: 20px 0 12px; color: #1a1a1a;">$1</h2>');
-      } else if (line.match(/^# /)) {
-        line = line.replace(/^# (.*)$/, '<h1 style="font-size: 2rem; font-weight: 700; margin: 24px 0 16px; color: #000;">$1</h1>');
-      }
-      // Numbered lists
-      else if (line.match(/^\d+\.\s+/)) {
-        line = line.replace(/^(\d+)\.\s+(.*)$/, '<li style="margin-left: 20px; list-style-type: decimal; margin-bottom: 8px;">$2</li>');
-      }
-      // Bullet lists
-      else if (line.match(/^-\s+/)) {
-        line = line.replace(/^-\s+(.*)$/, '<li style="margin-left: 20px; list-style-type: disc; margin-bottom: 8px;">$1</li>');
-      }
-      // Regular paragraph
-      else {
-        line = '<p style="margin-bottom: 12px;">' + line + '</p>';
-      }
-      
-      // Now apply inline formatting (bold, italic, code, links, images).
-      // Finished images/links are parked as placeholders so the bold/italic/code
-      // pass can't inject tags into their attributes.
-      const tokens = [];
-      const keep = (tag) => `\u0000${tokens.push(tag) - 1}\u0000`;
-
-      // Images (must be before links)
-      line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, url) => {
-        const src = safeUrl(url);
-        return src ? keep(`<img src="${src}" alt="${alt}" style="max-width: 100%; height: auto; margin: 16px 0; border-radius: 8px; display: block;" />`) : alt;
-      });
-
-      // Links
-      line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
-        const href = safeUrl(url);
-        return href ? keep(`<a href="${href}" style="color: #8B0000; text-decoration: underline; font-weight: 600;">${formatInline(text)}</a>`) : text;
-      });
-
-      line = formatInline(line);
-      line = line.replace(/\u0000(\d+)\u0000/g, (m, n) => tokens[n]);
-
-      html += line;
-    }
-    
-    return html;
-  };
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/articles/${id}`)
@@ -212,50 +125,6 @@ export default function ArticleDetail({ user }) {
     }
   };
 
-  const handleSave = async () => {
-    setSubmitting(true);
-    try {
-      const updatedArticle = {
-        title: { en: title_en, ta: title_ta },
-        content: { en: content_en, ta: content_ta },
-        author: { en: author_en, ta: author_ta },
-        imageLink,
-        videoLink,
-        image,
-        videoUrl,
-      };
-
-      const res = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(updatedArticle),
-      });
-
-      if (!res.ok) throw new Error("Failed to update article");
-
-      const data = await res.json();
-      // Refetch to get the full article with all fields
-      const refreshRes = await fetch(`${API_BASE_URL}/api/articles/${id}`);
-      const refreshData = await refreshRes.json();
-      setArticle(refreshData);
-      setTitleEn(refreshData.title?.en || "");
-      setTitleTa(refreshData.title?.ta || "");
-      setContentEn(refreshData.content?.en || "");
-      setContentTa(refreshData.content?.ta || "");
-      setAuthorEn(refreshData.author?.en || "");
-      setAuthorTa(refreshData.author?.ta || "");
-      setImageLink(refreshData.imageLink || "");
-      setVideoLink(refreshData.videoLink || "");
-      setImage(refreshData.image || "");
-      setVideoUrl(refreshData.videoUrl || "");
-      setEditMode(false);
-    } catch (err) {
-      setActionError(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this article?")) {
@@ -272,20 +141,8 @@ export default function ArticleDetail({ user }) {
     }
   };
 
-  const handleStartEdit = () => {
-    // Default to the current UI language (i18n.language) or fall back based on content availability
-    let defaultLang = i18n.language === 'ta' ? 'ta' : 'en';
-    
-    // If the selected default language has absolutely no content, but the other does, switch to the other
-    if (defaultLang === 'en' && !title_en && !content_en && (title_ta || content_ta)) {
-      defaultLang = 'ta';
-    } else if (defaultLang === 'ta' && !title_ta && !content_ta && (title_en || content_en)) {
-      defaultLang = 'en';
-    }
-    
-    setEditLanguage(defaultLang);
-    setEditMode(true);
-  };
+  // The writing screen picks the language that has content itself
+  const handleStartEdit = () => setEditMode(true);
 
   const actionErrorToast = (
     <Snackbar
@@ -317,314 +174,25 @@ export default function ArticleDetail({ user }) {
 
   // --- ADMIN EDIT VIEW ---
   if (editMode) {
+    // Same writing screen as new articles, filled in with this article
     return (
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 } }}>
         {actionErrorToast}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: { xs: 2, sm: 3, md: 5 }, 
-            border: '1px solid #e0e0e0', 
-            borderRadius: 2, 
-            boxShadow: '0 8px 32px rgba(0,0,0,0.08)' 
+        <ArticleComposer
+          user={user}
+          article={article}
+          onCancel={() => setEditMode(false)}
+          onDelete={handleDelete}
+          onSaved={async () => {
+            try {
+              const refreshRes = await fetch(`${API_BASE_URL}/api/articles/${article.slug || id}`, { credentials: 'include' });
+              if (refreshRes.ok) setArticle(await refreshRes.json());
+            } catch {
+              // keep the page; the next visit loads the saved version
+            }
+            setEditMode(false);
           }}
-        >
-          {/* Header */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mb: 3, 
-            pb: 2,
-            borderBottom: '2px solid #8B0000'
-          }}>
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontWeight: 700, 
-                fontFamily: 'Georgia, serif', 
-                color: '#8B0000',
-                fontSize: { xs: '1.5rem', md: '2rem' }
-              }}
-            >
-              {t('articles.edit', 'Edit Article')}
-            </Typography>
-            <IconButton 
-              onClick={() => setEditMode(false)}
-              sx={{ 
-                '&:hover': { bgcolor: 'rgba(139,0,0,0.08)' }
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-
-          {/* Language Toggle */}
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            mb: 4,
-            py: 3,
-            bgcolor: '#fafafa',
-            borderRadius: 2
-          }}>
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                mb: 2, 
-                fontWeight: 600, 
-                color: '#333',
-                fontSize: { xs: '0.85rem', md: '0.9rem' }
-              }}
-            >
-              {i18n.language === 'ta' ? 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:' : 'Select Language to Edit:'}
-            </Typography>
-            <ToggleButtonGroup
-              value={editLanguage}
-              exclusive
-              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: { xs: 2.5, md: 3.5 },
-                  py: { xs: 0.8, md: 1 },
-                  border: '2px solid #8B0000',
-                  color: '#8B0000',
-                  fontWeight: 700,
-                  fontSize: { xs: '0.85rem', md: '0.9rem' },
-                  letterSpacing: '0.5px',
-                  '&.Mui-selected': {
-                    bgcolor: '#8B0000',
-                    color: '#fff',
-                    '&:hover': {
-                      bgcolor: '#6B0000',
-                    },
-                  },
-                  '&:hover': {
-                    bgcolor: 'rgba(139,0,0,0.08)',
-                  }
-                },
-              }}
-            >
-              <ToggleButton value="ta">தமிழ்</ToggleButton>
-              <ToggleButton value="en">ENGLISH</ToggleButton>
-            </ToggleButtonGroup>
-            <Typography variant="caption" sx={{ mt: 2, color: '#666', fontStyle: 'italic', textAlign: 'center', px: 2 }}>
-              {editLanguage === 'en'
-                ? "Note: If your article content is in Tamil, click the 'தமிழ்' button above to edit it."
-                : "குறிப்பு: உங்கள் கட்டுரை ஆங்கிலத்தில் இருந்தால், அதைத் திருத்த மேலே உள்ள 'ENGLISH' பொத்தானைக் கிளிக் செய்யவும்."}
-            </Typography>
-          </Box>
-
-          {/* Form Fields */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Title Section */}
-            <Box>
-              <Typography 
-                variant="overline" 
-                sx={{ 
-                  color: '#8B0000', 
-                  fontWeight: 700, 
-                  fontSize: '0.75rem',
-                  letterSpacing: '1px',
-                  mb: 1,
-                  display: 'block'
-                }}
-              >
-                {editLanguage === 'en' ? 'ARTICLE TITLE' : 'கட்டுரை தலைப்பு'}
-              </Typography>
-              <TextField 
-                label={editLanguage === 'en' ? 'Title (English)' : 'தலைப்பு (தமிழ்)'} 
-                value={editLanguage === 'en' ? title_en : title_ta} 
-                onChange={(e) => editLanguage === 'en' ? setTitleEn(e.target.value) : setTitleTa(e.target.value)} 
-                fullWidth
-                variant="outlined"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#8B0000',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#8B0000',
-                      borderWidth: 2,
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#8B0000',
-                  }
-                }}
-              />
-            </Box>
-
-            {/* Content Section */}
-            <Box>
-              <Typography 
-                variant="overline" 
-                sx={{ 
-                  color: '#8B0000', 
-                  fontWeight: 700, 
-                  fontSize: '0.75rem',
-                  letterSpacing: '1px',
-                  mb: 1,
-                  display: 'block'
-                }}
-              >
-                {editLanguage === 'en' ? 'ARTICLE CONTENT' : 'கட்டுரை உள்ளடக்கம்'}
-              </Typography>
-              <TextField 
-                label={editLanguage === 'en' ? 'Content (English)' : 'உள்ளடக்கம் (தமிழ்)'} 
-                value={editLanguage === 'en' ? content_en : content_ta} 
-                onChange={(e) => editLanguage === 'en' ? setContentEn(e.target.value) : setContentTa(e.target.value)} 
-                fullWidth 
-                multiline 
-                rows={12}
-                variant="outlined"
-                placeholder={editLanguage === 'en' 
-                  ? 'Write your article content here...' 
-                  : 'உங்கள் கட்டுரை உள்ளடக்கத்தை இங்கே எழுதவும்...'
-                }
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    fontFamily: 'Georgia, serif',
-                    fontSize: '1rem',
-                    lineHeight: 1.8,
-                    '&:hover fieldset': {
-                      borderColor: '#8B0000',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#8B0000',
-                      borderWidth: 2,
-                    }
-                  },
-                  '& .MuiInputLabel-root.Mui-focused': {
-                    color: '#8B0000',
-                  }
-                }}
-              />
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: '#666', 
-                  mt: 1, 
-                  display: 'block',
-                  fontStyle: 'italic'
-                }}
-              >
-                {editLanguage === 'en' 
-                  ? 'Tip: Make sure to fill content in both languages for better accessibility' 
-                  : 'குறிப்பு: சிறந்த அணுகலுக்காக இரு மொழிகளிலும் உள்ளடக்கத்தை நிரப்புங்கள்'
-                }
-              </Typography>
-            </Box>
-
-            {/* Thumbnail / Image Upload */}
-            <Box sx={{ mt: 3, mb: 3 }}>
-              <Typography 
-                variant="overline" 
-                sx={{ 
-                  color: '#8B0000', 
-                  fontWeight: 700, 
-                  fontSize: '0.75rem',
-                  letterSpacing: '1px',
-                  mb: 1,
-                  display: 'block'
-                }}
-              >
-                ARTICLE THUMBNAIL (IMAGE)
-              </Typography>
-              <Box sx={{ 
-                p: { xs: 2, md: 3 }, 
-                bgcolor: '#f9f9f9', 
-                borderRadius: 2,
-                border: '1px dashed #ccc'
-              }}>
-                <MediaUpload
-                  onImageLinkChange={setImageLink}
-                  onImageChange={setImage}
-                  currentImageLink={imageLink}
-                  currentImage={image}
-                  label="Article Thumbnail"
-                />
-              </Box>
-            </Box>
-            <Box sx={{ 
-              display: 'flex', 
-              gap: 2, 
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mt: 3,
-              pt: 3,
-              borderTop: '1px solid #e0e0e0',
-              flexDirection: { xs: 'column', sm: 'row' }
-            }}>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleDelete}
-                sx={{
-                  borderWidth: 2,
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1.2,
-                  order: { xs: 2, sm: 1 },
-                  width: { xs: '100%', sm: 'auto' }
-                }}
-              >
-                Delete Article
-              </Button>
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 2,
-                order: { xs: 1, sm: 2 },
-                width: { xs: '100%', sm: 'auto' }
-              }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setEditMode(false)}
-                  sx={{
-                    borderColor: '#666',
-                    color: '#666',
-                    fontWeight: 600,
-                    px: 3,
-                    py: 1.2,
-                    flex: { xs: 1, sm: 'none' },
-                    '&:hover': {
-                      borderColor: '#333',
-                      bgcolor: 'rgba(0,0,0,0.04)'
-                    }
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  variant="contained"
-                  disabled={submitting}
-                  startIcon={!submitting && <SaveIcon />}
-                  sx={{
-                    bgcolor: '#8B0000',
-                    color: '#fff',
-                    fontWeight: 700,
-                    px: 4,
-                    py: 1.2,
-                    flex: { xs: 1, sm: 'none' },
-                    '&:hover': { 
-                      bgcolor: '#6B0000',
-                      boxShadow: '0 4px 12px rgba(139,0,0,0.3)'
-                    },
-                    '&:disabled': {
-                      bgcolor: '#ccc',
-                      color: '#666'
-                    }
-                  }}
-                >
-                  {submitting ? t('actions.saving', 'Saving...') : t('actions.save', 'Save Changes')}
-                </Button>
-              </Box>
-            </Box>
-          </Box>
-        </Paper>
+        />
       </Container>
     );
   }
@@ -652,39 +220,6 @@ export default function ArticleDetail({ user }) {
       }}>
         {/* Reading Mode */}
         <Box>
-          {/* Hero Image Section */}
-          {(article.image || article.imageLink) && (
-            <Box sx={{
-              width: '100%',
-              height: { xs: 300, md: 450 },
-              mb: 4,
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: '0 4px 30px rgba(0,0,0,0.15)',
-            }}>
-              <Box
-                component="img"
-                src={cldImg(article.imageLink || article.image, 1600)}
-                alt={getContent(article.title)}
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-              />
-              {/* Decorative border */}
-              <Box sx={{
-                position: 'absolute',
-                top: 12,
-                left: 12,
-                right: 12,
-                bottom: 12,
-                border: '3px solid rgba(255,255,255,0.3)',
-                pointerEvents: 'none',
-              }} />
-            </Box>
-          )}
-
           {/* Article Content Card */}
           <Box sx={{
             bgcolor: '#fff',
@@ -701,51 +236,63 @@ export default function ArticleDetail({ user }) {
               bgcolor: '#8B0000',
             }
           }}>
-            {/* Title */}
-            <Typography
-              variant="h3"
-              sx={{
-                fontFamily: 'Georgia, serif',
-                fontWeight: 700,
-                color: '#000',
-                mb: 3,
-                fontSize: { xs: '1.75rem', md: '2.5rem' },
-                lineHeight: 1.3,
-                letterSpacing: -0.5,
-              }}
-            >
-              {getContent(article.title)}
-            </Typography>
+            {/* Header: photo on the left, title on the right (photo on top on phones) */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column-reverse', md: 'row-reverse' }, alignItems: { md: 'center' }, gap: { xs: 2.5, md: 4 }, mb: 4 }}>
+              <Typography
+                variant="h3"
+                sx={{
+                  flex: 1,
+                  fontFamily: 'Georgia, serif',
+                  fontWeight: 700,
+                  color: '#000',
+                  fontSize: { xs: '1.75rem', md: '2.4rem' },
+                  lineHeight: 1.3,
+                  letterSpacing: -0.5,
+                }}
+              >
+                {getContent(article.title)}
+              </Typography>
+              {(article.image || article.imageLink) && (
+                <Box
+                  onClick={() => setViewImage({ list: [article.imageLink || article.image], index: 0 })}
+                  sx={{
+                    width: { xs: '100%', md: '48%' },
+                    flexShrink: 0,
+                    aspectRatio: '16 / 9', // same shape as the writing screen's photo adjuster
+                    overflow: 'hidden',
+                    borderRadius: '6px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    cursor: 'zoom-in',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={cldImg(article.imageLink || article.image, 1200)}
+                    alt={getContent(article.title)}
+                    sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </Box>
+              )}
+            </Box>
 
             {/* Article Content */}
             <Box
-              sx={{
-                lineHeight: 1.9,
-                fontSize: { xs: '1.05rem', md: '1.15rem' },
-                color: '#333',
-                fontFamily: 'Georgia, serif',
-                mb: 4,
-                '& p': {
-                  mb: 2,
-                },
-                '& h1, & h2, & h3': {
-                  fontFamily: 'Georgia, serif',
-                },
-                '& strong': {
-                  fontWeight: 700,
-                  color: '#000',
-                },
-                '& em': {
-                  fontStyle: 'italic',
-                },
-                '& a': {
-                  color: '#8B0000',
-                  textDecoration: 'underline',
-                  fontWeight: 600,
-                },
-                textAlign: 'justify',
+              sx={{ ...articleBodySx, mb: 4 }}
+              onClick={(e) => {
+                if (e.target.tagName !== 'IMG') return;
+                // every photo of the article, so the viewer can step through them
+                const imgs = Array.from(e.currentTarget.querySelectorAll('img'));
+                setViewImage({ list: imgs.map((img) => img.dataset.full || img.src), index: imgs.indexOf(e.target) });
               }}
-              dangerouslySetInnerHTML={{ __html: parseContent(getContent(article.content)) }}
+              dangerouslySetInnerHTML={{ __html: renderArticleHtml(getContent(article.content)) }}
+            />
+
+            {/* Full-screen photo viewer, with previous / next */}
+            <PhotoLightbox
+              photos={viewImage?.list || []}
+              index={viewImage ? viewImage.index : null}
+              onIndexChange={(index) => setViewImage((v) => v && { ...v, index })}
+              onClose={() => setViewImage(null)}
             />
 
             {/* Media Display - Only if video exists */}

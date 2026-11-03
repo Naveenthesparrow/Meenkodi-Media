@@ -9,6 +9,7 @@ const bilingual = {
 const researchFolderSchema = new mongoose.Schema({
   name: { type: bilingual, required: true },
   description: bilingual,
+  author: { type: String, trim: true, default: '' }, // who wrote / collected this folder
   coverPhoto: { type: String, trim: true, default: '' }, // Cover photo URL
   // Photos belonging to this heritage collection (per country/region)
   photos: [

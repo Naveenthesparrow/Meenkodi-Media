@@ -1138,6 +1138,7 @@ app.get("/api/seedsandfootprints/folders", async (req, res) => {
           name: 1,
           slug: 1,
           description: 1,
+          author: 1,
           coverPhoto: 1,
           order: 1,
           createdAt: 1,
@@ -1151,6 +1152,7 @@ app.get("/api/seedsandfootprints/folders", async (req, res) => {
       name: f.name, // Return raw bilingual object
       nameRaw: f.name,
       description: f.description, // Return raw bilingual object
+      author: f.author || '',
       coverPhoto: f.coverPhoto || null,
       photoCount: f.photoCount,
       order: f.order,
@@ -1186,6 +1188,7 @@ app.get('/api/seedsandfootprints/folders/:id', async (req, res) => {
       name: folder.name, // Return raw bilingual object
       nameRaw: folder.name,
       description: folder.description, // Return raw bilingual object
+      author: folder.author || '',
       coverPhoto: folder.coverPhoto || null,
       order: folder.order,
       createdAt: folder.createdAt,
@@ -1448,7 +1451,7 @@ app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('
     console.log('Body:', req.body);
     console.log('File:', req.file);
 
-    const { nameEn, nameTa, descriptionEn, descriptionTa } = req.body;
+    const { nameEn, nameTa, descriptionEn, descriptionTa, author } = req.body;
 
     if (!nameEn && !nameTa) {
       console.log('Validation failed: No name provided');
@@ -1465,6 +1468,7 @@ app.post("/api/seedsandfootprints/folders", ensureAdmin, researchUpload.single('
     if (nameTa) payload.name.ta = nameTa;
     if (descriptionEn) payload.description.en = descriptionEn;
     if (descriptionTa) payload.description.ta = descriptionTa;
+    if (author) payload.author = author;
 
     // Add cover photo if uploaded
     if (req.file) {
@@ -1699,7 +1703,7 @@ app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.singl
     console.log('Body:', req.body);
     console.log('File:', req.file);
 
-    const { nameEn, nameTa, descriptionEn, descriptionTa, removeCoverPhoto } = req.body;
+    const { nameEn, nameTa, descriptionEn, descriptionTa, author, removeCoverPhoto } = req.body;
 
     // Build the update payload using dot notation for bilingual fields to support partial updates
     const updatePayload = {};
@@ -1709,6 +1713,7 @@ app.put("/api/seedsandfootprints/folders/:id", ensureAdmin, researchUpload.singl
 
     if (descriptionEn !== undefined) updatePayload['description.en'] = descriptionEn;
     if (descriptionTa !== undefined) updatePayload['description.ta'] = descriptionTa;
+    if (author !== undefined) updatePayload.author = author;
 
     // Handle cover photo operations
     if (req.file) {

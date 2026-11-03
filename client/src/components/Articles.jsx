@@ -96,16 +96,8 @@ export default function Articles({ user }) {
   const [showComposer, setShowComposer] = useState(false);
 
   // Edit Article States
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedArticleId, setSelectedArticleId] = useState(null);
-  const [editLanguage, setEditLanguage] = useState('ta');
-  const [editTitleEn, setEditTitleEn] = useState('');
-  const [editTitleTa, setEditTitleTa] = useState('');
-  const [editContentEn, setEditContentEn] = useState('');
-  const [editContentTa, setEditContentTa] = useState('');
-  const [editImageLink, setEditImageLink] = useState('');
-  const [editImage, setEditImage] = useState('');
-  const [savingArticle, setSavingArticle] = useState(false);
+  // Article opened in the writing screen for editing (null = closed)
+  const [editingArticle, setEditingArticle] = useState(null);
 
   // Manage Articles States
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
@@ -114,55 +106,42 @@ export default function Articles({ user }) {
   const [savingOrder, setSavingOrder] = useState(false);
   const [dragIndex, setDragIndex] = useState(null);
 
-  const handleOpenEditModal = (article) => {
-    setSelectedArticleId(article._id);
-    setEditTitleEn(article.title?.en || '');
-    setEditTitleTa(article.title?.ta || '');
-    setEditContentEn(article.content?.en || '');
-    setEditContentTa(article.content?.ta || '');
-    setEditImageLink(article.imageLink || '');
-    setEditImage(article.image || '');
-    
-    // Choose the default language based on content availability
-    let defaultLang = i18n.language === 'ta' ? 'ta' : 'en';
-    if (defaultLang === 'en' && !(article.title?.en || article.content?.en) && (article.title?.ta || article.content?.ta)) {
-      defaultLang = 'ta';
-    } else if (defaultLang === 'ta' && !(article.title?.ta || article.content?.ta) && (article.title?.en || article.content?.en)) {
-      defaultLang = 'en';
+  const handleOpenEditModal = (article) => setEditingArticle(article);
+
+  // Admin approve / reject of a pending article (these buttons had no handler before)
+  const handleApprove = async (articleId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/articles/${articleId}/approve`, { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not approve the article');
+      setArticles(prev => prev.map(art => art._id === articleId ? { ...art, ...data, status: 'published' } : art));
+    } catch (err) {
+      alert(err.message);
     }
-    setEditLanguage(defaultLang);
-    setEditDialogOpen(true);
   };
 
-  const handleSaveEditedArticle = async () => {
-    setSavingArticle(true);
+  const handleReject = async (articleId) => {
+    const reason = window.prompt('Reason for rejecting (shown to the author):', '');
+    if (reason === null) return;
     try {
-      const payload = {
-        title: { en: editTitleEn, ta: editTitleTa },
-        content: { en: editContentEn, ta: editContentTa },
-        imageLink: editImageLink,
-        image: editImage,
-      };
-
-      const response = await fetch(`${API_BASE_URL}/api/articles/${selectedArticleId}`, {
-        method: 'PUT',
+      const res = await fetch(`${API_BASE_URL}/api/articles/${articleId}/reject`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ reason }),
       });
-
-      if (!response.ok) throw new Error('Failed to save article changes');
-      
-      const updatedData = await response.json();
-      
-      // Update local state so the grid refreshes immediately
-      setArticles(prev => prev.map(art => art._id === selectedArticleId ? { ...art, ...updatedData } : art));
-      setEditDialogOpen(false);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not reject the article');
+      setArticles(prev => prev.map(art => art._id === articleId ? { ...art, ...data, status: 'rejected' } : art));
     } catch (err) {
-      alert(err.message || 'Error saving changes');
-    } finally {
-      setSavingArticle(false);
+      alert(err.message);
     }
+  };
+
+  const handleArticleSaved = (updatedData) => {
+    // Update local state so the grid refreshes immediately
+    setArticles(prev => prev.map(art => art._id === updatedData._id ? { ...art, ...updatedData } : art));
+    setEditingArticle(null);
   };
 
   const handleDeleteArticle = async (e, article) => {
@@ -183,6 +162,8 @@ export default function Articles({ user }) {
         if (article.status === 'pending') {
           setPendingCount(prev => Math.max(0, prev - 1));
         }
+        // Close the edit screen if this article was open in it
+        setEditingArticle(prev => (prev && prev._id === article._id ? null : prev));
       } catch (err) {
         alert(err.message || 'Error deleting article');
       }
@@ -1024,120 +1005,23 @@ export default function Articles({ user }) {
           ← {t('actions.backToHome', 'Back to Home')}
         </Button>
       </Box>
-      {/* Edit Article Dialog */}
-      <Dialog 
-        open={editDialogOpen} 
-        onClose={() => setEditDialogOpen(false)}
+      {/* Edit Article: the same writing screen as new articles */}
+      <Dialog
+        open={Boolean(editingArticle)}
+        onClose={() => setEditingArticle(null)}
         maxWidth="lg"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            p: 1
-          }
-        }}
+        scroll="body"
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1, borderBottom: '2px solid #8B0000' }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, fontFamily: 'Georgia, serif', color: '#8B0000' }}>
-            {t('articles.edit', 'Edit Article')}
-          </Typography>
-          <IconButton onClick={() => setEditDialogOpen(false)}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-
-        <DialogContent sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Language Selector */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1.5, bgcolor: '#fafafa', borderRadius: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#333' }}>
-              Select Language to Edit:
-            </Typography>
-            <ToggleButtonGroup
-              value={editLanguage}
-              exclusive
-              onChange={(e, newLang) => newLang && setEditLanguage(newLang)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 3,
-                  py: 0.75,
-                  border: '2px solid #8B0000',
-                  color: '#8B0000',
-                  fontWeight: 700,
-                  '&.Mui-selected': {
-                    bgcolor: '#8B0000',
-                    color: '#fff',
-                    '&:hover': { bgcolor: '#6B0000' },
-                  },
-                },
-              }}
-            >
-              <ToggleButton value="ta">தமிழ்</ToggleButton>
-              <ToggleButton value="en">ENGLISH</ToggleButton>
-            </ToggleButtonGroup>
-            <Typography variant="caption" sx={{ mt: 1, color: '#666', fontStyle: 'italic' }}>
-              {editLanguage === 'en'
-                ? "Note: If your article content is in Tamil, click the 'தமிழ்' button above to edit it."
-                : "குறிப்பு: உங்கள் கட்டுரை ஆங்கிலத்தில் இருந்தால், அதைத் திருத்த மேலே உள்ள 'ENGLISH' பொத்தானைக் கிளிக் செய்யவும்."}
-            </Typography>
-          </Box>
-
-          {/* Title Input */}
-          <TextField
-            label={editLanguage === 'en' ? 'Title (English)' : 'தலைப்பு (தமிழ்)'}
-            value={editLanguage === 'en' ? editTitleEn : editTitleTa}
-            onChange={(e) => editLanguage === 'en' ? setEditTitleEn(e.target.value) : setEditTitleTa(e.target.value)}
-            fullWidth
-            variant="outlined"
+        {editingArticle && (
+          <ArticleComposer
+            user={user}
+            article={editingArticle}
+            onCancel={() => setEditingArticle(null)}
+            onSaved={handleArticleSaved}
+            onDelete={(e) => handleDeleteArticle(e, editingArticle)}
           />
-
-          {/* Content Input */}
-          <TextField
-            label={editLanguage === 'en' ? 'Content (English)' : 'உள்ளடக்கம் (தமிழ்)'}
-            value={editLanguage === 'en' ? editContentEn : editContentTa}
-            onChange={(e) => editLanguage === 'en' ? setEditContentEn(e.target.value) : setEditContentTa(e.target.value)}
-            fullWidth
-            multiline
-            rows={10}
-            variant="outlined"
-            placeholder="Write content here..."
-            sx={{ '& textarea': { fontFamily: 'Georgia, serif' } }}
-          />
-
-          {/* Thumbnail / Image Upload */}
-          <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderRadius: 1, border: '1px dashed #ccc' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700, color: '#8B0000' }}>
-              ARTICLE THUMBNAIL (IMAGE)
-            </Typography>
-            <MediaUpload
-              onImageLinkChange={setEditImageLink}
-              onImageChange={setEditImage}
-              currentImageLink={editImageLink}
-              currentImage={editImage}
-              label="Article Thumbnail"
-            />
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 2.5, gap: 1.5, borderTop: '1px solid #e0e0e0' }}>
-          <Button onClick={() => setEditDialogOpen(false)} variant="outlined" sx={{ color: '#666', borderColor: '#ccc' }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSaveEditedArticle}
-            variant="contained"
-            disabled={savingArticle}
-            startIcon={savingArticle ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-            sx={{
-              bgcolor: '#8B0000',
-              color: '#fff',
-              fontWeight: 700,
-              px: 3,
-              '&:hover': { bgcolor: '#6B0000' }
-            }}
-          >
-            Save Changes
-          </Button>
-        </DialogActions>
+        )}
       </Dialog>
 
       {/* Manage Articles Dialog */}

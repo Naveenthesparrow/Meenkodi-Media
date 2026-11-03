@@ -1,328 +1,109 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
-  Box,
-  Card,
-  TextField,
-  Button,
-  Avatar,
-  Typography,
-  IconButton,
   Alert,
+  Box,
+  Button,
+  Card,
   CircularProgress,
+  Divider,
+  IconButton,
+  Paper,
+  Tab,
+  Tabs,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
-  Divider,
-  Tabs,
-  Tab,
-  Paper,
-  Tooltip,
+  Typography,
 } from '@mui/material';
-import ImageIcon from "@mui/icons-material/Image";
-import VideoIcon from "@mui/icons-material/VideoLibrary";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddPhotoAlternate from "@mui/icons-material/AddPhotoAlternate";
 import CloseIcon from "@mui/icons-material/Close";
-import ShareIcon from "@mui/icons-material/Share";
-import FormatBold from "@mui/icons-material/FormatBold";
-import FormatItalic from "@mui/icons-material/FormatItalic";
-import FormatListBulleted from "@mui/icons-material/FormatListBulleted";
-import FormatListNumbered from "@mui/icons-material/FormatListNumbered";
-import LinkIcon from "@mui/icons-material/Link";
-import CodeIcon from "@mui/icons-material/Code";
-import TitleIcon from "@mui/icons-material/Title";
 import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../utils/api';
+import RichTextEditor from './common/RichTextEditor';
+import { renderArticleHtml, articleBodySx } from '../utils/articleRender';
+import cldImg, { canCropImage } from '../utils/cloudinaryImage';
+import ImageCropDialog from './common/ImageCropDialog';
+import CropIcon from '@mui/icons-material/Crop';
 
-const useTextHistory = (initialValue = '') => {
-  const [state, setState] = useState({
-    history: [initialValue],
-    pointer: 0
-  });
-  const lastPush = useRef(0);
+// Upload a picked image file; returns its full URL (Cloudinary) or null
+async function uploadImageFile(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const response = await fetch(`${API_BASE_URL}/api/upload/image`, { method: 'POST', body: formData, credentials: 'include' });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || data.details || 'Upload failed');
+  const url = data.imageUrl || data.url || data.fullPath;
+  if (!url) throw new Error('No image URL returned from server');
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE_URL}${url.startsWith('/') ? url : `/uploads/gallery/${url}`}`;
+}
 
-  const setValue = (newVal, forcePush = false) => {
-    const now = Date.now();
-    setState(prev => {
-      const { history, pointer } = prev;
-      const current = history[pointer];
-      if (current === newVal) return prev;
+// Editor and preview boxes share this height on computers (each scrolls inside)
+const PANE_HEIGHT = 'max(420px, calc(100vh - 230px))';
 
-      const isPaste = Math.abs(newVal.length - current.length) > 1;
-      const endsWithBoundary = /[\s\n]$/.test(newVal);
-      
-      const shouldPush = forcePush || (now - lastPush.current > 800) || isPaste || endsWithBoundary;
-      
-      if (!shouldPush) {
-        const newHistory = [...history];
-        newHistory[pointer] = newVal;
-        lastPush.current = now;
-        return { history: newHistory, pointer };
-      } else {
-        const newHistory = history.slice(0, pointer + 1);
-        newHistory.push(newVal);
-        if (newHistory.length > 50) newHistory.shift();
-        lastPush.current = now;
-        return {
-          history: newHistory,
-          pointer: newHistory.length - 1
-        };
-      }
-    });
-  };
+const pickFiles = (multiple = false) => new Promise((resolve) => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = multiple;
+  // Windows hands files over in its own order; use file-name order (1, 2, … 10)
+  input.onchange = () => resolve(Array.from(input.files || []).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })));
+  input.click();
+});
 
-  const undo = () => {
-    setState(prev => {
-      if (prev.pointer > 0) {
-        return { ...prev, pointer: prev.pointer - 1 };
-      }
-      return prev;
-    });
-  };
-
-  const redo = () => {
-    setState(prev => {
-      if (prev.pointer < prev.history.length - 1) {
-        return { ...prev, pointer: prev.pointer + 1 };
-      }
-      return prev;
-    });
-  };
-
-  const reset = () => {
-    setState({ history: [initialValue], pointer: 0 });
-    lastPush.current = 0;
-  };
-
-  return {
-    value: state.history[state.pointer],
-    setValue,
-    undo,
-    redo,
-    reset
-  };
-};
-
-export default function ArticleComposer({ user, onPostCreated }) {
+/**
+ * Article writing screen, used both for new articles and for editing
+ * (pass `article`; saving then updates it and calls onSaved).
+ */
+export default function ArticleComposer({ user, onPostCreated, article = null, onSaved, onCancel, onDelete }) {
   const { t, i18n } = useTranslation();
-  const [composerLanguage, setComposerLanguage] = useState('ta'); // 'en' or 'ta'
-  const [titleEn, setTitleEn] = useState('');
-  const [titleTa, setTitleTa] = useState('');
-  const enHistory = useTextHistory('');
-  const taHistory = useTextHistory('');
-  const contentEn = enHistory.value;
-  const contentTa = taHistory.value;
-  const setContentEn = (val, forcePush = false) => enHistory.setValue(val, forcePush);
-  const setContentTa = (val, forcePush = false) => taHistory.setValue(val, forcePush);
-  const [image, setImage] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [socialMediaLink, setSocialMediaLink] = useState('');
-  const [imagePreview, setImagePreview] = useState('');
+  const editing = Boolean(article);
+  const [composerLanguage, setComposerLanguage] = useState(() => (article && !article.content?.ta && article.content?.en ? 'en' : 'ta'));
+  const [titleEn, setTitleEn] = useState(article?.title?.en || '');
+  const [titleTa, setTitleTa] = useState(article?.title?.ta || '');
+  const [contentEn, setContentEn] = useState(article?.content?.en || '');
+  const [contentTa, setContentTa] = useState(article?.content?.ta || '');
+  // Cover photo: an uploaded (and cropped) image, or a pasted image link
+  const [image, setImage] = useState(article?.image || '');
+  const [imageLink, setImageLink] = useState(article?.imageLink || '');
+  const cover = image || imageLink;
+  const [adjustOpen, setAdjustOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const contentRef = useRef(null);
+  const [mobileView, setMobileView] = useState('write'); // phones: 'write' | 'preview'
+  const ta = composerLanguage === 'ta';
+  const uiTa = i18n.language === 'ta'; // labels follow the site language, not the writing language
+  const currentTitle = ta ? titleTa : titleEn;
+  const currentContent = ta ? contentTa : contentEn;
 
-  const handleImageUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
+  // Pick and upload photos; returns their URLs (several at once for the article text)
+  const uploadPhotos = async (multiple) => {
+    const files = await pickFiles(multiple);
+    if (!files.length) return [];
     setUploading(true);
     setError(null);
-
-    const reader = new FileReader();
-    reader.onload = (e) => setImagePreview(e.target.result);
-    reader.readAsDataURL(file);
-
-    const formData = new FormData();
-    formData.append('image', file);
-
+    const urls = [];
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Upload failed');
-
-      const imageUrl = data.imageUrl || data.fullPath;
-      // Cloudinary returns a full https URL - use it as-is
-      if (/^https?:\/\//i.test(imageUrl)) {
-        setImage(imageUrl);
-      } else {
-        const normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
-        setImage(`${API_BASE_URL}${normalizedUrl}`);
-      }
+      for (const file of files) urls.push(await uploadImageFile(file));
     } catch (err) {
       setError(err.message);
-      setImagePreview('');
     } finally {
       setUploading(false);
     }
+    return urls;
   };
+  const uploadForEditor = () => uploadPhotos(true);
 
-  // Rich text formatting functions
-  const insertFormatting = (before, after = '') => {
-    const textarea = contentRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = composerLanguage === 'en' ? contentEn.substring(start, end) : contentTa.substring(start, end);
-    const currentContent = composerLanguage === 'en' ? contentEn : contentTa;
-    
-    const newText = currentContent.substring(0, start) + before + selectedText + after + currentContent.substring(end);
-    
-    if (composerLanguage === 'en') {
-      setContentEn(newText, true);
-    } else {
-      setContentTa(newText, true);
-    }
-
-    // Set cursor position after insertion
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + before.length + selectedText.length + after.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
-
-  const insertHeading = (level) => {
-    const hashes = '#'.repeat(level);
-    insertFormatting(`${hashes} `, '\n');
-  };
-
-  const insertBold = () => insertFormatting('**', '**');
-  const insertItalic = () => insertFormatting('*', '*');
-  const insertList = () => insertFormatting('\n- ');
-  const insertNumberedList = () => insertFormatting('\n1. ');
-  const insertCode = () => insertFormatting('`', '`');
-
-  const handleEditorImageUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      setUploading(true);
-      setError(null);
-
-      const formData = new FormData();
-      formData.append('image', file);
-
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
-          method: 'POST',
-          credentials: 'include',
-          body: formData,
-        });
-
-        const responseText = await response.text();
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseErr) {
-          throw new Error(`Server returned non-JSON error: ${responseText.substring(0, 100)}`);
-        }
-
-        if (!response.ok) throw new Error(data.error || data.details || 'Upload failed');
-
-        const imageUrl = data.imageUrl || data.url || data.fullPath;
-        if (!imageUrl) {
-          throw new Error('No image URL returned from server');
-        }
-
-        let normalizedUrl;
-        if (imageUrl.startsWith('http') || imageUrl.startsWith('//') || imageUrl.startsWith('data:')) {
-          normalizedUrl = imageUrl;
-        } else {
-          normalizedUrl = imageUrl.startsWith('/') ? imageUrl : `/uploads/gallery/${imageUrl}`;
-        }
-        
-        const finalUrl = (normalizedUrl.startsWith('http') || normalizedUrl.startsWith('//') || normalizedUrl.startsWith('data:'))
-          ? normalizedUrl
-          : `${API_BASE_URL}${normalizedUrl}`;
-
-        insertFormatting(`![image](${finalUrl})\n`);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setUploading(false);
-      }
-    };
-    input.click();
-  };
-
-  const insertLink = () => {
-    const url = prompt(composerLanguage === 'en' 
-      ? 'Enter link URL:' 
-      : 'இணைப்பு URL ஐ உள்ளிடவும்:'
-    );
+  const chooseThumbnail = async () => {
+    const [url] = await uploadPhotos(false);
     if (url) {
-      insertFormatting('[', `](${url})`);
+      setImage(url);
+      setImageLink('');
+      if (canCropImage(url)) setAdjustOpen(true); // pick the part to show right away
     }
-  };
-
-  // Parse markdown-like content for preview
-  const parseContent = (content) => {
-    if (!content) return '';
-    
-    // Split content into lines for better processing
-    let lines = content.split('\n');
-    let html = '';
-    
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      
-      // Skip empty lines
-      if (!line.trim()) {
-        html += '<br />';
-        continue;
-      }
-      
-      // Headers (must be at start of line)
-      if (line.match(/^### /)) {
-        line = line.replace(/^### (.*)$/, '<h3 style="font-size: 1.3rem; font-weight: 600; margin: 16px 0 8px; color: #333;">$1</h3>');
-      } else if (line.match(/^## /)) {
-        line = line.replace(/^## (.*)$/, '<h2 style="font-size: 1.6rem; font-weight: 700; margin: 20px 0 12px; color: #1a1a1a;">$1</h2>');
-      } else if (line.match(/^# /)) {
-        line = line.replace(/^# (.*)$/, '<h1 style="font-size: 2rem; font-weight: 700; margin: 24px 0 16px; color: #000;">$1</h1>');
-      }
-      // Numbered lists
-      else if (line.match(/^\d+\.\s+/)) {
-        line = line.replace(/^(\d+)\.\s+(.*)$/, '<li style="margin-left: 20px; list-style-type: decimal; margin-bottom: 8px;">$2</li>');
-      }
-      // Bullet lists
-      else if (line.match(/^-\s+/)) {
-        line = line.replace(/^-\s+(.*)$/, '<li style="margin-left: 20px; list-style-type: disc; margin-bottom: 8px;">$1</li>');
-      }
-      // Regular paragraph
-      else {
-        line = '<p style="margin-bottom: 12px;">' + line + '</p>';
-      }
-      
-      // Now apply inline formatting (bold, italic, code, links, images)
-      // Images (must be before links)
-      line = line.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width: 100%; height: auto; margin: 16px 0; border-radius: 8px; display: block;" />');
-      
-      // Links
-      line = line.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: #8B0000; text-decoration: underline; font-weight: 600;">$1</a>');
-      
-      // Bold (must be before italic)
-      line = line.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 700; color: #000;">$1</strong>');
-      
-      // Italic
-      line = line.replace(/\*([^*]+)\*/g, '<em style="font-style: italic; color: #333;">$1</em>');
-      
-      // Code
-      line = line.replace(/`([^`]+)`/g, '<code style="background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #d63384;">$1</code>');
-      
-      html += line;
-    }
-    
-    return html;
   };
 
   const handleSubmit = async () => {
@@ -331,7 +112,6 @@ export default function ArticleComposer({ user, onPostCreated }) {
       setError(t('articles.error.titleRequired', 'Title is required'));
       return;
     }
-
     if (!contentEn.trim() && !contentTa.trim()) {
       setError(t('articles.error.contentRequired', 'Content is required'));
       return;
@@ -339,36 +119,34 @@ export default function ArticleComposer({ user, onPostCreated }) {
 
     setSubmitting(true);
     setError(null);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/api/articles`, {
-        method: 'POST',
+      const body = {
+        title: { en: titleEn, ta: titleTa },
+        content: { en: contentEn, ta: contentTa },
+        image,
+        imageLink,
+      };
+      const response = await fetch(`${API_BASE_URL}/api/articles${editing ? `/${article._id}` : ''}`, {
+        method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          title: { en: titleEn, ta: titleTa },
-          content: { en: contentEn, ta: contentTa },
-          image,
-          videoUrl,
-          socialMediaLink,
-        }),
+        body: JSON.stringify(body),
       });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || (editing ? 'Failed to save the article' : 'Failed to create article'));
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create article');
-
+      if (editing) {
+        if (onSaved) onSaved(data);
+        return;
+      }
       setSuccess(true);
       setTitleEn('');
       setTitleTa('');
-      enHistory.reset();
-      taHistory.reset();
+      setContentEn('');
+      setContentTa('');
       setImage('');
-      setVideoUrl('');
-      setSocialMediaLink('');
-      setImagePreview('');
-
+      setImageLink('');
       setTimeout(() => setSuccess(false), 3000);
-
       if (onPostCreated) onPostCreated(data);
     } catch (err) {
       setError(err.message);
@@ -379,305 +157,181 @@ export default function ArticleComposer({ user, onPostCreated }) {
 
   if (!user) return null;
 
-  const currentContent = composerLanguage === 'en' ? contentEn : contentTa;
-  const currentTitle = composerLanguage === 'en' ? titleEn : titleTa;
-
   return (
     <Card sx={{ p: { xs: 2, md: 3 }, mb: 4, border: '2px solid #000', borderRadius: 0, boxShadow: '0 8px 24px rgba(0,0,0,0.1)', overflow: 'visible' }}>
+      {editing && (
+        <Typography sx={{ fontWeight: 800, fontFamily: 'Georgia, serif', color: '#8B0000', fontSize: '1.3rem', mb: 2 }}>
+          {i18n.language === 'ta' ? 'கட்டுரையைத் திருத்து' : 'Edit article'}
+        </Typography>
+      )}
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
       {success && (
         <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
-          {user.role === 'admin' 
-            ? t('articles.composer.published', 'Article published successfully!') 
+          {user.role === 'admin'
+            ? t('articles.composer.published', 'Article published successfully!')
             : t('articles.composer.submitted', 'Article submitted for review!')}
         </Alert>
       )}
 
-      {/* Language Toggle */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3, p: 2, bgcolor: '#fafafa', borderRadius: 1 }}>
-        <Typography 
-          variant="subtitle2" 
-          sx={{ mb: 1.5, fontWeight: 600, color: '#333', fontSize: '0.9rem' }}
-        >
-          {i18n.language === 'ta' ? 'எழுத மொழியைத் தேர்ந்தெடுக்கவும்:' : 'Select Language to Write:'}
+      {/* Language */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 2.5 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#555' }}>
+          {i18n.language === 'ta' ? 'எழுதும் மொழி:' : 'Writing in:'}
         </Typography>
         <ToggleButtonGroup
           value={composerLanguage}
           exclusive
-          onChange={(e, newLang) => newLang && setComposerLanguage(newLang)}
+          size="small"
+          onChange={(e, lang) => lang && setComposerLanguage(lang)}
           sx={{
             '& .MuiToggleButton-root': {
-              px: { xs: 2.5, md: 3.5 },
-              py: 1,
-              border: '2px solid #8B0000',
-              color: '#8B0000',
-              fontWeight: 700,
-              fontSize: { xs: '0.85rem', md: '0.9rem' },
-              '&.Mui-selected': {
-                bgcolor: '#8B0000',
-                color: '#fff',
-                '&:hover': { bgcolor: '#6B0000' },
-              },
+              px: 2.5, border: '2px solid #8B0000', color: '#8B0000', fontWeight: 700,
+              '&.Mui-selected': { bgcolor: '#8B0000', color: '#fff', '&:hover': { bgcolor: '#6B0000' } },
             },
           }}
         >
-          <ToggleButton value="ta">தமிழ்</ToggleButton>
-          <ToggleButton value="en">ENGLISH</ToggleButton>
+          <ToggleButton value="ta">தமிழ் {contentTa.trim() ? '✓' : ''}</ToggleButton>
+          <ToggleButton value="en">ENGLISH {contentEn.trim() ? '✓' : ''}</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
-      {/* Title Field */}
+      {/* Title */}
       <TextField
         fullWidth
-        placeholder={composerLanguage === 'en' ? 'Add a title (English)...' : 'தலைப்பு சேர்க்கவும் (தமிழ்)...'}
-        value={currentTitle}
-        onChange={(e) => composerLanguage === 'en' ? setTitleEn(e.target.value) : setTitleTa(e.target.value)}
-        variant="outlined"
-        sx={{ 
+        placeholder={ta ? 'தலைப்பு (தமிழ்)…' : 'Title (English)…'}
+        value={ta ? titleTa : titleEn}
+        onChange={(e) => (ta ? setTitleTa(e.target.value) : setTitleEn(e.target.value))}
+        sx={{
           mb: 2,
           '& .MuiOutlinedInput-root': {
-            fontSize: { xs: '1.1rem', md: '1.3rem' },
-            fontWeight: 600,
-            '&:hover fieldset': { borderColor: '#8B0000' },
+            fontSize: { xs: '1.25rem', md: '1.5rem' }, fontWeight: 700, fontFamily: 'Georgia, serif',
             '&.Mui-focused fieldset': { borderColor: '#8B0000', borderWidth: 2 },
-          }
+          },
         }}
       />
 
-      {/* Formatting Toolbar */}
-      <Paper elevation={0} sx={{ 
-        p: 1, 
-        mb: 2, 
-        bgcolor: '#f5f5f5', 
-        display: 'flex', 
-        gap: 0.5, 
-        flexWrap: 'wrap', 
-        border: '1px solid #e0e0e0',
-        position: 'sticky',
-        top: { xs: 60, sm: 70 },
-        zIndex: 1100,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-      }}>
-          <Tooltip title="Heading 1">
-            <IconButton size="small" onClick={() => insertHeading(1)} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <Typography sx={{ fontSize: '1.2rem', fontWeight: 700 }}>H1</Typography>
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Heading 2">
-            <IconButton size="small" onClick={() => insertHeading(2)} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <Typography sx={{ fontSize: '1rem', fontWeight: 700 }}>H2</Typography>
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Heading 3">
-            <IconButton size="small" onClick={() => insertHeading(3)} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <Typography sx={{ fontSize: '0.9rem', fontWeight: 700 }}>H3</Typography>
-            </IconButton>
-          </Tooltip>
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title="Bold">
-            <IconButton size="small" onClick={insertBold} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <FormatBold fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Italic">
-            <IconButton size="small" onClick={insertItalic} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <FormatItalic fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title="Bullet List">
-            <IconButton size="small" onClick={insertList} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <FormatListBulleted fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Numbered List">
-            <IconButton size="small" onClick={insertNumberedList} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <FormatListNumbered fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title={composerLanguage === 'en' ? "Upload & Insert Image" : "படம் பதிவேற்றி செருகவும்"}>
-            <IconButton 
-              size="small" 
-              onClick={handleEditorImageUpload} 
-              disabled={uploading}
-              sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}
-            >
-              {uploading ? <CircularProgress size={18} color="inherit" /> : <ImageIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Insert Link">
-            <IconButton size="small" onClick={insertLink} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <LinkIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Code">
-            <IconButton size="small" onClick={insertCode} sx={{ '&:hover': { bgcolor: '#8B0000', color: '#fff' } }}>
-              <CodeIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Paper>
+      {/* Thumbnail: one compact row — upload a photo or paste an image link */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5, flexWrap: 'wrap' }}>
+        <Box sx={{ position: 'relative', width: 88, height: 56, flexShrink: 0, borderRadius: 1, border: '1px dashed #ccc', bgcolor: '#f7f5f1', overflow: 'visible', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {cover ? (
+            <>
+              <Box component="img" src={cldImg(cover, 200)} alt="" sx={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 1, display: 'block' }} />
+              <IconButton size="small" onClick={() => { setImage(''); setImageLink(''); }} aria-label="Remove thumbnail" sx={{ position: 'absolute', top: -9, right: -9, p: 0.25, bgcolor: '#fff', border: '1px solid #ddd', '&:hover': { bgcolor: '#fee' } }}>
+                <CloseIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            </>
+          ) : (
+            <AddPhotoAlternate sx={{ color: '#bbb' }} />
+          )}
+        </Box>
+        <Button size="small" onClick={chooseThumbnail} disabled={uploading} startIcon={uploading ? <CircularProgress size={14} /> : null} variant="outlined" sx={{ color: '#8B0000', borderColor: '#8B0000', textTransform: 'none', whiteSpace: 'nowrap' }}>
+          {cover ? (uiTa ? 'முகப்புப் படத்தை மாற்று' : 'Change thumbnail') : (uiTa ? 'முகப்புப் படம் சேர்' : 'Add thumbnail')}
+        </Button>
+        <TextField
+          size="small"
+          placeholder={uiTa ? 'அல்லது பட இணைப்பை ஒட்டவும் (https://…)' : 'or paste image link (https://…)'}
+          value={imageLink}
+          onChange={(e) => { setImageLink(e.target.value); if (e.target.value) setImage(''); }}
+          sx={{ flex: 1, minWidth: 200, maxWidth: 420 }}
+        />
+        {canCropImage(cover) && (
+          <Button size="small" onClick={() => setAdjustOpen(true)} startIcon={<CropIcon />} sx={{ color: '#8B0000', textTransform: 'none', whiteSpace: 'nowrap' }}>
+            {uiTa ? 'காட்டும் பகுதியைச் சரிசெய்' : 'Adjust what shows'}
+          </Button>
+        )}
+      </Box>
+      <ImageCropDialog
+        open={adjustOpen}
+        src={cover}
+        onClose={() => setAdjustOpen(false)}
+        onSave={(url) => {
+          if (image) setImage(url); else setImageLink(url);
+          setAdjustOpen(false);
+        }}
+        labels={uiTa ? {
+          title: 'முகப்புப் படத்தைச் சரிசெய்',
+          hint: 'காட்ட வேண்டிய பகுதிக்குப் பெட்டியை இழுக்கவும். பெரிதாக்க ஸ்லைடரைப் பயன்படுத்தவும்.',
+          zoom: 'பெரிதாக்கு',
+          cancel: 'ரத்து',
+          save: 'இந்தப் பகுதியைப் பயன்படுத்து',
+        } : {}}
+      />
 
-      {/* Content Area - Split Mode */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-        gap: 2,
-        mb: 2 
-      }}>
-        {/* Editor */}
-        <Box>
-            <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600, color: '#666' }}>
-              ✍️ {composerLanguage === 'en' ? 'EDITOR' : 'எழுத்தாளர்'}
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              minRows={14}
-              placeholder={composerLanguage === 'en' 
-                ? 'Write your article here...\n\nTips:\n- Use # for headings (# H1, ## H2, ### H3)\n- Use **text** for bold\n- Use *text* for italic\n- Use formatting buttons above' 
-                : 'உங்கள் கட்டுரையை இங்கே எழுதவும்...\n\nஉதவிக்குறிப்புகள்:\n- தலைப்புகளுக்கு # பயன்படுத்தவும்\n- அடித்துக் காட்ட **உரை** பயன்படுத்தவும்\n- சாய்வுக்கு *உரை* பயன்படுத்தவும்'
-              }
-              value={currentContent}
-              onChange={(e) => composerLanguage === 'en' ? setContentEn(e.target.value) : setContentTa(e.target.value)}
-              variant="outlined"
-              inputRef={contentRef}
-              onKeyDown={(e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                  e.preventDefault();
-                  if (e.shiftKey) {
-                    composerLanguage === 'en' ? enHistory.redo() : taHistory.redo();
-                  } else {
-                    composerLanguage === 'en' ? enHistory.undo() : taHistory.undo();
-                  }
-                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-                  e.preventDefault();
-                  composerLanguage === 'en' ? enHistory.redo() : taHistory.redo();
-                }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '1rem',
-                  lineHeight: 1.8,
-                  '&:hover fieldset': { borderColor: '#8B0000' },
-                  '&.Mui-focused fieldset': { borderColor: '#8B0000', borderWidth: 2 },
-                },
-                '& textarea': {
-                  fontFamily: 'Georgia, serif !important',
-                }
-              }}
-            />
-            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#666', fontStyle: 'italic' }}>
-              {currentContent.length} characters • {currentContent.split(/\s+/).filter(w => w).length} words
+      {/* Phones: switch between writing and the preview */}
+      <Tabs
+        value={mobileView}
+        onChange={(e, v) => setMobileView(v)}
+        variant="fullWidth"
+        sx={{ display: { xs: 'flex', md: 'none' }, mb: 1.5, '& .Mui-selected': { color: '#8B0000 !important' }, '& .MuiTabs-indicator': { bgcolor: '#8B0000' } }}
+      >
+        <Tab value="write" label={uiTa ? 'எழுது' : 'Write'} />
+        <Tab value="preview" label={uiTa ? 'முன்னோட்டம்' : 'Preview'} />
+      </Tabs>
+
+      {/* Editor on the left, live preview of the published article on the right */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, alignItems: 'start' }}>
+        <Box sx={{ display: { xs: mobileView === 'write' ? 'block' : 'none', md: 'block' }, minWidth: 0 }}>
+          <RichTextEditor
+            key={composerLanguage}
+            value={currentContent}
+            onChange={ta ? setContentTa : setContentEn}
+            placeholder={ta ? 'உங்கள் கட்டுரையை இங்கே எழுதுங்கள்…' : 'Write your article here…'}
+            onUploadImage={uploadForEditor}
+            uploading={uploading}
+            height={{ md: PANE_HEIGHT }}
+          />
+        </Box>
+
+        <Box sx={{ display: { xs: mobileView === 'preview' ? 'block' : 'none', md: 'block' }, minWidth: 0 }}>
+          {/* Header bar, same height as the editor toolbar so both boxes line up */}
+          <Box sx={{ minHeight: 50, boxSizing: 'border-box', display: 'flex', alignItems: 'center', px: 2, border: '1px solid #e0dcd3', borderBottom: 'none', borderRadius: '6px 6px 0 0', bgcolor: '#faf8f5' }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: '#8B0000', letterSpacing: 1 }}>
+              {uiTa ? 'வெளியிட்ட பின் இப்படித் தோன்றும்' : 'PREVIEW — HOW IT WILL LOOK WHEN PUBLISHED'}
             </Typography>
           </Box>
-
-        {/* Preview */}
-        <Box>
-            <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600, color: '#666' }}>
-              👁️ {composerLanguage === 'en' ? 'LIVE PREVIEW' : 'நேரடி முன்னோட்டம்'}
+          <Paper
+            elevation={0}
+            sx={{ border: '1px solid #e0dcd3', borderRadius: '0 0 6px 6px', bgcolor: '#fff', p: { xs: 2, md: 3 }, overflowWrap: 'anywhere', overflowX: 'hidden', height: { md: PANE_HEIGHT }, overflowY: { md: 'auto' } }}
+          >
+            {cover && (
+              <Box component="img" src={cldImg(cover, 900)} alt="" sx={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 1, mb: 2, display: 'block' }} />
+            )}
+            <Typography sx={{ fontFamily: 'Georgia, serif', fontWeight: 700, color: '#000', fontSize: { xs: '1.5rem', md: '1.8rem' }, lineHeight: 1.3, mb: 2 }}>
+              {currentTitle || <Box component="span" sx={{ color: '#bbb' }}>{ta ? 'தலைப்பு' : 'Your title'}</Box>}
             </Typography>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 3, 
-                minHeight: 400,
-                overflowY: 'auto',
-                border: '2px solid #e0e0e0',
-                bgcolor: '#fafafa',
-                fontFamily: 'Georgia, serif',
-              }}
-            >
-              {currentTitle && (
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontWeight: 700, 
-                    mb: 3, 
-                    pb: 2, 
-                    borderBottom: '2px solid #8B0000',
-                    color: '#000',
-                    fontFamily: 'Georgia, serif'
-                  }}
-                >
-                  {currentTitle}
-                </Typography>
-              )}
-              {currentContent ? (
-                <Box 
-                  sx={{ 
-                    '& > *': { fontFamily: 'Georgia, serif' },
-                    lineHeight: 1.8,
-                    color: '#333',
-                    fontSize: '1.05rem',
-                  }}
-                  dangerouslySetInnerHTML={{ __html: parseContent(currentContent) }}
-                />
-              ) : (
-                <Typography sx={{ color: '#999', fontStyle: 'italic', textAlign: 'center', mt: 4 }}>
-                  {composerLanguage === 'en' 
-                    ? 'Your article preview will appear here...' 
-                    : 'உங்கள் கட்டுரை முன்னோட்டம் இங்கே தோன்றும்...'}
-                </Typography>
-              )}
-            </Paper>
-          </Box>
+            {currentContent.trim() ? (
+              <Box sx={articleBodySx} dangerouslySetInnerHTML={{ __html: renderArticleHtml(currentContent) }} />
+            ) : (
+              <Typography sx={{ color: '#aaa', fontStyle: 'italic' }}>
+                {uiTa ? 'எழுதத் தொடங்கியதும் இங்கே தெரியும்…' : 'Start writing and your article appears here…'}
+              </Typography>
+            )}
+          </Paper>
+        </Box>
       </Box>
 
-      {/* Action Buttons */}
       <Divider sx={{ my: 3 }} />
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+        {editing && onDelete && (
+          <Button onClick={onDelete} disabled={submitting} color="error" variant="outlined" startIcon={<DeleteIcon />} sx={{ mr: 'auto', fontWeight: 600 }}>
+            {i18n.language === 'ta' ? 'கட்டுரையை நீக்கு' : 'Delete article'}
+          </Button>
+        )}
+        {editing && onCancel && (
+          <Button onClick={onCancel} disabled={submitting} sx={{ color: '#555' }}>
+            {i18n.language === 'ta' ? 'ரத்து' : 'Cancel'}
+          </Button>
+        )}
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={submitting}
-          sx={{
-            bgcolor: '#8B0000',
-            color: '#fff',
-            borderRadius: 0,
-            px: { xs: 4, md: 6 },
-            py: 1.5,
-            fontWeight: 700,
-            fontSize: { xs: '0.95rem', md: '1rem' },
-            '&:hover': { 
-              bgcolor: '#6B0000',
-              boxShadow: '0 4px 12px rgba(139,0,0,0.4)'
-            },
-            minWidth: 140,
-          }}
+          disabled={submitting || uploading}
+          sx={{ bgcolor: '#8B0000', color: '#fff', borderRadius: 0, px: { xs: 4, md: 6 }, py: 1.5, fontWeight: 700, minWidth: 140, '&:hover': { bgcolor: '#6B0000' } }}
         >
-          {submitting ? (
-            <>
-              <CircularProgress size={20} sx={{ mr: 1, color: '#fff' }} />
-              {t('actions.posting', 'Posting...')}
-            </>
-          ) : (
-            t('actions.post', 'POST')
-          )}
+          {submitting
+            ? <><CircularProgress size={20} sx={{ mr: 1, color: '#fff' }} />{editing ? 'Saving…' : t('actions.posting', 'Posting...')}</>
+            : (editing ? (i18n.language === 'ta' ? 'சேமி' : 'Save changes') : t('actions.post', 'POST'))}
         </Button>
-      </Box>
-
-      {/* Formatting Guide */}
-      <Box sx={{ mt: 3, p: 2, bgcolor: '#f9f9f9', borderRadius: 1, border: '1px dashed #ccc' }}>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: '#8B0000', display: 'block', mb: 1 }}>
-          💡 {composerLanguage === 'en' ? 'Formatting Guide:' : 'வடிவமைப்பு வழிகாட்டி:'}
-        </Typography>
-        <Typography variant="caption" sx={{ color: '#666', display: 'block', lineHeight: 1.6 }}>
-          {composerLanguage === 'en' ? (
-            <>
-              • <strong>**Bold text**</strong> for bold • <em>*Italic text*</em> for italic<br />
-              • <strong># Heading 1</strong>, <strong>## Heading 2</strong>, <strong>### Heading 3</strong><br />
-              • Use toolbar buttons or type manually • Click image button to upload and insert images
-            </>
-          ) : (
-            <>
-              • <strong>**தடிமன் உரை**</strong> தடிமனாக • <em>*சாய்வு உரை*</em> சாய்வாக<br />
-              • <strong># தலைப்பு 1</strong>, <strong>## தலைப்பு 2</strong>, <strong>### தலைப்பு 3</strong><br />
-              • கருவிப்பட்டை பொத்தான்களைப் பயன்படுத்தவும் • படங்களை பதிவேற்றி சேர்க்க பொத்தானைக் கிளிக் செய்யவும்
-            </>
-          )}
-        </Typography>
       </Box>
     </Card>
   );

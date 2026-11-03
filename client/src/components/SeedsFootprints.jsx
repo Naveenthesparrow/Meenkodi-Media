@@ -40,7 +40,7 @@ export default function SeedsFootprints({ user }) {
   const folders = foldersRaw;
   const [loading, setLoading] = useState(!cachedSeedsData);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ nameEn: '', nameTa: '', descEn: '', descTa: '', coverPhoto: null });
+  const [form, setForm] = useState({ nameEn: '', nameTa: '', descEn: '', descTa: '', author: '', coverPhoto: null });
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openOrderDialog, setOpenOrderDialog] = useState(false);
   const [folderOrder, setFolderOrder] = useState([]);
@@ -49,7 +49,7 @@ export default function SeedsFootprints({ user }) {
   
   // Edit folder states
   const [editingFolder, setEditingFolder] = useState(null);
-  const [editForm, setEditForm] = useState({ nameEn: '', nameTa: '', descEn: '', descTa: '', coverPhoto: null, currentCoverPhoto: null, removeCoverPhoto: false });
+  const [editForm, setEditForm] = useState({ nameEn: '', nameTa: '', descEn: '', descTa: '', author: '', coverPhoto: null, currentCoverPhoto: null, removeCoverPhoto: false });
   
   const isAdmin = user && user.role === 'admin';
 
@@ -133,6 +133,7 @@ export default function SeedsFootprints({ user }) {
       formData.append('nameTa', form.nameTa);
       formData.append('descriptionEn', form.descEn);
       formData.append('descriptionTa', form.descTa);
+      formData.append('author', form.author);
       
       // Add cover photo if selected
       if (form.coverPhoto) {
@@ -148,7 +149,7 @@ export default function SeedsFootprints({ user }) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Server error');
       }
-      setForm({ nameEn: '', nameTa: '', descEn: '', descTa: '', coverPhoto: null });
+      setForm({ nameEn: '', nameTa: '', descEn: '', descTa: '', author: '', coverPhoto: null });
       loadFolders();
       setOpenCreateDialog(false);
     } catch (err) {
@@ -183,6 +184,7 @@ export default function SeedsFootprints({ user }) {
       nameTa: (typeof folder.name === 'object' ? folder.name.ta : '') || '',
       descEn: (typeof folder.description === 'object' ? folder.description.en : folder.description) || '',
       descTa: (typeof folder.description === 'object' ? folder.description.ta : '') || '',
+      author: folder.author || '',
       coverPhoto: null,
       currentCoverPhoto: folder.coverPhoto || null,
       removeCoverPhoto: false
@@ -203,6 +205,7 @@ export default function SeedsFootprints({ user }) {
       formData.append('nameTa', editForm.nameTa);
       formData.append('descriptionEn', editForm.descEn);
       formData.append('descriptionTa', editForm.descTa);
+      formData.append('author', editForm.author);
       
       // Add cover photo if selected
       if (editForm.coverPhoto) {
@@ -224,7 +227,7 @@ export default function SeedsFootprints({ user }) {
         throw new Error(err.error || 'Server error');
       }
       setEditingFolder(null);
-      setEditForm({ nameEn: '', nameTa: '', descEn: '', descTa: '', coverPhoto: null, currentCoverPhoto: null, removeCoverPhoto: false });
+      setEditForm({ nameEn: '', nameTa: '', descEn: '', descTa: '', author: '', coverPhoto: null, currentCoverPhoto: null, removeCoverPhoto: false });
       loadFolders();
     } catch (err) {
       console.error(err);
@@ -483,6 +486,15 @@ export default function SeedsFootprints({ user }) {
                 }
               }}
               placeholder="கோப்புறையின் உள்ளடக்கம் பற்றிய சுருக்கமான விளக்கம்"
+            />
+
+            <TextField
+              label={t('research.folders.author', 'Researcher name')}
+              fullWidth
+              value={form.author}
+              onChange={handleChange('author')}
+              sx={{ mb: 2.5, '& .MuiOutlinedInput-root': { borderRadius: 2, '&:hover fieldset': { borderColor: '#8B0000' }, '&.Mui-focused fieldset': { borderColor: '#8B0000' } } }}
+              placeholder={t('research.folders.authorPlaceholder', 'Who wrote or collected this')}
             />
 
             {/* Cover Photo Upload Section */}
@@ -989,6 +1001,12 @@ export default function SeedsFootprints({ user }) {
                           </Typography>
                         )}
 
+                        {f.author && (
+                          <Typography sx={{ fontSize: '0.85rem', color: '#8B0000', fontWeight: 600, textAlign: 'center', mt: 0.5 }}>
+                            {t('research.folders.authorBy', 'Researcher:')} {f.author}
+                          </Typography>
+                        )}
+
                         {/* Decorative bottom dots */}
                         <Box
                           className="decorative-dots"
@@ -1323,6 +1341,20 @@ export default function SeedsFootprints({ user }) {
                   }}
                 />
               </Box>
+            </Box>
+
+            {/* Author */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1.5, color: '#8B0000', fontWeight: 600 }}>
+                {t('research.folders.author', 'Researcher name')}
+              </Typography>
+              <TextField
+                value={editForm.author}
+                onChange={(e) => setEditForm(prev => ({ ...prev, author: e.target.value }))}
+                fullWidth
+                placeholder={t('research.folders.authorPlaceholder', 'Who wrote or collected this')}
+                sx={{ '& .MuiOutlinedInput-root': { '&:hover fieldset': { borderColor: '#8B0000' }, '&.Mui-focused fieldset': { borderColor: '#8B0000' } } }}
+              />
             </Box>
 
             {/* Cover Photo Upload Section */}
